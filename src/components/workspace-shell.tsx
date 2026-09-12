@@ -402,7 +402,7 @@ export function WorkspaceShell({
 
           <Button
             variant="outline"
-            className="fixed inset-x-0 top-1.5 mx-auto hidden h-9 w-[220px] justify-start border-[var(--app-border)] bg-[var(--app-control)] px-2.5 text-xs text-[var(--app-muted)] shadow-none hover:bg-[var(--app-hover)] lg:flex"
+            className="fixed inset-x-0 top-1.5 mx-auto hidden h-9 w-[220px] justify-start rounded-lg border-[var(--app-border)] bg-[var(--app-control)] px-2.5 text-xs text-[var(--app-muted)] shadow-none hover:bg-[var(--app-hover)] lg:flex"
             onClick={openCommand}
             aria-label="Quick Search (Ctrl K)"
           >
@@ -453,7 +453,7 @@ export function WorkspaceShell({
           data-testid="workspace-content-surface"
           tabIndex={-1}
           className={cn(
-            "workspace-scrollbar-hidden h-[calc(100dvh_-_68px_-_env(safe-area-inset-bottom))] overflow-y-auto bg-[var(--app-canvas)] pt-12 outline-none lg:fixed lg:bottom-1.5 lg:right-1.5 lg:top-[54px] lg:h-auto lg:min-h-0 lg:overscroll-contain lg:rounded-md lg:border lg:border-[var(--app-border)] lg:pt-0 lg:transition-[left] lg:ease-[cubic-bezier(0.22,1,0.36,1)]",
+            "workspace-scrollbar-hidden h-[calc(100dvh_-_68px_-_env(safe-area-inset-bottom))] overflow-y-auto bg-[var(--app-canvas)] pt-12 outline-none lg:fixed lg:bottom-1.5 lg:right-1.5 lg:top-[54px] lg:h-auto lg:min-h-0 lg:overscroll-contain lg:rounded-2xl lg:border lg:border-[var(--app-border)] lg:pt-0 lg:transition-[left] lg:ease-[cubic-bezier(0.22,1,0.36,1)]",
             reduceMotion ? "lg:duration-0" : "lg:duration-[220ms]",
             collapsed ? "lg:left-[58px]" : "lg:left-[222px]"
           )}
@@ -690,7 +690,7 @@ function SidebarRoute({
       aria-label={collapsed ? item.label : undefined}
       aria-current={active ? "page" : undefined}
       className={cn(
-        "group relative flex h-8 items-center overflow-hidden rounded text-[12px] font-medium outline-none transition-[background-color,color] duration-150 ease-out focus-visible:ring-2 focus-visible:ring-[var(--app-accent)] focus-visible:ring-inset",
+        "group relative flex h-8 items-center overflow-hidden rounded-lg text-[12px] font-medium outline-none transition-[background-color,color] duration-150 ease-out focus-visible:ring-2 focus-visible:ring-[var(--app-accent)] focus-visible:ring-inset",
         collapsed ? "mx-auto w-9 justify-center px-0" : "gap-2 px-2",
         active
           ? "bg-[var(--app-active)] text-[var(--app-ink)]"

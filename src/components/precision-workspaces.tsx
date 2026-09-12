@@ -380,16 +380,19 @@ export function PrecisionClients({
               label="Clients"
               value={clients.length}
               icon={<UsersRound className="size-4" />}
+              className="rounded-xl"
             />
             <MetricItem
               label="Active projects"
               value={projects.filter(active).length}
               icon={<FolderKanban className="size-4" />}
+              className="rounded-xl"
             />
             <MetricItem
               label="Delivered"
               value={projects.filter(delivered).length}
               icon={<CheckCircle2 className="size-4" />}
+              className="rounded-xl"
             />
           </MetricStrip>
         ) : null}
@@ -400,12 +403,12 @@ export function PrecisionClients({
         >
           <MasterDetail
             className={cn(
-              "min-h-full lg:h-full lg:min-h-0 lg:overflow-hidden",
+              "min-h-full gap-3 lg:h-full lg:min-h-0 lg:overflow-hidden",
               !clients.length && "lg:grid-cols-1 [&>div:first-child]:hidden"
             )}
             master={
-              <aside className="flex min-h-0 flex-col border-b border-[var(--app-border)] bg-[var(--app-soft-panel)] lg:h-full lg:border-b-0 lg:border-r">
-                <div className="border-b border-[var(--app-border)] p-3">
+              <aside className="flex min-h-0 flex-col overflow-hidden rounded-xl border border-[var(--app-border)] bg-[var(--app-panel)] lg:h-full">
+                <div className="border-b border-[var(--app-border)] bg-[var(--app-soft-panel)] p-3">
                   <div className="relative">
                     <Search className="pointer-events-none absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-[var(--app-muted)]" />
                     <Input
@@ -506,10 +509,10 @@ export function PrecisionClients({
                     transition={
                       reduceMotion ? { duration: 0 } : revealTransition
                     }
-                    className="flex min-h-0 min-w-0 flex-col lg:h-full"
+                    className="flex min-h-0 min-w-0 flex-col overflow-hidden rounded-xl border border-[var(--app-border)] bg-[var(--app-panel)] lg:h-full"
                   >
                     <div className="flex flex-col gap-4 border-b border-[var(--app-border)] p-5 sm:flex-row sm:items-start">
-                      <span className="grid size-12 shrink-0 place-items-center rounded-[6px] bg-[var(--app-active)] text-sm font-semibold text-[var(--app-highlight)]">
+                      <span className="grid size-12 shrink-0 place-items-center rounded-lg bg-[var(--app-active)] text-sm font-semibold text-[var(--app-highlight)] ring-1 ring-[var(--app-border)]">
                         {clientInitials(selected.name)}
                       </span>
                       <div className="min-w-0 flex-1">
@@ -523,14 +526,14 @@ export function PrecisionClients({
                       </div>
                       <Button
                         variant="outline"
-                        className="h-8 self-start text-xs"
+                        className="h-8 self-start rounded-lg text-xs"
                         onClick={() => setEditingClient(selected)}
                       >
                         Edit
                       </Button>
                       <Button
                         variant="outline"
-                        className="h-8 self-start text-xs"
+                        className="h-8 self-start rounded-lg text-xs"
                         onClick={() =>
                           onUpdateClient({
                             ...selected,
@@ -542,7 +545,7 @@ export function PrecisionClients({
                       </Button>
                       <Button
                         variant="outline"
-                        className="h-8 self-start border-[var(--app-border)] bg-[var(--app-panel)] text-xs"
+                        className="h-8 self-start rounded-lg border-[var(--app-border)] bg-[var(--app-panel)] text-xs"
                         onClick={() => void copyClientName(selected.name)}
                         aria-label={
                           copiedName === selected.name
@@ -558,7 +561,7 @@ export function PrecisionClients({
                         {copiedName === selected.name ? "Copied" : "Copy name"}
                       </Button>
                     </div>
-                    <div className="grid grid-cols-2 divide-x divide-y divide-[var(--app-border)] border-b border-[var(--app-border)] sm:grid-cols-4 sm:divide-y-0">
+                    <div className="grid grid-cols-2 gap-2 border-b border-[var(--app-border)] p-4 sm:grid-cols-4">
                       <ClientMetric
                         label="Projects"
                         value={String(selected.projects.length)}
@@ -605,7 +608,7 @@ export function PrecisionClients({
                           ))}
                       </dl>
                     ) : null}
-                    <div className="grid gap-3 border-b border-[var(--app-border)] p-5 sm:grid-cols-[1fr_1fr_auto]">
+                    <div className="grid gap-3 border-b border-[var(--app-border)] bg-[var(--app-soft-panel)]/45 p-4 sm:grid-cols-[1fr_1fr_auto]">
                       <Input
                         value={hubContactName}
                         onChange={(event) =>
@@ -650,7 +653,7 @@ export function PrecisionClients({
                         </div>
                       </div>
                       {selected.projects.length ? (
-                        <div className="divide-y divide-[var(--app-border)] overflow-hidden rounded-[6px] border border-[var(--app-border)]">
+                        <div className="divide-y divide-[var(--app-border)] overflow-hidden rounded-xl border border-[var(--app-border)]">
                           {selected.projects
                             .slice()
                             .sort((a, b) => b.dueDate.localeCompare(a.dueDate))
@@ -702,7 +705,7 @@ export function PrecisionClients({
                             ))}
                         </div>
                       ) : (
-                        <div className="grid min-h-56 place-items-center rounded-[6px] border border-dashed border-[var(--app-border)] text-center">
+                        <div className="grid min-h-56 place-items-center rounded-xl border border-dashed border-[var(--app-border)] text-center">
                           <div>
                             <BriefcaseBusiness className="mx-auto size-6 text-[var(--app-muted)]" />
                             <p className="mt-2 text-sm font-semibold">
@@ -2092,7 +2095,7 @@ export function PrecisionReports({
 
 function ClientMetric({ label, value }: { label: string; value: string }) {
   return (
-    <div className="px-4 py-3">
+    <div className="rounded-lg border border-[var(--app-border)] bg-[var(--app-soft-panel)] px-3 py-2.5">
       <p className="text-[9px] font-semibold uppercase text-[var(--app-subtle)]">
         {label}
       </p>

@@ -4,6 +4,8 @@ import { getProjectProgress } from "@/features/projects/project-domain";
 
 import {
   ArrowRight,
+  Check,
+  ChevronDown,
   Archive,
   Edit3,
   Film,
@@ -57,13 +59,6 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
   Sheet,
   SheetContent,
   SheetDescription,
@@ -92,6 +87,69 @@ import {
 type WorkspaceScope = "personal" | "team";
 
 const MotionCard = motion.create(Card);
+
+type ProjectMenuOption<T extends string> = {
+  value: T;
+  label: string;
+};
+
+function ProjectDropdown<T extends string>({
+  value,
+  options,
+  onChange,
+  ariaLabel,
+  className,
+  contentClassName,
+}: {
+  value: T;
+  options: readonly ProjectMenuOption<T>[];
+  onChange: (value: T) => void;
+  ariaLabel: string;
+  className?: string;
+  contentClassName?: string;
+}) {
+  const selectedOption = options.find((option) => option.value === value);
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button
+          variant="outline"
+          aria-label={ariaLabel}
+          className={cn(
+            "h-9 min-w-0 shrink-0 justify-between gap-3 overflow-hidden rounded-lg border-[var(--app-border)] !bg-[var(--app-panel)] text-xs font-normal",
+            className
+          )}
+        >
+          <span className="truncate">
+            {selectedOption?.label ?? "Choose an option"}
+          </span>
+          <ChevronDown className="size-3.5 shrink-0 text-[var(--app-muted)]" />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent
+        align="start"
+        className={cn("min-w-[10rem]", contentClassName)}
+      >
+        {options.map((option) => (
+          <DropdownMenuItem
+            key={option.value}
+            onSelect={() => onChange(option.value)}
+            className="justify-between gap-4"
+          >
+            <span>{option.label}</span>
+            <Check
+              className={cn(
+                "size-4",
+                option.value === value ? "opacity-100" : "opacity-0"
+              )}
+            />
+          </DropdownMenuItem>
+        ))}
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
 
 type PrecisionProjectsProps = {
   settings: SettingsState;
@@ -187,7 +245,7 @@ function ProjectVideoThumbnail({
       data-slot="project-thumbnail"
       data-thumbnail-kind="video"
       className={cn(
-        "relative isolate flex h-[50px] w-[88px] shrink-0 overflow-hidden rounded-md border border-white/10",
+        "relative isolate flex h-[50px] w-[88px] shrink-0 overflow-hidden rounded-lg border border-white/10",
         className
       )}
       style={{ background: projectColor(project) }}
@@ -261,6 +319,7 @@ function ProjectBoardCard({
           <Button
             variant="ghost"
             size="icon-sm"
+            className="!bg-[var(--app-panel)] transition-transform active:scale-95"
             aria-label={`Change stage for ${project.title}`}
           >
             <MoreHorizontal />
@@ -513,7 +572,7 @@ export function PrecisionProjects(props: PrecisionProjectsProps) {
               <Button
                 variant="ghost"
                 size="icon-sm"
-                className="transition-transform active:scale-95"
+                className="!bg-[var(--app-panel)] transition-transform active:scale-95"
                 aria-label={`Actions for ${row.original.title}`}
                 onClick={(event) => event.stopPropagation()}
               >
@@ -582,7 +641,11 @@ export function PrecisionProjects(props: PrecisionProjectsProps) {
 
   return (
     <MotionConfig reducedMotion="user" transition={springTransition}>
-      <WorkspacePage family="data-index" mode="fill" className="lg:min-h-full">
+      <WorkspacePage
+        family="data-index"
+        mode="fill"
+        className="workspace-scrollbar-hidden min-w-0 overflow-x-hidden lg:min-h-full"
+      >
         <motion.div
           initial={reduceMotion ? false : { opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -607,14 +670,14 @@ export function PrecisionProjects(props: PrecisionProjectsProps) {
                       }
                       placeholder="Search project, client, or note..."
                       aria-label="Search projects"
-                      className="h-9 bg-[var(--app-panel)] pl-8 text-xs transition-shadow focus-visible:ring-2"
+                      className="h-9 rounded-lg border-[var(--app-border)] !bg-[var(--app-panel)] pl-8 text-xs transition-shadow focus-visible:ring-2"
                     />
                   </div>
                   <div className="flex min-w-[150px] items-center gap-2">
                     <SlidersHorizontal className="size-4 shrink-0 text-[var(--app-muted)]" />
-                    <Select
+                    <ProjectDropdown
                       value={tableState.stage}
-                      onValueChange={(value) =>
+                      onChange={(value) =>
                         setTableState((state) => ({
                           ...state,
                           stage: parseProjectTableSearch(
@@ -622,149 +685,111 @@ export function PrecisionProjects(props: PrecisionProjectsProps) {
                           ).stage,
                         }))
                       }
-                    >
-                      <SelectTrigger
-                        aria-label="Filter projects by status"
-                        className="h-9 w-full bg-[var(--app-panel)] text-xs transition-colors"
-                      >
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {[
-                          "all",
-                          "Planned",
-                          "In Progress",
-                          "Review",
-                          "Client Review",
-                          "Revision",
-                          "Delivered",
-                          "Cancelled",
-                        ].map((value) => (
-                          <SelectItem key={value} value={value}>
-                            {value === "all" ? "All stages" : value}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                      ariaLabel="Filter projects by status"
+                      className="w-full"
+                      options={[
+                        { value: "all", label: "All stages" },
+                        { value: "Planned", label: "Planned" },
+                        { value: "In Progress", label: "In Progress" },
+                        { value: "Review", label: "Review" },
+                        { value: "Client Review", label: "Client Review" },
+                        { value: "Revision", label: "Revision" },
+                        { value: "Delivered", label: "Delivered" },
+                        { value: "Cancelled", label: "Cancelled" },
+                      ]}
+                    />
                   </div>
-                  <Select
+                  <ProjectDropdown
                     value={tableState.clientId || "all"}
-                    onValueChange={(value) =>
+                    onChange={(value) =>
                       setTableState((state) => ({
                         ...state,
                         clientId: value === "all" ? "" : value,
                       }))
                     }
-                  >
-                    <SelectTrigger
-                      aria-label="Filter projects by client"
-                      className="h-9 w-[140px] bg-[var(--app-panel)] text-xs"
-                    >
-                      <SelectValue placeholder="All clients" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All clients</SelectItem>
-                      {props.settings.clients
+                    ariaLabel="Filter projects by client"
+                    className="w-[140px]"
+                    options={[
+                      { value: "all", label: "All clients" },
+                      ...props.settings.clients
                         .filter((client) => !client.archived)
-                        .map((client) => (
-                          <SelectItem key={client.id} value={client.id}>
-                            {client.name}
-                          </SelectItem>
-                        ))}
-                    </SelectContent>
-                  </Select>
-                  <Select
+                        .map((client) => ({
+                          value: client.id,
+                          label: client.name,
+                        })),
+                    ]}
+                  />
+                  <ProjectDropdown
                     value={tableState.payment}
-                    onValueChange={(value) =>
+                    onChange={(value) =>
                       setTableState((state) => ({
                         ...state,
                         payment: parseProjectTableSearch(`payment=${value}`)
                           .payment,
                       }))
                     }
-                  >
-                    <SelectTrigger
-                      aria-label="Filter projects by payment"
-                      className="h-9 w-[130px] bg-[var(--app-panel)] text-xs"
-                    >
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All payments</SelectItem>
-                      <SelectItem value="paid">Paid</SelectItem>
-                      <SelectItem value="unpaid">Unpaid</SelectItem>
-                      <SelectItem value="not-billable">Not billable</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <Select
+                    ariaLabel="Filter projects by payment"
+                    className="w-[130px]"
+                    options={[
+                      { value: "all", label: "All payments" },
+                      { value: "paid", label: "Paid" },
+                      { value: "unpaid", label: "Unpaid" },
+                      { value: "not-billable", label: "Not billable" },
+                    ]}
+                  />
+                  <ProjectDropdown
                     value={tableState.salary}
-                    onValueChange={(value) =>
+                    onChange={(value) =>
                       setTableState((state) => ({
                         ...state,
                         salary: parseProjectTableSearch(`salary=${value}`)
                           .salary,
                       }))
                     }
-                  >
-                    <SelectTrigger
-                      aria-label="Filter projects by salary type"
-                      className="h-9 w-[125px] bg-[var(--app-panel)] text-xs"
-                    >
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All work</SelectItem>
-                      <SelectItem value="salary">Salary</SelectItem>
-                      <SelectItem value="client">Client work</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <Select
+                    ariaLabel="Filter projects by salary type"
+                    className="w-[125px]"
+                    options={[
+                      { value: "all", label: "All work" },
+                      { value: "salary", label: "Salary" },
+                      { value: "client", label: "Client work" },
+                    ]}
+                  />
+                  <ProjectDropdown
                     value={tableState.archive}
-                    onValueChange={(value) =>
+                    onChange={(value) =>
                       setTableState((state) => ({
                         ...state,
                         archive: parseProjectTableSearch(`archive=${value}`)
                           .archive,
                       }))
                     }
-                  >
-                    <SelectTrigger
-                      aria-label="Filter archived projects"
-                      className="h-9 w-[120px] bg-[var(--app-panel)] text-xs"
-                    >
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="active">Unarchived</SelectItem>
-                      <SelectItem value="archived">Archived</SelectItem>
-                      <SelectItem value="all">All records</SelectItem>
-                    </SelectContent>
-                  </Select>
+                    ariaLabel="Filter archived projects"
+                    className="w-[120px]"
+                    options={[
+                      { value: "active", label: "Unarchived" },
+                      { value: "archived", label: "Archived" },
+                      { value: "all", label: "All records" },
+                    ]}
+                  />
                   {showAssignees ? (
-                    <Select
+                    <ProjectDropdown
                       value={tableState.assigneeUserId || "all"}
-                      onValueChange={(value) =>
+                      onChange={(value) =>
                         setTableState((state) => ({
                           ...state,
                           assigneeUserId: value === "all" ? "" : value,
                         }))
                       }
-                    >
-                      <SelectTrigger
-                        aria-label="Filter projects by assignee"
-                        className="h-9 w-[135px] bg-[var(--app-panel)] text-xs"
-                      >
-                        <SelectValue placeholder="All assignees" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">All assignees</SelectItem>
-                        {props.settings.teamMembers.map((member) => (
-                          <SelectItem key={member.id} value={member.id}>
-                            {member.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                      ariaLabel="Filter projects by assignee"
+                      className="w-[135px]"
+                      options={[
+                        { value: "all", label: "All assignees" },
+                        ...props.settings.teamMembers.map((member) => ({
+                          value: member.id,
+                          label: member.name,
+                        })),
+                      ]}
+                    />
                   ) : null}
                 </>
               }
@@ -772,7 +797,7 @@ export function PrecisionProjects(props: PrecisionProjectsProps) {
                 <>
                   <Button
                     variant="outline"
-                    className="h-9"
+                    className="h-9 rounded-lg !bg-[var(--app-panel)]"
                     onClick={() => props.onManageProjectGroups(scope)}
                   >
                     Project Groups
@@ -789,7 +814,7 @@ export function PrecisionProjects(props: PrecisionProjectsProps) {
                   >
                     <TabsList
                       aria-label="Project view"
-                      className="h-9 rounded-md border border-[var(--app-border)] bg-[var(--app-panel)] p-0.5"
+                      className="h-9 rounded-lg border border-[var(--app-border)] bg-[var(--app-panel)] p-0.5"
                     >
                       <TabsTrigger
                         id="project-table-tab"
@@ -820,7 +845,7 @@ export function PrecisionProjects(props: PrecisionProjectsProps) {
                   >
                     <TabsList
                       aria-label="Project scope"
-                      className="h-9 rounded-md border border-[var(--app-border)] bg-[var(--app-panel)] p-0.5"
+                      className="h-9 rounded-lg border border-[var(--app-border)] bg-[var(--app-panel)] p-0.5"
                     >
                       <TabsTrigger
                         id="project-personal-tab"
@@ -847,9 +872,9 @@ export function PrecisionProjects(props: PrecisionProjectsProps) {
                       </TabsTrigger>
                     </TabsList>
                   </Tabs>
-                  <Select
+                  <ProjectDropdown
                     value={`${tableState.sort}:${tableState.direction}`}
-                    onValueChange={(value) => {
+                    onChange={(value) => {
                       const [sort, direction] = value.split(":");
                       const parsed = parseProjectTableSearch(
                         `sort=${sort}&dir=${direction}`
@@ -860,22 +885,17 @@ export function PrecisionProjects(props: PrecisionProjectsProps) {
                         direction: parsed.direction,
                       }));
                     }}
-                  >
-                    <SelectTrigger
-                      aria-label="Sort projects"
-                      className="h-9 w-[140px] bg-[var(--app-panel)] text-xs"
-                    >
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="due:asc">Due first</SelectItem>
-                      <SelectItem value="due:desc">Due last</SelectItem>
-                      <SelectItem value="name:asc">Name A-Z</SelectItem>
-                      <SelectItem value="stage:asc">Stage</SelectItem>
-                      <SelectItem value="payment:asc">Payment</SelectItem>
-                      <SelectItem value="salary:desc">Salary first</SelectItem>
-                    </SelectContent>
-                  </Select>
+                    ariaLabel="Sort projects"
+                    className="w-[140px]"
+                    options={[
+                      { value: "due:asc", label: "Due first" },
+                      { value: "due:desc", label: "Due last" },
+                      { value: "name:asc", label: "Name A-Z" },
+                      { value: "stage:asc", label: "Stage" },
+                      { value: "payment:asc", label: "Payment" },
+                      { value: "salary:desc", label: "Salary first" },
+                    ]}
+                  />
                 </>
               }
             />
@@ -891,7 +911,7 @@ export function PrecisionProjects(props: PrecisionProjectsProps) {
             >
               <SplitPane
                 ratio="inspector"
-                className="h-full min-h-0"
+                className="h-full min-h-0 gap-3"
                 primary={
                   <DataTableFrame
                     id="project-library-panel"
@@ -899,13 +919,13 @@ export function PrecisionProjects(props: PrecisionProjectsProps) {
                     aria-labelledby={`project-${tableState.view}-tab project-${scope}-tab`}
                     aria-busy={isUpdating}
                     bodyLabel="Project library viewport"
-                    className="relative h-full min-h-0 border-[var(--app-border)] bg-[var(--app-panel)]"
-                    bodyClassName="flex min-h-0 flex-1 flex-col overflow-hidden max-lg:flex-none max-lg:overflow-visible"
+                    className="relative h-full min-h-0 rounded-xl border border-[var(--app-border)] bg-[var(--app-panel)]"
+                    bodyClassName="workspace-scrollbar-hidden flex min-h-0 flex-1 flex-col overflow-hidden max-lg:flex-none max-lg:overflow-visible"
                   >
                     {isUpdating ? (
                       <div className="absolute inset-x-0 top-0 z-20 h-0.5 bg-[var(--app-accent)]" />
                     ) : null}
-                    <header className="flex h-12 items-center justify-between px-4">
+                    <header className="flex h-12 items-center justify-between border-b border-[var(--app-border)] px-4">
                       <span
                         className="flex items-center gap-2 text-[11px] text-[var(--app-muted)]"
                         aria-live="polite"
@@ -947,7 +967,7 @@ export function PrecisionProjects(props: PrecisionProjectsProps) {
                           onDragEnd={handleDragEnd}
                         >
                           <div
-                            className="grid min-h-0 flex-1 auto-cols-[minmax(210px,1fr)] grid-flow-col overflow-x-auto border-t border-[var(--app-border)]"
+                            className="workspace-scrollbar-hidden grid min-h-0 flex-1 auto-cols-[minmax(210px,1fr)] grid-flow-col overflow-x-auto bg-[var(--app-panel)]"
                             aria-label="Project board"
                           >
                             {board.map(({ stage, projects: stageProjects }) => {
@@ -1048,7 +1068,7 @@ export function PrecisionProjects(props: PrecisionProjectsProps) {
                                 {table.getHeaderGroups().map((group) => (
                                   <TableRow
                                     key={group.id}
-                                    className="border-y border-[var(--app-border)] bg-[var(--app-soft-panel)]"
+                                    className="border-b border-[var(--app-border)] bg-[var(--app-soft-panel)]"
                                   >
                                     {group.headers.map((header) => (
                                       <TableHead
@@ -1195,7 +1215,7 @@ export function PrecisionProjects(props: PrecisionProjectsProps) {
                           {hasFilters ? (
                             <Button
                               variant="outline"
-                              className="mt-3 h-8 active:scale-[0.98]"
+                              className="mt-3 h-8 !bg-[var(--app-panel)] active:scale-[0.98]"
                               size="sm"
                               onClick={() =>
                                 setTableState((state) => ({
@@ -1226,18 +1246,15 @@ export function PrecisionProjects(props: PrecisionProjectsProps) {
                   </DataTableFrame>
                 }
                 secondary={
-                  <AnimatePresence mode="wait" initial={false}>
-                    <ProjectInspector
-                      key={selected?.id ?? "empty"}
-                      project={selected}
-                      settings={props.settings}
-                      onOpen={props.onViewProject}
-                      onEdit={props.onEditProject}
-                      canEdit={props.canEditProjects}
-                      reduceMotion={reduceMotion}
-                      className="hidden xl:block"
-                    />
-                  </AnimatePresence>
+                  <ProjectInspector
+                    project={selected}
+                    settings={props.settings}
+                    onOpen={props.onViewProject}
+                    onEdit={props.onEditProject}
+                    canEdit={props.canEditProjects}
+                    reduceMotion={reduceMotion}
+                    className="hidden xl:block"
+                  />
                 }
               />
             </motion.div>
@@ -1256,18 +1273,15 @@ export function PrecisionProjects(props: PrecisionProjectsProps) {
                   Review the selected project and open or edit its workspace.
                 </SheetDescription>
               </SheetHeader>
-              <AnimatePresence mode="wait" initial={false}>
-                <ProjectInspector
-                  key={selected?.id ?? "empty"}
-                  project={selected}
-                  settings={props.settings}
-                  onOpen={props.onViewProject}
-                  onEdit={props.onEditProject}
-                  canEdit={props.canEditProjects}
-                  reduceMotion={reduceMotion}
-                  className="h-full border-0"
-                />
-              </AnimatePresence>
+              <ProjectInspector
+                project={selected}
+                settings={props.settings}
+                onOpen={props.onViewProject}
+                onEdit={props.onEditProject}
+                canEdit={props.canEditProjects}
+                reduceMotion={reduceMotion}
+                className="h-full border-0"
+              />
             </SheetContent>
           </Sheet>
         </motion.div>
@@ -1296,11 +1310,8 @@ function ProjectInspector({
   if (!project) {
     return (
       <MotionCard
-        initial={reduceMotion ? false : { opacity: 0, x: 8 }}
-        animate={{ opacity: 1, x: 0 }}
-        exit={reduceMotion ? undefined : { opacity: 0, x: 8 }}
         className={cn(
-          "p-6 text-center text-xs text-[var(--app-muted)] shadow-none",
+          "rounded-xl border border-[var(--app-border)] bg-[var(--app-panel)] p-6 text-center text-xs text-[var(--app-muted)] shadow-none",
           className
         )}
       >
@@ -1313,103 +1324,105 @@ function ProjectInspector({
   return (
     <MotionCard
       role="region"
-      initial={reduceMotion ? false : { opacity: 0, x: 10 }}
-      animate={{ opacity: 1, x: 0 }}
-      exit={reduceMotion ? undefined : { opacity: 0, x: -6 }}
       aria-label="Selected project details"
       className={cn(
-        "workspace-scrollbar-hidden h-full min-h-0 overflow-y-auto overscroll-contain shadow-none",
+        "workspace-scrollbar-hidden h-full min-h-0 overflow-y-auto overscroll-contain rounded-xl border border-[var(--app-border)] bg-[var(--app-panel)] shadow-none",
         className
       )}
     >
-      <div className="border-b border-[var(--app-border)] p-4">
-        <div>
+      <div className="p-4">
+        <ProjectVideoThumbnail
+          project={project}
+          className="mb-3 aspect-video h-auto w-full"
+        />
+        <AnimatePresence mode="wait" initial={false}>
           <motion.div
-            initial={reduceMotion ? false : { scale: 0.96 }}
-            animate={{ scale: 1 }}
-            className="w-full"
+            key={project.id}
+            initial={reduceMotion ? false : { opacity: 0, y: 6 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={reduceMotion ? undefined : { opacity: 0, y: -6 }}
           >
-            <ProjectVideoThumbnail
-              project={project}
-              className="mb-3 aspect-video h-auto w-full"
-            />
+            <div className="border-b border-[var(--app-border)] pb-4">
+              <div className="min-w-0 flex-1">
+                <h2 className="truncate text-sm font-semibold">
+                  {project.title}
+                </h2>
+                <p className="mt-0.5 truncate text-[11px] text-[var(--app-muted)]">
+                  {project.client || "No client"}
+                </p>
+                <Badge
+                  variant="outline"
+                  className={cn(
+                    "mt-2 h-5 rounded px-1.5 text-[10px] font-semibold",
+                    projectStatusTone(project.status)
+                  )}
+                >
+                  {project.status}
+                </Badge>
+              </div>
+            </div>
+            <div className="space-y-4 pt-4">
+              <dl className="grid grid-cols-2 gap-x-4 gap-y-5">
+                <Detail label="Client" value={project.client || "No client"} />
+                <Detail label="Work type" value={project.workType} />
+                <Detail label="Due date" value={formatDate(project.dueDate)} />
+                <Detail
+                  label="Value"
+                  value={
+                    project.workType === settings.salaryWorkType
+                      ? "Batch tracked"
+                      : money(project.earnings, settings.currencyCode)
+                  }
+                />
+              </dl>
+              <div className="border-t border-[var(--app-border)] pt-4">
+                <div className="flex justify-between text-xs font-semibold">
+                  <span>Progress</span>
+                  <span>{value}%</span>
+                </div>
+                <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-[var(--app-progress-track)]">
+                  <motion.div
+                    className="h-full origin-left rounded-full bg-[var(--app-accent)]"
+                    initial={reduceMotion ? false : { scaleX: 0 }}
+                    animate={{ scaleX: value / 100 }}
+                  />
+                </div>
+              </div>
+              <div className="border-t border-[var(--app-border)] pt-4">
+                <p className="text-[10px] font-semibold uppercase text-[var(--app-subtle)]">
+                  Project note
+                </p>
+                <p className="mt-2 text-xs leading-5 text-[var(--app-muted)]">
+                  {project.notes || "No project notes yet."}
+                </p>
+              </div>
+              <div className="border-t border-[var(--app-border)] pt-4">
+                <p className="text-[10px] font-semibold uppercase text-[var(--app-subtle)]">
+                  Next action
+                </p>
+                <p className="mt-2 text-xs leading-5 text-[var(--app-ink)]">
+                  {projectNextAction(project)}
+                </p>
+              </div>
+              <div className="grid grid-cols-2 gap-2 pt-1">
+                <Button
+                  variant="outline"
+                  className="h-9 !bg-[var(--app-panel)] transition-transform active:scale-[0.98]"
+                  disabled={!canEdit && Boolean(project.teamId)}
+                  onClick={() => onEdit(project)}
+                >
+                  <Edit3 /> Edit
+                </Button>
+                <Button
+                  className="h-9 transition-transform active:scale-[0.98]"
+                  onClick={() => onOpen(project)}
+                >
+                  Open <ArrowRight />
+                </Button>
+              </div>
+            </div>
           </motion.div>
-          <div className="min-w-0 flex-1">
-            <h2 className="truncate text-sm font-semibold">{project.title}</h2>
-            <p className="mt-0.5 truncate text-[11px] text-[var(--app-muted)]">
-              {project.client || "No client"}
-            </p>
-            <Badge
-              variant="outline"
-              className={cn(
-                "mt-2 h-5 rounded px-1.5 text-[10px] font-semibold",
-                projectStatusTone(project.status)
-              )}
-            >
-              {project.status}
-            </Badge>
-          </div>
-        </div>
-      </div>
-      <div className="space-y-4 p-4">
-        <dl className="grid grid-cols-2 gap-x-4 gap-y-5">
-          <Detail label="Client" value={project.client || "No client"} />
-          <Detail label="Work type" value={project.workType} />
-          <Detail label="Due date" value={formatDate(project.dueDate)} />
-          <Detail
-            label="Value"
-            value={
-              project.workType === settings.salaryWorkType
-                ? "Batch tracked"
-                : money(project.earnings, settings.currencyCode)
-            }
-          />
-        </dl>
-        <div className="border-t border-[var(--app-border)] pt-4">
-          <div className="flex justify-between text-xs font-semibold">
-            <span>Progress</span>
-            <span>{value}%</span>
-          </div>
-          <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-[var(--app-progress-track)]">
-            <motion.div
-              className="h-full origin-left rounded-full bg-[var(--app-accent)]"
-              initial={reduceMotion ? false : { scaleX: 0 }}
-              animate={{ scaleX: value / 100 }}
-            />
-          </div>
-        </div>
-        <div className="border-t border-[var(--app-border)] pt-4">
-          <p className="text-[10px] font-semibold uppercase text-[var(--app-subtle)]">
-            Project note
-          </p>
-          <p className="mt-2 text-xs leading-5 text-[var(--app-muted)]">
-            {project.notes || "No project notes yet."}
-          </p>
-        </div>
-        <div className="border-t border-[var(--app-border)] pt-4">
-          <p className="text-[10px] font-semibold uppercase text-[var(--app-subtle)]">
-            Next action
-          </p>
-          <p className="mt-2 text-xs leading-5 text-[var(--app-ink)]">
-            {projectNextAction(project)}
-          </p>
-        </div>
-        <div className="grid grid-cols-2 gap-2 pt-1">
-          <Button
-            variant="outline"
-            className="h-9 transition-transform active:scale-[0.98]"
-            disabled={!canEdit && Boolean(project.teamId)}
-            onClick={() => onEdit(project)}
-          >
-            <Edit3 /> Edit
-          </Button>
-          <Button
-            className="h-9 transition-transform active:scale-[0.98]"
-            onClick={() => onOpen(project)}
-          >
-            Open <ArrowRight />
-          </Button>
-        </div>
+        </AnimatePresence>
       </div>
     </MotionCard>
   );

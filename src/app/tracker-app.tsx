@@ -205,10 +205,11 @@ import {
 import { FieldLayout } from "@/components/ui/field-layout";
 import { Input as OwnedInput } from "@/components/ui/input";
 import {
-  Popover as OwnedPopover,
-  PopoverContent as OwnedPopoverContent,
-  PopoverTrigger as OwnedPopoverTrigger,
-} from "@/components/ui/popover";
+  DropdownMenu as OwnedDropdownMenu,
+  DropdownMenuContent as OwnedDropdownMenuContent,
+  DropdownMenuSeparator as OwnedDropdownMenuSeparator,
+  DropdownMenuTrigger as OwnedDropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import {
   Select as OwnedSelect,
   SelectContent as OwnedSelectContent,
@@ -7028,8 +7029,11 @@ function NotificationBell({ settings }: { settings: SettingsState }) {
   );
 
   return (
-    <OwnedPopover open={notificationOpen} onOpenChange={setNotificationOpen}>
-      <OwnedPopoverTrigger asChild>
+    <OwnedDropdownMenu
+      open={notificationOpen}
+      onOpenChange={setNotificationOpen}
+    >
+      <OwnedDropdownMenuTrigger asChild>
         <OwnedButton
           type="button"
           variant="ghost"
@@ -7054,10 +7058,10 @@ function NotificationBell({ settings }: { settings: SettingsState }) {
             <span className="absolute top-1.5 right-[7px] size-2 rounded-full border border-[var(--app-panel)] bg-[var(--app-accent)]" />
           ) : null}
         </OwnedButton>
-      </OwnedPopoverTrigger>
-      <OwnedPopoverContent
+      </OwnedDropdownMenuTrigger>
+      <OwnedDropdownMenuContent
         align="end"
-        role="dialog"
+        sideOffset={6}
         aria-label="Notifications"
         className="w-[290px] border-[var(--app-border)] bg-[var(--app-panel)] p-0 text-[var(--app-ink)] shadow-none"
       >
@@ -7092,7 +7096,7 @@ function NotificationBell({ settings }: { settings: SettingsState }) {
                     : "No notifications yet"}
           </p>
         </div>
-        <div className="border-t border-[var(--app-border)]" />
+        <OwnedDropdownMenuSeparator className="border-[var(--app-border)]" />
         {isConvexAuthLoading ? (
           <p className="px-3 py-2.5 text-xs leading-relaxed text-[var(--app-muted)]">
             Waiting for Convex auth before loading Team notifications.
@@ -7169,8 +7173,8 @@ function NotificationBell({ settings }: { settings: SettingsState }) {
             Settings.
           </p>
         )}
-      </OwnedPopoverContent>
-    </OwnedPopover>
+      </OwnedDropdownMenuContent>
+    </OwnedDropdownMenu>
   );
 }
 

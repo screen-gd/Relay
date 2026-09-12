@@ -9,7 +9,9 @@ import {
   ArrowUp,
   ArrowUpDown,
   CalendarClock,
+  Check,
   CheckCircle2,
+  ChevronDown,
   Clock3,
   Edit3,
   FolderKanban,
@@ -47,13 +49,6 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import {
   Sheet,
   SheetContent,
@@ -160,11 +155,100 @@ const statusOptions: Array<ProjectStatus | "All"> = [
   "Cancelled",
 ];
 
+const sortOptions = [
+  { value: "createdAt_desc", label: "Newest" },
+  { value: "createdAt_asc", label: "Oldest" },
+  { value: "dueDate_asc", label: "Due soon" },
+  { value: "earnings_desc", label: "Highest value" },
+  { value: "earnings_asc", label: "Lowest value" },
+] as const satisfies ReadonlyArray<{ value: SortKey; label: string }>;
+
+const dueOptions = [
+  { value: "ALL", label: "Any date" },
+  { value: "This Week", label: "Within 7 days" },
+  { value: "Overdue", label: "Overdue" },
+  { value: "Delivered", label: "Delivered" },
+] as const satisfies ReadonlyArray<{ value: DueFilter; label: string }>;
+
+const billingOptions = [
+  { value: "ALL", label: "All Payments" },
+  { value: "Paid", label: "Collected" },
+  { value: "Unpaid", label: "Needs action" },
+] as const satisfies ReadonlyArray<{
+  value: "ALL" | "Paid" | "Unpaid";
+  label: string;
+}>;
+
+type DashboardMenuOption<T extends string> = {
+  value: T;
+  label: string;
+};
+
+function DashboardDropdown<T extends string>({
+  value,
+  options,
+  onChange,
+  ariaLabel,
+  className,
+  contentClassName,
+}: {
+  value: T;
+  options: ReadonlyArray<DashboardMenuOption<T>>;
+  onChange: (value: T) => void;
+  ariaLabel: string;
+  className?: string;
+  contentClassName?: string;
+}) {
+  const selectedOption = options.find((option) => option.value === value);
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button
+          variant="outline"
+          aria-label={ariaLabel}
+          className={cn(
+            "h-8 w-full justify-between rounded-lg border-[var(--app-border)] bg-[var(--app-control)] px-3 text-[11px] shadow-none",
+            className
+          )}
+        >
+          <span className="truncate">{selectedOption?.label ?? value}</span>
+          <ChevronDown
+            className="size-3.5 shrink-0 text-[var(--app-muted)]"
+            strokeWidth={1.75}
+          />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent
+        align="start"
+        className={cn("min-w-[10rem]", contentClassName)}
+      >
+        {options.map((option) => (
+          <DropdownMenuItem
+            key={option.value}
+            onSelect={() => onChange(option.value)}
+            className="justify-between gap-4"
+          >
+            <span className="truncate">{option.label}</span>
+            <Check
+              className={cn(
+                "size-4 shrink-0",
+                option.value === value ? "opacity-100" : "opacity-0"
+              )}
+              strokeWidth={1.75}
+            />
+          </DropdownMenuItem>
+        ))}
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
+
 /** Minimalist motion: soft settle, never snappy SaaS bounce. */
 const easing = [0.16, 1, 0.3, 1] as const;
 
 const surface =
-  "rounded-[6px] border border-[var(--app-border)] bg-[var(--app-panel)] transition-colors duration-150";
+  "rounded-xl border border-[var(--app-border)] bg-[var(--app-panel)] transition-colors duration-150";
 
 const MotionCard = motion.create(Card);
 
@@ -658,7 +742,7 @@ export function PrecisionDashboard(props: DashboardProps) {
                     onChange={(event) => props.setQuery(event.target.value)}
                     placeholder="Search the project ledger"
                     aria-label="Search dashboard projects"
-                    className="h-9 rounded-md border-[var(--app-border)] bg-[var(--app-panel)] pl-9 text-xs shadow-none focus-visible:border-[var(--app-accent)]"
+                    className="h-9 rounded-lg border-[var(--app-border)] bg-[var(--app-panel)] pl-9 text-xs shadow-none focus-visible:border-[var(--app-accent)]"
                   />
                 </div>
               }
@@ -666,7 +750,7 @@ export function PrecisionDashboard(props: DashboardProps) {
                 <>
                   <Button
                     variant="outline"
-                    className="h-9 rounded-md border-[var(--app-border)] bg-[var(--app-panel)] px-3 text-[11px] shadow-none"
+                    className="h-9 rounded-lg border-[var(--app-border)] bg-[var(--app-panel)] px-3 text-[11px] shadow-none"
                     aria-expanded={showFilters}
                     aria-controls="dashboard-filters"
                     onClick={() => setShowFilters((value) => !value)}
@@ -674,28 +758,14 @@ export function PrecisionDashboard(props: DashboardProps) {
                     <ListFilter className="size-3.5" strokeWidth={1.75} />
                     Filters{activeFilterCount ? ` · ${activeFilterCount}` : ""}
                   </Button>
-                  <Select
+                  <DashboardDropdown
                     value={props.sortKey}
-                    onValueChange={(value) =>
-                      props.setSortKey(value as SortKey)
-                    }
-                  >
-                    <SelectTrigger
-                      aria-label="Sort dashboard projects"
-                      className="h-9 w-[142px] rounded-md border-[var(--app-border)] bg-[var(--app-panel)] text-[11px] shadow-none"
-                    >
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="createdAt_desc">Newest</SelectItem>
-                      <SelectItem value="createdAt_asc">Oldest</SelectItem>
-                      <SelectItem value="dueDate_asc">Due soon</SelectItem>
-                      <SelectItem value="earnings_desc">
-                        Highest value
-                      </SelectItem>
-                      <SelectItem value="earnings_asc">Lowest value</SelectItem>
-                    </SelectContent>
-                  </Select>
+                    options={sortOptions}
+                    onChange={props.setSortKey}
+                    ariaLabel="Sort dashboard projects"
+                    className="h-9 w-[142px] bg-[var(--app-panel)]"
+                    contentClassName="min-w-[142px]"
+                  />
                   {activeFilterCount > 0 || props.query ? (
                     <Button
                       variant="ghost"
@@ -733,99 +803,45 @@ export function PrecisionDashboard(props: DashboardProps) {
                   surface
                 )}
               >
-                <Select
+                <DashboardDropdown
                   value={props.statusFilter}
-                  onValueChange={(value) =>
-                    props.setStatusFilter(value as ProjectStatus | "All")
-                  }
-                >
-                  <SelectTrigger
-                    aria-label="Filter by project status"
-                    className="h-8 rounded-md bg-[var(--app-control)] text-[11px] shadow-none"
-                  >
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {statusOptions.map((value) => (
-                      <SelectItem key={value} value={value}>
-                        {value}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <Select
+                  options={statusOptions.map((value) => ({
+                    value,
+                    label: value,
+                  }))}
+                  onChange={props.setStatusFilter}
+                  ariaLabel="Filter by project status"
+                />
+                <DashboardDropdown
                   value={props.kindFilter}
-                  onValueChange={props.setKindFilter}
-                >
-                  <SelectTrigger
-                    aria-label="Filter by project type"
-                    className="h-8 rounded-md bg-[var(--app-control)] text-[11px] shadow-none"
-                  >
-                    <SelectValue placeholder="All types" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {props.projectTagOptions.map((value) => (
-                      <SelectItem key={value} value={value}>
-                        {value === "ALL" ? "All types" : value}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <Select
+                  options={props.projectTagOptions.map((value) => ({
+                    value,
+                    label: value === "ALL" ? "All types" : value,
+                  }))}
+                  onChange={props.setKindFilter}
+                  ariaLabel="Filter by project type"
+                />
+                <DashboardDropdown
                   value={props.clientFilter}
-                  onValueChange={props.setClientFilter}
-                >
-                  <SelectTrigger
-                    aria-label="Filter by client"
-                    className="h-8 rounded-md bg-[var(--app-control)] text-[11px] shadow-none"
-                  >
-                    <SelectValue placeholder="All clients" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {props.clientOptions.map((value) => (
-                      <SelectItem key={value} value={value}>
-                        {value === "ALL" ? "All clients" : value}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <Select
+                  options={props.clientOptions.map((value) => ({
+                    value,
+                    label: value === "ALL" ? "All clients" : value,
+                  }))}
+                  onChange={props.setClientFilter}
+                  ariaLabel="Filter by client"
+                />
+                <DashboardDropdown
                   value={props.dueFilter}
-                  onValueChange={(value) =>
-                    props.setDueFilter(value as DueFilter)
-                  }
-                >
-                  <SelectTrigger
-                    aria-label="Filter by due date"
-                    className="h-8 rounded-md bg-[var(--app-control)] text-[11px] shadow-none"
-                  >
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="ALL">Any date</SelectItem>
-                    <SelectItem value="This Week">Within 7 days</SelectItem>
-                    <SelectItem value="Overdue">Overdue</SelectItem>
-                    <SelectItem value="Delivered">Delivered</SelectItem>
-                  </SelectContent>
-                </Select>
-                <Select
+                  options={dueOptions}
+                  onChange={props.setDueFilter}
+                  ariaLabel="Filter by due date"
+                />
+                <DashboardDropdown
                   value={props.billingFilter}
-                  onValueChange={(value) =>
-                    props.setBillingFilter(value as "ALL" | "Paid" | "Unpaid")
-                  }
-                >
-                  <SelectTrigger
-                    aria-label="Filter by payment status"
-                    className="h-8 rounded-md bg-[var(--app-control)] text-[11px] shadow-none"
-                  >
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="ALL">All Payments</SelectItem>
-                    <SelectItem value="Paid">Collected</SelectItem>
-                    <SelectItem value="Unpaid">Needs action</SelectItem>
-                  </SelectContent>
-                </Select>
+                  options={billingOptions}
+                  onChange={props.setBillingFilter}
+                  ariaLabel="Filter by payment status"
+                />
               </motion.div>
             ) : null}
           </AnimatePresence>
@@ -840,13 +856,13 @@ export function PrecisionDashboard(props: DashboardProps) {
               ease: easing,
             }}
           >
-            <Card className="overflow-hidden shadow-none">
+            <div className="min-w-0">
               <MetricStrip
                 columns={showSalaryBatch ? 5 : 4}
                 aria-label="Operational pulse"
-                className="gap-0 bg-transparent [&>div:not(:last-child)]:border-b [&>div:not(:last-child)]:border-[var(--app-border)] sm:[&>div]:border-b-0 sm:[&>div:not(:last-child)]:border-r"
+                className="gap-2 bg-transparent"
               >
-                <div className="bg-[var(--app-panel)] px-4 py-3">
+                <div className="rounded-xl border border-[var(--app-border)] bg-[var(--app-panel)] px-4 py-3">
                   <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-[var(--app-muted)]">
                     In motion
                   </p>
@@ -859,7 +875,7 @@ export function PrecisionDashboard(props: DashboardProps) {
                     </span>
                   </div>
                 </div>
-                <div className="bg-[var(--app-panel)] px-4 py-3">
+                <div className="rounded-xl border border-[var(--app-border)] bg-[var(--app-panel)] px-4 py-3">
                   <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-[var(--app-muted)]">
                     Due within 7 days
                   </p>
@@ -872,7 +888,7 @@ export function PrecisionDashboard(props: DashboardProps) {
                     </span>
                   </div>
                 </div>
-                <div className="bg-[var(--app-panel)] px-4 py-3">
+                <div className="rounded-xl border border-[var(--app-border)] bg-[var(--app-panel)] px-4 py-3">
                   <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-[var(--app-muted)]">
                     Waiting reviews
                   </p>
@@ -892,7 +908,7 @@ export function PrecisionDashboard(props: DashboardProps) {
                     </span>
                   </div>
                 </div>
-                <div className="bg-[var(--app-panel)] px-4 py-3">
+                <div className="rounded-xl border border-[var(--app-border)] bg-[var(--app-panel)] px-4 py-3">
                   <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-[var(--app-muted)]">
                     Collected
                   </p>
@@ -915,7 +931,7 @@ export function PrecisionDashboard(props: DashboardProps) {
                   </div>
                 </div>
                 {showSalaryBatch ? (
-                  <div className="bg-[var(--app-panel)] px-4 py-2.5">
+                  <div className="rounded-xl border border-[var(--app-border)] bg-[var(--app-panel)] px-4 py-2.5">
                     <div className="flex items-center justify-between gap-2">
                       <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-[var(--app-muted)]">
                         Salary batch
@@ -961,7 +977,7 @@ export function PrecisionDashboard(props: DashboardProps) {
                   </div>
                 ) : null}
               </MetricStrip>
-            </Card>
+            </div>
           </motion.div>
 
           <motion.div
@@ -983,7 +999,7 @@ export function PrecisionDashboard(props: DashboardProps) {
                     title="Project ledger"
                     count={ledgerProjects.length}
                     icon={FolderKanban}
-                    className="h-full rounded-none"
+                    className="h-full rounded-xl"
                     action={
                       <div className="flex items-center gap-2">
                         <Button
@@ -1259,7 +1275,7 @@ export function PrecisionDashboard(props: DashboardProps) {
                               {activeFilterCount || props.query ? (
                                 <Button
                                   variant="outline"
-                                  className="h-9 rounded-md shadow-none transition-transform active:scale-[0.98]"
+                                  className="h-9 rounded-lg shadow-none transition-transform active:scale-[0.98]"
                                   size="sm"
                                   onClick={clearFilters}
                                 >
@@ -1267,7 +1283,7 @@ export function PrecisionDashboard(props: DashboardProps) {
                                 </Button>
                               ) : null}
                               <Button
-                                className="h-9 rounded-md bg-[var(--app-accent)] text-[var(--app-accent-foreground)] shadow-none hover:bg-[var(--app-accent)]/90"
+                                className="h-9 rounded-lg bg-[var(--app-accent)] text-[var(--app-accent-foreground)] shadow-none hover:bg-[var(--app-accent)]/90"
                                 size="sm"
                                 onClick={props.onNewProject}
                                 disabled={!props.canCreateProjects}
@@ -1544,7 +1560,7 @@ function WorkspaceSection({
             strokeWidth={1.75}
           />
           {typeof count === "number" ? (
-            <span className="rounded-full bg-[var(--app-soft-panel)] px-2 py-0.5 font-mono text-[10px] tabular-nums text-[var(--app-muted)]">
+            <span className="rounded-md bg-[var(--app-soft-panel)] px-2 py-0.5 font-mono text-[10px] tabular-nums text-[var(--app-muted)]">
               {count}
             </span>
           ) : null}
