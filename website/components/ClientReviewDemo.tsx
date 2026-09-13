@@ -1,37 +1,39 @@
 "use client";
 
 import Image from "next/image";
-import { Pause, Play, Volume2, VolumeX } from "lucide-react";
+import { Volume2, VolumeX } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+import AnimatedList from "./react-bits/AnimatedList";
+import ElasticSlider from "./ElasticSlider";
 
 const comments = [
   {
     id: 1,
     author: "Maya Chen",
-    time: "00:07",
+    time: "00:04",
     text: "Can we hold this shot for half a second longer?",
-    seconds: 7,
+    seconds: 4,
   },
   {
     id: 2,
     author: "Jordan Patel",
-    time: "00:16",
+    time: "00:09",
     text: "Love the pace here.",
-    seconds: 16,
+    seconds: 9,
   },
   {
     id: 3,
     author: "Alex Rivera",
-    time: "00:24",
+    time: "00:14",
     text: "Let's brighten the midtones just a touch.",
-    seconds: 24,
+    seconds: 14,
   },
   {
     id: 4,
     author: "Samir Khan",
-    time: "00:38",
+    time: "00:20",
     text: "Can we soften the highlights on the road?",
-    seconds: 38,
+    seconds: 20,
   },
 ] as const;
 
@@ -54,7 +56,7 @@ export default function ClientReviewDemo() {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [commentId, setCommentId] = useState<number | null>(null);
   const [playing, setPlaying] = useState(false);
-  const [muted, setMuted] = useState(true);
+  const [volume, setVolume] = useState(0.7);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [playbackError, setPlaybackError] = useState(false);
@@ -74,6 +76,14 @@ export default function ClientReviewDemo() {
     if (video) syncDuration(video);
   }, []);
 
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    video.volume = volume;
+    video.muted = volume === 0;
+  }, [volume]);
+
   const togglePlayback = async () => {
     const video = videoRef.current;
     if (!video) return;
@@ -91,12 +101,21 @@ export default function ClientReviewDemo() {
     }
   };
 
-  const selectComment = (id: number, seconds: number) => {
+  const selectComment = async (id: number, seconds: number) => {
     const video = videoRef.current;
     const nextTime = clampTime(seconds, duration || video?.duration || 0);
     setCommentId(id);
     setCurrentTime(nextTime);
-    if (video && Number.isFinite(nextTime)) video.currentTime = nextTime;
+    if (!video || !Number.isFinite(nextTime)) return;
+
+    setPlaybackError(false);
+    video.currentTime = nextTime;
+    try {
+      await video.play();
+    } catch {
+      setPlaying(false);
+      setPlaybackError(true);
+    }
   };
 
   const seek = (seconds: number) => {
@@ -136,76 +155,100 @@ export default function ClientReviewDemo() {
         </div>
         <div className="review-room-grid">
           <div className="review-player">
-            <video
-              aria-label="Sample client review video"
-              ref={videoRef}
-              src="/videos/client-review-city.mp4"
-              preload="metadata"
-              playsInline
-              muted={muted}
-              onPlay={() => {
-                setPlaybackError(false);
-                setPlaying(true);
+            <div
+              className="review-video-stage"
+              role="button"
+              tabIndex={0}
+              aria-label={playing ? "Pause video" : "Play video"}
+              onClick={() => void togglePlayback()}
+              onKeyDown={(event) => {
+                if (event.key === "Enter" || event.key === " ") {
+                  event.preventDefault();
+                  void togglePlayback();
+                }
               }}
-              onPause={() => setPlaying(false)}
-              onEnded={() => setPlaying(false)}
-              onError={() => {
-                setPlaying(false);
-                setPlaybackError(true);
-              }}
-              onTimeUpdate={(event) => {
-                const video = event.currentTarget;
-                // Some browsers report duration=0 for loadedmetadata and only
-                // expose the real value after playback starts.
-                syncDuration(video);
-                const nextTime = clampTime(video.currentTime, video.duration);
-                setCurrentTime(nextTime);
-              }}
-              onLoadedMetadata={(event) => syncDuration(event.currentTarget)}
-              onDurationChange={(event) => syncDuration(event.currentTarget)}
-              onCanPlay={(event) => syncDuration(event.currentTarget)}
-            />
-            {comment && (
-              <div className="frame-note">
-                <span>
-                  {comment.time} · {comment.author}
-                </span>
-                {comment.text}
-              </div>
-            )}
-            <div className="review-controls">
-              <button
-                type="button"
-                onClick={() => void togglePlayback()}
-                aria-label={playing ? "Pause video" : "Play video"}
-              >
-                {playing ? <Pause size={16} /> : <Play size={16} />}
-              </button>
-              <button
-                type="button"
-                onClick={() => setMuted((value) => !value)}
-                aria-label={muted ? "Unmute video" : "Mute video"}
-              >
-                {muted ? <VolumeX size={16} /> : <Volume2 size={16} />}
-              </button>
-              <span>{formatTime(currentTime)}</span>
-              <input
-                type="range"
-                min={0}
-                max={duration > 0 ? duration : 1}
-                step={0.1}
-                value={Math.min(currentTime, duration > 0 ? duration : 1)}
-                disabled={duration <= 0}
-                aria-label="Video position"
-                onChange={(event) => seek(Number(event.currentTarget.value))}
+            >
+              <video
+                aria-label="Sample client review video"
+                ref={videoRef}
+                src="/videos/client-review-city.mp4"
+                preload="metadata"
+                playsInline
+                muted={volume === 0}
+                onPlay={() => {
+                  setPlaybackError(false);
+                  setPlaying(true);
+                }}
+                onPause={() => setPlaying(false)}
+                onEnded={() => setPlaying(false)}
+                onError={() => {
+                  setPlaying(false);
+                  setPlaybackError(true);
+                }}
+                onTimeUpdate={(event) => {
+                  const video = event.currentTarget;
+                  // Some browsers report duration=0 for loadedmetadata and only
+                  // expose the real value after playback starts.
+                  syncDuration(video);
+                  const nextTime = clampTime(video.currentTime, video.duration);
+                  setCurrentTime(nextTime);
+                  const timedComment = comments.findLast(
+                    (item) => nextTime >= item.seconds
+                  );
+                  setCommentId(timedComment?.id ?? null);
+                }}
+                onSeeked={(event) =>
+                  setCurrentTime(
+                    clampTime(
+                      event.currentTarget.currentTime,
+                      event.currentTarget.duration
+                    )
+                  )
+                }
+                onLoadedMetadata={(event) => syncDuration(event.currentTarget)}
+                onDurationChange={(event) => syncDuration(event.currentTarget)}
+                onCanPlay={(event) => syncDuration(event.currentTarget)}
               />
-              <span>{formatTime(duration)}</span>
+              {comment && (
+                <div className="frame-note">
+                  <span>
+                    {comment.time} · {comment.author}
+                  </span>
+                  {comment.text}
+                </div>
+              )}
+              <div className="review-controls">
+                <span>{formatTime(currentTime)}</span>
+                <input
+                  type="range"
+                  min={0}
+                  max={duration > 0 ? duration : 1}
+                  step={0.1}
+                  value={Math.min(currentTime, duration > 0 ? duration : 1)}
+                  disabled={duration <= 0}
+                  aria-label="Video position"
+                  onClick={(event) => event.stopPropagation()}
+                  onChange={(event) => seek(Number(event.currentTarget.value))}
+                />
+                <span>{formatTime(duration)}</span>
+              </div>
+              {playbackError && (
+                <p role="status" aria-live="polite">
+                  The video could not be played. Try again.
+                </p>
+              )}
             </div>
-            {playbackError && (
-              <p role="status" aria-live="polite">
-                The video could not be played. Try again.
-              </p>
-            )}
+            <div className="review-volume" aria-label="Video volume">
+              <span className="review-volume-label">Volume</span>
+              <ElasticSlider
+                className="review-volume-slider"
+                defaultValue={volume * 100}
+                maxValue={100}
+                leftIcon={<VolumeX size={14} />}
+                rightIcon={<Volume2 size={14} />}
+                onValueChange={(value) => setVolume(value / 100)}
+              />
+            </div>
           </div>
           <aside
             className="review-comments"
@@ -215,21 +258,32 @@ export default function ClientReviewDemo() {
               <span>Comments</span>
               <small>{comments.length} open</small>
             </header>
-            {comments.map((item) => (
-              <button
-                className={commentId === item.id ? "is-active" : ""}
-                key={item.id}
-                type="button"
-                aria-pressed={commentId === item.id}
-                onClick={() => selectComment(item.id, item.seconds)}
-              >
-                <span>
-                  {item.author}
-                  <small>{item.time}</small>
-                </span>
-                <p>{item.text}</p>
-              </button>
-            ))}
+            <AnimatedList
+              className="review-comment-list"
+              items={comments}
+              selectedIndex={comments.findIndex(
+                (item) => item.id === commentId
+              )}
+              getKey={(item) => item.id}
+              onItemSelect={(item) => void selectComment(item.id, item.seconds)}
+              renderItem={(item, _index, selected) => (
+                <button
+                  className={selected ? "is-active" : ""}
+                  type="button"
+                  aria-current={selected ? "true" : undefined}
+                  onClick={() => void selectComment(item.id, item.seconds)}
+                >
+                  <span>
+                    {item.author}
+                    <small>
+                      {selected && playing ? "Playing · " : ""}
+                      {item.time}
+                    </small>
+                  </span>
+                  <p>{item.text}</p>
+                </button>
+              )}
+            />
           </aside>
         </div>
       </div>

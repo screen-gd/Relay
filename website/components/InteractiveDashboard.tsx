@@ -3,14 +3,24 @@
 import Image from "next/image";
 import {
   ArrowRight,
+  BarChart3,
+  Bell,
+  BookOpen,
   CalendarDays,
   CheckCircle2,
+  ClipboardCheck,
+  FileText,
   FolderKanban,
+  Images,
   LayoutGrid,
   MessageSquare,
+  PanelLeftClose,
   Plus,
   Search,
+  Settings,
   SlidersHorizontal,
+  Sparkles,
+  Users,
   Workflow,
 } from "lucide-react";
 import { useMemo, useState } from "react";
@@ -112,13 +122,26 @@ const teamActivity = [
   "Maya delivered Field Notes episode 12",
 ];
 
-const sidebarItems = [
-  { label: "Dashboard demo", icon: LayoutGrid, href: "#product" },
-  { label: "Projects", icon: FolderKanban, href: "#demo-projects" },
-  { label: "Workflow demo", icon: Workflow, href: "#workflow" },
-  { label: "Client review demo", icon: MessageSquare, href: "#client-review" },
-  { label: "Activity and deadlines", icon: CalendarDays, href: "#proof" },
-];
+const sidebarGroups = [
+  [
+    { label: "Dashboard demo", icon: LayoutGrid, href: "#product" },
+    { label: "Schedule", icon: CalendarDays, href: "#proof" },
+    { label: "Workflow demo", icon: Workflow, href: "#workflow" },
+  ],
+  [
+    { label: "Projects", icon: FolderKanban, href: "#demo-projects" },
+    { label: "Clients", icon: Users, href: "#client-review" },
+    { label: "Client feedback", icon: MessageSquare, href: "#client-review" },
+    { label: "Project files", icon: FileText, href: "#delivery" },
+    { label: "Media library", icon: Images, href: "#delivery" },
+    { label: "Approvals", icon: ClipboardCheck, href: "#client-review" },
+  ],
+  [
+    { label: "Resources", icon: BookOpen, href: "#proof" },
+    { label: "Automation", icon: Sparkles, href: "#workflow" },
+    { label: "Reports", icon: BarChart3, href: "#proof" },
+  ],
+] as const;
 
 const currency = new Intl.NumberFormat("en-US", {
   style: "currency",
@@ -209,27 +232,45 @@ export default function InteractiveDashboard() {
       <aside className="demo-sidebar" aria-label="Workspace sections">
         <span className="demo-app-mark" aria-hidden="true">
           <Image
-            src="/brand/relay/mark-accent.svg"
+            src="/brand/relay/mark-white.svg"
             width={20}
             height={20}
             alt=""
           />
         </span>
         <nav>
-          {sidebarItems.map((item) => {
-            const Icon = item.icon;
-            return (
-              <a
-                key={item.label}
-                href={item.href}
-                aria-label={item.label}
-                title={item.label}
-              >
-                <Icon size={15} strokeWidth={1.7} />
-              </a>
-            );
-          })}
+          {sidebarGroups.map((group, groupIndex) => (
+            <div className="demo-sidebar-group" key={groupIndex}>
+              {group.map((item, itemIndex) => {
+                const Icon = item.icon;
+                return (
+                  <a
+                    className={
+                      groupIndex === 0 && itemIndex === 0 ? "is-active" : ""
+                    }
+                    key={item.label}
+                    href={item.href}
+                    aria-label={item.label}
+                    title={item.label}
+                  >
+                    <Icon size={15} strokeWidth={1.7} />
+                  </a>
+                );
+              })}
+            </div>
+          ))}
         </nav>
+        <a
+          className="demo-settings"
+          href="#pricing"
+          aria-label="Settings"
+          title="Settings"
+        >
+          <Settings size={15} strokeWidth={1.7} />
+        </a>
+        <span className="demo-sidebar-collapse" aria-hidden="true">
+          <PanelLeftClose size={14} strokeWidth={1.7} />
+        </span>
       </aside>
 
       <div className="demo-workspace">
@@ -250,6 +291,13 @@ export default function InteractiveDashboard() {
             />
           </label>
           <div className="demo-top-actions">
+            <button
+              className="demo-icon-button"
+              type="button"
+              aria-label="Notifications"
+            >
+              <Bell size={14} />
+            </button>
             <button type="button" onClick={createProject}>
               <Plus size={14} />
               Quick create
@@ -260,11 +308,7 @@ export default function InteractiveDashboard() {
         <div className="demo-main">
           <section className="demo-dashboard-heading">
             <div>
-              <h3>Explore a sample workspace.</h3>
-              <p>
-                Search or filter projects, select a row, or create a sample
-                project.
-              </p>
+              <h3>Good to see you, Screen.</h3>
             </div>
             <div className="demo-ledger-tools">
               <label>
@@ -346,7 +390,7 @@ export default function InteractiveDashboard() {
 
           <section className="demo-metrics" aria-label="Production metrics">
             <div>
-              <span>In progress</span>
+              <span>In motion</span>
               <b>
                 {
                   projects.filter((project) => project.status === "In progress")
@@ -356,14 +400,14 @@ export default function InteractiveDashboard() {
               <small>of {projects.length} projects</small>
             </div>
             <div>
-              <span>Due May 5 to 11</span>
+              <span>Due within 7 days</span>
               <b>{upcomingProjects}</b>
-              <small>upcoming deliveries</small>
+              <small>upcoming handoffs</small>
             </div>
             <div>
               <span>Waiting reviews</span>
               <b>{waitingReviews}</b>
-              <small>awaiting action</small>
+              <small>awaiting client action</small>
             </div>
             <div>
               <span>Collected</span>
@@ -371,9 +415,28 @@ export default function InteractiveDashboard() {
               <small>{currency.format(outstanding)} due</small>
             </div>
             <div>
-              <span>Delivered</span>
+              <span>Salary batch</span>
               <b>{deliveredProjects}</b>
-              <small>completed projects</small>
+              <small>/ {projects.length} edits</small>
+              <strong className="demo-batch-percent">
+                {Math.round((deliveredProjects / projects.length) * 100)}%
+              </strong>
+              <button
+                className="demo-payment-button"
+                type="button"
+                onClick={() =>
+                  setNotice("Sample salary batch marked for payment")
+                }
+              >
+                Mark payment
+              </button>
+              <i className="demo-batch-progress" aria-hidden="true">
+                <b
+                  style={{
+                    width: `${(deliveredProjects / projects.length) * 100}%`,
+                  }}
+                />
+              </i>
             </div>
           </section>
 
