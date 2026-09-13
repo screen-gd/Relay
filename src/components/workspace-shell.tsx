@@ -378,12 +378,12 @@ export function WorkspaceShell({
       >
         <header
           className={cn(
-            "fixed inset-x-0 top-0 z-30 flex h-12 items-center bg-[var(--app-sidebar)] px-2.5 transition-[left] ease-[cubic-bezier(0.22,1,0.36,1)] lg:justify-between lg:px-3",
+            "fixed inset-x-0 top-0 z-30 flex h-[54px] items-center bg-[var(--app-sidebar)] px-2.5 transition-[left] ease-[cubic-bezier(0.22,1,0.36,1)] lg:justify-between lg:px-3",
             reduceMotion ? "duration-0" : "duration-[220ms]",
             collapsed ? "lg:left-[52px]" : "lg:left-[216px]"
           )}
         >
-          <div className="flex min-w-0 flex-1 items-center gap-2 lg:flex-none">
+          <div className="flex h-full min-w-0 flex-1 items-center gap-2 lg:flex-none">
             <RelayBrand compact className="lg:hidden" />
             <p className="truncate text-sm font-semibold lg:hidden">{title}</p>
             <p
@@ -402,7 +402,7 @@ export function WorkspaceShell({
 
           <Button
             variant="outline"
-            className="fixed inset-x-0 top-1.5 mx-auto hidden h-9 w-[220px] justify-start rounded-lg border-[var(--app-border)] bg-[var(--app-control)] px-2.5 text-xs text-[var(--app-muted)] shadow-none hover:bg-[var(--app-hover)] lg:flex"
+            className="absolute left-1/2 top-1/2 hidden h-9 w-[220px] -translate-x-1/2 -translate-y-1/2 justify-start rounded-lg border-[var(--app-border)] !bg-[var(--app-control)] px-2.5 text-xs text-[var(--app-muted)] shadow-none hover:bg-[var(--app-hover)] lg:flex"
             onClick={openCommand}
             aria-label="Quick Search (Ctrl K)"
           >
@@ -413,7 +413,7 @@ export function WorkspaceShell({
             </kbd>
           </Button>
 
-          <div className="ml-3 flex items-center gap-1.5 lg:ml-0">
+          <div className="ml-3 flex h-9 items-center gap-1.5 lg:ml-0">
             <Button
               variant="ghost"
               size="icon"
@@ -453,7 +453,7 @@ export function WorkspaceShell({
           data-testid="workspace-content-surface"
           tabIndex={-1}
           className={cn(
-            "workspace-scrollbar-hidden h-[calc(100dvh_-_68px_-_env(safe-area-inset-bottom))] overflow-y-auto bg-[var(--app-canvas)] pt-12 outline-none lg:fixed lg:bottom-1.5 lg:right-1.5 lg:top-[54px] lg:h-auto lg:min-h-0 lg:overscroll-contain lg:rounded-2xl lg:border lg:border-[var(--app-border)] lg:pt-0 lg:transition-[left] lg:ease-[cubic-bezier(0.22,1,0.36,1)]",
+            "workspace-scrollbar-hidden h-[calc(100dvh_-_68px_-_env(safe-area-inset-bottom))] overflow-y-auto bg-[var(--app-canvas)] pt-12 outline-none lg:fixed lg:bottom-1.5 lg:right-1.5 lg:top-[54px] lg:h-auto lg:min-h-0 lg:overscroll-contain lg:rounded-2xl lg:border-x lg:border-b lg:border-[var(--app-border)] lg:pt-0 lg:transition-[left] lg:ease-[cubic-bezier(0.22,1,0.36,1)]",
             reduceMotion ? "lg:duration-0" : "lg:duration-[220ms]",
             collapsed ? "lg:left-[58px]" : "lg:left-[222px]"
           )}
@@ -539,7 +539,7 @@ function DesktopSidebar({
     >
       <div
         className={cn(
-          "grid h-12 grid-cols-1 items-center justify-items-center bg-[var(--app-sidebar)] px-1.5"
+          "grid h-[54px] grid-cols-1 items-center justify-items-center bg-[var(--app-sidebar)] px-1.5"
         )}
       >
         <div
