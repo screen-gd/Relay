@@ -124,22 +124,22 @@ const teamActivity = [
 
 const sidebarGroups = [
   [
-    { label: "Dashboard demo", icon: LayoutGrid, href: "#product" },
-    { label: "Schedule", icon: CalendarDays, href: "#proof" },
-    { label: "Workflow demo", icon: Workflow, href: "#workflow" },
+    { label: "Dashboard demo", icon: LayoutGrid },
+    { label: "Schedule", icon: CalendarDays },
+    { label: "Workflow demo", icon: Workflow },
   ],
   [
-    { label: "Projects", icon: FolderKanban, href: "#demo-projects" },
-    { label: "Clients", icon: Users, href: "#client-review" },
-    { label: "Client feedback", icon: MessageSquare, href: "#client-review" },
-    { label: "Project files", icon: FileText, href: "#delivery" },
-    { label: "Media library", icon: Images, href: "#delivery" },
-    { label: "Approvals", icon: ClipboardCheck, href: "#client-review" },
+    { label: "Projects", icon: FolderKanban },
+    { label: "Clients", icon: Users },
+    { label: "Client feedback", icon: MessageSquare },
+    { label: "Project files", icon: FileText },
+    { label: "Media library", icon: Images },
+    { label: "Approvals", icon: ClipboardCheck },
   ],
   [
-    { label: "Resources", icon: BookOpen, href: "#proof" },
-    { label: "Automation", icon: Sparkles, href: "#workflow" },
-    { label: "Reports", icon: BarChart3, href: "#proof" },
+    { label: "Resources", icon: BookOpen },
+    { label: "Automation", icon: Sparkles },
+    { label: "Reports", icon: BarChart3 },
   ],
 ] as const;
 
@@ -165,6 +165,7 @@ export default function InteractiveDashboard() {
     "Recent"
   );
   const [selectedId, setSelectedId] = useState(seedProjects[0].id);
+  const [activeSidebarItem, setActiveSidebarItem] = useState("Dashboard demo");
   const [notice, setNotice] = useState("");
 
   const visibleProjects = useMemo(() => {
@@ -241,33 +242,36 @@ export default function InteractiveDashboard() {
         <nav>
           {sidebarGroups.map((group, groupIndex) => (
             <div className="demo-sidebar-group" key={groupIndex}>
-              {group.map((item, itemIndex) => {
+              {group.map((item) => {
                 const Icon = item.icon;
+                const isActive = item.label === activeSidebarItem;
                 return (
-                  <a
-                    className={
-                      groupIndex === 0 && itemIndex === 0 ? "is-active" : ""
-                    }
+                  <button
+                    className={isActive ? "is-active" : ""}
                     key={item.label}
-                    href={item.href}
+                    type="button"
                     aria-label={item.label}
+                    aria-pressed={isActive}
                     title={item.label}
+                    onClick={() => setActiveSidebarItem(item.label)}
                   >
                     <Icon size={15} strokeWidth={1.7} />
-                  </a>
+                  </button>
                 );
               })}
             </div>
           ))}
         </nav>
-        <a
+        <button
           className="demo-settings"
-          href="#pricing"
+          type="button"
           aria-label="Settings"
+          aria-pressed={activeSidebarItem === "Settings"}
           title="Settings"
+          onClick={() => setActiveSidebarItem("Settings")}
         >
           <Settings size={15} strokeWidth={1.7} />
-        </a>
+        </button>
         <span className="demo-sidebar-collapse" aria-hidden="true">
           <PanelLeftClose size={14} strokeWidth={1.7} />
         </span>
@@ -550,9 +554,12 @@ export default function InteractiveDashboard() {
                       : currency.format(selectedProject.value)}
                   </b>
                 </span>
-                <a href="#workflow">
+                <button
+                  type="button"
+                  onClick={() => setNotice("Workflow preview opened")}
+                >
                   View workflow <ArrowRight size={14} />
-                </a>
+                </button>
               </div>
             </aside>
           ) : (

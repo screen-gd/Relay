@@ -184,12 +184,14 @@ export default function SpecularButton(props: SpecularButtonProps) {
     }
     const gl = renderer.gl;
     let contextLost = false;
+    let hasRendered = false;
     const handleContextLost = (event: Event) => {
       event.preventDefault();
       contextLost = true;
     };
     gl.canvas.addEventListener("webglcontextlost", handleContextLost, false);
     gl.clearColor(0, 0, 0, 0);
+    gl.canvas.style.opacity = "0";
     gl.enable(gl.BLEND);
     gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
 
@@ -324,6 +326,10 @@ export default function SpecularButton(props: SpecularButtonProps) {
       program.uniforms.uShineFade.value = (current.shineFade * Math.PI) / 180;
       program.uniforms.uThickness.value = current.thickness * dpr;
       renderer.render({ scene: mesh });
+      if (!hasRendered) {
+        hasRendered = true;
+        gl.canvas.style.opacity = "1";
+      }
 
       if (
         current.autoAnimate ||
@@ -337,6 +343,7 @@ export default function SpecularButton(props: SpecularButtonProps) {
 
     return () => {
       if (frame !== null) cancelAnimationFrame(frame);
+      gl.canvas.style.opacity = "0";
       resizeObserver.disconnect();
       button.removeEventListener("pointermove", handlePointerMove);
       window.removeEventListener("scroll", resize);

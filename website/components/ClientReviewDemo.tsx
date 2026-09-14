@@ -84,6 +84,23 @@ export default function ClientReviewDemo() {
     video.muted = volume === 0;
   }, [volume]);
 
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (!entry?.isIntersecting || entry.intersectionRatio < 0.35) {
+          video.pause();
+        }
+      },
+      { threshold: [0, 0.35, 0.75] }
+    );
+
+    observer.observe(video);
+    return () => observer.disconnect();
+  }, []);
+
   const togglePlayback = async () => {
     const video = videoRef.current;
     if (!video) return;
@@ -109,6 +126,7 @@ export default function ClientReviewDemo() {
     if (!video || !Number.isFinite(nextTime)) return;
 
     setPlaybackError(false);
+    video.pause();
     video.currentTime = nextTime;
     try {
       await video.play();
