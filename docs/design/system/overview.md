@@ -34,5 +34,3 @@ Keep local, sample, and cloud modes; current routes and aliases; theme, accent, 
 - Shared primitives have documented keyboard and state behavior.
 - Every route family links to a feature contract.
 - Existing UI and browser checks pass after each slice.
-
-Source: [best practices](../../research/frontend-ui-best-practices-2026.md) and [audit](../current-frontend-audit.md).

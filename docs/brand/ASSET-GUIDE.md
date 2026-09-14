@@ -25,6 +25,6 @@ The minimum supported mark and favicon size is 16 x 16 pixels. Do not render the
 
 The same generated files live in `public/brand/relay` and `website/public/brand/relay` because the app and marketing site build separately. The build script keeps both copies identical.
 
-## Runtime adoption
+## Runtime use
 
-Ticket 01 does not switch runtime branding. Ticket 03 will map the marketing favicon and 1600 x 900 social metadata to this pack. Ticket 04 will map the app's 32 and 64 pixel browser icons, 256 pixel Apple icon, and 192, 512, and 1024 pixel manifest icons. Until then, verification checks both the current references and the prepared Relay files.
+Both the app and marketing site use this asset pack for headers, metadata, favicons, and install icons. Keep those references on the generated files instead of adding route-specific copies.

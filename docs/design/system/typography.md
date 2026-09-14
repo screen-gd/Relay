@@ -33,5 +33,3 @@ Keep current product fonts and font loading. Preserve code, comments, descriptio
 - Typography tokens cover every route family.
 - 200% zoom retains all content and controls.
 - Long labels and translated-like strings wrap without overlap.
-
-Source: [best practices](../../research/frontend-ui-best-practices-2026.md).

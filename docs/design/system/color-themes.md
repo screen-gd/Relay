@@ -35,5 +35,3 @@ Keep theme, accent, and stored preference boot behavior and existing brand asset
 - Token audit finds no raw feature colors.
 - Light, dark, and accent captures pass contrast checks.
 - Status remains clear in grayscale and with assistive text.
-
-Source: [best practices](../../research/frontend-ui-best-practices-2026.md) and [brand system](../DESIGN_SYSTEM.md).

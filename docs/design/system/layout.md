@@ -34,4 +34,4 @@ Keep `WorkspaceShell`, command search, account and notification actions, route l
 - Sticky controls never cover focused content.
 - Each page uses an approved layout pattern and unique title/h1.
 
-Source: [best practices](../../research/frontend-ui-best-practices-2026.md) and [workspace-page architecture](../../architecture/workspace-page-system.md).
+Related: [workspace-page architecture](../../architecture/workspace-page-system.md).

@@ -60,7 +60,7 @@ Describe the checks you ran in the pull request. Include clear reproduction and 
 
 ## Code Style
 
-- Follow the existing Next.js, React, TypeScript, Material UI, and Convex patterns.
+- Follow the existing Next.js, React, TypeScript, Tailwind, owned Radix UI, and Convex patterns.
 - Keep TypeScript strict and avoid `any` where a precise type is available.
 - Read `convex/_generated/ai/guidelines.md` before changing Convex code.
 - Derive authorization from the authenticated Convex identity; do not trust client-provided user IDs.

@@ -13,7 +13,6 @@ Relay is a video workflow workspace designed first for freelance video editors. 
 - Build the symbol from three measured geometric curves moving left to right into one compact solid form, using negative space to separate the paths.
 - Keep the symbol free-standing and use controlled asymmetry.
 - Avoid literal play buttons, film strips, cameras, timelines, chain links, arrows, and lightning bolts. An `R` monogram may be explored when it feels simple and ownable.
-- Do not preserve the old mark for recognition. Relay has no existing users.
 
 ## Logo system
 
@@ -41,4 +40,4 @@ The circular concept was selected on 29 August 2026. Its authoritative vector so
 
 Option B, "Product proof," was selected on 30 August 2026. The marketing homepage must lead with a concise centered promise, show a credible Relay workspace above the fold, and follow it with four short workflow principles. On mobile, reduce the workspace preview to a focused project queue instead of shrinking the desktop dashboard.
 
-Ticket 03 may use React Bits as a source for selected marketing interactions. Add components one at a time and keep their source inside the marketing package. Do not add gradients, glow, continuous animation, or effects that fail reduced-motion, keyboard, contrast, or mobile performance checks.
+Keep marketing interactions local to the marketing package. Do not add gradients, glow, continuous animation, or effects that fail reduced-motion, keyboard, contrast, or mobile performance checks.

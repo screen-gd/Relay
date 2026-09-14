@@ -33,5 +33,3 @@ Keep current empty illustrations, Sonner toasts, local/cloud fallback, sample mo
 - Every route has loading, empty, error, and permission fixtures.
 - Status is understandable without color.
 - Recoverable errors retain user input and offer retry.
-
-Source: [best practices](../../research/frontend-ui-best-practices-2026.md) and [audit](../current-frontend-audit.md).
