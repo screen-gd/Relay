@@ -33,5 +33,3 @@ Keep Motion transitions, reduced-motion hooks, command shortcuts, toast notifica
 - Every mutation reports pending and result.
 - Destructive actions offer cancel and recoverable errors.
 - Keyboard, touch, reduced-motion, and screen-reader paths pass.
-
-Source: [best practices](../../research/frontend-ui-best-practices-2026.md).

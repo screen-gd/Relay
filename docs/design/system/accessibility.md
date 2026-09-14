@@ -33,5 +33,3 @@ Keep current skip link, focus-visible styles, reduced-motion support, Radix prim
 - Keyboard-only pass covers navigation, search, CRUD, filters, tables, sheets, dialogs, and settings.
 - Screen-reader pass covers names, headings, landmarks, status, errors, and chart alternatives.
 - Automated checks plus desktop/mobile light/dark/reduced-motion captures pass.
-
-Source: [best practices](../../research/frontend-ui-best-practices-2026.md).

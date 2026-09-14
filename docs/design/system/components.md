@@ -33,5 +33,3 @@ Keep current shadcn/Radix, Lucide, TanStack Table, Recharts, Sonner, and Motion 
 - Story or fixture coverage shows all interactive states.
 - Keyboard paths and focus return work for menus, dialogs, sheets, tabs, and grids.
 - No feature component uses raw color constants.
-
-Source: [best practices](../../research/frontend-ui-best-practices-2026.md).

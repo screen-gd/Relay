@@ -147,16 +147,6 @@ const cutoutIsVisible = await page
   );
 if (!cutoutIsVisible)
   throw new Error("The Relay negative-space cut collapsed at 16 pixels.");
-const evidenceDirectory = resolve(
-  root,
-  ".scratch/relay-brand-rollout/evidence"
-);
-await import("node:fs/promises").then(({ mkdir }) =>
-  mkdir(evidenceDirectory, { recursive: true })
-);
-await page.screenshot({
-  path: resolve(evidenceDirectory, "01-relay-mark-16px-light-dark.png"),
-});
 await browser.close();
 
 console.log(

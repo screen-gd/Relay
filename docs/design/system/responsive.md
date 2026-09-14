@@ -33,5 +33,3 @@ Keep mobile project inspector sheets, responsive media/project layouts, calendar
 - No accidental page-level horizontal scroll below 400px.
 - Every feature has a tested small-screen action path.
 - Data tables announce their scroll or prioritized alternative.
-
-Source: [best practices](../../research/frontend-ui-best-practices-2026.md) and [competitor patterns](../../research/competitor-ui-patterns-2026.md).

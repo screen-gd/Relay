@@ -33,5 +33,3 @@ Keep existing hrefs, grouped navigation, `G` route chords, command dialog, accou
 - Every current route remains reachable by link and command search.
 - Active state survives refresh and direct deep links.
 - Keyboard and screen-reader users can open, navigate, and close mobile navigation.
-
-Source: [best practices](../../research/frontend-ui-best-practices-2026.md) and [competitor patterns](../../research/competitor-ui-patterns-2026.md).

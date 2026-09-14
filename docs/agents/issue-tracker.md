@@ -24,3 +24,5 @@ GitHub remains the source remote and pull-request host. Local tickets exist beca
 - Blocking: `Blocked by: NN, NN` near the top.
 - Claim: set `Status: claimed` before work.
 - Resolve: add `## Answer`, set `Status: resolved`, then add a short link to the map.
+
+Remove a completed effort after its durable decisions have moved into `CONTEXT.md`, `docs/adr/`, or the relevant product or architecture document. Git history remains the archive; `.scratch/` is only for active work.

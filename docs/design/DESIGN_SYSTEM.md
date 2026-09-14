@@ -30,13 +30,13 @@ This index defines the unified UI contract for the Relay workspace. It keeps the
 - [Profiles and portals](features/profiles-portals.md)
 - [Access and support](features/access-support.md)
 
-The research basis is [frontend UI best practices](../research/frontend-ui-best-practices-2026.md), [competitor UI patterns](../research/competitor-ui-patterns-2026.md), and the [current frontend audit](current-frontend-audit.md). The current implementation order and acceptance gates live in the [legacy retirement spec](../../.scratch/legacy-retirement/spec.md).
+The remaining implementation work and acceptance gates live in the [legacy retirement spec](../../.scratch/legacy-retirement/spec.md).
 
 ---
 
 ## Existing brand foundations
 
-The brand-kit images in `assets/` are the visual source of truth. Product code should consume the shared tokens and components rather than copying color or typography values into individual routes.
+The approved assets in [`docs/brand`](../brand/ASSET-GUIDE.md) define the visual identity. Product code should consume shared tokens and components instead of copying color or typography values into individual routes.
 
 ## Reference-board foundations
 

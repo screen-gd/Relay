@@ -33,5 +33,3 @@ Keep the user density setting, current 4/8 rhythm, compact production tables, an
 - Compact mode does not hide columns, actions, or focus rings.
 - Target-size and zoom checks pass.
 - Spacing uses tokens rather than route-local values.
-
-Source: [best practices](../../research/frontend-ui-best-practices-2026.md) and [audit](../current-frontend-audit.md).
