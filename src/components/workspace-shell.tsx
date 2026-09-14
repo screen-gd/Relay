@@ -26,7 +26,7 @@ import { motion } from "motion/react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
-import { useClerk, useUser } from "@clerk/nextjs";
+import { useAppAuth } from "@/lib/auth-context";
 import { useData } from "@/lib/data-context";
 import type { SettingsState } from "@/lib/types";
 import { useHydratedReducedMotion } from "@/lib/motion";
@@ -493,8 +493,7 @@ function SidebarRoute({
 
 function ProfileMenu({ settings, collapsed, page }: { settings: SettingsState; collapsed: boolean; page: ShellPage }) {
   const { isAuthEnabled } = useData();
-  const { isSignedIn } = useUser();
-  const { openSignIn, openSignUp, signOut } = useClerk();
+  const { isSignedIn, openSignIn, openSignUp, signOut } = useAppAuth();
   const [open, setOpen] = useState(false);
   const reduceMotion = useHydratedReducedMotion();
   const name = settings.profileName || "Your profile";

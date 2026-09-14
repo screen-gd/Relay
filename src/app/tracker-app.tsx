@@ -2,7 +2,7 @@
 
 import { createContext, useCallback, useContext, useEffect, useId, useMemo, useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
-import { UserProfile, useUser, useClerk } from "@clerk/nextjs";
+import { UserProfile } from "@clerk/nextjs";
 import { useConvexAuth, useMutation, useQuery } from "convex/react";
 import { useData } from "@/lib/data-context";
 import { api } from "../../convex/_generated/api";
@@ -137,6 +137,8 @@ import { PrecisionProjects } from "@/components/precision-projects";
 import { PrecisionCalendar, PrecisionTimeline } from "@/components/precision-schedule";
 import { PrecisionClients, PrecisionFeedback, PrecisionReports } from "@/components/precision-workspaces";
 import { PrecisionMedia } from "@/components/precision-media";
+import { PrecisionSettings } from "@/components/precision-settings";
+import { useAppAuth } from "@/lib/auth-context";
 
 const defaultProjectTags = ["Job / Salary", "Freelance", "Personal Channel"];
 const defaultSalaryWorkType = "Job / Salary";
@@ -447,7 +449,7 @@ export function TrackerApp({ page }: { page: PageKey }) {
     reconcileSalaryBatches,
     updateSalaryBatchPayment,
   } = useData();
-  const { openSignIn, openSignUp } = useClerk();
+  const { openSignIn, openSignUp } = useAppAuth();
   const { isAuthenticated: isConvexAuthenticated, isLoading: isConvexAuthLoading } = useConvexAuth();
   const shouldLoadTeamPermissions = Boolean(isSignedIn && isConvexAuthenticated);
   const teamData = useQuery(api.team.getMyWorkspace, shouldLoadTeamPermissions ? {} : "skip");
@@ -927,7 +929,34 @@ export function TrackerApp({ page }: { page: PageKey }) {
   ) : page === "team-chat" ? (
     <TeamChatPage />
   ) : page === "settings" ? (
-    <SettingsDesignPage settings={settings} setSettings={setSettings} onNewProject={openNewProject} notify={notify} />
+    <PrecisionSettings
+      settings={settings}
+      setSettings={setSettings}
+      notify={notify}
+      onReset={() => {
+        setSettings({
+          ...defaultSettings,
+          customClients: [...defaultSettings.customClients],
+          customProjectTemplates: defaultSettings.customProjectTemplates.map((template) => ({
+            ...template,
+            workflowStages: [...template.workflowStages],
+            deliverables: template.deliverables.map((item) => ({ ...item })),
+            checklistItems: [...template.checklistItems],
+          })),
+          projectTags: [...defaultSettings.projectTags],
+          projectStages: [...defaultSettings.projectStages],
+          notifications: { ...defaultSettings.notifications },
+          integrations: { ...defaultSettings.integrations },
+          integrationAccounts: { ...defaultSettings.integrationAccounts },
+          integrationConfigs: JSON.parse(JSON.stringify(defaultIntegrationConfigs)),
+          integrationLinks: {},
+          teamMembers: defaultSettings.teamMembers.map((member) => ({ ...member })),
+          editorPermissions: { ...defaultSettings.editorPermissions },
+          rolePermissions: JSON.parse(JSON.stringify(defaultRolePermissions)),
+        });
+        notify("Settings reset to defaults.", "warning");
+      }}
+    />
   ) : page === "account" ? (
     <AccountSettingsPage />
   ) : page === "profile" ? (
@@ -937,6 +966,7 @@ export function TrackerApp({ page }: { page: PageKey }) {
   ) : (
     <OrganizationProfilePage projects={teamProjects} settings={settings} stats={teamStats} />
   );
+  const resolvedPageContent = isAuthLoaded ? pageContent : <WorkspaceLoadingPage />;
 
   const projectDialog = (
     <>
@@ -999,7 +1029,7 @@ export function TrackerApp({ page }: { page: PageKey }) {
     return (
       <Box className="motion-enter" sx={{ ...appSurfaceSx(settings), minHeight: "100dvh", bgcolor: canvas, color: ink }}>
       <PageContext.Provider value={page}>
-        <SettingsContext.Provider value={settings}>{pageContent}</SettingsContext.Provider>
+        <SettingsContext.Provider value={settings}>{resolvedPageContent}</SettingsContext.Provider>
       </PageContext.Provider>
       {projectDialog}
       {deleteDialog}
@@ -1032,7 +1062,7 @@ export function TrackerApp({ page }: { page: PageKey }) {
       >
         <Box sx={{ ...appSurfaceSx(settings), minHeight: "calc(100dvh - 56px)", bgcolor: canvas, color: ink }}>
           <PageContext.Provider value={page}>
-            <SettingsContext.Provider value={settings}>{pageContent}</SettingsContext.Provider>
+            <SettingsContext.Provider value={settings}>{resolvedPageContent}</SettingsContext.Provider>
           </PageContext.Provider>
         </Box>
       </WorkspaceShell>
@@ -1213,8 +1243,7 @@ function Sidebar({
 }
 
 function CloudProfileActions({ onClose }: { onClose: () => void }) {
-  const { isSignedIn } = useUser();
-  const { openSignIn, openSignUp, signOut } = useClerk();
+  const { isSignedIn, openSignIn, openSignUp, signOut } = useAppAuth();
 
   if (isSignedIn) {
     return (
@@ -1261,8 +1290,7 @@ function CloudProfileActions({ onClose }: { onClose: () => void }) {
 }
 
 function AccountSettingsPage() {
-  const { isSignedIn, isLoaded } = useUser();
-  const { openSignIn, openSignUp } = useClerk();
+  const { isSignedIn, isLoaded, openSignIn, openSignUp } = useAppAuth();
 
   return (
     <PageFrame title="Account Settings" subtitle="Manage your private login details separately from your public CutLab profile.">
@@ -1450,6 +1478,19 @@ function AppLoadingStatus() {
         "& .MuiLinearProgress-bar": { bgcolor: accent }
       }}
     />
+  );
+}
+
+function WorkspaceLoadingPage() {
+  return (
+    <div className="mx-auto min-h-[calc(100dvh-56px)] w-full max-w-[1580px] animate-pulse px-3 py-4 sm:px-5 lg:px-6 lg:py-5" aria-label="Loading workspace" aria-busy="true">
+      <div className="h-7 w-56 rounded-md bg-[var(--app-soft-panel)]" />
+      <div className="mt-2 h-3 w-80 max-w-full rounded bg-[var(--app-soft-panel)]" />
+      <div className="mt-5 grid grid-cols-2 gap-3 lg:grid-cols-4">
+        {[0, 1, 2, 3].map((item) => <div key={item} className="h-24 rounded-lg border border-[var(--app-border)] bg-[var(--app-panel)]" />)}
+      </div>
+      <div className="mt-4 h-[420px] rounded-lg border border-[var(--app-border)] bg-[var(--app-panel)]" />
+    </div>
   );
 }
 
@@ -3157,9 +3198,8 @@ function ReportsDesignPage({
 }
 
 function TeamDesignPage({ projects, settings }: { projects: WorkItem[]; settings: SettingsState; setSettings: (settings: SettingsState) => void }) {
-  const { isSignedIn, isLoaded: isUserLoaded } = useUser();
+  const { isSignedIn, isLoaded: isUserLoaded, openSignIn, openSignUp } = useAppAuth();
   const { isAuthenticated: isConvexAuthenticated, isLoading: isConvexAuthLoading } = useConvexAuth();
-  const { openSignIn, openSignUp } = useClerk();
   const teamData = useQuery(api.team.getMyWorkspace, isConvexAuthenticated ? {} : "skip");
   const createWorkspace = useMutation(api.team.createWorkspace);
   const joinWorkspace = useMutation(api.team.joinWorkspace);
@@ -3557,9 +3597,8 @@ function TeamDesignPage({ projects, settings }: { projects: WorkItem[]; settings
 }
 
 function TeamChatPage() {
-  const { isSignedIn, isLoaded: isUserLoaded } = useUser();
+  const { isSignedIn, isLoaded: isUserLoaded, openSignIn } = useAppAuth();
   const { isAuthenticated: isConvexAuthenticated, isLoading: isConvexAuthLoading } = useConvexAuth();
-  const { openSignIn } = useClerk();
   const teamData = useQuery(api.team.getMyWorkspace, isConvexAuthenticated ? {} : "skip");
   const sendChatMessage = useMutation(api.team.sendChatMessage);
   const [message, setMessage] = useState("");
@@ -4522,7 +4561,6 @@ function ProfileEditPage({ settings, setSettings }: { settings: SettingsState; s
 }
 
 function PageFrame({ title, subtitle, action, children }: { title: string; subtitle: string; action?: React.ReactNode; children: React.ReactNode }) {
-  const settings = useTrackerSettings();
   const page = useContext(PageContext);
   const reduceMotion = useHydratedReducedMotion();
   return (
@@ -4532,17 +4570,14 @@ function PageFrame({ title, subtitle, action, children }: { title: string; subti
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: reduceMotion ? 0 : 0.24, ease: [0.16, 1, 0.3, 1] }}
     >
-      <Box sx={{ width: "100%", maxWidth: 1580, mx: "auto", px: { xs: 1.5, sm: 2.5, lg: 3 }, pt: { xs: 2, md: 2.5 }, pb: 6 }}>
+      <Box sx={{ width: "100%", maxWidth: 1580, minHeight: "calc(100dvh - 56px)", mx: "auto", px: { xs: 1.5, sm: 2.5, lg: 3 }, pt: { xs: 2, md: 2.5 }, pb: 6 }}>
         <Stack direction={{ xs: "column", sm: "row" }} justifyContent="space-between" alignItems={{ xs: "stretch", sm: "flex-end" }} gap={2} sx={{ mb: 2.5, pb: 2, borderBottom: `1px solid ${border}` }}>
           <Box>
             <SectionEyebrow>Workspace / {title}</SectionEyebrow>
             <Typography sx={{ fontSize: { xs: 22, md: 24 }, color: ink, fontWeight: 650, lineHeight: 1.15, fontFamily: headingFont, mt: 0.7, letterSpacing: "-0.01em" }}>{title}</Typography>
             <Typography sx={{ fontSize: 12, color: muted, mt: 0.65, maxWidth: 700, lineHeight: 1.5 }}>{subtitle}</Typography>
           </Box>
-          <Stack direction="row" alignItems="center" justifyContent={{ xs: "space-between", sm: "flex-end" }} gap={1.5} sx={{ flexShrink: 0 }}>
-            {action}
-            <NotificationBell settings={settings} />
-          </Stack>
+          {action ? <Stack direction="row" alignItems="center" justifyContent={{ xs: "flex-start", sm: "flex-end" }} gap={1.5} sx={{ flexShrink: 0 }}>{action}</Stack> : null}
         </Stack>
         {children}
       </Box>
@@ -4552,7 +4587,7 @@ function PageFrame({ title, subtitle, action, children }: { title: string; subti
 
 function NotificationBell({ settings }: { settings: SettingsState }) {
   const [notificationAnchor, setNotificationAnchor] = useState<null | HTMLElement>(null);
-  const { isSignedIn, isLoaded: isUserLoaded } = useUser();
+  const { isSignedIn, isLoaded: isUserLoaded } = useAppAuth();
   const { isAuthenticated: isConvexAuthenticated, isLoading: isConvexAuthLoading } = useConvexAuth();
   const teamData = useQuery(api.team.getMyWorkspace, isConvexAuthenticated ? {} : "skip");
   const markNotificationRead = useMutation(api.team.markNotificationRead);

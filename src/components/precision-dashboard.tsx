@@ -491,7 +491,7 @@ export function PrecisionDashboard(props: DashboardProps) {
 
   return (
     <motion.div
-      className="mx-auto w-full max-w-[1580px] px-3 py-4 sm:px-5 lg:px-6 lg:py-5"
+      className="mx-auto min-h-[calc(100dvh-56px)] w-full max-w-[1580px] px-3 py-4 sm:px-5 lg:px-6 lg:py-5"
       initial={entry.initial}
       animate={entry.animate}
       transition={{ duration: reduceMotion ? 0 : 0.35, ease: easing }}
@@ -610,13 +610,13 @@ export function PrecisionDashboard(props: DashboardProps) {
       </motion.section>
 
       <motion.div
-        className="grid min-w-0 gap-4 xl:grid-cols-[minmax(0,1fr)_310px]"
+        className="grid min-w-0 gap-3 xl:grid-cols-[minmax(0,1fr)_310px]"
         initial={entry.initial}
         animate={entry.animate}
         transition={{ delay: reduceMotion ? 0 : 0.1, duration: reduceMotion ? 0 : 0.4, ease: easing }}
       >
-        <div className="min-w-0 space-y-4">
-          <div className="grid gap-4 lg:grid-cols-2">
+        <div className="min-w-0 space-y-3">
+          <div className="grid gap-3 lg:grid-cols-2">
             <WorkspaceSection title="Deadline queue" count={dueSoon.length} icon={CalendarClock}>
               {dueSoon.length ? (
                 <div className="divide-y divide-[var(--app-border)]">
@@ -821,7 +821,7 @@ export function PrecisionDashboard(props: DashboardProps) {
             )}
           </WorkspaceSection>
 
-          <div className="grid gap-4 lg:grid-cols-2">
+          <div className="grid gap-3 lg:grid-cols-2">
             <WorkspaceSection
               title="Activity"
               count={activity.length}

@@ -54,6 +54,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
 function delivered(project: WorkItem) {
   return project.status === "Delivered";
@@ -529,8 +537,8 @@ export function PrecisionReports({
   }
 
   return (
-    <div className="mx-auto w-full max-w-[1500px] px-3 py-4 sm:px-5 lg:px-6 lg:py-5">
-      <div className="flex flex-col gap-3 border-b border-[var(--app-border)] pb-4 sm:flex-row sm:items-end sm:justify-between">
+    <div className="mx-auto min-h-full w-full max-w-[1580px] px-3 py-4 sm:px-5 lg:min-h-[calc(100dvh-56px)] lg:px-6 lg:py-5">
+      <div className="flex flex-col gap-4 border-b border-[var(--app-border)] pb-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <p className="text-[10px] font-semibold uppercase tracking-[0.08em] text-[var(--app-highlight)]">Performance</p>
           <h1 className="mt-1.5 text-[24px] font-semibold tracking-[-0.015em]">Reports</h1>
@@ -575,18 +583,20 @@ export function PrecisionReports({
                 { value: 6 as const, label: "6M" },
                 { value: "all" as const, label: "All" },
               ]).map((option) => (
-                <button
+                <Button
                   key={option.label}
                   type="button"
+                  variant="ghost"
+                  size="sm"
                   aria-pressed={trendRange === option.value}
                   onClick={() => setTrendRange(option.value)}
                   className={cn(
-                    "h-7 rounded-md px-2.5 text-[10px] font-medium text-[var(--app-muted)] transition-colors hover:bg-[var(--app-hover)] hover:text-[var(--app-text)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--app-highlight)]",
+                    "h-7 rounded-md px-2.5 text-[10px] font-medium text-[var(--app-muted)] transition-colors hover:bg-[var(--app-hover)] hover:text-[var(--app-text)] focus-visible:ring-[var(--app-highlight)]",
                     trendRange === option.value && "bg-[var(--app-active)] text-[var(--app-highlight)]",
                   )}
                 >
                   {option.label}
-                </button>
+                </Button>
               ))}
             </div>
           </div>
@@ -654,42 +664,42 @@ export function PrecisionReports({
           <Button variant="outline" size="sm" className="h-8" onClick={exportInvoiceDrafts} disabled={!invoiceDrafts.length}><Download /> Export invoices</Button>
         </header>
         <div className="overflow-x-auto border-t border-[var(--app-border)]">
-          <table className="w-full min-w-[760px] border-collapse">
-            <thead><tr className="bg-[var(--app-soft-panel)] text-left text-[10px] font-semibold uppercase text-[var(--app-subtle)]"><th className="h-8 px-4">Draft</th><th className="px-4">Client</th><th className="px-4">Projects</th><th className="px-4">Due</th><th className="px-4 text-right">Total</th></tr></thead>
-            <tbody className="divide-y divide-[var(--app-border)]">
+          <Table className="min-w-[760px] border-collapse">
+            <TableHeader><TableRow className="bg-[var(--app-soft-panel)] text-left text-[10px] font-semibold uppercase text-[var(--app-subtle)]"><TableHead className="h-8 p-0 px-4">Draft</TableHead><TableHead className="h-8 p-0 px-4">Client</TableHead><TableHead className="h-8 p-0 px-4">Projects</TableHead><TableHead className="h-8 p-0 px-4">Due</TableHead><TableHead className="h-8 p-0 px-4 text-right">Total</TableHead></TableRow></TableHeader>
+            <TableBody className="divide-y divide-[var(--app-border)]">
               {invoiceDrafts.map((draft) => (
-                <tr key={draft.id} className="h-12 text-xs transition-colors hover:bg-[var(--app-hover)]">
-                  <td className="px-4 font-semibold">{draft.invoiceNumber}</td>
-                  <td className="px-4 text-[var(--app-muted)]">{draft.client}</td>
-                  <td className="px-4">{draft.lineItems.length}</td>
-                  <td className="px-4 text-[var(--app-muted)]">{formatDate(draft.dueDate)}</td>
-                  <td className="px-4 text-right font-semibold">{money(draft.total, settings.currencyCode)}</td>
-                </tr>
+                <TableRow key={draft.id} className="h-12 text-xs transition-colors hover:bg-[var(--app-hover)]">
+                  <TableCell className="p-0 px-4 font-semibold">{draft.invoiceNumber}</TableCell>
+                  <TableCell className="p-0 px-4 text-[var(--app-muted)]">{draft.client}</TableCell>
+                  <TableCell className="p-0 px-4">{draft.lineItems.length}</TableCell>
+                  <TableCell className="p-0 px-4 text-[var(--app-muted)]">{formatDate(draft.dueDate)}</TableCell>
+                  <TableCell className="p-0 px-4 text-right font-semibold">{money(draft.total, settings.currencyCode)}</TableCell>
+                </TableRow>
               ))}
-              {!invoiceDrafts.length ? <tr><td colSpan={5} className="h-28 text-center text-xs text-[var(--app-muted)]">Delivered freelance projects with client names and positive earnings will appear here.</td></tr> : null}
-            </tbody>
-          </table>
+              {!invoiceDrafts.length ? <TableRow><TableCell colSpan={5} className="h-28 p-0 px-4 text-center text-xs text-[var(--app-muted)]">Delivered freelance projects with client names and positive earnings will appear here.</TableCell></TableRow> : null}
+            </TableBody>
+          </Table>
         </div>
       </section>
       <section className="mt-4 overflow-hidden rounded-lg border border-[var(--app-border)] bg-[var(--app-panel)]">
         <header className="flex h-12 items-center justify-between px-4"><div><h2 className="text-sm font-semibold">Salary Batch Ledger</h2><p className="text-[10px] text-[var(--app-muted)]">Completed edit batches and payout status.</p></div><span className="text-[11px] text-[var(--app-muted)]">{report.batches.length} batches</span></header>
         <div className="overflow-x-auto border-t border-[var(--app-border)]">
-          <table className="w-full min-w-[720px] border-collapse">
-            <thead><tr className="bg-[var(--app-soft-panel)] text-left text-[10px] font-semibold uppercase text-[var(--app-subtle)]"><th className="h-8 px-4">Batch</th><th className="px-4">Completed</th><th className="px-4">Edits</th><th className="px-4">Amount</th><th className="px-4">Payment</th><th className="px-4 text-right">Action</th></tr></thead>
-            <tbody className="divide-y divide-[var(--app-border)]">
+          <Table className="min-w-[720px] border-collapse">
+            <TableHeader><TableRow className="bg-[var(--app-soft-panel)] text-left text-[10px] font-semibold uppercase text-[var(--app-subtle)]"><TableHead className="h-8 p-0 px-4">Batch</TableHead><TableHead className="h-8 p-0 px-4">Completed</TableHead><TableHead className="h-8 p-0 px-4">Edits</TableHead><TableHead className="h-8 p-0 px-4">Amount</TableHead><TableHead className="h-8 p-0 px-4">Payment</TableHead><TableHead className="h-8 p-0 px-4 text-right">Action</TableHead></TableRow></TableHeader>
+            <TableBody className="divide-y divide-[var(--app-border)]">
               {report.batches.map((batch) => (
-                <tr key={batch.id} className="h-12 text-xs transition-colors hover:bg-[var(--app-hover)]">
-                  <td className="px-4 font-semibold">Batch #{batch.number}</td>
-                  <td className="px-4 text-[var(--app-muted)]">{batch.date ? formatDate(batch.date) : "Pending"}</td>
-                  <td className="px-4">{settings.salaryBatchSize}</td>
-                  <td className="px-4 font-medium">{money(batch.amount, settings.currencyCode)}</td>
-                  <td className="px-4"><Badge variant="outline" className={cn("h-5 rounded px-1.5 text-[10px]", batch.paid ? "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-900 dark:bg-emerald-950/50 dark:text-emerald-300" : "border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-900 dark:bg-amber-950/50 dark:text-amber-300")}>{batch.paid ? "Paid" : "Unpaid"}</Badge></td>
-                  <td className="px-4 text-right"><Button variant="ghost" size="sm" className="h-7 text-xs" aria-label={`${batch.paid ? "Mark unpaid" : "Mark paid"} for batch ${batch.number}`} onClick={() => onUpdateBatchPayment(batch.id, !batch.paid)}>{batch.paid ? "Mark unpaid" : "Mark paid"}</Button></td>
-                </tr>
+                <TableRow key={batch.id} className="h-12 text-xs transition-colors hover:bg-[var(--app-hover)]">
+                  <TableCell className="p-0 px-4 font-semibold">Batch #{batch.number}</TableCell>
+                  <TableCell className="p-0 px-4 text-[var(--app-muted)]">{batch.date ? formatDate(batch.date) : "Pending"}</TableCell>
+                  <TableCell className="p-0 px-4">{settings.salaryBatchSize}</TableCell>
+                  <TableCell className="p-0 px-4 font-medium">{money(batch.amount, settings.currencyCode)}</TableCell>
+                  <TableCell className="p-0 px-4"><Badge variant="outline" className={cn("h-5 rounded px-1.5 text-[10px]", batch.paid ? "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-900 dark:bg-emerald-950/50 dark:text-emerald-300" : "border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-900 dark:bg-amber-950/50 dark:text-amber-300")}>{batch.paid ? "Paid" : "Unpaid"}</Badge></TableCell>
+                  <TableCell className="p-0 px-4 text-right"><Button variant="ghost" size="sm" className="h-7 text-xs" aria-label={`${batch.paid ? "Mark unpaid" : "Mark paid"} for batch ${batch.number}`} onClick={() => onUpdateBatchPayment(batch.id, !batch.paid)}>{batch.paid ? "Mark unpaid" : "Mark paid"}</Button></TableCell>
+                </TableRow>
               ))}
-              {!report.batches.length ? <tr><td colSpan={6} className="h-32 text-center text-xs text-[var(--app-muted)]">Completed salary batches will appear here automatically.</td></tr> : null}
-            </tbody>
-          </table>
+              {!report.batches.length ? <TableRow><TableCell colSpan={6} className="h-32 p-0 px-4 text-center text-xs text-[var(--app-muted)]">Completed salary batches will appear here automatically.</TableCell></TableRow> : null}
+            </TableBody>
+          </Table>
         </div>
       </section>
 

@@ -179,6 +179,18 @@ defines the trust gate for future OAuth, webhook, accounting, or payment work.
 
 Planned work is outlined in the [CutLab Studio Roadmap](docs/product/ROADMAP.md).
 
+## Local development
+
+This repository uses npm and commits `package-lock.json`.
+
+```powershell
+npm.cmd install
+npm.cmd run dev
+```
+
+Use the `.cmd` form in Windows PowerShell when script execution policy blocks
+the `npm.ps1` wrapper. `pnpm` is not required.
+
 ## Demo
 
 The [60-90 second product demo flow](docs/product/DEMO_FLOW.md) covers the full editor-to-client

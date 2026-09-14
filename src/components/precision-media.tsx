@@ -18,6 +18,8 @@ import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 function delivered(project: WorkItem) {
   return project.status === "Delivered";
@@ -98,47 +100,41 @@ export function PrecisionMedia({
         </div>
 
         <LayoutGroup id="media-workspace">
-          <div className="mt-4 grid min-h-[520px] overflow-hidden rounded-lg border border-[var(--app-border)] bg-[var(--app-panel)] lg:grid-cols-[230px_minmax(0,1fr)_300px]">
+          <Tabs
+            value={collection}
+            onValueChange={(value) => setCollection(value as typeof collection)}
+            orientation="vertical"
+            className="mt-4 grid min-h-[calc(100dvh-148px)] w-full min-w-0 overflow-hidden rounded-lg border border-[var(--app-border)] bg-[var(--app-panel)] lg:grid-cols-[230px_minmax(0,1fr)_300px]"
+          >
             <aside className="border-b border-[var(--app-border)] bg-[var(--app-soft-panel)] p-3 lg:border-b-0 lg:border-r">
               <p className="px-2 text-[10px] font-semibold uppercase tracking-[0.08em] text-[var(--app-subtle)]">Collections</p>
-              <nav className="mt-2 space-y-0.5" aria-label="Media collections">
+              <TabsList className="mt-2 h-auto w-full flex-col items-stretch gap-0.5 bg-transparent p-0" aria-label="Media collections">
                 {collections.map((item) => {
                   const Icon = item.icon;
-                  const active = collection === item.id;
                   return (
-                    <motion.button
+                    <TabsTrigger
                       key={item.id}
-                      type="button"
                       className={cn(
-                        "relative flex h-9 w-full items-center gap-2 overflow-hidden rounded-md px-2 text-xs font-medium outline-none transition-colors focus-visible:ring-2 focus-visible:ring-[var(--app-accent)] focus-visible:ring-offset-1 focus-visible:ring-offset-[var(--app-soft-panel)]",
-                        active ? "text-[var(--app-highlight)]" : "text-[var(--app-muted)] hover:bg-[var(--app-hover)] hover:text-[var(--app-ink)]",
+                        "h-9 w-full justify-start gap-2 rounded-md px-2 text-xs font-medium text-[var(--app-muted)] transition-colors hover:bg-[var(--app-hover)] hover:text-[var(--app-ink)]",
+                        "data-[state=active]:bg-[var(--app-active)] data-[state=active]:text-[var(--app-highlight)]",
                       )}
-                      onClick={() => setCollection(item.id)}
-                      aria-pressed={active}
-                      whileTap={reduceMotion ? undefined : { scale: 0.985 }}
+                      value={item.id}
                     >
-                      {active ? (
-                        <motion.span
-                          layoutId="active-media-collection"
-                          className="absolute inset-0 rounded-md bg-[var(--app-active)]"
-                          transition={transition}
-                        />
-                      ) : null}
-                      <Icon className="relative z-10 size-4 shrink-0" />
-                      <span className="relative z-10 truncate">{item.label}</span>
+                      <Icon className="size-4 shrink-0" />
+                      <span className="truncate">{item.label}</span>
                       <motion.span
                         key={item.count}
-                        className="relative z-10 ml-auto min-w-4 text-right text-[10px] tabular-nums"
+                        className="ml-auto min-w-4 text-right text-[10px] tabular-nums"
                         initial={reduceMotion ? false : { opacity: 0.4, y: -2 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={contentTransition}
                       >
                         {item.count}
                       </motion.span>
-                    </motion.button>
+                    </TabsTrigger>
                   );
                 })}
-              </nav>
+              </TabsList>
             </aside>
 
             <main className="min-w-0 border-b border-[var(--app-border)] lg:border-b-0 lg:border-r">
@@ -209,7 +205,7 @@ export function PrecisionMedia({
                 </motion.span>
               </div>
 
-              <div className="relative min-h-[420px]">
+              <ScrollArea className="relative h-[calc(100dvh-292px)] min-h-[420px] max-h-[640px]">
                 <AnimatePresence mode="wait" initial={false}>
                   {filtered.length ? (
                     <motion.div
@@ -348,7 +344,7 @@ export function PrecisionMedia({
                     </motion.div>
                   )}
                 </AnimatePresence>
-              </div>
+              </ScrollArea>
             </main>
 
             <aside className="min-h-[360px] p-4" aria-label="Selected package details">
@@ -392,7 +388,7 @@ export function PrecisionMedia({
                 )}
               </AnimatePresence>
             </aside>
-          </div>
+          </Tabs>
         </LayoutGroup>
       </motion.div>
     </MotionConfig>

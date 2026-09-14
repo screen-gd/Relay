@@ -257,7 +257,7 @@ export function PrecisionProjects(props: PrecisionProjectsProps) {
         initial={reduceMotion ? false : { opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={contentTransition}
-        className="mx-auto w-full max-w-[1580px] px-3 py-4 sm:px-5 lg:px-6 lg:py-5"
+        className="mx-auto min-h-[calc(100dvh-56px)] w-full max-w-[1580px] px-3 py-4 sm:px-5 lg:px-6 lg:py-5"
       >
       <motion.div
         initial={reduceMotion ? false : { opacity: 0, y: 8 }}
@@ -286,23 +286,27 @@ export function PrecisionProjects(props: PrecisionProjectsProps) {
         className="mt-4 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between"
       >
         <div className="relative inline-flex w-fit rounded-md border border-[var(--app-border)] bg-[var(--app-panel)] p-0.5">
-          <button
+          <Button
+            type="button"
+            variant="ghost"
             aria-pressed={scope === "personal"}
-            className={cn("relative rounded px-3 py-1.5 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--app-accent)] active:scale-[0.98]", scope === "personal" ? "text-[var(--app-highlight)]" : "text-[var(--app-muted)] hover:text-[var(--app-ink)]")}
+            className={cn("relative h-auto rounded px-3 py-1.5 text-xs font-medium transition-colors hover:bg-transparent focus-visible:ring-[var(--app-accent)]", scope === "personal" ? "text-[var(--app-highlight)]" : "text-[var(--app-muted)] hover:text-[var(--app-ink)]")}
             onClick={() => setScope("personal")}
           >
             {scope === "personal" ? <motion.span layoutId="project-scope" className="absolute inset-0 rounded bg-[var(--app-active)]" /> : null}
             <span className="relative">My Projects <span className="ml-1 text-[10px]">{props.personalProjects.length}</span></span>
-          </button>
-          <button
+          </Button>
+          <Button
+            type="button"
+            variant="ghost"
             disabled={!hasTeam}
             aria-pressed={scope === "team"}
-            className={cn("relative rounded px-3 py-1.5 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--app-accent)] active:scale-[0.98] disabled:opacity-40", scope === "team" ? "text-[var(--app-highlight)]" : "text-[var(--app-muted)] hover:text-[var(--app-ink)]")}
+            className={cn("relative h-auto rounded px-3 py-1.5 text-xs font-medium transition-colors hover:bg-transparent focus-visible:ring-[var(--app-accent)] disabled:opacity-40", scope === "team" ? "text-[var(--app-highlight)]" : "text-[var(--app-muted)] hover:text-[var(--app-ink)]")}
             onClick={() => setScope("team")}
           >
             {scope === "team" ? <motion.span layoutId="project-scope" className="absolute inset-0 rounded bg-[var(--app-active)]" /> : null}
             <span className="relative">Team Projects <span className="ml-1 text-[10px]">{props.teamProjects.length}</span></span>
-          </button>
+          </Button>
         </div>
         <div className="flex flex-1 flex-col gap-2 sm:flex-row lg:max-w-[680px]">
           <div className="relative flex-1">
@@ -402,14 +406,16 @@ export function PrecisionProjects(props: PrecisionProjectsProps) {
                           className="h-8 px-3 text-left text-[10px] font-semibold uppercase text-[var(--app-subtle)]"
                         >
                           {header.isPlaceholder ? null : header.column.getCanSort() ? (
-                            <button
+                            <Button
                               type="button"
-                              className="group inline-flex items-center gap-1 rounded-sm py-1 text-left transition-colors hover:text-[var(--app-ink)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--app-accent)]"
+                              variant="ghost"
+                              size="xs"
+                              className="group h-auto rounded-sm px-1 py-1 text-left transition-colors hover:bg-transparent hover:text-[var(--app-ink)] focus-visible:ring-[var(--app-accent)]"
                               onClick={header.column.getToggleSortingHandler()}
                             >
                               {flexRender(header.column.columnDef.header, header.getContext())}
                               <SortIcon direction={header.column.getIsSorted()} />
-                            </button>
+                            </Button>
                           ) : flexRender(header.column.columnDef.header, header.getContext())}
                         </th>
                       ))}
