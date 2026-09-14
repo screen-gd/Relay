@@ -1,0 +1,429 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#101417" />
+    <title>CutLab UI Build Tracker</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        --canvas: #101417;
+        --panel: #171d21;
+        --panel-strong: #1d252a;
+        --panel-soft: #13191c;
+        --line: #2a353b;
+        --line-strong: #3a474e;
+        --ink: #eef2f1;
+        --muted: #a4b0b2;
+        --subtle: #718085;
+        --accent: #63c8bc;
+        --accent-strong: #8be2d6;
+        --accent-soft: rgba(99, 200, 188, 0.13);
+        --warning: #f3bd6b;
+        --shadow: 0 20px 70px rgba(0, 0, 0, 0.24);
+        --radius: 14px;
+      }
+
+      * { box-sizing: border-box; }
+
+      html { background: var(--canvas); }
+
+      body {
+        margin: 0;
+        min-width: 320px;
+        background:
+          radial-gradient(circle at 78% -12%, rgba(99, 200, 188, 0.09), transparent 34rem),
+          var(--canvas);
+        color: var(--ink);
+        font: 15px/1.55 ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      }
+
+      button, input, textarea { font: inherit; }
+      button { cursor: pointer; }
+
+      .app {
+        width: min(1180px, calc(100% - 36px));
+        margin: 0 auto;
+        padding: 42px 0 72px;
+      }
+
+      .topbar {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 24px;
+        margin-bottom: 34px;
+      }
+
+      .eyebrow {
+        margin: 0 0 8px;
+        color: var(--accent-strong);
+        font-size: 11px;
+        font-weight: 800;
+        letter-spacing: 0.13em;
+        text-transform: uppercase;
+      }
+
+      h1, h2, h3, p { margin-top: 0; }
+      h1 { margin-bottom: 10px; font-size: clamp(30px, 5vw, 54px); line-height: 1.02; letter-spacing: -0.055em; }
+      h2 { margin-bottom: 6px; font-size: 20px; letter-spacing: -0.025em; }
+      h3 { margin-bottom: 4px; font-size: 16px; }
+      .lede { max-width: 650px; margin-bottom: 0; color: var(--muted); font-size: 16px; }
+
+      .actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; }
+
+      .button {
+        min-height: 38px;
+        padding: 0 13px;
+        border: 1px solid var(--line-strong);
+        border-radius: 9px;
+        background: var(--panel);
+        color: var(--ink);
+        font-weight: 700;
+        transition: border-color 140ms ease, background 140ms ease, transform 140ms ease;
+      }
+
+      .button:hover { border-color: var(--accent); background: var(--panel-strong); }
+      .button:active { transform: translateY(1px); }
+      .button.primary { border-color: transparent; background: var(--accent); color: #10211f; }
+      .button.primary:hover { background: var(--accent-strong); }
+
+      .overview {
+        display: grid;
+        grid-template-columns: minmax(0, 1.6fr) minmax(270px, 0.9fr);
+        gap: 16px;
+        margin-bottom: 26px;
+      }
+
+      .card {
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        background: color-mix(in srgb, var(--panel) 94%, transparent);
+        box-shadow: var(--shadow);
+      }
+
+      .progress-card { display: flex; align-items: center; gap: 22px; padding: 22px; }
+      .progress-ring {
+        display: grid;
+        flex: 0 0 106px;
+        width: 106px;
+        height: 106px;
+        place-items: center;
+        border-radius: 50%;
+        background: conic-gradient(var(--accent) var(--progress, 0%), var(--line) 0);
+      }
+      .progress-ring::after { content: ""; grid-area: 1 / 1; width: 82px; height: 82px; border-radius: 50%; background: var(--panel); }
+      .progress-value { z-index: 1; grid-area: 1 / 1; font-size: 23px; font-weight: 850; }
+      .progress-copy { min-width: 0; }
+      .progress-copy p { margin-bottom: 0; color: var(--muted); }
+
+      .focus-card { padding: 20px; }
+      .focus-card label, .field label { display: block; margin-bottom: 7px; color: var(--subtle); font-size: 11px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; }
+
+      input, textarea {
+        width: 100%;
+        border: 1px solid var(--line);
+        border-radius: 9px;
+        outline: none;
+        background: var(--panel-soft);
+        color: var(--ink);
+        transition: border-color 140ms ease, box-shadow 140ms ease;
+      }
+
+      input { min-height: 42px; padding: 0 12px; }
+      textarea { min-height: 132px; resize: vertical; padding: 11px 12px; }
+      input:focus, textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+      input::placeholder, textarea::placeholder { color: var(--subtle); }
+
+      .tracker-heading { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; margin: 0 0 12px; }
+      .tracker-heading p { margin-bottom: 0; color: var(--subtle); font-size: 13px; }
+
+      .phases { display: grid; gap: 12px; }
+      .phase { overflow: hidden; }
+      .phase-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 18px; padding: 20px 20px 16px; border-bottom: 1px solid var(--line); }
+      .phase-title { display: flex; gap: 12px; align-items: flex-start; }
+      .phase-number { display: grid; flex: 0 0 30px; width: 30px; height: 30px; place-items: center; border: 1px solid var(--line-strong); border-radius: 8px; color: var(--accent-strong); font-size: 12px; font-weight: 850; }
+      .phase-header p { margin-bottom: 0; color: var(--muted); font-size: 13px; }
+      .phase-count { flex: 0 0 auto; padding: 5px 8px; border: 1px solid var(--line); border-radius: 999px; color: var(--muted); font-size: 11px; font-weight: 800; }
+      .phase-count.done { border-color: rgba(99, 200, 188, 0.42); background: var(--accent-soft); color: var(--accent-strong); }
+
+      .checklist { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1px; background: var(--line); }
+      .check-item { display: flex; align-items: flex-start; gap: 11px; min-height: 56px; padding: 15px 18px; background: var(--panel); }
+      .check-item:hover { background: var(--panel-strong); }
+      .check-item input { flex: 0 0 auto; width: 17px; height: 17px; min-height: 0; margin-top: 2px; accent-color: var(--accent); }
+      .check-item label { color: var(--ink); font-size: 13px; cursor: pointer; }
+      .check-item input:checked + label { color: var(--muted); text-decoration: line-through; text-decoration-color: var(--accent); }
+
+      .notes { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin-top: 26px; }
+      .field { padding: 18px; }
+      .field textarea { min-height: 150px; }
+
+      .footer-note { margin: 24px 0 0; color: var(--subtle); font-size: 12px; text-align: center; }
+      .saved { color: var(--accent-strong); }
+
+      @media (max-width: 760px) {
+        .app { width: min(100% - 24px, 600px); padding-top: 26px; }
+        .topbar { display: block; margin-bottom: 24px; }
+        .actions { justify-content: flex-start; margin-top: 18px; }
+        .overview, .notes { grid-template-columns: 1fr; }
+        .progress-card { align-items: flex-start; }
+        .checklist { grid-template-columns: 1fr; }
+        .phase-header { padding: 16px; }
+        .check-item { padding: 14px 16px; }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        *, *::before, *::after { scroll-behavior: auto !important; transition-duration: 0.01ms !important; }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="app">
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">CutLab Studio · Figma workspace</p>
+          <h1>Build the UI without losing the thread.</h1>
+          <p class="lede">Use this tracker beside Figma to move from direction and foundations to one complete, tested product flow.</p>
+        </div>
+        <div class="actions" aria-label="Tracker actions">
+          <button class="button" id="exportButton" type="button">Export progress</button>
+          <button class="button" id="resetButton" type="button">Reset tracker</button>
+        </div>
+      </header>
+
+      <section class="overview" aria-label="Progress overview">
+        <div class="card progress-card">
+          <div class="progress-ring" id="progressRing" aria-label="0 percent complete">
+            <span class="progress-value" id="progressValue">0%</span>
+          </div>
+          <div class="progress-copy">
+            <p class="eyebrow">Overall progress</p>
+            <h2 id="progressTitle">Start with the brief</h2>
+            <p><span id="completedCount">0</span> of <span id="totalCount">0</span> checkpoints complete. Keep the scope small until the first workflow feels coherent.</p>
+          </div>
+        </div>
+        <div class="card focus-card">
+          <label for="focusInput">Current focus</label>
+          <input id="focusInput" type="text" placeholder="Example: finish the project detail screen" autocomplete="off" />
+        </div>
+      </section>
+
+      <section aria-labelledby="trackerTitle">
+        <div class="tracker-heading">
+          <div>
+            <p class="eyebrow">The path</p>
+            <h2 id="trackerTitle">Figma UI checklist</h2>
+          </div>
+          <p>Check things off as they become real in Figma.</p>
+        </div>
+        <div class="phases">
+          <article class="card phase" data-phase="01">
+            <div class="phase-header">
+              <div class="phase-title"><span class="phase-number">01</span><div><h3>Direction and scope</h3><p>Know what you are designing before polishing pixels.</p></div></div>
+              <span class="phase-count">0 / 0</span>
+            </div>
+            <div class="checklist">
+              <div class="check-item"><input id="scope-1" type="checkbox" /><label for="scope-1">Write the main user goal for the first flow.</label></div>
+              <div class="check-item"><input id="scope-2" type="checkbox" /><label for="scope-2">Choose one primary workflow to design first.</label></div>
+              <div class="check-item"><input id="scope-3" type="checkbox" /><label for="scope-3">List the screens needed for that workflow.</label></div>
+              <div class="check-item"><input id="scope-4" type="checkbox" /><label for="scope-4">Write down what is explicitly out of scope.</label></div>
+            </div>
+          </article>
+
+          <article class="card phase" data-phase="02">
+            <div class="phase-header">
+              <div class="phase-title"><span class="phase-number">02</span><div><h3>Foundations</h3><p>Make the visual language repeatable.</p></div></div>
+              <span class="phase-count">0 / 0</span>
+            </div>
+            <div class="checklist">
+              <div class="check-item"><input id="foundation-1" type="checkbox" /><label for="foundation-1">Choose the type family and text hierarchy.</label></div>
+              <div class="check-item"><input id="foundation-2" type="checkbox" /><label for="foundation-2">Define color tokens for canvas, panels, text, borders, and accent.</label></div>
+              <div class="check-item"><input id="foundation-3" type="checkbox" /><label for="foundation-3">Define spacing, radius, border, and shadow rules.</label></div>
+              <div class="check-item"><input id="foundation-4" type="checkbox" /><label for="foundation-4">Define light and dark theme behavior.</label></div>
+              <div class="check-item"><input id="foundation-5" type="checkbox" /><label for="foundation-5">Pick one icon family and use it consistently.</label></div>
+              <div class="check-item"><input id="foundation-6" type="checkbox" /><label for="foundation-6">Create a Figma Foundations page.</label></div>
+            </div>
+          </article>
+
+          <article class="card phase" data-phase="03">
+            <div class="phase-header">
+              <div class="phase-title"><span class="phase-number">03</span><div><h3>App shell</h3><p>Make the product feel like one place before filling it with data.</p></div></div>
+              <span class="phase-count">0 / 0</span>
+            </div>
+            <div class="checklist">
+              <div class="check-item"><input id="shell-1" type="checkbox" /><label for="shell-1">Design the collapsed sidebar and unified top bar.</label></div>
+              <div class="check-item"><input id="shell-2" type="checkbox" /><label for="shell-2">Define active, hover, focus, and disabled navigation states.</label></div>
+              <div class="check-item"><input id="shell-3" type="checkbox" /><label for="shell-3">Design search or command palette behavior.</label></div>
+              <div class="check-item"><input id="shell-4" type="checkbox" /><label for="shell-4">Design profile, notification, and workspace controls.</label></div>
+              <div class="check-item"><input id="shell-5" type="checkbox" /><label for="shell-5">Design the mobile navigation pattern.</label></div>
+            </div>
+          </article>
+
+          <article class="card phase" data-phase="04">
+            <div class="phase-header">
+              <div class="phase-title"><span class="phase-number">04</span><div><h3>Core components</h3><p>Build a small kit before creating lots of one-off screens.</p></div></div>
+              <span class="phase-count">0 / 0</span>
+            </div>
+            <div class="checklist">
+              <div class="check-item"><input id="components-1" type="checkbox" /><label for="components-1">Create buttons and icon buttons.</label></div>
+              <div class="check-item"><input id="components-2" type="checkbox" /><label for="components-2">Create inputs, selects, tabs, and filters.</label></div>
+              <div class="check-item"><input id="components-3" type="checkbox" /><label for="components-3">Create dialogs, dropdowns, tooltips, and toasts.</label></div>
+              <div class="check-item"><input id="components-4" type="checkbox" /><label for="components-4">Create avatars, badges, status chips, and progress indicators.</label></div>
+              <div class="check-item"><input id="components-5" type="checkbox" /><label for="components-5">Create empty, loading, error, and success patterns.</label></div>
+              <div class="check-item"><input id="components-6" type="checkbox" /><label for="components-6">Add component states and usage notes in Figma.</label></div>
+            </div>
+          </article>
+
+          <article class="card phase" data-phase="05">
+            <div class="phase-header">
+              <div class="phase-title"><span class="phase-number">05</span><div><h3>First complete workflow</h3><p>Design one journey end to end instead of scattering attention.</p></div></div>
+              <span class="phase-count">0 / 0</span>
+            </div>
+            <div class="checklist">
+              <div class="check-item"><input id="flow-1" type="checkbox" /><label for="flow-1">Design the dashboard with realistic content.</label></div>
+              <div class="check-item"><input id="flow-2" type="checkbox" /><label for="flow-2">Design the projects list and its filters.</label></div>
+              <div class="check-item"><input id="flow-3" type="checkbox" /><label for="flow-3">Design the project detail screen.</label></div>
+              <div class="check-item"><input id="flow-4" type="checkbox" /><label for="flow-4">Design the file or media section.</label></div>
+              <div class="check-item"><input id="flow-5" type="checkbox" /><label for="flow-5">Connect the screens into a clickable Figma prototype.</label></div>
+            </div>
+          </article>
+
+          <article class="card phase" data-phase="06">
+            <div class="phase-header">
+              <div class="phase-title"><span class="phase-number">06</span><div><h3>States and responsiveness</h3><p>Design the moments that make the interface trustworthy.</p></div></div>
+              <span class="phase-count">0 / 0</span>
+            </div>
+            <div class="checklist">
+              <div class="check-item"><input id="states-1" type="checkbox" /><label for="states-1">Add empty states for new users and empty projects.</label></div>
+              <div class="check-item"><input id="states-2" type="checkbox" /><label for="states-2">Add loading and error states.</label></div>
+              <div class="check-item"><input id="states-3" type="checkbox" /><label for="states-3">Test long names, long titles, and large lists.</label></div>
+              <div class="check-item"><input id="states-4" type="checkbox" /><label for="states-4">Create desktop and mobile versions of the key screens.</label></div>
+              <div class="check-item"><input id="states-5" type="checkbox" /><label for="states-5">Check keyboard focus and readable contrast.</label></div>
+            </div>
+          </article>
+
+          <article class="card phase" data-phase="07">
+            <div class="phase-header">
+              <div class="phase-title"><span class="phase-number">07</span><div><h3>Handoff and implementation</h3><p>Turn the approved design into a focused build plan.</p></div></div>
+              <span class="phase-count">0 / 0</span>
+            </div>
+            <div class="checklist">
+              <div class="check-item"><input id="handoff-1" type="checkbox" /><label for="handoff-1">Name screens, components, and variants clearly.</label></div>
+              <div class="check-item"><input id="handoff-2" type="checkbox" /><label for="handoff-2">Record behavior notes for interactions and responsive rules.</label></div>
+              <div class="check-item"><input id="handoff-3" type="checkbox" /><label for="handoff-3">Identify which screens use sample data first.</label></div>
+              <div class="check-item"><input id="handoff-4" type="checkbox" /><label for="handoff-4">Break the approved design into small implementation tasks.</label></div>
+              <div class="check-item"><input id="handoff-5" type="checkbox" /><label for="handoff-5">Only then connect Convex and Clerk behavior.</label></div>
+            </div>
+          </article>
+
+          <article class="card phase" data-phase="08">
+            <div class="phase-header">
+              <div class="phase-title"><span class="phase-number">08</span><div><h3>Final UI QA</h3><p>Make sure the design still works outside the happy path.</p></div></div>
+              <span class="phase-count">0 / 0</span>
+            </div>
+            <div class="checklist">
+              <div class="check-item"><input id="qa-1" type="checkbox" /><label for="qa-1">Review the full flow in Figma from a new-user perspective.</label></div>
+              <div class="check-item"><input id="qa-2" type="checkbox" /><label for="qa-2">Review desktop, tablet, and mobile layouts.</label></div>
+              <div class="check-item"><input id="qa-3" type="checkbox" /><label for="qa-3">Remove duplicate patterns and inconsistent spacing.</label></div>
+              <div class="check-item"><input id="qa-4" type="checkbox" /><label for="qa-4">Confirm every major action has feedback.</label></div>
+              <div class="check-item"><input id="qa-5" type="checkbox" /><label for="qa-5">Mark the design ready for implementation.</label></div>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <section class="notes" aria-label="Planning notes">
+        <div class="card field"><label for="decisionsInput">Decisions made</label><textarea id="decisionsInput" placeholder="Record choices you do not want to revisit repeatedly."></textarea></div>
+        <div class="card field"><label for="questionsInput">Open questions</label><textarea id="questionsInput" placeholder="Capture uncertainty here instead of changing direction mid-screen."></textarea></div>
+        <div class="card field"><label for="nextInput">Next session</label><textarea id="nextInput" placeholder="Write the smallest useful next step before you stop."></textarea></div>
+      </section>
+
+      <p class="footer-note">Progress is saved locally in this browser. <span class="saved" id="saveStatus">Ready</span></p>
+    </main>
+
+    <script>
+      (() => {
+        const storageKey = "cutlab.figma-ui-tracker.v1";
+        const checks = [...document.querySelectorAll("input[type=checkbox]")];
+        const textFields = [...document.querySelectorAll("input[type=text], textarea")];
+        const progressRing = document.getElementById("progressRing");
+        const progressValue = document.getElementById("progressValue");
+        const progressTitle = document.getElementById("progressTitle");
+        const completedCount = document.getElementById("completedCount");
+        const totalCount = document.getElementById("totalCount");
+        const saveStatus = document.getElementById("saveStatus");
+
+        function readState() {
+          try { return JSON.parse(localStorage.getItem(storageKey) || "{}"); }
+          catch { return {}; }
+        }
+
+        function saveState() {
+          const state = {
+            checks: Object.fromEntries(checks.map((check) => [check.id, check.checked])),
+            fields: Object.fromEntries(textFields.map((field) => [field.id, field.value])),
+            savedAt: new Date().toISOString(),
+          };
+          localStorage.setItem(storageKey, JSON.stringify(state));
+          saveStatus.textContent = "Saved just now";
+          window.clearTimeout(saveState.timeout);
+          saveState.timeout = window.setTimeout(() => { saveStatus.textContent = "Saved locally"; }, 1600);
+        }
+
+        function updateProgress() {
+          const complete = checks.filter((check) => check.checked).length;
+          const total = checks.length;
+          const percent = total ? Math.round((complete / total) * 100) : 0;
+          progressRing.style.setProperty("--progress", `${percent}%`);
+          progressRing.setAttribute("aria-label", `${percent} percent complete`);
+          progressValue.textContent = `${percent}%`;
+          completedCount.textContent = complete;
+          totalCount.textContent = total;
+          progressTitle.textContent = percent === 0 ? "Start with the brief" : percent === 100 ? "Ready to build" : percent >= 70 ? "Shape the final details" : "Keep the first flow small";
+
+          document.querySelectorAll(".phase").forEach((phase) => {
+            const phaseChecks = [...phase.querySelectorAll("input[type=checkbox]")];
+            const phaseComplete = phaseChecks.filter((check) => check.checked).length;
+            const count = phase.querySelector(".phase-count");
+            count.textContent = `${phaseComplete} / ${phaseChecks.length}`;
+            count.classList.toggle("done", phaseComplete === phaseChecks.length);
+          });
+        }
+
+        function loadState() {
+          const state = readState();
+          checks.forEach((check) => { check.checked = Boolean(state.checks && state.checks[check.id]); });
+          textFields.forEach((field) => { field.value = state.fields && typeof state.fields[field.id] === "string" ? state.fields[field.id] : ""; });
+          saveStatus.textContent = state.savedAt ? `Saved ${new Date(state.savedAt).toLocaleDateString()}` : "Ready";
+          updateProgress();
+        }
+
+        checks.forEach((check) => check.addEventListener("change", () => { updateProgress(); saveState(); }));
+        textFields.forEach((field) => field.addEventListener("input", saveState));
+
+        document.getElementById("resetButton").addEventListener("click", () => {
+          if (!window.confirm("Reset all checklist items and notes?")) return;
+          localStorage.removeItem(storageKey);
+          checks.forEach((check) => { check.checked = false; });
+          textFields.forEach((field) => { field.value = ""; });
+          saveStatus.textContent = "Reset";
+          updateProgress();
+        });
+
+        document.getElementById("exportButton").addEventListener("click", () => {
+          const state = readState();
+          const blob = new Blob([JSON.stringify({ ...state, exportedAt: new Date().toISOString() }, null, 2)], { type: "application/json" });
+          const link = document.createElement("a");
+          link.href = URL.createObjectURL(blob);
+          link.download = "cutlab-figma-ui-progress.json";
+          link.click();
+          URL.revokeObjectURL(link.href);
+          saveStatus.textContent = "Exported";
+        });
+
+        loadState();
+      })();
+    </script>
+  </body>
+</html>

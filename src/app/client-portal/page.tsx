@@ -1,30 +1,45 @@
 "use client";
 
+import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
-import { Box, Button, Paper, Stack, Typography } from "@mui/material";
-import ArrowBackOutlinedIcon from "@mui/icons-material/ArrowBackOutlined";
-import { CutLabLockup } from "../cutlab-brand";
-import { emptyStateAssets } from "../brand-assets";
-import { cutlab, cutlabPanelSx } from "../design-system";
+
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 
 export default function ClientPortalLandingPage() {
   return (
-    <Box sx={{ minHeight: "100dvh", bgcolor: `var(--app-canvas, ${cutlab.color.charcoal})`, color: `var(--app-ink, ${cutlab.color.softWhite})`, display: "grid", placeItems: "center", px: 2 }}>
-      <Paper sx={{ ...cutlabPanelSx, width: "min(100%, 680px)", p: { xs: 3, md: 5 }, textAlign: "center" }}>
-        <Box sx={{ display: "flex", justifyContent: "center", mb: 3 }}>
-          <CutLabLockup subtitle="Client Portal" />
-        </Box>
-        <Box component="img" src={emptyStateAssets.projects} alt="" aria-hidden="true" sx={{ width: 210, maxWidth: "70%", mb: 2 }} />
-        <Typography sx={{ fontFamily: cutlab.font.heading, fontSize: { xs: 28, md: 36 }, fontWeight: 760 }}>
+    <main className="grid min-h-dvh place-items-center bg-background px-4 text-foreground">
+      <Card className="w-full max-w-lg p-6 text-center md:p-10">
+        <div className="mb-6 flex justify-center">
+          <a
+            href="/"
+            aria-label="Relay home"
+            className="inline-flex items-center gap-2 text-foreground no-underline"
+          >
+            <span className="grid size-8 place-items-center rounded-[6px] bg-foreground text-sm font-bold text-background">
+              R
+            </span>
+            <span className="text-lg font-bold tracking-tight">Relay</span>
+          </a>
+        </div>
+        <h1 className="font-[family-name:var(--font-geist-sans)] text-[28px] font-bold md:text-4xl">
           A project link is required
-        </Typography>
-        <Typography sx={{ color: "var(--app-muted, #A5ADB4)", fontSize: 14, lineHeight: 1.65, maxWidth: 500, mx: "auto", mt: 1 }}>
-          No account required. Open the unique portal link shared by your editor to track progress, review deliverables, and submit revision requests.
-        </Typography>
-        <Button component={Link} href="/" variant="outlined" startIcon={<ArrowBackOutlinedIcon />} sx={{ mt: 3, borderColor: "var(--app-border, #2A3138)", color: "var(--app-accent, #2D8C97)" }}>
-          Back to CutLab
+        </h1>
+        <p className="mx-auto mt-2 max-w-[500px] text-sm leading-relaxed text-muted-foreground">
+          No account required. Open the unique portal link shared by your editor
+          to track progress, review deliverables, and submit revision requests.
+        </p>
+        <Button
+          asChild
+          variant="outline"
+          className="mt-6 border-[var(--app-border)] text-[var(--app-highlight)]"
+        >
+          <Link href="/">
+            <ArrowLeft aria-hidden="true" />
+            Back to Relay
+          </Link>
         </Button>
-      </Paper>
-    </Box>
+      </Card>
+    </main>
   );
 }

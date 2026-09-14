@@ -24,11 +24,13 @@ export async function chooseLocalMode(page: Page) {
 }
 
 export async function createProject(page: Page, title: string, client = "E2E Client") {
-  await page.getByRole("button", { name: /New (?:Personal |Team )?Project/ }).click();
+  await page.getByRole("button", { name: /New (?:Personal |Team )?Project/ }).first().click();
   await page.getByRole("button", { name: "Blank project" }).click();
   const dialog = page.getByRole("dialog", { name: "New Project" });
   await dialog.getByLabel("Project name").fill(title);
-  await dialog.getByLabel("Client").fill(client);
+  await dialog.getByLabel("Client").click();
+  await page.getByPlaceholder("Search or type a client...").fill(client);
+  await page.keyboard.press("Escape");
   await selectOption(dialog.getByLabel("Tag"), page, "Freelance");
   await dialog.getByLabel("Earnings").fill("1250");
   await dialog.getByLabel("Notes").fill("Created by the Playwright core workflow.");
@@ -42,6 +44,11 @@ export function projectRow(page: Page, title: string) {
 
 export async function openProject(page: Page, title: string) {
   await projectRow(page, title).click();
+  await page
+    .getByRole("complementary")
+    .filter({ hasText: title })
+    .getByRole("button", { name: "Open", exact: true })
+    .click();
   const detail = page.getByTestId("project-detail-dialog");
   await expect(detail.getByText(title, { exact: true }).first()).toBeVisible();
   return detail;

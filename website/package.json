@@ -1,28 +1,45 @@
 {
-  "name": "cutlab-studio-marketing",
+  "name": "relay-marketing",
   "version": "0.1.0",
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "opennextjs-cloudflare build",
+    "build:next": "next build --webpack",
+    "preview": "opennextjs-cloudflare build && opennextjs-cloudflare preview",
+    "deploy": "opennextjs-cloudflare build && opennextjs-cloudflare deploy",
+    "upload": "opennextjs-cloudflare build && opennextjs-cloudflare upload",
     "start": "next start",
     "lint": "tsc --noEmit"
   },
   "dependencies": {
-    "next": "16.2.7",
-    "react": "19.2.0",
-    "react-dom": "19.2.0"
-  },
-  "overrides": {
-    "postcss": "8.5.15"
+    "@gsap/react": "^2.1.2",
+    "@opennextjs/cloudflare": "1.20.2",
+    "@react-three/drei": "^10.7.8",
+    "@react-three/fiber": "^9.7.0",
+    "gsap": "^3.15.0",
+    "lucide-react": "^1.37.0",
+    "maath": "^0.10.8",
+    "mathjs": "^15.2.0",
+    "motion": "^12.43.0",
+    "next": "16.3.2",
+    "ogl": "^1.0.11",
+    "react": "19.2.8",
+    "react-dom": "19.2.8",
+    "three": "^0.180.0"
   },
   "dependencyNotes": {
     "postcss": "Pins Next.js's transitive PostCSS dependency to the current compatible 8.5.15 release; keep until Next.js declares an equivalent or newer version."
   },
   "devDependencies": {
-    "@types/node": "24.10.1",
-    "@types/react": "19.2.6",
-    "@types/react-dom": "19.2.3",
-    "typescript": "5.9.3"
+    "@tailwindcss/postcss": "^4.3.3",
+    "@types/node": "24.13.3",
+    "@types/react": "19.2.18",
+    "@types/react-dom": "19.2.5",
+    "@types/three": "^0.185.4",
+    "jsrepo": "^3.8.1",
+    "tailwindcss": "^4.3.3",
+    "typescript": "5.9.3",
+    "wrangler": "^4.120.0"
   }
 }

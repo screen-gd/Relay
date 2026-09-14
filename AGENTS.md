@@ -1,3 +1,7 @@
+# Writing
+
+Use plain words, active voice, and concise explanations. Follow the user's writing preferences.
+
 <!-- convex-ai-start -->
 
 This project uses [Convex](https://convex.dev) as its backend.

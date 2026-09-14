@@ -1,29 +1,66 @@
 "use client";
 
-import { Box, Button, Paper, Stack, Typography } from "@mui/material";
 import Link from "next/link";
+import { useEffect } from "react";
 
-export default function GlobalError({ reset }: { error: Error & { digest?: string }; reset: () => void }) {
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { reportEssentialError } from "@/lib/telemetry";
+import { RelayBrand } from "./relay-brand";
+
+export default function GlobalError({
+  error,
+  reset,
+}: {
+  error: Error & { digest?: string };
+  reset: () => void;
+}) {
+  useEffect(() => {
+    reportEssentialError(error);
+  }, [error]);
   return (
-    <Box sx={{ minHeight: "100dvh", display: "grid", placeItems: "center", bgcolor: "var(--app-canvas, #0C0F12)", color: "var(--app-ink, #E6E5E3)", px: 2 }}>
-      <Paper sx={{ width: "min(100%, 520px)", p: 3, borderRadius: "8px", border: "1px solid var(--app-border, #2A3138)", bgcolor: "var(--app-panel, #1A1F24)", boxShadow: "none" }}>
-        <Stack gap={2}>
-          <Box>
-            <Typography sx={{ fontFamily: "var(--font-space-grotesk)", fontSize: 26, fontWeight: 700 }}>CutLab needs a refresh</Typography>
-            <Typography sx={{ mt: 0.8, color: "var(--app-muted, #A5ADB4)", fontSize: 14 }}>
-              The tracker hit an unexpected app error. Your saved projects stay in local browser storage.
-            </Typography>
-          </Box>
-          <Stack direction={{ xs: "column", sm: "row" }} gap={1}>
-            <Button variant="contained" onClick={reset} sx={{ bgcolor: "var(--app-accent, #2D8C97)", color: "#fff" }}>
+    <main
+      id="main-content"
+      className="grid min-h-dvh place-items-center bg-[var(--surface-canvas)] px-4 py-8 text-[var(--text-primary)]"
+    >
+      <Card
+        className="w-full max-w-[560px] bg-[var(--surface-panel)] p-6 text-[var(--text-primary)] shadow-[var(--shadow-panel)] md:p-8"
+        aria-labelledby="error-heading"
+      >
+        <div className="space-y-4">
+          <RelayBrand compact />
+          <div>
+            <p className="text-xs font-bold uppercase tracking-[0.12em] text-[var(--app-muted)]">
+              Unexpected error
+            </p>
+            <h1
+              id="error-heading"
+              className="mt-2 font-[family-name:var(--font-geist-sans)] text-[30px] font-bold leading-tight"
+            >
+              Relay needs a refresh
+            </h1>
+            <p className="mt-2 text-sm leading-relaxed text-[var(--text-secondary)]">
+              The tracker hit an unexpected app error. Your saved projects stay
+              in local browser storage.
+            </p>
+          </div>
+          <div className="flex flex-col gap-2 sm:flex-row">
+            <Button
+              onClick={reset}
+              className="min-h-11 bg-[var(--app-highlight)] text-white hover:bg-[var(--app-accent)]"
+            >
               Try Again
             </Button>
-            <Button component={Link} href="/" variant="outlined" sx={{ borderColor: "var(--app-border, #2A3138)", color: "var(--app-highlight, #69C4CE)" }}>
-              Back to Dashboard
+            <Button
+              asChild
+              variant="outline"
+              className="min-h-11 border-[var(--app-border)] text-[var(--app-highlight)]"
+            >
+              <Link href="/">Back to Dashboard</Link>
             </Button>
-          </Stack>
-        </Stack>
-      </Paper>
-    </Box>
+          </div>
+        </div>
+      </Card>
+    </main>
   );
 }

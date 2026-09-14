@@ -1,457 +1,991 @@
 "use client";
 
-import { useState } from "react";
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type FormEvent,
+  type ReactNode,
+} from "react";
+import { makeFunctionReference } from "convex/server";
 import { useMutation, useQuery } from "convex/react";
 import {
-  Box,
-  Button,
-  Chip,
-  CircularProgress,
-  Divider,
-  LinearProgress,
-  Paper,
-  Stack,
-  TextField,
-  Typography
-} from "@mui/material";
-import AccessTimeOutlinedIcon from "@mui/icons-material/AccessTimeOutlined";
-import CalendarTodayOutlinedIcon from "@mui/icons-material/CalendarTodayOutlined";
-import ChatBubbleOutlineOutlinedIcon from "@mui/icons-material/ChatBubbleOutlineOutlined";
-import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
-import FileDownloadOutlinedIcon from "@mui/icons-material/FileDownloadOutlined";
-import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
-import OpenInNewIcon from "@mui/icons-material/OpenInNew";
-import PlayArrowRoundedIcon from "@mui/icons-material/PlayArrowRounded";
-import { api } from "../../../convex/_generated/api";
-import { CutLabLockup } from "../cutlab-brand";
-import { emptyStateAssets } from "../brand-assets";
-import { cutlab, cutlabPanelSx } from "../design-system";
-import { approvalStatusLabel } from "@/lib/domain-values";
-import {
-  normalizeOptionalTimecode,
-  TIMECODE_FORMAT_HINT,
-} from "@/lib/timecode";
+  ArrowUpRight,
+  CalendarDays,
+  Check,
+  Download,
+  FileText,
+  LockKeyhole,
+  LoaderCircle,
+  ShieldCheck,
+} from "lucide-react";
 
-const headingFont = cutlab.font.heading;
-const accent = `var(--app-accent, ${cutlab.color.teal})`;
-const ink = `var(--app-ink, ${cutlab.color.softWhite})`;
-const muted = "var(--app-muted, #A5ADB4)";
-const border = "var(--app-border, #2A3138)";
-const panel = `var(--app-panel, ${cutlab.color.graphite})`;
-const canvas = `var(--app-canvas, ${cutlab.color.charcoal})`;
-const activeBg = "var(--app-active, rgba(45,140,151,0.18))";
-const softPanel = "var(--app-soft-panel, #151B20)";
-const progressTrack = "var(--app-progress-track, #293139)";
-const panelSx = cutlabPanelSx;
-const stages = ["Planning", "In Progress", "Review", "Delivered"];
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { PublicMediaVersionComments } from "@/components/media-version-comments";
+import type { MediaVersionComment } from "@/features/media-version-comments/media-version-comments";
+import { parseMediaVersionComments } from "@/features/media-version-comments/media-version-comments-data";
+import { trackOptionalEvent } from "@/lib/telemetry";
+import { cn } from "@/lib/utils";
+import { RelayBrand } from "@/app/relay-brand";
+
+type PublicSource = { provider: "YouTube" | "Vimeo" | "Link"; url: string };
+type PublicVersion = {
+  id: string;
+  label: string;
+  createdAt?: string;
+  source: PublicSource;
+};
+type PublicOutput = {
+  id: string;
+  title: string;
+  reviewState?: string;
+  dueDate?: string;
+  currentVersion?: PublicVersion;
+};
+type PublicFile = {
+  id: string;
+  title: string;
+  description?: string;
+  url: string;
+  downloadable: boolean;
+  fileName: string;
+  mimeType: string;
+  updatedAt?: string;
+};
+type PublicPortal = {
+  title: string;
+  clientName?: string;
+  summary?: string;
+  notes?: string;
+  startDate?: string;
+  dueDate?: string;
+  stage: string;
+  progress: number;
+  outputs: PublicOutput[];
+  branding?: { name: string; accentColor: string };
+};
+type PublicAccess =
+  | { kind: "loading" }
+  | { kind: "invalid" }
+  | { kind: "unpublished" }
+  | { kind: "closed" }
+  | { kind: "expired" }
+  | { kind: "pin-required"; wrongPin: boolean }
+  | { kind: "active"; portal: PublicPortal };
+
+const publicPortalRef = makeFunctionReference<
+  "query",
+  { token: string; pin?: string },
+  unknown
+>("projectPortals:getByToken");
+const publicCommentsRef = makeFunctionReference<
+  "query",
+  { token: string; pin?: string },
+  unknown
+>("mediaVersionComments:listForPortal");
+const publicFilesRef = makeFunctionReference<
+  "query",
+  { token: string; pin?: string },
+  unknown
+>("projectFiles:listForPortal");
+const addPublicCommentRef = makeFunctionReference<
+  "mutation",
+  {
+    token: string;
+    pin?: string;
+    outputId: string;
+    mediaVersionId: string;
+    authorName: string;
+    body: string;
+  },
+  unknown
+>("mediaVersionComments:addPublicComment");
+const reopenPublicCommentRef = makeFunctionReference<
+  "mutation",
+  { token: string; pin?: string; commentId: string },
+  unknown
+>("mediaVersionComments:reopenPublicComment");
+const DISPLAY_NAME_KEY = "relay:client-portal-display-name:v1";
+const PUBLIC_STAGES = ["Planning", "In Progress", "Review", "Delivered"];
+const reviewLabels: Record<string, string> = {
+  draft: "In progress",
+  sent_to_client: "Ready for review",
+  changes_requested: "Changes requested",
+  approved: "Approved",
+  final_delivered: "Delivered",
+};
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null;
+}
+function text(value: unknown) {
+  return typeof value === "string" && value.trim() ? value.trim() : undefined;
+}
+function number(value: unknown) {
+  return typeof value === "number" && Number.isFinite(value)
+    ? value
+    : undefined;
+}
+function safeUrl(value: unknown) {
+  const raw = text(value);
+  if (!raw) return undefined;
+  try {
+    const url = new URL(raw);
+    return url.protocol === "http:" || url.protocol === "https:"
+      ? url.toString()
+      : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+function readPublicFiles(value: unknown): PublicFile[] {
+  if (!isRecord(value) || !Array.isArray(value.files)) return [];
+  return value.files.flatMap((item) => {
+    if (!isRecord(item)) return [];
+    const title = text(item.title);
+    const fileName = text(item.fileName);
+    const url = safeUrl(item.url);
+    if (!title || !fileName || !url) return [];
+    return [
+      {
+        id: text(item.id) ?? fileName,
+        title,
+        description: text(item.description),
+        url,
+        downloadable: item.downloadable === true,
+        fileName,
+        mimeType: text(item.mimeType) ?? "application/octet-stream",
+        updatedAt: text(item.updatedAt),
+      },
+    ];
+  });
+}
+
+function fileKind(mimeType: string) {
+  const mime = mimeType.toLowerCase();
+  if (
+    mime === "text/plain" ||
+    mime === "text/markdown" ||
+    mime === "text/x-markdown"
+  )
+    return "Text";
+  if (mime === "application/pdf") return "PDF";
+  if (mime.startsWith("image/")) return "Image";
+  return "File";
+}
+
+export function readPublicPortalAccess(value: unknown): PublicAccess {
+  if (!isRecord(value)) return { kind: "invalid" };
+  const access = text(value.access) ?? text(value.status);
+  if (access === "unpublished") return { kind: "unpublished" };
+  if (access === "closed" || access === "unavailable" || access === "denied")
+    return { kind: "closed" };
+  if (access === "expired") return { kind: "expired" };
+  if (access === "invalid_pin") return { kind: "pin-required", wrongPin: true };
+  if (
+    access === "locked" ||
+    access === "pin_required" ||
+    access === "pin-required"
+  )
+    return { kind: "pin-required", wrongPin: false };
+  const source = isRecord(value.portal) ? value.portal : value;
+  const project = isRecord(source.project) ? source.project : source;
+  const branding = isRecord(source.branding) ? source.branding : undefined;
+  const title = text(project.title) ?? text(project.name);
+  const stage = normalizePublicStage(
+    text(project.stage) ?? text(project.publicStage) ?? text(project.status)
+  );
+  if (!title) return { kind: "invalid" };
+  return {
+    kind: "active",
+    portal: {
+      title,
+      clientName: text(project.clientName) ?? text(project.client),
+      summary: text(project.summary) ?? text(project.clientSummary),
+      notes: text(project.publicNotes) ?? text(project.clientNotes),
+      startDate: text(project.startDate),
+      dueDate: text(project.dueDate),
+      stage,
+      progress: Math.max(
+        0,
+        Math.min(100, number(project.progress) ?? progressForStage(stage))
+      ),
+      outputs: readOutputs(project.outputs ?? source.outputs),
+      branding:
+        text(branding?.name) &&
+        /^#[0-9a-fA-F]{6}$/.test(text(branding?.accentColor) ?? "")
+          ? {
+              name: text(branding?.name)!,
+              accentColor: text(branding?.accentColor)!,
+            }
+          : undefined,
+    },
+  };
+}
+
+function readOutputs(value: unknown): PublicOutput[] {
+  if (!Array.isArray(value)) return [];
+  return value.flatMap((item, index) => {
+    if (!isRecord(item)) return [];
+    const title = text(item.title) ?? text(item.name);
+    if (!title) return [];
+    const currentValue = isRecord(item.currentVersion)
+      ? item.currentVersion
+      : isRecord(item.currentMediaVersion)
+        ? item.currentMediaVersion
+        : undefined;
+    const current = currentValue
+      ? readVersion(currentValue, `${index + 1}`)
+      : undefined;
+    return [
+      {
+        id: text(item.id) ?? `output-${index + 1}`,
+        title,
+        reviewState: safeReviewState(
+          text(item.reviewState) ?? text(item.status)
+        ),
+        dueDate: text(item.dueDate),
+        ...(current ? { currentVersion: current } : {}),
+      },
+    ];
+  });
+}
+
+function readVersion(
+  value: Record<string, unknown>,
+  fallbackId: string
+): PublicVersion | undefined {
+  const source = isRecord(value.source) ? value.source : value;
+  const url = safeUrl(source.url);
+  if (!url) return undefined;
+  const providerValue = text(source.provider) ?? text(source.kind);
+  const provider =
+    providerValue?.toLowerCase() === "youtube"
+      ? "YouTube"
+      : providerValue?.toLowerCase() === "vimeo"
+        ? "Vimeo"
+        : "Link";
+  return {
+    id: text(value.id) ?? fallbackId,
+    label: text(value.label) ?? text(value.title) ?? "Current version",
+    createdAt: text(value.createdAt),
+    source: { provider, url },
+  };
+}
+
+function safeReviewState(value: string | undefined) {
+  return value && value in reviewLabels ? value : undefined;
+}
+
+function normalizePublicStage(value: string | undefined) {
+  const normalized = value?.trim().toLowerCase().replaceAll("_", " ");
+  if (
+    normalized === "in progress" ||
+    normalized === "editing" ||
+    normalized === "active"
+  )
+    return "In Progress";
+  if (
+    normalized === "review" ||
+    normalized === "client review" ||
+    normalized === "feedback"
+  )
+    return "Review";
+  if (
+    normalized === "delivered" ||
+    normalized === "complete" ||
+    normalized === "completed"
+  )
+    return "Delivered";
+  return "Planning";
+}
+
+function progressForStage(stage: string) {
+  const index = PUBLIC_STAGES.findIndex(
+    (item) => item.toLowerCase() === stage.toLowerCase()
+  );
+  return index < 0 ? 0 : Math.round((index / (PUBLIC_STAGES.length - 1)) * 100);
+}
+function displayStage(stage: string) {
+  return (
+    PUBLIC_STAGES.find((item) => item.toLowerCase() === stage.toLowerCase()) ??
+    "Planning"
+  );
+}
+function formatDate(value: string | undefined) {
+  if (!value) return "Not scheduled";
+  const date = new Date(value.length === 10 ? `${value}T12:00:00` : value);
+  return Number.isFinite(date.getTime())
+    ? new Intl.DateTimeFormat("en", {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+      }).format(date)
+    : "Not scheduled";
+}
 
 export function ClientPortalView({ token }: { token: string }) {
-  const [passwordInput, setPasswordInput] = useState("");
-  const [portalPassword, setPortalPassword] = useState("");
-  const portalResult = useQuery(
-    api.clientPortals.getByToken,
-    token ? (portalPassword ? { token, password: portalPassword } : { token }) : "skip"
+  const [pinInput, setPinInput] = useState("");
+  const [pin, setPin] = useState<string | undefined>();
+  const [pinError, setPinError] = useState("");
+  const [pinBusy, setPinBusy] = useState(false);
+  const publicResult = useQuery(
+    publicPortalRef,
+    token ? { token, ...(pin ? { pin } : {}) } : "skip"
   );
-  const submitRevision = useMutation(api.clientPortals.submitRevision);
-  const [clientName, setClientName] = useState("");
-  const [timecode, setTimecode] = useState("");
-  const [request, setRequest] = useState("");
-  const [submitState, setSubmitState] = useState<"idle" | "submitting" | "submitted">("idle");
-  const [error, setError] = useState("");
 
-  async function submitFeedback() {
-    const message = request.trim();
-    if (!message || submitState === "submitting") return;
-    setError("");
+  useEffect(() => {
+    const root = document.documentElement;
+    const wasDark = root.classList.contains("dark");
+    const previousScheme = root.style.colorScheme;
+    const media = window.matchMedia("(prefers-color-scheme: dark)");
+    const applyDeviceTheme = () => {
+      root.classList.toggle("dark", media.matches);
+      root.style.colorScheme = media.matches ? "dark" : "light";
+    };
+    applyDeviceTheme();
+    media.addEventListener("change", applyDeviceTheme);
+    return () => {
+      media.removeEventListener("change", applyDeviceTheme);
+      root.classList.toggle("dark", wasDark);
+      root.style.colorScheme = previousScheme;
+    };
+  }, []);
+
+  const access = useMemo<PublicAccess>(
+    () =>
+      publicResult === undefined
+        ? { kind: "loading" }
+        : readPublicPortalAccess(publicResult),
+    [publicResult]
+  );
+  const publicCommentsResult = useQuery(
+    publicCommentsRef,
+    access.kind === "active" ? { token, ...(pin ? { pin } : {}) } : "skip"
+  );
+  const publicFilesResult = useQuery(
+    publicFilesRef,
+    access.kind === "active" ? { token, ...(pin ? { pin } : {}) } : "skip"
+  );
+  const addPublicComment = useMutation(addPublicCommentRef);
+  const reopenPublicComment = useMutation(reopenPublicCommentRef);
+  const [displayName, setDisplayName] = useState("");
+  const [commentBusyOutputId, setCommentBusyOutputId] = useState("");
+  const [busyCommentId, setBusyCommentId] = useState("");
+  const trackedPortalOpen = useRef(false);
+
+  const publicComments = parseMediaVersionComments(publicCommentsResult);
+  const publicFiles = readPublicFiles(publicFilesResult);
+
+  useEffect(() => {
     try {
-      const normalizedTimecode = normalizeOptionalTimecode(timecode);
-      setSubmitState("submitting");
-      await submitRevision({
-        token,
-        ...(portalPassword ? { password: portalPassword } : {}),
-        clientName,
-        message,
-        ...(normalizedTimecode ? { timecode: normalizedTimecode } : {}),
-      });
-      setRequest("");
-      setTimecode("");
-      setSubmitState("submitted");
-    } catch (caught) {
-      setSubmitState("idle");
-      setError(caught instanceof Error ? caught.message : "Could not submit the revision request.");
+      const saved = window.localStorage.getItem(DISPLAY_NAME_KEY);
+      if (saved) setDisplayName(saved.slice(0, 120));
+    } catch {
+      // Local storage may be disabled. Comments still work for this visit.
+    }
+  }, []);
+
+  useEffect(() => {
+    if (publicResult !== undefined) setPinBusy(false);
+  }, [publicResult]);
+
+  useEffect(() => {
+    if (access.kind !== "active" || trackedPortalOpen.current) return;
+    trackedPortalOpen.current = true;
+    trackOptionalEvent("client_portal_opened", { result: "active" });
+  }, [access.kind]);
+
+  function unlock(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const value = pinInput.trim();
+    if (value.length < 4) {
+      setPinError("Enter the PIN provided by your editor.");
+      return;
+    }
+    setPinError("");
+    setPinBusy(true);
+    setPin(value);
+  }
+
+  function changeDisplayName(value: string) {
+    const next = value.slice(0, 120);
+    setDisplayName(next);
+    try {
+      if (next.trim()) window.localStorage.setItem(DISPLAY_NAME_KEY, next);
+      else window.localStorage.removeItem(DISPLAY_NAME_KEY);
+    } catch {
+      // Local storage is an enhancement, not an access requirement.
     }
   }
 
-  if (portalResult === undefined) {
-    return (
-      <PortalState title="Loading project portal" body="Connecting to the latest client-facing project snapshot.">
-        <CircularProgress size={28} sx={{ color: accent }} />
-      </PortalState>
-    );
+  function clearDisplayName() {
+    changeDisplayName("");
   }
 
-  if (portalResult.access === "unavailable") {
-    return (
-      <PortalState title="Portal link unavailable" body="This link may be incorrect, unpublished, or no longer active. Ask your editor for a current portal link.">
-        <Box component="img" src={emptyStateAssets.projects} alt="" aria-hidden="true" sx={{ width: 190 }} />
-      </PortalState>
-    );
+  async function addComment(
+    outputId: string,
+    mediaVersionId: string,
+    body: string
+  ) {
+    setCommentBusyOutputId(outputId);
+    try {
+      await addPublicComment({
+        token,
+        ...(pin ? { pin } : {}),
+        outputId,
+        mediaVersionId,
+        authorName: displayName.trim(),
+        body,
+      });
+      trackOptionalEvent("comment_added", { surface: "portal" });
+    } finally {
+      setCommentBusyOutputId("");
+    }
   }
 
-  if (portalResult.access === "expired") {
-    return (
-      <PortalState title="Portal link expired" body="This client portal has expired. Ask your editor to extend access or send a new link.">
-        <AccessTimeOutlinedIcon sx={{ color: accent, fontSize: 54 }} />
-      </PortalState>
-    );
+  async function reopenComment(commentId: string) {
+    setBusyCommentId(commentId);
+    try {
+      await reopenPublicComment({ token, ...(pin ? { pin } : {}), commentId });
+    } finally {
+      setBusyCommentId("");
+    }
   }
 
-  if (portalResult.access === "locked") {
-    const incorrectCode = Boolean(portalPassword);
+  if (access.kind === "loading")
     return (
-      <PortalState
-        title="This portal is protected"
-        body="Enter the PIN or password provided by your editor to view this project."
+      <AccessState
+        title="Loading your project"
+        body="Checking the shared portal link."
       >
-        <Stack
-          component="form"
-          onSubmit={(event) => {
-            event.preventDefault();
-            if (passwordInput) setPortalPassword(passwordInput);
-          }}
-          gap={1.2}
-          sx={{ width: "min(100%, 360px)" }}
+        <LoaderCircle className="size-7 animate-spin" aria-hidden="true" />
+      </AccessState>
+    );
+  if (access.kind === "invalid")
+    return (
+      <AccessState
+        title="Portal link unavailable"
+        body="This link is invalid or no longer available. Ask your editor for a new link."
+      />
+    );
+  if (access.kind === "unpublished")
+    return (
+      <AccessState
+        title="This portal is not open yet"
+        body="Ask your editor to publish the project portal before using this link."
+      />
+    );
+  if (access.kind === "closed")
+    return (
+      <AccessState
+        title="This portal is closed"
+        body="The editor closed access to this project. Ask them to reopen it or send a new link."
+      />
+    );
+  if (access.kind === "expired")
+    return (
+      <AccessState
+        title="This portal has expired"
+        body="Ask your editor to extend access or send a new project link."
+      />
+    );
+  if (access.kind === "pin-required")
+    return (
+      <AccessState
+        title="This portal is protected"
+        body={
+          access.wrongPin
+            ? "That PIN did not unlock this portal. Try again."
+            : "Enter the PIN shared by your editor to view this project."
+        }
+      >
+        <form
+          onSubmit={(event) => void unlock(event)}
+          className="w-full max-w-sm space-y-3 text-left"
         >
-          <LockOutlinedIcon sx={{ color: accent, fontSize: 54, alignSelf: "center" }} />
-          <TextField
-            label="PIN or password"
+          <label htmlFor="portal-pin" className="text-sm font-medium">
+            Portal PIN
+          </label>
+          <Input
+            id="portal-pin"
             type="password"
-            value={passwordInput}
+            value={pinInput}
             onChange={(event) => {
-              setPasswordInput(event.target.value);
-              if (portalPassword) setPortalPassword("");
+              setPinInput(event.target.value);
+              setPin(undefined);
+              setPinError("");
             }}
-            inputProps={{ minLength: 4, maxLength: 128 }}
-            error={incorrectCode}
-            helperText={incorrectCode ? "That code did not unlock the portal. Try again." : "Access is granted only after the code is verified."}
+            minLength={4}
+            maxLength={128}
             autoComplete="current-password"
             autoFocus
+            aria-invalid={Boolean(pinError)}
+            className="bg-background"
           />
-          <Button type="submit" variant="contained" disabled={passwordInput.length < 4} sx={{ bgcolor: accent, "&:hover": { bgcolor: accent } }}>
-            Unlock Portal
+          <p
+            className={cn(
+              "text-xs text-muted-foreground",
+              (pinError || access.wrongPin) && "text-destructive"
+            )}
+            role={pinError || access.wrongPin ? "alert" : undefined}
+          >
+            {pinError ||
+              (access.wrongPin ? "Check the PIN and try again." : null) ||
+              "Your PIN is checked securely and is never shown here."}
+          </p>
+          <Button
+            type="submit"
+            disabled={pinInput.trim().length < 4 || pinBusy}
+            className="w-full"
+          >
+            {pinBusy ? "Checking..." : "Unlock portal"}
           </Button>
-        </Stack>
-      </PortalState>
+        </form>
+      </AccessState>
     );
-  }
-
-  const portal = portalResult;
-  const currentStageIndex = Math.max(0, stages.indexOf(portal.status));
-  const revisionsUsed = portal.revisions.length;
-  const revisionsRemaining = Math.max(0, portal.revisionLimit - revisionsUsed);
   return (
-    <Box data-testid="client-portal" sx={{ minHeight: "100dvh", bgcolor: canvas, color: ink }}>
-      <Box sx={{ maxWidth: 1280, mx: "auto", px: { xs: 2, md: 4 }, py: { xs: 2.5, md: 4 } }}>
-        <Stack direction={{ xs: "column", sm: "row" }} justifyContent="space-between" alignItems={{ xs: "stretch", sm: "center" }} gap={2} sx={{ mb: 3 }}>
-          <CutLabLockup subtitle="Client Portal" />
-          <Stack direction="row" gap={1} flexWrap="wrap">
-            {portalPassword ? <Chip label="Access granted" sx={{ bgcolor: "var(--app-success-bg, rgba(35,181,142,0.14))", color: "var(--app-success, #23B58E)", borderRadius: "5px" }} /> : null}
-            <Chip label="No account required" sx={{ bgcolor: activeBg, color: accent, borderRadius: "5px" }} />
-            <Chip label="Private project link" sx={{ bgcolor: softPanel, color: muted, borderRadius: "5px" }} />
-          </Stack>
-        </Stack>
+    <ActivePortal
+      portal={access.portal}
+      comments={publicComments}
+      commentsLoading={publicCommentsResult === undefined}
+      files={publicFiles}
+      filesLoading={publicFilesResult === undefined}
+      displayName={displayName}
+      onDisplayNameChange={changeDisplayName}
+      onClearDisplayName={clearDisplayName}
+      onAddComment={addComment}
+      onReopenComment={reopenComment}
+      busyOutputId={commentBusyOutputId}
+      busyCommentId={busyCommentId}
+    />
+  );
+}
 
-        <Paper sx={{ ...panelSx, mb: 2.5, overflow: "hidden" }}>
-          <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", lg: "minmax(0, 1.45fr) 360px" } }}>
-            <Box sx={{ p: { xs: 2.4, md: 3 }, borderRight: { lg: `1px solid ${border}` } }}>
-              <StatusChip label={portal.status} tone={portal.status === "Delivered" ? "success" : "warning"} />
-              <Typography sx={{ color: ink, fontSize: { xs: 30, md: 44 }, fontWeight: 760, lineHeight: 1.04, fontFamily: headingFont, maxWidth: 760, mt: 1.5 }}>
-                {portal.title}
-              </Typography>
-              <Typography sx={{ color: portal.clientSummary ? muted : "var(--app-subtle, #7B848E)", fontSize: 14, mt: 1.3, maxWidth: 680, lineHeight: 1.65 }}>
-                {portal.clientSummary || "Your editor has not added a client-facing project summary yet."}
-              </Typography>
-              <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr 1fr", md: "repeat(4, minmax(0, 1fr))" }, gap: 1.2, mt: 2.4 }}>
-                <InfoTile label="Client" value={portal.clientName || "Client"} />
-                <InfoTile label="Type" value={portal.projectType} />
-                <InfoTile label="Due Date" value={formatDate(portal.dueDate)} />
-                <InfoTile label="Status" value={portal.status} />
-              </Box>
-            </Box>
-            <Box sx={{ p: { xs: 2.4, md: 3 }, bgcolor: softPanel }}>
-              <Typography sx={{ color: ink, fontSize: 19, fontWeight: 760 }}>Project Summary</Typography>
-              <Stack gap={1.3} sx={{ mt: 2 }}>
-                <SummaryMetric icon={<PlayArrowRoundedIcon />} label="Completion" value={`${portal.progress}%`} />
-                <LinearProgress variant="determinate" value={portal.progress} sx={{ height: 7, borderRadius: 99, bgcolor: progressTrack, "& .MuiLinearProgress-bar": { bgcolor: accent } }} />
-                <SummaryMetric icon={<CheckCircleOutlineIcon />} label="Delivery Status" value={portal.status === "Delivered" ? "Delivered" : "In production"} />
-                <SummaryMetric icon={<AccessTimeOutlinedIcon />} label="Last Updated" value={formatDateTime(portal.updatedAt)} />
-                <SummaryMetric icon={<CalendarTodayOutlinedIcon />} label="Estimated Completion" value={formatDate(portal.estimatedCompletion)} />
-              </Stack>
-            </Box>
-          </Box>
-        </Paper>
+function AccessState({
+  title,
+  body,
+  children,
+}: {
+  title: string;
+  body: string;
+  children?: ReactNode;
+}) {
+  return (
+    <main className="grid min-h-dvh place-items-center bg-background px-5 py-10 text-foreground">
+      <section className="w-full max-w-lg border border-border bg-card p-6 text-card-foreground sm:p-10">
+        <RelayBrand compact />
+        <div className="mt-14 flex flex-col items-center text-center">
+          <span
+            className="grid size-14 place-items-center border border-border text-muted-foreground"
+            aria-hidden="true"
+          >
+            {children ? (
+              <LockKeyhole className="size-6" />
+            ) : (
+              <ShieldCheck className="size-6" />
+            )}
+          </span>
+          <h1 className="mt-6 text-2xl font-semibold tracking-tight">
+            {title}
+          </h1>
+          <p className="mt-2 max-w-sm text-sm leading-6 text-muted-foreground">
+            {body}
+          </p>
+          {children ? <div className="mt-8 w-full">{children}</div> : null}
+        </div>
+        <p className="mt-14 text-xs text-muted-foreground">
+          Private project view · No account required
+        </p>
+      </section>
+    </main>
+  );
+}
 
-        <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", xl: "minmax(0, 1fr) 360px" }, gap: 2 }}>
-          <Stack gap={2}>
-            <PortalSection title="Workflow Progress" subtitle="The current production stage at a glance.">
-              <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr 1fr", md: "repeat(4, minmax(0, 1fr))" }, gap: 1.2 }}>
-                {stages.map((stage, index) => {
-                  const complete = index < currentStageIndex || portal.status === "Delivered";
-                  const current = index === currentStageIndex;
-                  return (
-                    <Box key={stage} sx={{ p: 1.4, border: `1px solid ${current ? accent : border}`, borderRadius: "6px", bgcolor: complete || current ? activeBg : panel, minHeight: 98 }}>
-                      <Stack direction="row" justifyContent="space-between">
-                        <Typography sx={{ color: complete || current ? accent : muted, fontSize: 11, fontWeight: 800 }}>0{index + 1}</Typography>
-                        {complete ? <CheckCircleOutlineIcon sx={{ color: accent, fontSize: 18 }} /> : null}
-                      </Stack>
-                      <Typography sx={{ color: ink, fontSize: 14, fontWeight: 760, mt: 1.4 }}>{stage}</Typography>
-                      <Typography sx={{ color: muted, fontSize: 11.5, mt: 0.35 }}>{current ? "Current stage" : complete ? "Completed" : "Upcoming"}</Typography>
-                    </Box>
-                  );
-                })}
-              </Box>
-            </PortalSection>
-
-            <PortalSection title="Deliverables" subtitle="Review or download files shared by your editor.">
-              {portal.deliverables.length ? (
-                <Stack divider={<Divider flexItem sx={{ borderColor: border }} />}>
-                  {portal.deliverables.map((item) => (
-                    <Box key={`${item.title}-${item.updatedAt}`} sx={{ display: "grid", gridTemplateColumns: { xs: "1fr auto", md: "minmax(0, 1fr) 130px auto" }, gap: 1.2, py: 1.35, alignItems: "center" }}>
-                      <Box sx={{ minWidth: 0 }}>
-                        <Typography sx={{ color: ink, fontSize: 14, fontWeight: 760 }}>{item.title}</Typography>
-                        <Typography sx={{ color: muted, fontSize: 12, mt: 0.3 }}>{item.detail || "Shared project file"}</Typography>
-                      </Box>
-                      <StatusChip label={approvalStatusLabel(item.status)} tone={deliverableTone(item.status)} />
-                      <Stack direction="row" gap={0.6}>
-                        <Button component="a" href={item.url} target="_blank" rel="noreferrer" aria-label={`View ${item.title}`} sx={iconButtonSx}>
-                          <OpenInNewIcon sx={{ fontSize: 18 }} />
-                        </Button>
-                        {item.downloadable ? (
-                          <Button component="a" href={item.url} download target="_blank" rel="noreferrer" aria-label={`Download ${item.title}`} sx={iconButtonSx}>
-                            <FileDownloadOutlinedIcon sx={{ fontSize: 18 }} />
-                          </Button>
-                        ) : null}
-                      </Stack>
-                    </Box>
-                  ))}
-                </Stack>
-              ) : <PortalEmpty asset="resources" title="No deliverables yet" body="Files will appear here as soon as your editor makes them available." />}
-            </PortalSection>
-
-            <PortalSection title="Revision Requests" subtitle="Review previous requests or submit clear, timestamped feedback.">
-              {portal.revisions.length ? (
-                <Stack gap={1}>
-                  {portal.revisions.map((item) => (
-                    <Box key={`${item.createdAt}-${item.message}`} sx={{ p: 1.35, border: `1px solid ${border}`, borderRadius: "6px", bgcolor: panel }}>
-                      <Stack direction="row" justifyContent="space-between" gap={1}>
-                        <Typography sx={{ color: ink, fontSize: 13, fontWeight: 760 }}>{item.clientName || "Client"}</Typography>
-                        <StatusChip label={item.status} tone={item.status === "Resolved" ? "success" : "warning"} />
-                      </Stack>
-                      <Typography sx={{ color: muted, fontSize: 11.5, mt: 0.25 }}>{formatDateTime(item.createdAt)}</Typography>
-                      {item.timecode ? (
-                        <Chip
-                          icon={<AccessTimeOutlinedIcon />}
-                          label={item.timecode}
-                          size="small"
-                          sx={{ mt: 0.75, height: 24, borderRadius: "5px", bgcolor: activeBg, color: accent, fontWeight: 760, "& .MuiChip-icon": { color: accent, fontSize: 15 } }}
-                        />
-                      ) : null}
-                      <Typography sx={{ color: ink, fontSize: 13, lineHeight: 1.55, mt: 0.75, whiteSpace: "pre-wrap" }}>{item.message}</Typography>
-                    </Box>
-                  ))}
-                </Stack>
-              ) : <PortalEmpty asset="feedback" title="No revision requests" body="Submit the first request below if anything needs to change." />}
-              <Divider sx={{ my: 2, borderColor: border }} />
-              <Stack gap={1.1}>
-                <TextField label="Your name" value={clientName} onChange={(event) => setClientName(event.target.value)} size="small" inputProps={{ maxLength: 100 }} />
-                <TextField
-                  label="Timecode (optional)"
-                  value={timecode}
-                  onChange={(event) => {
-                    setTimecode(event.target.value);
-                    if (error) setError("");
-                  }}
-                  size="small"
-                  placeholder="00:12 or 00:01:25"
-                  inputProps={{ maxLength: 8, inputMode: "text" }}
-                  helperText={TIMECODE_FORMAT_HINT}
+function ActivePortal({
+  portal,
+  comments,
+  commentsLoading,
+  files,
+  filesLoading,
+  displayName,
+  onDisplayNameChange,
+  onClearDisplayName,
+  onAddComment,
+  onReopenComment,
+  busyOutputId,
+  busyCommentId,
+}: {
+  portal: PublicPortal;
+  comments: readonly MediaVersionComment[];
+  commentsLoading: boolean;
+  files: readonly PublicFile[];
+  filesLoading: boolean;
+  displayName: string;
+  onDisplayNameChange: (value: string) => void;
+  onClearDisplayName: () => void;
+  onAddComment: (
+    outputId: string,
+    mediaVersionId: string,
+    body: string
+  ) => Promise<void>;
+  onReopenComment: (commentId: string) => Promise<void>;
+  busyOutputId: string;
+  busyCommentId: string;
+}) {
+  const currentStage = displayStage(portal.stage);
+  const currentIndex = PUBLIC_STAGES.findIndex((item) => item === currentStage);
+  return (
+    <main className="min-h-dvh bg-background text-foreground">
+      <div className="mx-auto w-full max-w-3xl px-5 py-6 sm:px-8 sm:py-10">
+        <header className="flex items-center justify-between gap-4 border-b border-border pb-5">
+          {portal.branding ? (
+            <span
+              className="text-base font-semibold"
+              style={{ color: portal.branding.accentColor }}
+            >
+              {portal.branding.name}
+            </span>
+          ) : (
+            <RelayBrand compact />
+          )}
+          <span className="text-xs font-medium text-muted-foreground">
+            Client portal
+          </span>
+        </header>
+        <section className="border-b border-border py-12">
+          <p className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+            Shared project
+          </p>
+          <h1 className="mt-3 max-w-2xl text-3xl font-semibold tracking-tight sm:text-5xl">
+            {portal.title}
+          </h1>
+          {portal.clientName ? (
+            <p className="mt-3 text-sm text-muted-foreground">
+              For {portal.clientName}
+            </p>
+          ) : null}
+          {portal.summary ? (
+            <p className="mt-7 max-w-2xl text-base leading-7 text-muted-foreground">
+              {portal.summary}
+            </p>
+          ) : null}
+          <div className="mt-8 flex flex-wrap gap-x-8 gap-y-3 text-sm">
+            {portal.startDate ? (
+              <span className="inline-flex items-center gap-2">
+                <CalendarDays
+                  className="size-4 text-muted-foreground"
+                  aria-hidden="true"
                 />
-                <TextField
-                  label="Revision request"
-                  value={request}
-                  onChange={(event) => {
-                    setRequest(event.target.value);
-                    if (submitState === "submitted") setSubmitState("idle");
-                    if (error) setError("");
-                  }}
-                  multiline
-                  minRows={4}
-                  inputProps={{ maxLength: 2000 }}
-                  placeholder="Describe the change with timestamps, file names, or visual references."
-                  error={Boolean(error)}
-                  helperText={error || `${request.length}/2000 characters`}
+                Started {formatDate(portal.startDate)}
+              </span>
+            ) : null}
+            <span className="inline-flex items-center gap-2">
+              <CalendarDays
+                className="size-4 text-muted-foreground"
+                aria-hidden="true"
+              />
+              Due {formatDate(portal.dueDate)}
+            </span>
+            <span className="inline-flex items-center gap-2">
+              <span
+                className="size-2 rounded-full bg-foreground"
+                aria-hidden="true"
+              />
+              {currentStage}
+            </span>
+          </div>
+        </section>
+        <section
+          aria-labelledby="progress-title"
+          className="border-b border-border py-10"
+        >
+          <div className="flex items-end justify-between gap-4">
+            <div>
+              <h2 id="progress-title" className="text-lg font-semibold">
+                Project progress
+              </h2>
+              <p className="mt-1 text-sm text-muted-foreground">
+                A client-safe view of the current stage.
+              </p>
+            </div>
+            <span className="text-2xl font-semibold tabular-nums">
+              {portal.progress}%
+            </span>
+          </div>
+          <div
+            role="progressbar"
+            aria-label="Project progress"
+            aria-valuemin={0}
+            aria-valuemax={100}
+            aria-valuenow={portal.progress}
+            className="mt-6 h-1.5 bg-muted"
+          >
+            <span
+              className="block h-full bg-foreground"
+              style={{ width: `${portal.progress}%` }}
+            />
+          </div>
+          <ol className="mt-7 grid grid-cols-2 gap-y-5 sm:grid-cols-4 sm:gap-x-4">
+            {PUBLIC_STAGES.map((stage, index) => {
+              const complete = currentIndex >= 0 && index < currentIndex;
+              const current = stage === currentStage;
+              return (
+                <li
+                  key={stage}
+                  aria-current={current ? "step" : undefined}
+                  className="flex items-center gap-2 text-sm"
+                >
+                  <span
+                    className={cn(
+                      "grid size-6 shrink-0 place-items-center border text-xs",
+                      complete || current
+                        ? "border-foreground bg-foreground text-background"
+                        : "border-border text-muted-foreground"
+                    )}
+                  >
+                    {complete ? (
+                      <Check className="size-3.5" aria-hidden="true" />
+                    ) : (
+                      index + 1
+                    )}
+                  </span>
+                  <span
+                    className={cn(
+                      current ? "font-semibold" : "text-muted-foreground"
+                    )}
+                  >
+                    {stage}
+                  </span>
+                </li>
+              );
+            })}
+          </ol>
+        </section>
+        <section aria-labelledby="outputs-title" className="py-10">
+          <div className="flex items-end justify-between gap-4">
+            <div>
+              <h2 id="outputs-title" className="text-lg font-semibold">
+                Shared outputs
+              </h2>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Only the current version shared by your editor appears here.
+              </p>
+            </div>
+            <Badge variant="outline">{portal.outputs.length}</Badge>
+          </div>
+          {portal.outputs.length ? (
+            <div className="mt-6 divide-y divide-border border-y border-border">
+              {portal.outputs.map((output) => (
+                <PublicOutputRow
+                  key={output.id}
+                  output={output}
+                  comments={comments}
+                  commentsLoading={commentsLoading}
+                  displayName={displayName}
+                  onDisplayNameChange={onDisplayNameChange}
+                  onClearDisplayName={onClearDisplayName}
+                  onAddComment={onAddComment}
+                  onReopenComment={onReopenComment}
+                  busy={busyOutputId === output.id}
+                  busyCommentId={busyCommentId}
                 />
-                <Stack direction={{ xs: "column", sm: "row" }} justifyContent="space-between" alignItems={{ xs: "stretch", sm: "center" }} gap={1}>
-                  <Typography sx={{ color: submitState === "submitted" ? accent : muted, fontSize: 12 }}>
-                    {submitState === "submitted" ? "Revision request submitted." : "Project management details remain read-only."}
-                  </Typography>
-                  <Button variant="contained" startIcon={<ChatBubbleOutlineOutlinedIcon />} onClick={submitFeedback} disabled={!request.trim() || submitState === "submitting"} sx={{ bgcolor: accent, color: "#fff", borderRadius: "6px", fontWeight: 760, "&:hover": { bgcolor: accent } }}>
-                    {submitState === "submitting" ? "Submitting..." : "Submit Request"}
-                  </Button>
-                </Stack>
-              </Stack>
-            </PortalSection>
-          </Stack>
-
-          <Stack gap={2}>
-            <PortalSection title="Revision Allowance" subtitle="Included project revision tracking.">
-              <Box sx={{ display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", gap: 1 }}>
-                <MiniNumber label="Included" value={portal.revisionLimit} />
-                <MiniNumber label="Used" value={revisionsUsed} />
-                <MiniNumber label="Remaining" value={revisionsRemaining} />
-              </Box>
-              <LinearProgress variant="determinate" value={portal.revisionLimit ? Math.min(100, (revisionsUsed / portal.revisionLimit) * 100) : 0} sx={{ height: 6, borderRadius: 99, bgcolor: progressTrack, mt: 1.5, "& .MuiLinearProgress-bar": { bgcolor: accent } }} />
-            </PortalSection>
-
-            <PortalSection title="Project Notes" subtitle="Notes intentionally shared with you.">
-              {portal.clientNotes ? (
-                <Typography sx={{ color: ink, fontSize: 13, whiteSpace: "pre-wrap", lineHeight: 1.65 }}>{portal.clientNotes}</Typography>
-              ) : <PortalEmpty asset="feedback" title="No client notes" body="Your editor has not shared any project notes yet." compact />}
-            </PortalSection>
-
-            <PortalSection title="Timeline" subtitle="Major client-visible milestones.">
-              {portal.events.length ? (
-                <Stack gap={1.3}>
-                  {[...portal.events].reverse().map((item) => (
-                    <Box key={`${item.createdAt}-${item.title}`} sx={{ pl: 1.35, borderLeft: `2px solid ${border}` }}>
-                      <Typography sx={{ color: accent, fontSize: 11.5, fontWeight: 760 }}>{formatDateTime(item.createdAt)}</Typography>
-                      <Typography sx={{ color: ink, fontSize: 13, fontWeight: 760, mt: 0.3 }}>{item.title}</Typography>
-                      <Typography sx={{ color: muted, fontSize: 12, lineHeight: 1.45, mt: 0.3 }}>{item.body}</Typography>
-                    </Box>
-                  ))}
-                </Stack>
-              ) : <PortalEmpty asset="schedule" title="No timeline events" body="Project milestones will appear here as work moves forward." compact />}
-            </PortalSection>
-
-            <PortalSection title="Recent Activity" subtitle="Latest project updates.">
-              {portal.events.length ? (
-                <Stack divider={<Divider flexItem sx={{ borderColor: border }} />}>
-                  {portal.events.slice(0, 5).map((item) => (
-                    <Box key={`${item.createdAt}-${item.title}`} sx={{ py: 1 }}>
-                      <Typography sx={{ color: ink, fontSize: 13, fontWeight: 760 }}>{item.title}</Typography>
-                      <Typography sx={{ color: muted, fontSize: 11.5, mt: 0.25 }}>{formatDateTime(item.createdAt)}</Typography>
-                    </Box>
-                  ))}
-                </Stack>
-              ) : <PortalEmpty asset="schedule" title="No recent activity" body="Updates will appear as the editor advances the project." compact />}
-            </PortalSection>
-          </Stack>
-        </Box>
-      </Box>
-    </Box>
+              ))}
+            </div>
+          ) : (
+            <div className="mt-6 border border-dashed border-border p-8 text-center text-sm text-muted-foreground">
+              No outputs have been shared yet.
+            </div>
+          )}
+        </section>
+        <PublicFilesSection files={files} loading={filesLoading} />
+        {portal.notes ? (
+          <section
+            aria-labelledby="notes-title"
+            className="border-t border-border py-10"
+          >
+            <h2 id="notes-title" className="text-lg font-semibold">
+              Notes from your editor
+            </h2>
+            <p className="mt-3 max-w-2xl whitespace-pre-wrap text-sm leading-6 text-muted-foreground">
+              {portal.notes}
+            </p>
+          </section>
+        ) : null}
+        <footer className="border-t border-border pt-5 text-xs text-muted-foreground">
+          Shared securely through Relay.
+        </footer>
+      </div>
+    </main>
   );
 }
 
-function PortalState({ title, body, children }: { title: string; body: string; children: React.ReactNode }) {
+function PublicFilesSection({
+  files,
+  loading,
+}: {
+  files: readonly PublicFile[];
+  loading: boolean;
+}) {
   return (
-    <Box sx={{ minHeight: "100dvh", bgcolor: canvas, color: ink, display: "grid", placeItems: "center", px: 2 }}>
-      <Paper sx={{ ...panelSx, width: "min(100%, 620px)", p: { xs: 3, md: 5 }, textAlign: "center" }}>
-        <Box sx={{ display: "flex", justifyContent: "center", mb: 3 }}><CutLabLockup subtitle="Client Portal" /></Box>
-        <Box sx={{ display: "flex", justifyContent: "center", mb: 2 }}>{children}</Box>
-        <Typography sx={{ fontFamily: headingFont, fontSize: 28, fontWeight: 760 }}>{title}</Typography>
-        <Typography sx={{ color: muted, fontSize: 13.5, lineHeight: 1.65, mt: 1 }}>{body}</Typography>
-      </Paper>
-    </Box>
+    <section
+      aria-labelledby="files-title"
+      className="border-t border-border py-10"
+    >
+      <div className="flex items-end justify-between gap-4">
+        <div>
+          <h2 id="files-title" className="text-lg font-semibold">
+            Files
+          </h2>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Files your editor has chosen to share.
+          </p>
+        </div>
+        <Badge variant="outline">{loading ? "…" : files.length}</Badge>
+      </div>
+      {loading ? (
+        <p className="mt-6 text-sm text-muted-foreground">
+          Loading shared files…
+        </p>
+      ) : files.length ? (
+        <div className="mt-6 divide-y divide-border border-y border-border">
+          {files.map((file) => (
+            <article
+              key={file.id}
+              className="grid gap-3 py-5 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center"
+            >
+              <div className="flex min-w-0 gap-3">
+                <FileText
+                  className="mt-0.5 size-4 shrink-0 text-muted-foreground"
+                  aria-hidden="true"
+                />
+                <div className="min-w-0">
+                  <h3 className="truncate font-semibold">{file.title}</h3>
+                  <p className="mt-1 truncate text-xs text-muted-foreground">
+                    {fileKind(file.mimeType)} · {file.fileName}
+                  </p>
+                  {file.description ? (
+                    <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-muted-foreground">
+                      {file.description}
+                    </p>
+                  ) : null}
+                </div>
+              </div>
+              <div className="flex flex-wrap items-center gap-4 sm:justify-end">
+                <a
+                  href={file.url}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center gap-2 text-sm font-medium underline decoration-border underline-offset-4 hover:decoration-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                >
+                  Open <ArrowUpRight className="size-4" aria-hidden="true" />
+                </a>
+                {file.downloadable ? (
+                  <a
+                    href={file.url}
+                    download={file.fileName}
+                    className="inline-flex items-center gap-2 text-sm font-medium underline decoration-border underline-offset-4 hover:decoration-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  >
+                    Download <Download className="size-4" aria-hidden="true" />
+                  </a>
+                ) : null}
+              </div>
+            </article>
+          ))}
+        </div>
+      ) : (
+        <p className="mt-6 border border-dashed border-border p-8 text-center text-sm text-muted-foreground">
+          No files have been shared yet.
+        </p>
+      )}
+    </section>
   );
 }
 
-function PortalSection({ title, subtitle, children }: { title: string; subtitle: string; children: React.ReactNode }) {
+function PublicOutputRow({
+  output,
+  comments,
+  commentsLoading,
+  displayName,
+  onDisplayNameChange,
+  onClearDisplayName,
+  onAddComment,
+  onReopenComment,
+  busy,
+  busyCommentId,
+}: {
+  output: PublicOutput;
+  comments: readonly MediaVersionComment[];
+  commentsLoading: boolean;
+  displayName: string;
+  onDisplayNameChange: (value: string) => void;
+  onClearDisplayName: () => void;
+  onAddComment: (
+    outputId: string,
+    mediaVersionId: string,
+    body: string
+  ) => Promise<void>;
+  onReopenComment: (commentId: string) => Promise<void>;
+  busy: boolean;
+  busyCommentId: string;
+}) {
+  const state = output.reviewState
+    ? (reviewLabels[output.reviewState] ?? output.reviewState)
+    : undefined;
+  const currentVersion = output.currentVersion;
   return (
-    <Paper component="section" sx={{ ...panelSx, p: 2 }}>
-      <Typography sx={{ color: ink, fontSize: 19, fontWeight: 760 }}>{title}</Typography>
-      <Typography sx={{ color: muted, fontSize: 12.5, mt: 0.35, mb: 1.6 }}>{subtitle}</Typography>
-      {children}
-    </Paper>
+    <article className="grid gap-4 py-5 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
+      <div className="min-w-0">
+        <h3 className="font-semibold">{output.title}</h3>
+        <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
+          {state ? <span>{state}</span> : null}
+          {output.dueDate ? (
+            <span>Due {formatDate(output.dueDate)}</span>
+          ) : null}
+          {currentVersion ? (
+            <span>
+              {currentVersion.source.provider} · {currentVersion.label}
+            </span>
+          ) : null}
+        </div>
+      </div>
+      {currentVersion ? (
+        <a
+          href={currentVersion.source.url}
+          target="_blank"
+          rel="noreferrer"
+          className="inline-flex w-fit items-center gap-2 text-sm font-medium underline decoration-border underline-offset-4 hover:decoration-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        >
+          Open current version{" "}
+          <ArrowUpRight className="size-4" aria-hidden="true" />
+        </a>
+      ) : (
+        <span className="text-sm text-muted-foreground">
+          No version shared yet
+        </span>
+      )}
+      {currentVersion ? (
+        <div className="sm:col-span-2">
+          <PublicMediaVersionComments
+            versionId={currentVersion.id}
+            comments={comments}
+            displayName={displayName}
+            onDisplayNameChange={onDisplayNameChange}
+            onClearDisplayName={onClearDisplayName}
+            onSubmit={(body) =>
+              onAddComment(output.id, currentVersion.id, body)
+            }
+            onReopen={onReopenComment}
+            busyCommentId={busyCommentId}
+            busy={busy}
+            loading={commentsLoading}
+          />
+        </div>
+      ) : null}
+    </article>
   );
 }
-
-function PortalEmpty({ asset, title, body, compact = false }: { asset: keyof typeof emptyStateAssets; title: string; body: string; compact?: boolean }) {
-  return (
-    <Stack direction={compact ? "row" : "column"} alignItems="center" justifyContent="center" gap={1.2} sx={{ minHeight: compact ? 90 : 170, textAlign: compact ? "left" : "center" }}>
-      <Box component="img" src={emptyStateAssets[asset]} alt="" aria-hidden="true" sx={{ width: compact ? 84 : 130, flexShrink: 0 }} />
-      <Box>
-        <Typography sx={{ color: ink, fontSize: 13.5, fontWeight: 760 }}>{title}</Typography>
-        <Typography sx={{ color: muted, fontSize: 11.5, lineHeight: 1.45, mt: 0.3 }}>{body}</Typography>
-      </Box>
-    </Stack>
-  );
-}
-
-function InfoTile({ label, value }: { label: string; value: string }) {
-  return (
-    <Box sx={{ p: 1.15, border: `1px solid ${border}`, borderRadius: "6px", bgcolor: panel }}>
-      <Typography sx={{ color: muted, fontSize: 10.5, fontWeight: 760, textTransform: "uppercase" }}>{label}</Typography>
-      <Typography sx={{ color: ink, fontSize: 12.5, fontWeight: 760, mt: 0.5 }}>{value}</Typography>
-    </Box>
-  );
-}
-
-function SummaryMetric({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) {
-  return (
-    <Stack direction="row" alignItems="center" gap={1}>
-      <Box sx={{ width: 34, height: 34, borderRadius: "6px", border: `1px solid ${border}`, display: "grid", placeItems: "center", color: accent, bgcolor: panel, flexShrink: 0 }}>{icon}</Box>
-      <Box sx={{ minWidth: 0 }}>
-        <Typography sx={{ color: muted, fontSize: 10.5, fontWeight: 760, textTransform: "uppercase" }}>{label}</Typography>
-        <Typography sx={{ color: ink, fontSize: 12.5, fontWeight: 760, mt: 0.2 }}>{value}</Typography>
-      </Box>
-    </Stack>
-  );
-}
-
-function MiniNumber({ label, value }: { label: string; value: number }) {
-  return (
-    <Box sx={{ p: 1, border: `1px solid ${border}`, borderRadius: "6px", bgcolor: panel, textAlign: "center" }}>
-      <Typography sx={{ color: ink, fontSize: 24, fontWeight: 760, lineHeight: 1 }}>{value}</Typography>
-      <Typography sx={{ color: muted, fontSize: 10.5, mt: 0.45 }}>{label}</Typography>
-    </Box>
-  );
-}
-
-function StatusChip({ label, tone }: { label: string; tone: "success" | "warning" | "neutral" }) {
-  const palette = {
-    success: { bg: "var(--app-success-bg, rgba(35,181,142,0.14))", fg: `var(--app-success, ${cutlab.color.success})` },
-    warning: { bg: "var(--app-warning-bg, rgba(245,166,35,0.14))", fg: `var(--app-warning, ${cutlab.color.warning})` },
-    neutral: { bg: softPanel, fg: muted }
-  }[tone];
-  return <Chip label={label} size="small" sx={{ bgcolor: palette.bg, color: palette.fg, borderRadius: "5px", fontSize: 11.5, fontWeight: 760, justifySelf: "start" }} />;
-}
-
-function deliverableTone(status: string): "success" | "warning" | "neutral" {
-  if (status === "approved" || status === "final_delivered") return "success";
-  if (status === "sent_to_client" || status === "changes_requested") return "warning";
-  return "neutral";
-}
-
-function formatDate(value: string) {
-  const date = new Date(value.length === 10 ? `${value}T12:00:00` : value);
-  return Number.isFinite(date.getTime())
-    ? new Intl.DateTimeFormat("en", { month: "short", day: "numeric", year: "numeric" }).format(date)
-    : value || "Not scheduled";
-}
-
-function formatDateTime(value: string) {
-  const date = new Date(value);
-  return Number.isFinite(date.getTime())
-    ? new Intl.DateTimeFormat("en", { month: "short", day: "numeric", year: "numeric", hour: "numeric", minute: "2-digit" }).format(date)
-    : "Recently";
-}
-
-const iconButtonSx = {
-  minWidth: 36,
-  width: 36,
-  height: 36,
-  color: accent,
-  p: 0,
-  border: `1px solid ${border}`,
-  borderRadius: "6px"
-};

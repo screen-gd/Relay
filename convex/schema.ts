@@ -1,24 +1,176 @@
 import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
+import { clientValidator } from "./workspaceClients";
 import {
   clientPortalStageValidator,
   fileCategoryValidator,
   fileProviderValidator,
   fileStatusValidator,
   memberStatusValidator,
+  mediaSourceValidator,
   notificationKindValidator,
   portalEventKindValidator,
   projectActivityKindValidator,
+  projectOutputReviewStateValidator,
+  projectPortalStatusValidator,
   revisionStatusValidator,
   settingsTeamRoleValidator,
   storedDeliverableStatusValidator,
   storedFileStatusValidator,
   storedProjectStatusValidator,
   storedTeamRoleValidator,
+  subscriptionPlanValidator,
+  billingPeriodValidator,
+  subscriptionStatusValidator,
+  reconciliationStateValidator,
   teamActivityKindValidator,
+  waitlistAudienceValidator,
+  workflowStageValidator,
 } from "./domainValidators";
 
 export default defineSchema({
+  clients: defineTable(
+    clientValidator.extend({ ownerUserId: v.string() })
+  ).index("by_ownerUserId_and_id", ["ownerUserId", "id"]),
+  projects: defineTable({
+    ownerUserId: v.string(),
+    id: v.string(),
+    teamId: v.optional(v.string()),
+    assigneeUserIds: v.array(v.string()),
+    profileId: v.string(),
+    title: v.string(),
+    clientId: v.string(),
+    salaryPlanId: v.optional(v.id("salaryPlans")),
+    projectGroupId: v.optional(v.string()),
+    archived: v.boolean(),
+    status: storedProjectStatusValidator,
+    workflowStageId: v.string(),
+    workflowStages: v.array(workflowStageValidator),
+    workType: v.string(),
+    startDate: v.string(),
+    dueDate: v.string(),
+    earnings: v.number(),
+    paid: v.boolean(),
+    paidDate: v.optional(v.string()),
+    completedAt: v.optional(v.string()),
+    notes: v.string(),
+    templateId: v.optional(v.string()),
+    templateProjectType: v.optional(v.string()),
+    createdAt: v.string(),
+    updatedAt: v.string(),
+  })
+    .index("by_ownerUserId_and_teamId", ["ownerUserId", "teamId"])
+    .index("by_ownerUserId_and_id", ["ownerUserId", "id"])
+    .index("by_projectId", ["id"])
+    .index("by_teamId", ["teamId"])
+    .index("by_teamId_and_id", ["teamId", "id"]),
+
+  projectSalaryBatches: defineTable({
+    ownerUserId: v.string(),
+    id: v.string(),
+    number: v.number(),
+    workType: v.string(),
+    requiredProjectCount: v.number(),
+    amount: v.number(),
+    projectIds: v.array(v.string()),
+    salaryPlanId: v.optional(v.id("salaryPlans")),
+    clientId: v.optional(v.string()),
+    clientName: v.optional(v.string()),
+    planStartDate: v.optional(v.string()),
+    planNotes: v.optional(v.string()),
+    completedAt: v.string(),
+    paid: v.boolean(),
+    paidAt: v.optional(v.string()),
+    received: v.optional(v.boolean()),
+    receivedAt: v.optional(v.string()),
+    correctionNote: v.optional(v.string()),
+  })
+    .index("by_ownerUserId", ["ownerUserId"])
+    .index("by_ownerUserId_and_id", ["ownerUserId", "id"])
+    .index("by_ownerUserId_and_workType", ["ownerUserId", "workType"]),
+
+  salaryPlans: defineTable({
+    ownerUserId: v.string(),
+    clientId: v.string(),
+    requiredProjectCount: v.number(),
+    amount: v.number(),
+    startDate: v.string(),
+    notes: v.string(),
+    archived: v.boolean(),
+    createdAt: v.string(),
+    updatedAt: v.string(),
+  })
+    .index("by_ownerUserId", ["ownerUserId"])
+    .index("by_ownerUserId_and_archived", ["ownerUserId", "archived"]),
+
+  projectOutputs: defineTable({
+    ownerUserId: v.string(),
+    projectId: v.string(),
+    teamId: v.optional(v.string()),
+    id: v.string(),
+    title: v.string(),
+    description: v.string(),
+    category: fileCategoryValidator,
+    reviewState: projectOutputReviewStateValidator,
+    dueDate: v.optional(v.string()),
+    archived: v.boolean(),
+    currentMediaVersionId: v.optional(v.id("projectMediaVersions")),
+    createdAt: v.string(),
+    updatedAt: v.string(),
+  })
+    .index("by_outputId", ["id"])
+    .index("by_projectId", ["projectId"])
+    .index("by_projectId_and_archived", ["projectId", "archived"]),
+
+  projectMediaVersions: defineTable({
+    ownerUserId: v.string(),
+    projectId: v.string(),
+    outputId: v.id("projectOutputs"),
+    id: v.string(),
+    versionNumber: v.number(),
+    source: mediaSourceValidator,
+    title: v.string(),
+    notes: v.string(),
+    createdByUserId: v.string(),
+    createdAt: v.string(),
+  })
+    .index("by_versionId", ["id"])
+    .index("by_outputId_and_versionNumber", ["outputId", "versionNumber"]),
+
+  projectPortals: defineTable({
+    ownerUserId: v.string(),
+    projectId: v.string(),
+    teamId: v.optional(v.string()),
+    tokenHash: v.string(),
+    status: projectPortalStatusValidator,
+    pinHash: v.optional(v.string()),
+    pinSalt: v.optional(v.string()),
+    pinIterations: v.optional(v.number()),
+    expiresAt: v.optional(v.string()),
+    publicNotes: v.string(),
+    showStartDate: v.boolean(),
+    showDueDate: v.boolean(),
+    selectedOutputIds: v.array(v.string()),
+    createdAt: v.string(),
+    updatedAt: v.string(),
+  })
+    .index("by_projectId", ["projectId"])
+    .index("by_tokenHash", ["tokenHash"]),
+
+  mediaVersionComments: defineTable({
+    ownerUserId: v.string(),
+    projectId: v.string(),
+    outputId: v.id("projectOutputs"),
+    mediaVersionId: v.id("projectMediaVersions"),
+    authorName: v.string(),
+    body: v.string(),
+    resolved: v.boolean(),
+    createdAt: v.string(),
+    resolvedAt: v.optional(v.string()),
+  })
+    .index("by_mediaVersionId", ["mediaVersionId"])
+    .index("by_outputId_and_resolved", ["outputId", "resolved"]),
+
   workItems: defineTable({
     userId: v.string(),
     id: v.string(),
@@ -28,6 +180,9 @@ export default defineSchema({
     profileId: v.string(),
     title: v.string(),
     client: v.optional(v.string()),
+    clientId: v.optional(v.string()),
+    projectGroupId: v.optional(v.string()),
+    archived: v.optional(v.boolean()),
     status: storedProjectStatusValidator,
     workType: v.string(),
     startDate: v.string(),
@@ -35,30 +190,52 @@ export default defineSchema({
     earnings: v.number(),
     paid: v.optional(v.boolean()),
     paidDate: v.optional(v.string()),
+    completedAt: v.optional(v.string()),
     notes: v.string(),
     templateId: v.optional(v.string()),
     templateProjectType: v.optional(v.string()),
     workflowStages: v.optional(v.array(v.string())),
-    templateDeliverables: v.optional(v.array(v.object({
-      title: v.string(),
-      category: fileCategoryValidator,
-      initialStatus: fileStatusValidator,
-    }))),
+    templateDeliverables: v.optional(
+      v.array(
+        v.object({
+          title: v.string(),
+          category: fileCategoryValidator,
+          initialStatus: fileStatusValidator,
+        })
+      )
+    ),
     checklistItems: v.optional(v.array(v.string())),
     checklistCompleted: v.optional(v.record(v.string(), v.boolean())),
-    integrationLinks: v.optional(v.record(
-      v.string(),
-      v.object({
-        url: v.string(),
-        label: v.string(),
-        notes: v.string(),
-        updatedAt: v.string(),
-      })
-    )),
+    integrationLinks: v.optional(
+      v.record(
+        v.string(),
+        v.object({
+          url: v.string(),
+          label: v.string(),
+          notes: v.string(),
+          updatedAt: v.string(),
+        })
+      )
+    ),
     createdAt: v.optional(v.string()),
   })
     .index("by_userId_and_teamId", ["userId", "teamId"])
     .index("by_workItemId", ["id"])
+    .index("by_teamId", ["teamId"])
+    .index("by_teamId_and_id", ["teamId", "id"]),
+
+  projectGroups: defineTable({
+    userId: v.string(),
+    id: v.string(),
+    teamId: v.optional(v.string()),
+    clientId: v.string(),
+    name: v.string(),
+    notes: v.string(),
+    archived: v.boolean(),
+    createdAt: v.string(),
+  })
+    .index("by_userId_and_teamId", ["userId", "teamId"])
+    .index("by_userId_and_id", ["userId", "id"])
     .index("by_teamId", ["teamId"])
     .index("by_teamId_and_id", ["teamId", "id"]),
 
@@ -134,6 +311,7 @@ export default defineSchema({
 
   projectFiles: defineTable({
     projectId: v.string(),
+    projectOutputId: v.optional(v.id("projectOutputs")),
     ownerUserId: v.string(),
     teamId: v.optional(v.string()),
     category: fileCategoryValidator,
@@ -142,6 +320,7 @@ export default defineSchema({
     status: storedFileStatusValidator,
     clientVisible: v.boolean(),
     downloadable: v.boolean(),
+    archived: v.optional(v.boolean()),
     createdByUserId: v.string(),
     createdByName: v.string(),
     createdAt: v.string(),
@@ -162,6 +341,7 @@ export default defineSchema({
     status: v.optional(fileStatusValidator),
     provider: fileProviderValidator,
     storageId: v.optional(v.id("_storage")),
+    r2Key: v.optional(v.string()),
     externalUrl: v.optional(v.string()),
     externalId: v.optional(v.string()),
     fileName: v.string(),
@@ -172,18 +352,97 @@ export default defineSchema({
     uploadedAt: v.string(),
     notes: v.string(),
   })
-    .index("by_projectFileId_and_versionNumber", ["projectFileId", "versionNumber"])
+    .index("by_projectFileId_and_versionNumber", [
+      "projectFileId",
+      "versionNumber",
+    ])
     .index("by_projectId_and_uploadedAt", ["projectId", "uploadedAt"])
-    .index("by_storageId", ["storageId"]),
+    .index("by_storageId", ["storageId"])
+    .index("by_r2Key", ["r2Key"]),
+
+  r2UploadSessions: defineTable({
+    projectId: v.string(),
+    projectFileId: v.optional(v.id("projectFiles")),
+    key: v.string(),
+    uploaderUserId: v.string(),
+    status: v.union(v.literal("pending"), v.literal("completed")),
+    createdAt: v.string(),
+    expiresAt: v.number(),
+  }),
+
+  workspaceStorageReservations: defineTable({
+    workspaceId: v.id("teamWorkspaces"),
+    projectId: v.string(),
+    uploaderUserId: v.string(),
+    bytes: v.number(),
+    status: v.union(
+      v.literal("pending"),
+      v.literal("committed"),
+      v.literal("released")
+    ),
+    createdAt: v.string(),
+    expiresAt: v.number(),
+  }).index("by_workspaceId_and_status", ["workspaceId", "status"]),
+
+  clientContacts: defineTable({
+    workspaceId: v.id("teamWorkspaces"),
+    clientId: v.string(),
+    email: v.string(),
+    name: v.string(),
+    active: v.boolean(),
+    createdAt: v.string(),
+  })
+    .index("by_workspaceId_and_clientId", ["workspaceId", "clientId"])
+    .index("by_email_and_active", ["email", "active"]),
+
+  clientHubProjects: defineTable({
+    workspaceId: v.id("teamWorkspaces"),
+    clientId: v.string(),
+    projectId: v.string(),
+    publishedAt: v.string(),
+  })
+    .index("by_workspaceId_and_projectId", ["workspaceId", "projectId"])
+    .index("by_workspaceId_and_clientId", ["workspaceId", "clientId"]),
 
   teamWorkspaces: defineTable({
     ownerUserId: v.string(),
     name: v.string(),
     inviteCode: v.string(),
     createdAt: v.string(),
+    allowAllTeamProjects: v.optional(v.boolean()),
+    currencyCode: v.optional(v.string()),
+    timeZone: v.optional(v.string()),
+    defaultWorkflowTemplateId: v.optional(v.string()),
+    portalBrandName: v.optional(v.string()),
+    portalAccentColor: v.optional(v.string()),
   })
     .index("by_ownerUserId", ["ownerUserId"])
     .index("by_inviteCode", ["inviteCode"]),
+
+  workspaceSubscriptions: defineTable({
+    workspaceId: v.id("teamWorkspaces"),
+    clerkUserId: v.optional(v.string()),
+    clerkOrganizationId: v.optional(v.string()),
+    clerkSubscriptionId: v.optional(v.string()),
+    clerkPlanId: v.optional(v.string()),
+    plan: subscriptionPlanValidator,
+    billingPeriod: billingPeriodValidator,
+    subscriptionStatus: subscriptionStatusValidator,
+    trialStartsAt: v.optional(v.string()),
+    trialEndsAt: v.optional(v.string()),
+    confirmedEditorQuantity: v.number(),
+    includedEditorSeatQuantity: v.number(),
+    purchasedExtraEditorSeatQuantity: v.number(),
+    storageAddonQuantity: v.number(),
+    retainedStorageBytes: v.optional(v.number()),
+    reservedStorageBytes: v.optional(v.number()),
+    lastClerkEventAt: v.optional(v.string()),
+    reconciliationState: reconciliationStateValidator,
+    updatedAt: v.string(),
+  })
+    .index("by_workspaceId", ["workspaceId"])
+    .index("by_clerkUserId", ["clerkUserId"])
+    .index("by_clerkOrganizationId", ["clerkOrganizationId"]),
 
   teamMembers: defineTable({
     teamId: v.string(),
@@ -229,9 +488,7 @@ export default defineSchema({
     timecode: v.optional(v.string()),
     mentions: v.array(v.string()),
     createdAt: v.string(),
-  })
-    .index("by_teamId_and_projectId", ["teamId", "projectId"])
-    .index("by_teamId_and_createdAt", ["teamId", "createdAt"]),
+  }).index("by_teamId_and_projectId", ["teamId", "projectId"]),
 
   teamNotifications: defineTable({
     teamId: v.string(),
@@ -242,8 +499,17 @@ export default defineSchema({
     read: v.boolean(),
     createdAt: v.string(),
   })
-    .index("by_teamId_and_userId_and_createdAt", ["teamId", "userId", "createdAt"])
-    .index("by_teamId_and_userId_and_read_and_createdAt", ["teamId", "userId", "read", "createdAt"]),
+    .index("by_teamId_and_userId_and_createdAt", [
+      "teamId",
+      "userId",
+      "createdAt",
+    ])
+    .index("by_teamId_and_userId_and_read_and_createdAt", [
+      "teamId",
+      "userId",
+      "read",
+      "createdAt",
+    ]),
 
   publicProfiles: defineTable({
     ownerUserId: v.string(),
@@ -262,12 +528,14 @@ export default defineSchema({
     activeProjects: v.number(),
     deliveredEdits: v.number(),
     avgTurnaroundDays: v.number(),
-    projects: v.array(v.object({
-      title: v.string(),
-      status: storedProjectStatusValidator,
-      workType: v.string(),
-      dueDate: v.string(),
-    })),
+    projects: v.array(
+      v.object({
+        title: v.string(),
+        status: storedProjectStatusValidator,
+        workType: v.string(),
+        dueDate: v.string(),
+      })
+    ),
     updatedAt: v.string(),
   })
     .index("by_ownerUserId", ["ownerUserId"])
@@ -290,40 +558,63 @@ export default defineSchema({
     weekStart: v.string(),
     currencyCode: v.string(),
     customClients: v.optional(v.array(v.string())),
-    customProjectTemplates: v.optional(v.array(v.object({
-      id: v.string(),
-      name: v.string(),
-      description: v.string(),
-      projectType: v.string(),
-      workType: v.union(v.literal("channel"), v.literal("freelance")),
-      durationDays: v.number(),
-      workflowStages: v.array(v.string()),
-      deliverables: v.array(v.object({
-        title: v.string(),
-        category: fileCategoryValidator,
-        initialStatus: fileStatusValidator,
-      })),
-      checklistItems: v.array(v.string()),
-      custom: v.optional(v.boolean()),
-      updatedAt: v.optional(v.string()),
-    }))),
+    clients: v.optional(
+      v.array(
+        v.object({
+          id: v.string(),
+          name: v.string(),
+          company: v.string(),
+          contactName: v.string(),
+          email: v.string(),
+          phone: v.string(),
+          notes: v.string(),
+          archived: v.boolean(),
+        })
+      )
+    ),
+    customProjectTemplates: v.optional(
+      v.array(
+        v.object({
+          id: v.string(),
+          name: v.string(),
+          description: v.string(),
+          projectType: v.string(),
+          workType: v.union(v.literal("channel"), v.literal("freelance")),
+          durationDays: v.number(),
+          workflowStages: v.array(v.union(v.string(), workflowStageValidator)),
+          deliverables: v.array(
+            v.object({
+              title: v.string(),
+              category: fileCategoryValidator,
+              initialStatus: fileStatusValidator,
+            })
+          ),
+          checklistItems: v.array(v.string()),
+          custom: v.optional(v.boolean()),
+          archived: v.optional(v.boolean()),
+          updatedAt: v.optional(v.string()),
+        })
+      )
+    ),
     projectTags: v.optional(v.array(v.string())),
     salaryWorkType: v.optional(v.string()),
     salaryBatchSize: v.optional(v.number()),
     salaryBatchAmount: v.optional(v.number()),
     projectStages: v.array(v.string()),
     notifications: v.record(v.string(), v.boolean()),
-    integrations: v.record(v.string(), v.boolean()),
-    integrationAccounts: v.record(v.string(), v.string()),
-    integrationLinks: v.optional(v.record(
-      v.string(),
-      v.object({
-        url: v.string(),
-        label: v.string(),
-        notes: v.string(),
-        updatedAt: v.string(),
-      })
-    )),
+    integrations: v.optional(v.record(v.string(), v.boolean())),
+    integrationAccounts: v.optional(v.record(v.string(), v.string())),
+    integrationLinks: v.optional(
+      v.record(
+        v.string(),
+        v.object({
+          url: v.string(),
+          label: v.string(),
+          notes: v.string(),
+          updatedAt: v.string(),
+        })
+      )
+    ),
     teamRole: settingsTeamRoleValidator,
     teamMembers: v.array(
       v.object({
@@ -333,7 +624,7 @@ export default defineSchema({
         email: v.string(),
       })
     ),
-    editorPermissions: v.record(v.string(), v.boolean()),
+    editorPermissions: v.optional(v.record(v.string(), v.boolean())),
     rolePermissions: v.record(v.string(), v.record(v.string(), v.boolean())),
     integrationConfigs: v.record(
       v.string(),
@@ -376,4 +667,13 @@ export default defineSchema({
     createdAt: v.string(),
     updatedAt: v.string(),
   }).index("by_userId", ["userId"]),
+
+  waitlistSignups: defineTable({
+    name: v.string(),
+    email: v.string(),
+    audience: waitlistAudienceValidator,
+    source: v.literal("marketing_site"),
+    status: v.literal("pending"),
+    submittedAt: v.number(),
+  }).index("by_email", ["email"]),
 });

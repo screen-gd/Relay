@@ -1,38 +1,16 @@
+import { requireProjectAccess } from "./projectAccess";
 import { v } from "convex/values";
-import { query, type MutationCtx, type QueryCtx } from "./_generated/server";
+import { query, type MutationCtx } from "./_generated/server";
 import type { Doc } from "./_generated/dataModel";
 import type { ProjectActivityKind } from "../src/lib/domain-values";
+import { projectActivityKindValidator } from "./domainValidators";
 
 const MAX_PROJECT_EVENTS = 150;
-
-async function requireProjectAccess(ctx: QueryCtx, projectId: string) {
-  const identity = await ctx.auth.getUserIdentity();
-  if (!identity) throw new Error("Not authenticated");
-  const project = await ctx.db
-    .query("workItems")
-    .withIndex("by_workItemId", (q) => q.eq("id", projectId))
-    .unique();
-  if (!project) throw new Error("Project not found");
-  if (!project.teamId) {
-    if (project.userId !== identity.tokenIdentifier) throw new Error("Project access required");
-    return project;
-  }
-  const membership = await ctx.db
-    .query("teamMembers")
-    .withIndex("by_teamId_and_userId", (q) =>
-      q.eq("teamId", project.teamId as string).eq("userId", identity.tokenIdentifier)
-    )
-    .unique();
-  if (!membership || membership.status !== "active" || !membership.permissions.viewProjects) {
-    throw new Error("Project access required");
-  }
-  return project;
-}
 
 export async function recordProjectActivity(
   ctx: MutationCtx,
   args: {
-    project: Pick<Doc<"workItems">, "id" | "userId" | "teamId">;
+    project: Pick<Doc<"projects">, "id" | "ownerUserId" | "teamId">;
     actorUserId: string;
     actorName: string;
     kind: ProjectActivityKind;
@@ -43,7 +21,9 @@ export async function recordProjectActivity(
 ) {
   const existing = await ctx.db
     .query("projectActivity")
-    .withIndex("by_projectId_and_createdAt", (q) => q.eq("projectId", args.project.id))
+    .withIndex("by_projectId_and_createdAt", (q) =>
+      q.eq("projectId", args.project.id)
+    )
     .order("desc")
     .take(MAX_PROJECT_EVENTS);
   if (existing.length >= MAX_PROJECT_EVENTS) {
@@ -51,10 +31,10 @@ export async function recordProjectActivity(
   }
   await ctx.db.insert("projectActivity", {
     projectId: args.project.id,
-    ownerUserId: args.project.userId,
+    ownerUserId: args.project.ownerUserId,
     teamId: args.project.teamId,
     actorUserId: args.actorUserId,
-    actorName: args.actorName.trim().slice(0, 120) || "CutLab user",
+    actorName: args.actorName.trim().slice(0, 120) || "Relay user",
     kind: args.kind,
     message: args.message.trim().slice(0, 500),
     detail: args.detail?.trim().slice(0, 1000),
@@ -62,11 +42,16 @@ export async function recordProjectActivity(
   });
 }
 
-export async function deleteProjectActivity(ctx: MutationCtx, projectId: string) {
+export async function deleteProjectActivity(
+  ctx: MutationCtx,
+  projectId: string
+) {
   while (true) {
     const events = await ctx.db
       .query("projectActivity")
-      .withIndex("by_projectId_and_createdAt", (q) => q.eq("projectId", projectId))
+      .withIndex("by_projectId_and_createdAt", (q) =>
+        q.eq("projectId", projectId)
+      )
       .take(100);
     if (!events.length) return;
     await Promise.all(events.map((event) => ctx.db.delete(event._id)));
@@ -75,11 +60,23 @@ export async function deleteProjectActivity(ctx: MutationCtx, projectId: string)
 
 export const listForProject = query({
   args: { projectId: v.string() },
+  returns: v.array(
+    v.object({
+      _id: v.id("projectActivity"),
+      actorName: v.string(),
+      kind: projectActivityKindValidator,
+      message: v.string(),
+      detail: v.optional(v.string()),
+      createdAt: v.string(),
+    })
+  ),
   handler: async (ctx, args) => {
     await requireProjectAccess(ctx, args.projectId);
     const events = await ctx.db
       .query("projectActivity")
-      .withIndex("by_projectId_and_createdAt", (q) => q.eq("projectId", args.projectId))
+      .withIndex("by_projectId_and_createdAt", (q) =>
+        q.eq("projectId", args.projectId)
+      )
       .order("desc")
       .take(MAX_PROJECT_EVENTS);
     return events.map((event) => ({

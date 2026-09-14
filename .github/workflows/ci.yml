@@ -15,14 +15,27 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Verify Convex skill mirrors
+        run: |
+          python3 scripts/test_sync_convex_skills.py
+          python3 scripts/sync-convex-skills.py
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.11.1
+
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: npm
+          cache: pnpm
 
       - name: Install dependencies
-        run: npm ci
+        run: pnpm install --frozen-lockfile
+
+      - name: Install browser
+        run: pnpm exec playwright install --with-deps chromium
 
       - name: Run full verification
-        run: npm run check:full
+        run: pnpm check:full

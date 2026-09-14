@@ -6,31 +6,46 @@ import {
   ChartNoAxesCombined,
   CheckSquare2,
   ChevronDown,
-  ChevronLeft,
   CircleUserRound,
+  CreditCard,
+  FileText,
   FolderKanban,
   Images,
   LayoutDashboard,
   Library,
+  LogIn,
+  LogOut,
   MessageSquareText,
   MoreHorizontal,
+  PanelLeftClose,
+  PanelLeftOpen,
   Plus,
   Search,
   Settings,
   Sparkles,
   Users,
   UsersRound,
+  UserPlus,
   Workflow,
 } from "lucide-react";
 import { motion } from "motion/react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
-import { useAppAuth } from "@/lib/auth-context";
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ReactNode,
+  type RefObject,
+} from "react";
 import { useData } from "@/lib/data-context";
+import { useOptionalAuth } from "@/lib/optional-auth";
 import type { SettingsState } from "@/lib/types";
+import type { SearchRecord } from "@/features/workspace-discovery/workspace-discovery";
 import { useHydratedReducedMotion } from "@/lib/motion";
 import { cn } from "@/lib/utils";
+import { RelayBrand } from "@/app/relay-brand";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
@@ -52,8 +67,18 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 type ShellPage =
   | "dashboard"
@@ -61,6 +86,7 @@ type ShellPage =
   | "clients"
   | "timeline"
   | "calendar"
+  | "files"
   | "media"
   | "resources"
   | "feedback"
@@ -71,6 +97,7 @@ type ShellPage =
   | "team-chat"
   | "settings"
   | "account"
+  | "subscription"
   | "profile"
   | "profile-edit"
   | "organization-profile";
@@ -92,40 +119,108 @@ const routeGroups: RouteGroup[] = [
   {
     label: "Overview",
     items: [
-      { page: "dashboard", label: "Dashboard", href: "/", icon: LayoutDashboard, shortcut: "G D" },
-      { page: "calendar", label: "Calendar", href: "/calendar", icon: CalendarDays, shortcut: "G C" },
-      { page: "timeline", label: "Timeline", href: "/timeline", icon: Workflow },
+      {
+        page: "dashboard",
+        label: "Dashboard",
+        href: "/",
+        icon: LayoutDashboard,
+        shortcut: "G D",
+      },
+      {
+        page: "calendar",
+        label: "Calendar",
+        href: "/calendar",
+        icon: CalendarDays,
+        shortcut: "G C",
+      },
+      {
+        page: "timeline",
+        label: "Timeline",
+        href: "/timeline",
+        icon: Workflow,
+      },
     ],
   },
   {
     label: "Work",
     items: [
-      { page: "projects", label: "Projects", href: "/projects", icon: FolderKanban, shortcut: "G P" },
+      {
+        page: "projects",
+        label: "Projects",
+        href: "/projects",
+        icon: FolderKanban,
+        shortcut: "G P",
+      },
       { page: "clients", label: "Clients", href: "/clients", icon: UsersRound },
-      { page: "feedback", label: "Reviews", href: "/feedback", icon: MessageSquareText },
+      {
+        page: "feedback",
+        label: "Reviews",
+        href: "/feedback",
+        icon: MessageSquareText,
+      },
+      { page: "files", label: "Files", href: "/files", icon: FileText },
       { page: "media", label: "Media", href: "/media", icon: Images },
-      { page: "templates", label: "Templates", href: "/templates", icon: CheckSquare2 },
+      {
+        page: "templates",
+        label: "Templates",
+        href: "/templates",
+        icon: CheckSquare2,
+      },
     ],
   },
   {
     label: "Operations",
     items: [
-      { page: "resources", label: "Resources", href: "/resources", icon: Library },
-      { page: "integrations", label: "Integrations", href: "/integrations", icon: Sparkles },
-      { page: "reports", label: "Reports", href: "/reports", icon: ChartNoAxesCombined, shortcut: "G R" },
+      {
+        page: "resources",
+        label: "Resources",
+        href: "/resources",
+        icon: Library,
+      },
+      {
+        page: "integrations",
+        label: "Integrations",
+        href: "/integrations",
+        icon: Sparkles,
+      },
+      {
+        page: "reports",
+        label: "Reports",
+        href: "/reports",
+        icon: ChartNoAxesCombined,
+        shortcut: "G R",
+      },
     ],
   },
   {
     label: "Workspace",
     items: [
       { page: "team", label: "Team", href: "/team", icon: Users },
-      { page: "team-chat", label: "Team chat", href: "/team-chat", icon: MessageSquareText },
-      { page: "settings", label: "Settings", href: "/settings", icon: Settings, shortcut: "G S" },
+      {
+        page: "team-chat",
+        label: "Team chat",
+        href: "/team-chat",
+        icon: MessageSquareText,
+      },
+      {
+        page: "settings",
+        label: "Settings",
+        href: "/settings",
+        icon: Settings,
+        shortcut: "G S",
+      },
     ],
   },
 ];
 
 const allRoutes = routeGroups.flatMap((group) => group.items);
+const starterPages = new Set<ShellPage>([
+  "dashboard",
+  "projects",
+  "calendar",
+  "feedback",
+  "settings",
+]);
 
 const mobileRoutes: RouteItem[] = [
   allRoutes.find((route) => route.page === "dashboard")!,
@@ -135,9 +230,11 @@ const mobileRoutes: RouteItem[] = [
 ];
 
 const shellTransition = {
-  duration: 0.28,
+  duration: 0.22,
   ease: [0.22, 1, 0.36, 1] as const,
 };
+
+let desktopSidebarCollapsed = false;
 
 const quickRouteShortcuts: Record<string, string> = {
   d: "/",
@@ -150,7 +247,10 @@ const quickRouteShortcuts: Record<string, string> = {
 function initials(value: string) {
   const parts = value.trim().split(/\s+/).filter(Boolean);
   if (!parts.length) return "CL";
-  return parts.slice(0, 2).map((part) => part[0]?.toUpperCase()).join("");
+  return parts
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase())
+    .join("");
 }
 
 function routeIsActive(currentPage: ShellPage, item: RouteItem) {
@@ -159,41 +259,57 @@ function routeIsActive(currentPage: ShellPage, item: RouteItem) {
   if (item.page === "clients") return currentPage === "clients";
   if (item.page === "media") return currentPage === "media";
   if (item.page === "team") return currentPage === "team";
-  if (item.page === "settings") return ["settings", "account"].includes(currentPage);
+  if (item.page === "settings")
+    return ["settings", "account"].includes(currentPage);
   return false;
 }
 
 export function WorkspaceShell({
   page,
   settings,
-  collapsed,
-  onToggle,
   onNewProject,
   canCreateProject,
+  starterNavigation = false,
+  showTeamNavigation = false,
   notificationSlot,
+  searchRecords = [],
   children,
 }: {
   page: ShellPage;
   settings: SettingsState;
-  collapsed: boolean;
-  onToggle: () => void;
   onNewProject: () => void;
   canCreateProject: boolean;
+  starterNavigation?: boolean;
+  showTeamNavigation?: boolean;
   notificationSlot?: ReactNode;
+  searchRecords?: readonly SearchRecord[];
   children: ReactNode;
 }) {
   const [commandOpen, setCommandOpen] = useState(false);
   const [moreOpen, setMoreOpen] = useState(false);
   const goChordRef = useRef(false);
   const goChordTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const commandReturnFocusRef = useRef<HTMLElement | null>(null);
   const reduceMotion = useHydratedReducedMotion();
   const router = useRouter();
+  const [collapsed, setCollapsedState] = useState(desktopSidebarCollapsed);
+  const setCollapsed = (next: boolean) => {
+    desktopSidebarCollapsed = next;
+    setCollapsedState(next);
+  };
+  const openCommand = () => {
+    if (document.activeElement instanceof HTMLElement) {
+      commandReturnFocusRef.current = document.activeElement;
+    }
+    setCommandOpen(true);
+  };
 
   useEffect(() => {
     const handler = (event: KeyboardEvent) => {
       if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k") {
         event.preventDefault();
-        setCommandOpen((value) => !value);
+        if (commandOpen) setCommandOpen(false);
+        else openCommand();
         return;
       }
 
@@ -230,181 +346,242 @@ export function WorkspaceShell({
       window.removeEventListener("keydown", handler);
       if (goChordTimerRef.current) clearTimeout(goChordTimerRef.current);
     };
-  }, [router]);
+  }, [commandOpen, router]);
 
   const title = useMemo(
-    () => allRoutes.find((route) => route.page === page)?.label ?? "CutLab Studio",
-    [page],
+    () =>
+      page === "subscription"
+        ? "Subscription"
+        : (allRoutes.find((route) => route.page === page)?.label ?? "Relay"),
+    [page]
   );
 
   return (
-    <div className="min-h-dvh bg-[var(--app-canvas)] text-[var(--app-ink)]">
-      <DesktopSidebar page={page} settings={settings} collapsed={collapsed} onToggle={onToggle} />
+    <div
+      data-testid="workspace-shell"
+      className="relay-density-balanced min-h-dvh bg-[var(--app-canvas)] text-[var(--app-ink)] lg:h-dvh lg:overflow-hidden lg:bg-[var(--app-sidebar)]"
+    >
+      <DesktopSidebar
+        page={page}
+        starterNavigation={starterNavigation}
+        showTeamNavigation={showTeamNavigation}
+        collapsed={collapsed}
+        onCollapsedChange={setCollapsed}
+      />
 
       <div
         className={cn(
-          "min-h-dvh transition-[padding] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]",
-          collapsed ? "lg:pl-[76px]" : "lg:pl-[224px]",
+          "min-h-dvh transition-[padding] ease-[cubic-bezier(0.22,1,0.36,1)]",
+          reduceMotion ? "duration-0" : "duration-[220ms]",
+          collapsed ? "lg:pl-[52px]" : "lg:pl-[216px]"
         )}
       >
         <header
           className={cn(
-            "fixed inset-x-0 top-0 z-30 flex h-14 items-center border-b border-[var(--app-border)] bg-[color-mix(in_srgb,var(--app-panel)_92%,transparent)] px-3 backdrop-blur-xl transition-[left] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] lg:justify-between",
-            collapsed ? "lg:left-[76px]" : "lg:left-[224px]",
+            "fixed inset-x-0 top-0 z-30 flex h-[54px] items-center bg-[var(--app-sidebar)] px-2.5 transition-[left] ease-[cubic-bezier(0.22,1,0.36,1)] lg:justify-between lg:px-3",
+            reduceMotion ? "duration-0" : "duration-[220ms]",
+            collapsed ? "lg:left-[52px]" : "lg:left-[216px]"
           )}
         >
-          <div className="flex min-w-0 flex-1 items-center gap-2 lg:flex-none">
-            <div className="flex items-center gap-2 lg:hidden">
-              <img
-                src="/brand/logo/cutlab-studio.png"
-                alt="CutLab Studio"
-                className="h-7 w-auto object-contain brightness-0 dark:brightness-100"
-              />
-            </div>
+          <div className="flex h-full min-w-0 flex-1 items-center gap-2 lg:flex-none">
+            <RelayBrand compact className="lg:hidden" />
             <p className="truncate text-sm font-semibold lg:hidden">{title}</p>
+            <p
+              className="hidden items-center gap-1.5 text-xs lg:flex"
+              aria-label={`Current location: ${title}`}
+            >
+              <span className="font-medium text-[var(--app-subtle)]">
+                Relay
+              </span>
+              <span aria-hidden="true" className="text-[var(--app-border)]">
+                /
+              </span>
+              <span className="font-medium text-[var(--app-ink)]">{title}</span>
+            </p>
           </div>
 
           <Button
             variant="outline"
-            className={cn(
-              "hidden h-9 w-[540px] justify-start border-[var(--app-border)] bg-[var(--app-control)] px-3 text-[var(--app-muted)] shadow-none transition-[left,background-color,border-color,box-shadow] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] hover:border-[var(--app-strong-border)] hover:bg-[var(--app-soft-panel)] hover:shadow-[0_1px_2px_color-mix(in_srgb,var(--app-ink)_8%,transparent)] lg:absolute lg:flex lg:-translate-x-1/2",
-              collapsed ? "lg:left-[calc(50vw-76px)]" : "lg:left-[calc(50vw-224px)]",
-            )}
-            onClick={() => setCommandOpen(true)}
+            className="absolute left-1/2 top-1/2 hidden h-9 w-[220px] -translate-x-1/2 -translate-y-1/2 justify-start rounded-lg border-[var(--app-border)] !bg-[var(--app-control)] px-2.5 text-xs text-[var(--app-muted)] shadow-none hover:bg-[var(--app-hover)] lg:flex"
+            onClick={openCommand}
+            aria-label="Quick Search (Ctrl K)"
           >
-            <Search className="size-4" />
-            <span className="truncate">Search pages and workspace actions</span>
-            <kbd className="ml-auto rounded border border-[var(--app-border)] bg-[var(--app-soft-panel)] px-1.5 py-0.5 font-mono text-[10px] text-[var(--app-muted)]">
+            <Search className="size-3.5 shrink-0" />
+            <span className="truncate">Quick Search</span>
+            <kbd className="ml-auto font-mono text-[9px] text-[var(--app-subtle)]">
               Ctrl K
             </kbd>
           </Button>
 
-          <div className="ml-3 flex items-center gap-1.5 lg:ml-0">
-            <motion.div
-              whileHover={canCreateProject && !reduceMotion ? { y: -1 } : undefined}
-              whileTap={canCreateProject && !reduceMotion ? { scale: 0.98, y: 0 } : undefined}
-              transition={{ duration: 0.12 }}
-              className="hidden sm:block"
+          <div className="ml-3 flex h-9 items-center gap-1.5 lg:ml-0">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="lg:hidden"
+              aria-label="Search pages and workspace actions (Ctrl K)"
+              onClick={openCommand}
             >
+              <Search className="size-[18px]" />
+            </Button>
+            <div className="hidden h-9 items-center sm:flex">
               <Button
-                className="h-9 bg-[var(--app-accent)] px-3.5 text-white shadow-none hover:bg-[var(--app-highlight)]"
+                aria-label="Quick create project"
+                className="h-9 bg-[var(--app-accent)] px-3 text-xs text-[var(--app-accent-foreground)] shadow-none hover:bg-[var(--app-highlight)]"
                 onClick={onNewProject}
                 disabled={!canCreateProject}
               >
-                <Plus className="size-4" />
-                New project
+                <Plus className="size-3.5" />
+                Quick create
               </Button>
-            </motion.div>
+            </div>
             {notificationSlot ?? (
-              <motion.div whileTap={reduceMotion ? undefined : { scale: 0.92 }} transition={{ duration: 0.1 }}>
+              <motion.div
+                whileTap={reduceMotion ? undefined : { scale: 0.92 }}
+                transition={{ duration: 0.1 }}
+              >
                 <Button variant="ghost" size="icon" aria-label="Notifications">
                   <Bell className="size-[18px]" />
                 </Button>
               </motion.div>
             )}
+            <ProfileMenu settings={settings} compact page={page} />
           </div>
         </header>
 
-        <main id="main-content" tabIndex={-1} className="h-[calc(100dvh_-_68px_-_env(safe-area-inset-bottom))] overflow-y-auto pt-14 outline-none lg:h-auto lg:min-h-[calc(100dvh-56px)] lg:overflow-visible">
-          {children}
+        <main
+          id="main-content"
+          data-testid="workspace-content-surface"
+          tabIndex={-1}
+          className={cn(
+            "workspace-scrollbar-hidden h-[calc(100dvh_-_68px_-_env(safe-area-inset-bottom))] overflow-y-auto bg-[var(--app-canvas)] pt-12 outline-none lg:fixed lg:bottom-1.5 lg:right-1.5 lg:top-[54px] lg:h-auto lg:min-h-0 lg:overscroll-contain lg:rounded-2xl lg:border-x lg:border-b lg:border-[var(--app-border)] lg:pt-0 lg:transition-[left] lg:ease-[cubic-bezier(0.22,1,0.36,1)]",
+            reduceMotion ? "lg:duration-0" : "lg:duration-[220ms]",
+            collapsed ? "lg:left-[58px]" : "lg:left-[222px]"
+          )}
+        >
+          <div className="min-h-full lg:h-full">{children}</div>
         </main>
       </div>
 
-      <MobileNavigation page={page} open={moreOpen} onOpenChange={setMoreOpen} />
-      <WorkspaceCommand open={commandOpen} onOpenChange={setCommandOpen} onNewProject={onNewProject} />
+      {(page === "dashboard" || page === "projects") && canCreateProject ? (
+        <Button
+          type="button"
+          aria-label="New Project"
+          className="fixed bottom-[calc(80px+env(safe-area-inset-bottom))] right-4 z-40 flex min-h-12 items-center gap-2 rounded-md bg-[var(--app-accent)] px-4 text-sm font-semibold text-[var(--app-accent-foreground)] shadow-[var(--app-shadow-2)] outline-none hover:bg-[var(--app-highlight)] focus-visible:ring-2 focus-visible:ring-[var(--app-accent)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--app-canvas)] sm:hidden"
+          onClick={onNewProject}
+        >
+          <Plus className="size-4" />
+          New project
+        </Button>
+      ) : null}
+
+      <MobileNavigation
+        page={page}
+        open={moreOpen}
+        onOpenChange={setMoreOpen}
+        starterNavigation={starterNavigation}
+        showTeamNavigation={showTeamNavigation}
+      />
+      <WorkspaceCommand
+        open={commandOpen}
+        onOpenChange={setCommandOpen}
+        onNewProject={onNewProject}
+        returnFocusRef={commandReturnFocusRef}
+        showTeamNavigation={showTeamNavigation}
+        searchRecords={searchRecords}
+      />
     </div>
   );
 }
 
 function DesktopSidebar({
   page,
-  settings,
+  starterNavigation,
+  showTeamNavigation,
   collapsed,
-  onToggle,
+  onCollapsedChange,
 }: {
   page: ShellPage;
-  settings: SettingsState;
+  starterNavigation: boolean;
+  showTeamNavigation: boolean;
   collapsed: boolean;
-  onToggle: () => void;
+  onCollapsedChange: (collapsed: boolean) => void;
 }) {
   const reduceMotion = useHydratedReducedMotion();
+  const [showAllTools, setShowAllTools] = useState(false);
+  const availableGroups = routeGroups
+    .map((group) => ({
+      ...group,
+      items: group.items.filter(
+        (item) =>
+          showTeamNavigation ||
+          (item.page !== "team" && item.page !== "team-chat")
+      ),
+    }))
+    .filter((group) => group.items.length);
+  const visibleGroups =
+    starterNavigation && !showAllTools
+      ? availableGroups
+          .map((group) => ({
+            ...group,
+            items: group.items.filter(
+              (item) => starterPages.has(item.page) || item.page === page
+            ),
+          }))
+          .filter((group) => group.items.length)
+      : availableGroups;
 
   return (
     <motion.aside
       initial={false}
-      animate={{ width: collapsed ? 76 : 224 }}
+      animate={{ width: collapsed ? 52 : 216 }}
       transition={reduceMotion ? { duration: 0 } : shellTransition}
-      className="fixed inset-y-0 left-0 z-40 hidden overflow-hidden border-r border-[var(--app-border)] bg-[var(--app-sidebar)] lg:flex lg:flex-col"
+      className="fixed inset-y-0 left-0 z-40 hidden overflow-hidden bg-[var(--app-sidebar)] lg:flex lg:flex-col"
     >
-      <div className={cn(
-        "border-b border-[var(--app-border)]",
-        collapsed ? "grid h-[104px] grid-rows-[42px_28px] justify-items-center gap-1 px-2 py-6" : "flex h-[104px] items-start justify-between gap-3 px-5 pt-6",
-      )}>
-        <Link
-          href="/"
-          aria-label="Go to dashboard"
+      <div
+        className={cn(
+          "grid h-[54px] grid-cols-1 items-center justify-items-center bg-[var(--app-sidebar)] px-1.5"
+        )}
+      >
+        <div
           className={cn(
-            "min-w-0 rounded-md outline-none focus-visible:ring-2 focus-visible:ring-[var(--app-accent)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--app-sidebar)]",
-            collapsed ? "flex w-[60px] items-center justify-center overflow-hidden" : "flex-1",
+            "flex h-full w-full items-center",
+            collapsed ? "justify-center" : "px-2"
           )}
         >
-          <motion.img
+          <motion.div
             initial={false}
-            animate={{
-              opacity: collapsed ? 0.75 : 1,
-              height: collapsed ? 16 : 48,
-              maxWidth: collapsed ? 58 : 178,
-            }}
+            animate={{ opacity: collapsed ? 0.88 : 1 }}
             transition={reduceMotion ? { duration: 0 } : shellTransition}
-            src="/brand/logo/cutlab-studio.png"
-            alt="CutLab Studio"
-            className={cn(
-              "w-auto object-contain brightness-0 dark:brightness-100",
-              collapsed ? "object-center" : "object-left",
-            )}
-          />
-        </Link>
-
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <motion.button
-              type="button"
-              whileHover={reduceMotion ? undefined : { x: collapsed ? 1 : -1 }}
-              whileTap={reduceMotion ? undefined : { scale: 0.92 }}
-              animate={{ rotate: collapsed ? 180 : 0 }}
-              transition={reduceMotion ? { duration: 0 } : shellTransition}
-              className={cn(
-                "flex shrink-0 items-center justify-center rounded-md outline-none transition-[background-color,color,box-shadow] focus-visible:ring-2 focus-visible:ring-[var(--app-accent)]",
-                collapsed
-                  ? "size-7 text-[var(--app-muted)] hover:bg-[var(--app-active)] hover:text-[var(--app-highlight)] focus-visible:bg-[var(--app-active)] focus-visible:text-[var(--app-highlight)]"
-                  : "mt-1 size-7 text-[var(--app-muted)] hover:bg-[var(--app-hover)] hover:text-[var(--app-ink)]",
-              )}
-              onClick={onToggle}
-              aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
-              aria-pressed={collapsed}
-            >
-              <ChevronLeft className="size-4" strokeWidth={2.1} />
-            </motion.button>
-          </TooltipTrigger>
-          <TooltipContent side="right">{collapsed ? "Expand sidebar" : "Collapse sidebar"}</TooltipContent>
-        </Tooltip>
+            className={cn("shrink-0", collapsed ? "mx-auto" : "mr-auto")}
+          >
+            <RelayBrand variant={collapsed ? "mark" : "lockup"} compact />
+          </motion.div>
+        </div>
       </div>
 
-      <nav aria-label="Primary navigation" className="min-h-0 flex-1 overflow-y-auto px-2 py-3">
-        {routeGroups.map((group, groupIndex) => (
-          <div key={group.label} className="mb-4">
+      <nav
+        aria-label="Primary navigation"
+        className="min-h-0 flex-1 overflow-y-auto px-1 py-1"
+      >
+        {visibleGroups.map((group, groupIndex) => (
+          <div key={group.label} className="mb-2.5">
             {!collapsed ? (
               <motion.p
                 initial={reduceMotion ? false : { opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={reduceMotion ? { duration: 0 } : shellTransition}
-                className="mb-1.5 px-2 text-[10px] font-semibold uppercase tracking-[0.08em] text-[var(--app-subtle)]"
+                className="mb-1.5 px-2 text-[9px] font-semibold uppercase tracking-[0.08em] text-[var(--app-subtle)]"
               >
                 {group.label}
               </motion.p>
             ) : (
-              <div className="mb-1.5 flex h-3.5 items-center justify-center" aria-hidden="true">
-                {groupIndex > 0 ? <span className="h-px w-10 bg-[var(--app-border)]" /> : null}
+              <div
+                className="mb-1 flex h-2 items-center justify-center"
+                aria-hidden="true"
+              >
+                {groupIndex > 0 ? (
+                  <span className="h-px w-8 bg-[var(--app-border)]" />
+                ) : null}
               </div>
             )}
             <div className="space-y-0.5">
@@ -420,15 +597,79 @@ function DesktopSidebar({
             </div>
           </div>
         ))}
+        {starterNavigation ? (
+          <Button
+            type="button"
+            variant="ghost"
+            className={cn(
+              "mt-1 flex min-h-9 w-full items-center rounded-md text-xs font-semibold text-[var(--app-muted)] outline-none hover:bg-[var(--app-hover)] hover:text-[var(--app-ink)] focus-visible:ring-2 focus-visible:ring-[var(--app-accent)]",
+              collapsed ? "justify-center" : "gap-2 px-2.5"
+            )}
+            onClick={() => setShowAllTools((value) => !value)}
+            aria-expanded={showAllTools}
+          >
+            <MoreHorizontal className="size-4" />
+            {collapsed ? (
+              <span className="sr-only">
+                {showAllTools ? "Show starter tools" : "Show all tools"}
+              </span>
+            ) : showAllTools ? (
+              "Show starter tools"
+            ) : (
+              "Show all tools"
+            )}
+          </Button>
+        ) : null}
       </nav>
 
-      <div className="border-t border-[var(--app-border)] p-2">
-        <ProfileMenu settings={settings} collapsed={collapsed} page={page} />
+      <div className="border-t border-[var(--app-border)] p-1.5">
+        {!collapsed ? (
+          <footer className="mb-2 border-b border-[var(--app-border)] px-2 pb-2 text-[11px] leading-5 text-[var(--app-subtle)]">
+            <nav
+              aria-label="Support and legal"
+              className="flex flex-wrap gap-x-3 gap-y-1"
+            >
+              <Link className="hover:text-[var(--app-ink)]" href="/contact">
+                Contact
+              </Link>
+              <Link className="hover:text-[var(--app-ink)]" href="/privacy">
+                Privacy
+              </Link>
+              <Link className="hover:text-[var(--app-ink)]" href="/terms">
+                Terms
+              </Link>
+              <Link
+                className="hover:text-[var(--app-ink)]"
+                href="/accessibility"
+              >
+                Accessibility
+              </Link>
+            </nav>
+            <p className="mt-1">© {new Date().getFullYear()} Relay</p>
+          </footer>
+        ) : null}
+        <Button
+          type="button"
+          variant="ghost"
+          className={cn(
+            "flex min-h-9 w-full items-center rounded-md text-xs font-semibold text-[var(--app-muted)] outline-none hover:bg-[var(--app-hover)] hover:text-[var(--app-ink)] focus-visible:ring-2 focus-visible:ring-[var(--app-accent)]",
+            collapsed ? "justify-center px-0" : "gap-2.5 px-2.5"
+          )}
+          onClick={() => onCollapsedChange(!collapsed)}
+          aria-label={collapsed ? "Expand navigation" : "Collapse navigation"}
+          aria-expanded={!collapsed}
+        >
+          {collapsed ? (
+            <PanelLeftOpen className="size-4" />
+          ) : (
+            <PanelLeftClose className="size-4" />
+          )}
+          {!collapsed ? <span>Collapse sidebar</span> : null}
+        </Button>
       </div>
     </motion.aside>
   );
 }
-
 
 function SidebarRoute({
   item,
@@ -442,33 +683,28 @@ function SidebarRoute({
   reduceMotion: boolean | null;
 }) {
   const Icon = item.icon;
+
   const link = (
     <Link
       href={item.href}
       aria-label={collapsed ? item.label : undefined}
       aria-current={active ? "page" : undefined}
       className={cn(
-        "group relative flex h-9 items-center overflow-hidden rounded-md text-[13px] font-medium outline-none transition-colors focus-visible:ring-2 focus-visible:ring-[var(--app-accent)] focus-visible:ring-inset",
-        collapsed ? "mx-auto w-10 justify-center px-0" : "gap-2.5 px-2.5",
+        "group relative flex h-8 items-center overflow-hidden rounded-lg text-[12px] font-medium outline-none transition-[background-color,color] duration-150 ease-out focus-visible:ring-2 focus-visible:ring-[var(--app-accent)] focus-visible:ring-inset",
+        collapsed ? "mx-auto w-9 justify-center px-0" : "gap-2 px-2",
         active
-          ? "text-[var(--app-highlight)]"
-          : "text-[var(--app-muted)] hover:bg-[var(--app-hover)] hover:text-[var(--app-ink)]",
+          ? "bg-[var(--app-active)] text-[var(--app-ink)]"
+          : "text-[var(--app-muted)] hover:bg-[var(--app-hover)] hover:text-[var(--app-ink)]"
       )}
     >
-      {active ? (
-        <motion.span
-          layoutId="sidebar-active-route"
-          transition={reduceMotion ? { duration: 0 } : shellTransition}
-          className="absolute inset-0 rounded-md bg-[var(--app-active)]"
-        />
-      ) : null}
-      <motion.span
-        animate={{ scale: active && !reduceMotion ? 1.04 : 1 }}
-        transition={reduceMotion ? { duration: 0 } : shellTransition}
-        className="relative z-10 flex shrink-0"
+      <span
+        className={cn(
+          "relative z-10 flex shrink-0 transition-transform duration-150 ease-out motion-reduce:transition-none group-hover:translate-x-0.5 motion-reduce:group-hover:translate-x-0",
+          active && "text-[var(--app-ink)]"
+        )}
       >
-        <Icon className="size-[17px]" strokeWidth={active ? 2.1 : 1.8} />
-      </motion.span>
+        <Icon className="size-4" strokeWidth={active ? 2.1 : 1.8} />
+      </span>
       {!collapsed ? (
         <motion.span
           initial={reduceMotion ? false : { opacity: 0, x: -4 }}
@@ -491,25 +727,39 @@ function SidebarRoute({
   );
 }
 
-function ProfileMenu({ settings, collapsed, page }: { settings: SettingsState; collapsed: boolean; page: ShellPage }) {
+function ProfileMenu({
+  settings,
+  collapsed = false,
+  compact = false,
+  page,
+}: {
+  settings: SettingsState;
+  collapsed?: boolean;
+  compact?: boolean;
+  page: ShellPage;
+}) {
   const { isAuthEnabled } = useData();
-  const { isSignedIn, openSignIn, openSignUp, signOut } = useAppAuth();
+  const { isSignedIn, openSignIn, openSignUp, signOut } = useOptionalAuth();
   const [open, setOpen] = useState(false);
   const reduceMotion = useHydratedReducedMotion();
   const name = settings.profileName || "Your profile";
-  const handle = settings.profileUsername ? `@${settings.profileUsername.replace(/^@/, "")}` : settings.teamRole || "Editor";
+  const handle = settings.profileUsername
+    ? `@${settings.profileUsername.replace(/^@/, "")}`
+    : settings.teamRole || "Editor";
 
   return (
     <DropdownMenu open={open} onOpenChange={setOpen}>
       <DropdownMenuTrigger asChild>
-        <motion.button
+        <Button
           type="button"
-          whileHover={reduceMotion ? undefined : { y: -1 }}
-          whileTap={reduceMotion ? undefined : { scale: 0.97, y: 0 }}
-          transition={{ duration: 0.12 }}
+          variant="ghost"
           className={cn(
-            "flex w-full items-center rounded-md text-left outline-none transition-[background-color,box-shadow] hover:bg-[var(--app-hover)] focus-visible:ring-2 focus-visible:ring-[var(--app-accent)]",
-            collapsed ? "justify-center p-1" : "gap-2.5 p-2",
+            "flex items-center rounded-md text-left outline-none transition-[background-color,box-shadow] hover:bg-[var(--app-hover)] focus-visible:ring-2 focus-visible:ring-[var(--app-accent)]",
+            compact
+              ? "h-9 w-9 justify-center p-0"
+              : collapsed
+                ? "w-full justify-center p-1"
+                : "w-full gap-2.5 p-2"
           )}
           aria-label="Open profile menu"
         >
@@ -519,11 +769,15 @@ function ProfileMenu({ settings, collapsed, page }: { settings: SettingsState; c
               {initials(name)}
             </AvatarFallback>
           </Avatar>
-          {!collapsed ? (
+          {!collapsed && !compact ? (
             <>
               <span className="min-w-0 flex-1">
-                <span className="block truncate text-[12px] font-semibold">{name}</span>
-                <span className="block truncate text-[11px] text-[var(--app-muted)]">{handle}</span>
+                <span className="block truncate text-[12px] font-semibold">
+                  {name}
+                </span>
+                <span className="block truncate text-[11px] text-[var(--app-muted)]">
+                  {handle}
+                </span>
               </span>
               <motion.span
                 animate={{ rotate: open ? 180 : 0 }}
@@ -534,14 +788,50 @@ function ProfileMenu({ settings, collapsed, page }: { settings: SettingsState; c
               </motion.span>
             </>
           ) : null}
-        </motion.button>
+        </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent side={collapsed ? "right" : "top"} align="start" className="w-64">
+      <DropdownMenuContent
+        side={compact ? "bottom" : collapsed ? "right" : "top"}
+        align={compact ? "end" : "start"}
+        className="w-64"
+      >
         <DropdownMenuLabel>
           <p className="text-sm font-semibold">{name}</p>
           <p className="text-xs font-normal text-muted-foreground">{handle}</p>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
+        {!isSignedIn ? (
+          <>
+            <DropdownMenuLabel className="text-xs font-normal text-muted-foreground">
+              Local Workspace · stored in this browser
+            </DropdownMenuLabel>
+            <DropdownMenuItem
+              disabled={!isAuthEnabled}
+              onSelect={() => openSignIn()}
+              className="bg-primary text-primary-foreground focus:bg-primary/90 focus:text-primary-foreground"
+            >
+              <LogIn /> Sign in
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              disabled={!isAuthEnabled}
+              onSelect={() => openSignUp()}
+            >
+              <UserPlus /> Create account
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+          </>
+        ) : null}
+        {isSignedIn ? (
+          <DropdownMenuItem asChild>
+            <Link
+              href="/subscription"
+              aria-current={page === "subscription" ? "page" : undefined}
+              className={cn(page === "subscription" && "bg-accent")}
+            >
+              <CreditCard /> Plans & billing
+            </Link>
+          </DropdownMenuItem>
+        ) : null}
         <DropdownMenuItem asChild>
           <Link
             href="/profile"
@@ -579,18 +869,13 @@ function ProfileMenu({ settings, collapsed, page }: { settings: SettingsState; c
           </Link>
         </DropdownMenuItem>
         <DropdownMenuSeparator />
-        {isAuthEnabled ? (
-          isSignedIn ? (
-            <DropdownMenuItem onSelect={() => void signOut()}>Sign out</DropdownMenuItem>
-          ) : (
-            <>
-              <DropdownMenuItem onSelect={() => openSignIn()}>Sign in</DropdownMenuItem>
-              <DropdownMenuItem onSelect={() => openSignUp()}>Create account</DropdownMenuItem>
-            </>
-          )
-        ) : (
+        {isSignedIn ? (
+          <DropdownMenuItem onSelect={() => void signOut()}>
+            <LogOut /> Sign out
+          </DropdownMenuItem>
+        ) : isAuthEnabled ? null : (
           <DropdownMenuLabel className="text-xs font-normal text-muted-foreground">
-            Local mode is active on this device.
+            Sign-in needs Clerk and Convex configuration.
           </DropdownMenuLabel>
         )}
       </DropdownMenuContent>
@@ -602,53 +887,117 @@ function WorkspaceCommand({
   open,
   onOpenChange,
   onNewProject,
+  returnFocusRef,
+  showTeamNavigation,
+  searchRecords,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onNewProject: () => void;
+  returnFocusRef: RefObject<HTMLElement | null>;
+  showTeamNavigation: boolean;
+  searchRecords: readonly SearchRecord[];
 }) {
   const reduceMotion = useHydratedReducedMotion();
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="overflow-hidden border-[var(--app-strong-border)] p-0 shadow-[0_24px_80px_color-mix(in_srgb,var(--app-ink)_18%,transparent)] sm:max-w-[620px]">
+      <DialogContent
+        className="overflow-hidden border-[var(--app-strong-border)] p-0 shadow-[0_24px_80px_color-mix(in_srgb,var(--app-ink)_18%,transparent)] sm:max-w-[620px]"
+        onCloseAutoFocus={(event) => {
+          event.preventDefault();
+          returnFocusRef.current?.focus();
+        }}
+      >
         <DialogTitle className="sr-only">Workspace command menu</DialogTitle>
         <motion.div
           initial={reduceMotion ? false : { opacity: 0, y: -8, scale: 0.985 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
-          transition={{ duration: reduceMotion ? 0 : 0.18, ease: [0.2, 0.8, 0.2, 1] }}
+          transition={{
+            duration: reduceMotion ? 0 : 0.18,
+            ease: [0.2, 0.8, 0.2, 1],
+          }}
         >
           <Command>
-            <CommandInput aria-label="Search workspace commands" placeholder="Search pages and actions..." />
+            <CommandInput
+              aria-label="Search workspace commands"
+              placeholder="Search pages and actions..."
+            />
             <CommandList className="max-h-[420px]">
               <CommandEmpty>No matching workspace action found.</CommandEmpty>
               <CommandGroup heading="Quick actions">
                 <CommandItem
                   onSelect={() => {
                     onOpenChange(false);
-                    onNewProject();
+                    requestAnimationFrame(() => {
+                      const target = returnFocusRef.current;
+                      if (target?.isConnected) target.focus();
+                      onNewProject();
+                    });
                   }}
                 >
                   <Plus /> Create new project
                 </CommandItem>
               </CommandGroup>
               <CommandSeparator />
-              {routeGroups.map((group) => (
-                <CommandGroup key={group.label} heading={group.label}>
-                  {group.items.map((item) => {
-                    const Icon = item.icon;
-                    return (
-                      <CommandItem key={item.page} asChild>
-                        <Link href={item.href} onClick={() => onOpenChange(false)}>
-                          <Icon />
-                          {item.label}
-                          {item.shortcut ? <CommandShortcut>{item.shortcut}</CommandShortcut> : null}
+              {searchRecords.length ? (
+                <CommandGroup heading="Workspace records">
+                  {searchRecords
+                    .filter((record) => record.kind !== "action")
+                    .map((record) => (
+                      <CommandItem
+                        key={`${record.kind}:${record.id}`}
+                        asChild
+                        value={`${record.title} ${record.detail} ${record.keywords ?? ""}`}
+                      >
+                        <Link
+                          href={record.href ?? "/"}
+                          onClick={() => onOpenChange(false)}
+                        >
+                          <FileText />
+                          <span className="min-w-0 flex-1 truncate">
+                            {record.title}
+                          </span>
+                          <span className="text-xs text-muted-foreground">
+                            {record.detail}
+                          </span>
                         </Link>
                       </CommandItem>
-                    );
-                  })}
+                    ))}
                 </CommandGroup>
-              ))}
+              ) : null}
+              {searchRecords.length ? <CommandSeparator /> : null}
+              {routeGroups
+                .map((group) => ({
+                  ...group,
+                  items: group.items.filter(
+                    (item) =>
+                      showTeamNavigation ||
+                      (item.page !== "team" && item.page !== "team-chat")
+                  ),
+                }))
+                .filter((group) => group.items.length)
+                .map((group) => (
+                  <CommandGroup key={group.label} heading={group.label}>
+                    {group.items.map((item) => {
+                      const Icon = item.icon;
+                      return (
+                        <CommandItem key={item.page} asChild>
+                          <Link
+                            href={item.href}
+                            onClick={() => onOpenChange(false)}
+                          >
+                            <Icon />
+                            {item.label}
+                            {item.shortcut ? (
+                              <CommandShortcut>{item.shortcut}</CommandShortcut>
+                            ) : null}
+                          </Link>
+                        </CommandItem>
+                      );
+                    })}
+                  </CommandGroup>
+                ))}
             </CommandList>
           </Command>
         </motion.div>
@@ -661,16 +1010,28 @@ function MobileNavigation({
   page,
   open,
   onOpenChange,
+  starterNavigation,
+  showTeamNavigation,
 }: {
   page: ShellPage;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  starterNavigation: boolean;
+  showTeamNavigation: boolean;
 }) {
   const reduceMotion = useHydratedReducedMotion();
+  const primaryRoutes = starterNavigation
+    ? ["dashboard", "projects", "calendar", "feedback"].map((key) =>
+        allRoutes.find((route) => route.page === key)!
+      )
+    : mobileRoutes;
 
   return (
-    <nav aria-label="Mobile navigation" className="fixed inset-x-0 bottom-0 z-40 grid h-[calc(68px+env(safe-area-inset-bottom))] grid-cols-5 border-t border-[var(--app-border)] bg-[color-mix(in_srgb,var(--app-panel)_94%,transparent)] px-1 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl lg:hidden">
-      {mobileRoutes.map((item) => {
+    <nav
+      aria-label="Mobile navigation"
+      className="fixed inset-x-0 bottom-0 z-40 grid h-[calc(68px+env(safe-area-inset-bottom))] grid-cols-5 border-t border-[var(--app-border)] bg-[color-mix(in_srgb,var(--app-panel)_94%,transparent)] px-1 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl lg:hidden"
+    >
+      {primaryRoutes.map((item) => {
         const Icon = item.icon;
         const active = routeIsActive(page, item);
         return (
@@ -680,7 +1041,7 @@ function MobileNavigation({
             aria-current={active ? "page" : undefined}
             className={cn(
               "relative flex flex-col items-center justify-center gap-1 rounded-md text-[10px] font-medium outline-none focus-visible:ring-2 focus-visible:ring-[var(--app-accent)] focus-visible:ring-inset",
-              active ? "text-[var(--app-highlight)]" : "text-[var(--app-muted)]",
+              active ? "text-[var(--app-highlight)]" : "text-[var(--app-muted)]"
             )}
           >
             {active ? (
@@ -702,47 +1063,103 @@ function MobileNavigation({
       })}
       <Sheet open={open} onOpenChange={onOpenChange}>
         <SheetTrigger asChild>
-          <motion.button
+          <Button
             type="button"
-            whileTap={reduceMotion ? undefined : { scale: 0.9 }}
-            className="flex flex-col items-center justify-center gap-1 rounded-md text-[10px] font-medium text-[var(--app-muted)] outline-none focus-visible:ring-2 focus-visible:ring-[var(--app-accent)] focus-visible:ring-inset"
+            variant="ghost"
+            className="h-full w-full flex-col items-center justify-center gap-1 rounded-md text-[10px] font-medium text-[var(--app-muted)] outline-none focus-visible:ring-2 focus-visible:ring-[var(--app-accent)] focus-visible:ring-inset"
             aria-label="Open more workspace pages"
           >
             <motion.span
-              animate={{ rotate: open ? 90 : 0, scale: open && !reduceMotion ? 1.06 : 1 }}
+              animate={{
+                rotate: open ? 90 : 0,
+                scale: open && !reduceMotion ? 1.06 : 1,
+              }}
               transition={{ duration: reduceMotion ? 0 : 0.16 }}
               className="flex"
             >
               <MoreHorizontal className="size-[19px]" />
             </motion.span>
             More
-          </motion.button>
+          </Button>
         </SheetTrigger>
-        <SheetContent side="bottom" className="max-h-[82dvh] rounded-t-xl px-3 pb-8">
+        <SheetContent
+          side="bottom"
+          className="max-h-[82dvh] rounded-t-xl px-3 pb-8"
+        >
           <SheetHeader className="px-1">
             <SheetTitle>Workspace</SheetTitle>
           </SheetHeader>
           <div className="mt-3 grid grid-cols-2 gap-2">
-            {allRoutes.filter((route) => !mobileRoutes.some((mobile) => mobile.page === route.page)).map((item) => {
-              const Icon = item.icon;
-              return (
-                <Link
-                  key={item.page}
-                  href={item.href}
-                  onClick={() => onOpenChange(false)}
-                  aria-current={routeIsActive(page, item) ? "page" : undefined}
-                  className="group flex items-center gap-3 rounded-md border border-[var(--app-border)] bg-[var(--app-panel)] p-3 text-sm font-medium outline-none transition-[background-color,border-color] hover:border-[var(--app-strong-border)] hover:bg-[var(--app-soft-panel)] focus-visible:ring-2 focus-visible:ring-[var(--app-accent)]"
-                >
-                  <motion.span
-                    whileTap={reduceMotion ? undefined : { scale: 0.9 }}
-                    className="flex"
+            {allRoutes
+              .filter(
+                (route) =>
+                  !primaryRoutes.some((mobile) => mobile.page === route.page)
+              )
+              .filter(
+                (route) =>
+                  showTeamNavigation ||
+                  (route.page !== "team" && route.page !== "team-chat")
+              )
+              .map((item) => {
+                const Icon = item.icon;
+                return (
+                  <Link
+                    key={item.page}
+                    href={item.href}
+                    onClick={() => onOpenChange(false)}
+                    aria-current={
+                      routeIsActive(page, item) ? "page" : undefined
+                    }
+                    className="group flex items-center gap-3 rounded-md border border-[var(--app-border)] bg-[var(--app-panel)] p-3 text-sm font-medium outline-none transition-[background-color,border-color] hover:border-[var(--app-strong-border)] hover:bg-[var(--app-soft-panel)] focus-visible:ring-2 focus-visible:ring-[var(--app-accent)]"
                   >
-                    <Icon className="size-[18px] text-[var(--app-muted)] transition-colors group-hover:text-[var(--app-ink)]" />
-                  </motion.span>
-                  {item.label}
-                </Link>
-              );
-            })}
+                    <motion.span
+                      whileTap={reduceMotion ? undefined : { scale: 0.9 }}
+                      className="flex"
+                    >
+                      <Icon className="size-[18px] text-[var(--app-muted)] transition-colors group-hover:text-[var(--app-ink)]" />
+                    </motion.span>
+                    {item.label}
+                  </Link>
+                );
+              })}
+          </div>
+          <div className="mt-4 border-t border-[var(--app-border)] pt-4">
+            <p className="px-1 text-xs font-semibold text-[var(--app-muted)]">
+              Support and legal
+            </p>
+            <div className="mt-2 grid grid-cols-2 gap-2 text-sm">
+              <Link
+                className="min-h-12 rounded-md border border-[var(--app-border)] p-3"
+                href="/contact"
+                onClick={() => onOpenChange(false)}
+              >
+                Contact
+              </Link>
+              <Link
+                className="min-h-12 rounded-md border border-[var(--app-border)] p-3"
+                href="/privacy"
+                onClick={() => onOpenChange(false)}
+              >
+                Privacy
+              </Link>
+              <Link
+                className="min-h-12 rounded-md border border-[var(--app-border)] p-3"
+                href="/terms"
+                onClick={() => onOpenChange(false)}
+              >
+                Terms
+              </Link>
+              <Link
+                className="min-h-12 rounded-md border border-[var(--app-border)] p-3"
+                href="/accessibility"
+                onClick={() => onOpenChange(false)}
+              >
+                Accessibility
+              </Link>
+            </div>
+            <p className="mt-3 px-1 text-xs text-[var(--app-subtle)]">
+              © {new Date().getFullYear()} Relay
+            </p>
           </div>
         </SheetContent>
       </Sheet>

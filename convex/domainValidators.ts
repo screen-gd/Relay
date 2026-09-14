@@ -1,5 +1,31 @@
 import { v } from "convex/values";
 
+export const subscriptionPlanValidator = v.union(
+  v.literal("free"),
+  v.literal("creator"),
+  v.literal("team")
+);
+
+export const billingPeriodValidator = v.union(
+  v.literal("monthly"),
+  v.literal("annual"),
+  v.null()
+);
+
+export const subscriptionStatusValidator = v.union(
+  v.literal("free"),
+  v.literal("trialing"),
+  v.literal("active"),
+  v.literal("past_due"),
+  v.literal("canceled")
+);
+
+export const reconciliationStateValidator = v.union(
+  v.literal("pending"),
+  v.literal("synced"),
+  v.literal("repair")
+);
+
 export const projectStatusValidator = v.union(
   v.literal("Planned"),
   v.literal("In Progress"),
@@ -12,6 +38,45 @@ export const projectStatusValidator = v.union(
 export const storedProjectStatusValidator = v.union(
   projectStatusValidator,
   v.literal("Client Review")
+);
+
+export const workflowStagePurposeValidator = v.union(
+  v.literal("planned"),
+  v.literal("editing"),
+  v.literal("client_review"),
+  v.literal("revisions"),
+  v.literal("approved"),
+  v.literal("delivered")
+);
+
+export const workflowStageValidator = v.object({
+  id: v.string(),
+  label: v.string(),
+  purpose: workflowStagePurposeValidator,
+});
+
+export const projectOutputReviewStateValidator = v.union(
+  v.literal("draft"),
+  v.literal("sent_to_client"),
+  v.literal("changes_requested"),
+  v.literal("approved"),
+  v.literal("final_delivered")
+);
+
+export const projectPortalStatusValidator = v.union(
+  v.literal("draft"),
+  v.literal("open"),
+  v.literal("closed")
+);
+
+export const mediaSourceValidator = v.union(
+  v.object({
+    kind: v.literal("youtube"),
+    url: v.string(),
+    videoId: v.string(),
+  }),
+  v.object({ kind: v.literal("vimeo"), url: v.string(), videoId: v.string() }),
+  v.object({ kind: v.literal("link"), url: v.string() })
 );
 
 export const fileCategoryValidator = v.union(
@@ -38,6 +103,7 @@ export const storedFileStatusValidator = v.union(
 
 export const fileProviderValidator = v.union(
   v.literal("convex"),
+  v.literal("r2"),
   v.literal("external"),
   v.literal("google_drive"),
   v.literal("dropbox"),
@@ -63,6 +129,11 @@ export const settingsTeamRoleValidator = v.union(
 export const memberStatusValidator = v.union(
   v.literal("invited"),
   v.literal("active")
+);
+
+export const waitlistAudienceValidator = v.union(
+  v.literal("freelancer"),
+  v.literal("team")
 );
 
 export const clientPortalStageValidator = v.union(

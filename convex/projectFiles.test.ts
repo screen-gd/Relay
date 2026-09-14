@@ -2,9 +2,13 @@
 
 import { convexTest } from "convex-test";
 import { describe, expect, test } from "vitest";
-import { api } from "./_generated/api";
+import { api, internal } from "./_generated/api";
 import schema from "./schema";
-import type { FileCategory, FileProvider, FileStatus } from "../src/lib/domain-values";
+import type {
+  FileCategory,
+  FileProvider,
+  FileStatus,
+} from "../src/lib/domain-values";
 import {
   isValidTimecode,
   normalizeOptionalTimecode,
@@ -18,10 +22,15 @@ describe("timecode validation", () => {
     expect(normalizeOptionalTimecode(` ${timecode} `)).toBe(timecode);
   });
 
-  test.each(["12", "1:05", "00:60", "00:01:60", "00:1:25", "not-a-timecode"])("rejects %s", (timecode) => {
-    expect(isValidTimecode(timecode)).toBe(false);
-    expect(() => normalizeOptionalTimecode(timecode)).toThrow("Use MM:SS or HH:MM:SS");
-  });
+  test.each(["12", "1:05", "00:60", "00:01:60", "00:1:25", "not-a-timecode"])(
+    "rejects %s",
+    (timecode) => {
+      expect(isValidTimecode(timecode)).toBe(false);
+      expect(() => normalizeOptionalTimecode(timecode)).toThrow(
+        "Use MM:SS or HH:MM:SS"
+      );
+    }
+  );
 
   test("allows feedback without a timecode", () => {
     expect(normalizeOptionalTimecode()).toBeUndefined();
@@ -59,30 +68,49 @@ const editorPermissions = {
   useChat: true,
 };
 
-async function setupProject(team = false) {
+async function setupProject(
+  team = false,
+  plan: "free" | "creator" | "team" = "creator"
+) {
   const t = convexTest(schema, modules);
   const createdAt = new Date().toISOString();
-  const teamId = team ? await t.run((ctx) => ctx.db.insert("teamWorkspaces", {
-    ownerUserId: "owner",
-    name: "File Team",
-    inviteCode: "FILES1",
-    createdAt,
-  })) : undefined;
-  if (teamId) {
+  const workspaceId = await t.run((ctx) =>
+    ctx.db.insert("teamWorkspaces", {
+      ownerUserId: "owner",
+      name: "File Team",
+      inviteCode: "FILES1",
+      createdAt,
+    })
+  );
+  await t.run(async (ctx) => {
+    await ctx.db.insert("teamMembers", {
+      teamId: workspaceId,
+      userId: "owner",
+      email: "owner@example.com",
+      name: "Owner User",
+      role: "Owner",
+      status: "active",
+      permissions: ownerPermissions,
+      createdAt,
+      joinedAt: createdAt,
+    });
+    await ctx.db.insert("workspaceSubscriptions", {
+      workspaceId,
+      plan,
+      billingPeriod: plan === "free" ? null : "monthly",
+      subscriptionStatus: plan === "free" ? "free" : "active",
+      confirmedEditorQuantity: team ? 2 : 1,
+      includedEditorSeatQuantity: plan === "team" ? 3 : 1,
+      purchasedExtraEditorSeatQuantity: 0,
+      storageAddonQuantity: 0,
+      reconciliationState: "synced",
+      updatedAt: createdAt,
+    });
+  });
+  if (team) {
     await t.run(async (ctx) => {
       await ctx.db.insert("teamMembers", {
-        teamId,
-        userId: "owner",
-        email: "owner@example.com",
-        name: "Owner User",
-        role: "Owner",
-        status: "active",
-        permissions: ownerPermissions,
-        createdAt,
-        joinedAt: createdAt,
-      });
-      await ctx.db.insert("teamMembers", {
-        teamId,
+        teamId: workspaceId,
         userId: "editor",
         email: "editor@example.com",
         name: "Editor User",
@@ -93,7 +121,7 @@ async function setupProject(team = false) {
         joinedAt: createdAt,
       });
       await ctx.db.insert("teamMembers", {
-        teamId,
+        teamId: workspaceId,
         userId: "reviewer",
         email: "reviewer@example.com",
         name: "Review User",
@@ -105,32 +133,237 @@ async function setupProject(team = false) {
       });
     });
   }
-  await t.run((ctx) => ctx.db.insert("workItems", {
-    userId: "owner",
-    id: "project-files",
-    teamId,
-    ownerUserId: "owner",
-    assigneeUserIds: team ? ["reviewer"] : [],
-    profileId: "video-editing",
-    title: "Project Files",
-    client: "Client",
-    status: "In Progress",
-    workType: "Freelance",
-    startDate: "2026-06-01",
-    dueDate: "2026-06-10",
-    earnings: 500,
-    notes: "",
-    createdAt,
-  }));
+  await t.run((ctx) =>
+    ctx.db.insert("projects", {
+      ownerUserId: "owner",
+      id: "project-files",
+      teamId: team ? workspaceId : undefined,
+      assigneeUserIds: team ? ["reviewer", "editor"] : [],
+      profileId: "video-editing",
+      title: "Project Files",
+      clientId: "client",
+      archived: false,
+      status: "In Progress",
+      workflowStageId: "editing",
+      workflowStages: [
+        { id: "planned", label: "Planned", purpose: "planned" },
+        { id: "editing", label: "Editing", purpose: "editing" },
+        { id: "delivered", label: "Delivered", purpose: "delivered" },
+      ],
+      workType: "Freelance",
+      startDate: "2026-06-01",
+      dueDate: "2026-06-10",
+      earnings: 500,
+      paid: false,
+      notes: "",
+      createdAt,
+      updatedAt: createdAt,
+    })
+  );
   return {
     t,
-    owner: t.withIdentity({ tokenIdentifier: "owner", name: "Owner User", email: "owner@example.com" }),
-    editor: t.withIdentity({ tokenIdentifier: "editor", name: "Editor User", email: "editor@example.com" }),
-    reviewer: t.withIdentity({ tokenIdentifier: "reviewer", name: "Review User", email: "reviewer@example.com" }),
+    owner: t.withIdentity({
+      tokenIdentifier: "owner",
+      subject: "owner",
+      name: "Owner User",
+      email: "owner@example.com",
+      pla: "u:creator",
+    }),
+    editor: t.withIdentity({
+      tokenIdentifier: "editor",
+      subject: "editor",
+      name: "Editor User",
+      email: "editor@example.com",
+      pla: "u:creator",
+    }),
+    reviewer: t.withIdentity({
+      tokenIdentifier: "reviewer",
+      subject: "reviewer",
+      name: "Review User",
+      email: "reviewer@example.com",
+    }),
   };
 }
 
 describe("project file management", () => {
+  test("blocks Free users from creating or saving uploads", async () => {
+    const { t } = await setupProject(false, "free");
+    const freeOwner = t.withIdentity({
+      tokenIdentifier: "owner",
+      subject: "owner",
+      pla: "u:free",
+    });
+    const storageId = await t.run((ctx) =>
+      ctx.storage.store(new Blob(["blocked"]))
+    );
+
+    await expect(
+      freeOwner.mutation(api.projectFiles.generateUploadUrl, {
+        projectId: "project-files",
+        size: 7,
+      })
+    ).rejects.toThrow("Creator or Team");
+    const reservationId = await t.run(async (ctx) => {
+      const subscription = await ctx.db
+        .query("workspaceSubscriptions")
+        .withIndex("by_workspaceId")
+        .unique();
+      if (!subscription) throw new Error("Subscription missing");
+      return await ctx.db.insert("workspaceStorageReservations", {
+        workspaceId: subscription.workspaceId,
+        projectId: "project-files",
+        uploaderUserId: "owner",
+        bytes: 7,
+        status: "pending",
+        createdAt: new Date().toISOString(),
+        expiresAt: Date.now() + 60_000,
+      });
+    });
+    await expect(
+      freeOwner.mutation(api.projectFiles.saveStorageVersion, {
+        projectId: "project-files",
+        storageId,
+        reservationId,
+        category: "Asset",
+        title: "Blocked upload",
+        description: "",
+        status: "draft",
+        clientVisible: false,
+        downloadable: false,
+        fileName: "blocked.txt",
+        mimeType: "text/plain",
+        notes: "",
+      })
+    ).rejects.toThrow("Creator or Team");
+  });
+
+  test("allows Editors to use their Workspace Creator entitlement", async () => {
+    const { editor } = await setupProject(true, "creator");
+    await expect(
+      editor.mutation(api.projectFiles.generateUploadUrl, {
+        projectId: "project-files",
+        size: 1,
+      })
+    ).resolves.toMatchObject({ url: expect.any(String) });
+  });
+
+  test("allows uploads during a confirmed Creator trial", async () => {
+    const { t, owner } = await setupProject(false, "creator");
+    await t.run(async (ctx) => {
+      const subscription = await ctx.db
+        .query("workspaceSubscriptions")
+        .withIndex("by_workspaceId")
+        .unique();
+      if (!subscription) throw new Error("Subscription missing");
+      await ctx.db.patch(subscription._id, {
+        subscriptionStatus: "trialing",
+        trialEndsAt: "2026-09-08T00:00:00.000Z",
+      });
+    });
+
+    await expect(
+      owner.mutation(api.projectFiles.generateUploadUrl, {
+        projectId: "project-files",
+        size: 1,
+      })
+    ).resolves.toMatchObject({ url: expect.any(String) });
+  });
+
+  test("blocks new uploads after a paid Workspace becomes past due", async () => {
+    const { t, owner } = await setupProject(false, "creator");
+    await t.run(async (ctx) => {
+      const subscription = await ctx.db
+        .query("workspaceSubscriptions")
+        .withIndex("by_workspaceId")
+        .unique();
+      if (!subscription) throw new Error("Subscription missing");
+      await ctx.db.patch(subscription._id, { subscriptionStatus: "past_due" });
+    });
+
+    await expect(
+      owner.mutation(api.projectFiles.generateUploadUrl, {
+        projectId: "project-files",
+        size: 1,
+      })
+    ).rejects.toThrow("Creator or Team");
+  });
+
+  test.each([
+    ["free", 0],
+    ["creator", 5_000_000_000],
+    ["team", 15_000_000_000],
+  ] as const)("reports the %s Workspace quota", async (plan, quota) => {
+    const { owner } = await setupProject(plan === "team", plan);
+
+    await expect(
+      owner.query(api.projectFiles.listForProject, {
+        projectId: "project-files",
+      })
+    ).resolves.toMatchObject({
+      retainedBytes: 0,
+      workspaceLimitBytes: quota,
+    });
+  });
+
+  test("serializes upload reservations against the confirmed quota", async () => {
+    const { t, owner } = await setupProject();
+    await t.run(async (ctx) => {
+      const subscription = await ctx.db
+        .query("workspaceSubscriptions")
+        .withIndex("by_workspaceId")
+        .unique();
+      if (!subscription) throw new Error("Subscription missing");
+      await ctx.db.patch(subscription._id, {
+        retainedStorageBytes: 4_999_999_990,
+      });
+    });
+
+    const first = await owner.mutation(api.projectFiles.generateUploadUrl, {
+      projectId: "project-files",
+      size: 6,
+    });
+    await expect(
+      owner.mutation(api.projectFiles.generateUploadUrl, {
+        projectId: "project-files",
+        size: 6,
+      })
+    ).rejects.toThrow("Workspace storage limit reached");
+
+    await owner.mutation(api.projectFiles.releaseUploadReservation, {
+      reservationId: first.reservationId,
+    });
+    await expect(
+      owner.mutation(api.projectFiles.generateUploadUrl, {
+        projectId: "project-files",
+        size: 6,
+      })
+    ).resolves.toMatchObject({ url: expect.any(String) });
+  });
+
+  test("releases expired upload reservations", async () => {
+    const { t, owner } = await setupProject();
+    const upload = await owner.mutation(api.projectFiles.generateUploadUrl, {
+      projectId: "project-files",
+      size: 12,
+    });
+    await t.run((ctx) =>
+      ctx.db.patch(upload.reservationId, { expiresAt: Date.now() - 1 })
+    );
+
+    await t.mutation(internal.projectFiles.releaseExpiredReservation, {
+      reservationId: upload.reservationId,
+    });
+
+    await expect(
+      t.run((ctx) =>
+        ctx.db
+          .query("workspaceSubscriptions")
+          .withIndex("by_workspaceId")
+          .unique()
+      )
+    ).resolves.toMatchObject({ reservedStorageBytes: 0 });
+  });
+
   test("rejects unknown file categories, statuses, and providers", async () => {
     const { owner } = await setupProject();
     const validVersion = {
@@ -149,18 +382,24 @@ describe("project file management", () => {
       notes: "",
     };
 
-    await expect(owner.mutation(api.projectFiles.saveExternalVersion, {
-      ...validVersion,
-      category: "asset" as FileCategory,
-    })).rejects.toThrow();
-    await expect(owner.mutation(api.projectFiles.saveExternalVersion, {
-      ...validVersion,
-      status: "Ready" as FileStatus,
-    })).rejects.toThrow();
-    await expect(owner.mutation(api.projectFiles.saveExternalVersion, {
-      ...validVersion,
-      provider: "unknown_provider" as FileProvider,
-    })).rejects.toThrow();
+    await expect(
+      owner.mutation(api.projectFiles.saveExternalVersion, {
+        ...validVersion,
+        category: "asset" as FileCategory,
+      })
+    ).rejects.toThrow();
+    await expect(
+      owner.mutation(api.projectFiles.saveExternalVersion, {
+        ...validVersion,
+        status: "Ready" as FileStatus,
+      })
+    ).rejects.toThrow();
+    await expect(
+      owner.mutation(api.projectFiles.saveExternalVersion, {
+        ...validVersion,
+        provider: "unknown_provider" as FileProvider,
+      })
+    ).rejects.toThrow();
   });
 
   test("stores categorized external files and chronological version history", async () => {
@@ -199,44 +438,160 @@ describe("project file management", () => {
       notes: "Client annotations included",
     });
 
-    const result = await owner.query(api.projectFiles.listForProject, { projectId: "project-files" });
+    const result = await owner.query(api.projectFiles.listForProject, {
+      projectId: "project-files",
+    });
     expect(result.files).toHaveLength(1);
     expect(result.files[0]).toMatchObject({
       category: "Reference",
       title: "Creative brief",
       status: "changes_requested",
     });
-    expect(result.files[0].versions.map((version) => version.versionNumber)).toEqual([2, 1]);
-    expect(result.files[0].versions.map((version) => version.status)).toEqual(["changes_requested", "approved"]);
-    expect(result.uploadHistory.map((version) => version.provider)).toEqual(["frame_io", "google_drive"]);
+    expect(
+      result.files[0].versions.map((version) => version.versionNumber)
+    ).toEqual([2, 1]);
+    expect(result.files[0].versions.map((version) => version.status)).toEqual([
+      "changes_requested",
+      "approved",
+    ]);
+    expect(result.uploadHistory.map((version) => version.provider)).toEqual([
+      "frame_io",
+      "google_drive",
+    ]);
   });
 
   test("tracks Convex upload metadata and uploader identity", async () => {
     const { t, owner } = await setupProject();
-    const storageId = await t.run((ctx) => ctx.storage.store(new Blob(["video-data"], { type: "video/mp4" })));
+    const storageId = await t.run((ctx) =>
+      ctx.storage.store(new Blob(["image-data"], { type: "image/png" }))
+    );
+    const { reservationId } = await owner.mutation(
+      api.projectFiles.generateUploadUrl,
+      { projectId: "project-files", size: 10 }
+    );
     await owner.mutation(api.projectFiles.saveStorageVersion, {
       projectId: "project-files",
       storageId,
+      reservationId,
       category: "Asset",
       title: "Source clip",
       description: "Camera original",
       status: "draft",
       clientVisible: false,
       downloadable: true,
-      fileName: "source.mp4",
-      mimeType: "video/mp4",
+      fileName: "source.png",
+      mimeType: "image/png",
       notes: "Uploaded from camera card",
     });
 
-    const result = await owner.query(api.projectFiles.listForProject, { projectId: "project-files" });
+    const result = await owner.query(api.projectFiles.listForProject, {
+      projectId: "project-files",
+    });
     expect(result.uploadHistory[0]).toMatchObject({
       provider: "convex",
-      fileName: "source.mp4",
-      mimeType: "video/mp4",
+      fileName: "source.png",
+      mimeType: "image/png",
       size: 10,
       uploadedByName: "Owner User",
     });
     expect(result.uploadHistory[0].url).toBeTruthy();
+  });
+
+  test("commits hosted bytes, keeps archives counted, and frees permanent deletions", async () => {
+    const { t, owner } = await setupProject();
+    const storageId = await t.run((ctx) =>
+      ctx.storage.store(new Blob(["retained"], { type: "text/plain" }))
+    );
+    const upload = await owner.mutation(api.projectFiles.generateUploadUrl, {
+      projectId: "project-files",
+      size: 8,
+    });
+    const fileId = await owner.mutation(api.projectFiles.saveStorageVersion, {
+      projectId: "project-files",
+      storageId,
+      reservationId: upload.reservationId,
+      category: "Asset",
+      title: "Retained upload",
+      description: "",
+      status: "draft",
+      clientVisible: false,
+      downloadable: true,
+      fileName: "retained.txt",
+      mimeType: "text/plain",
+      notes: "",
+    });
+
+    await expect(
+      owner.query(api.projectFiles.listForProject, {
+        projectId: "project-files",
+      })
+    ).resolves.toMatchObject({ retainedBytes: 8 });
+    await owner.mutation(api.projectFiles.archiveFile, { fileId });
+    await expect(
+      owner.query(api.projectFiles.listForProject, {
+        projectId: "project-files",
+        includeArchived: true,
+      })
+    ).resolves.toMatchObject({ retainedBytes: 8 });
+    await owner.mutation(api.projectFiles.removeFile, { fileId });
+    await expect(
+      owner.query(api.projectFiles.listForProject, {
+        projectId: "project-files",
+      })
+    ).resolves.toMatchObject({ retainedBytes: 0 });
+  });
+
+  test("keeps existing files readable after a downgrade while blocking growth", async () => {
+    const { t, owner } = await setupProject();
+    const storageId = await t.run((ctx) =>
+      ctx.storage.store(new Blob(["keep"], { type: "text/plain" }))
+    );
+    const upload = await owner.mutation(api.projectFiles.generateUploadUrl, {
+      projectId: "project-files",
+      size: 4,
+    });
+    await owner.mutation(api.projectFiles.saveStorageVersion, {
+      projectId: "project-files",
+      storageId,
+      reservationId: upload.reservationId,
+      category: "Asset",
+      title: "Keep after downgrade",
+      description: "",
+      status: "draft",
+      clientVisible: false,
+      downloadable: true,
+      fileName: "keep.txt",
+      mimeType: "text/plain",
+      notes: "",
+    });
+    await t.run(async (ctx) => {
+      const subscription = await ctx.db
+        .query("workspaceSubscriptions")
+        .withIndex("by_workspaceId")
+        .unique();
+      if (!subscription) throw new Error("Subscription missing");
+      await ctx.db.patch(subscription._id, {
+        plan: "free",
+        billingPeriod: null,
+        subscriptionStatus: "free",
+      });
+    });
+
+    await expect(
+      owner.query(api.projectFiles.listForProject, {
+        projectId: "project-files",
+      })
+    ).resolves.toMatchObject({
+      retainedBytes: 4,
+      workspaceLimitBytes: 0,
+      files: [expect.objectContaining({ title: "Keep after downgrade" })],
+    });
+    await expect(
+      owner.mutation(api.projectFiles.generateUploadUrl, {
+        projectId: "project-files",
+        size: 1,
+      })
+    ).rejects.toThrow("Creator or Team");
   });
 
   test("normalizes legacy file states and upgrades the latest legacy version on edit", async () => {
@@ -274,7 +629,9 @@ describe("project file management", () => {
       return id;
     });
 
-    const before = await owner.query(api.projectFiles.listForProject, { projectId: "project-files" });
+    const before = await owner.query(api.projectFiles.listForProject, {
+      projectId: "project-files",
+    });
     expect(before.files[0]).toMatchObject({ status: "sent_to_client" });
     expect(before.files[0].versions[0].status).toBe("draft");
 
@@ -288,7 +645,9 @@ describe("project file management", () => {
       downloadable: false,
     });
 
-    const after = await owner.query(api.projectFiles.listForProject, { projectId: "project-files" });
+    const after = await owner.query(api.projectFiles.listForProject, {
+      projectId: "project-files",
+    });
     expect(after.files[0]).toMatchObject({ status: "changes_requested" });
     expect(after.files[0].versions[0]).toMatchObject({
       versionNumber: 1,
@@ -298,7 +657,9 @@ describe("project file management", () => {
 
   test("rejects reusing one Convex storage blob across versions", async () => {
     const { t, owner } = await setupProject();
-    const storageId = await t.run((ctx) => ctx.storage.store(new Blob(["shared"], { type: "text/plain" })));
+    const storageId = await t.run((ctx) =>
+      ctx.storage.store(new Blob(["shared"], { type: "text/plain" }))
+    );
     const version = {
       projectId: "project-files",
       storageId,
@@ -313,11 +674,27 @@ describe("project file management", () => {
       notes: "",
     };
 
-    await owner.mutation(api.projectFiles.saveStorageVersion, version);
-    await expect(owner.mutation(api.projectFiles.saveStorageVersion, {
+    const first = await owner.mutation(api.projectFiles.generateUploadUrl, {
+      projectId: "project-files",
+      size: 6,
+    });
+    await owner.mutation(api.projectFiles.saveStorageVersion, {
       ...version,
-      title: "Duplicate source",
-    })).rejects.toThrow("This uploaded file is already attached to a project version");
+      reservationId: first.reservationId,
+    });
+    const second = await owner.mutation(api.projectFiles.generateUploadUrl, {
+      projectId: "project-files",
+      size: 6,
+    });
+    await expect(
+      owner.mutation(api.projectFiles.saveStorageVersion, {
+        ...version,
+        reservationId: second.reservationId,
+        title: "Duplicate source",
+      })
+    ).rejects.toThrow(
+      "This uploaded file is already attached to a project version"
+    );
   });
 
   test("reviewers can view files but cannot upload, edit, or delete", async () => {
@@ -338,20 +715,35 @@ describe("project file management", () => {
       notes: "",
     });
 
-    expect((await reviewer.query(api.projectFiles.listForProject, { projectId: "project-files" })).files).toHaveLength(1);
-    await expect(reviewer.mutation(api.projectFiles.generateUploadUrl, { projectId: "project-files" })).rejects.toThrow("Project access required");
-    await expect(reviewer.mutation(api.projectFiles.updateFile, {
-      fileId,
-      category: "Asset",
-      title: "Brand kit",
-      description: "",
-      status: "approved",
-      clientVisible: false,
-      downloadable: true,
-    })).rejects.toThrow("Project access required");
-    await expect(reviewer.mutation(api.projectFiles.removeFile, { fileId })).rejects.toThrow("Project access required");
+    expect(
+      (
+        await reviewer.query(api.projectFiles.listForProject, {
+          projectId: "project-files",
+        })
+      ).files
+    ).toHaveLength(1);
+    await expect(
+      reviewer.mutation(api.projectFiles.generateUploadUrl, {
+        projectId: "project-files",
+        size: 1,
+      })
+    ).rejects.toThrow("Permission denied");
+    await expect(
+      reviewer.mutation(api.projectFiles.updateFile, {
+        fileId,
+        category: "Asset",
+        title: "Brand kit",
+        description: "",
+        status: "approved",
+        clientVisible: false,
+        downloadable: true,
+      })
+    ).rejects.toThrow("Permission denied");
+    await expect(
+      reviewer.mutation(api.projectFiles.removeFile, { fileId })
+    ).rejects.toThrow("Permission denied");
 
-    const { portalId, deliverableId } = await t.run(async (ctx) => {
+    const portalId = await t.run(async (ctx) => {
       const now = new Date().toISOString();
       const portalId = await ctx.db.insert("clientPortals", {
         ownerUserId: "owner",
@@ -373,50 +765,48 @@ describe("project file management", () => {
         createdAt: now,
         updatedAt: now,
       });
-      const deliverableId = await ctx.db.insert("portalDeliverables", {
-        portalId,
-        title: "Manual review link",
-        detail: "",
-        url: "https://example.com/review",
-        status: "sent_to_client",
-        downloadable: false,
-        createdAt: now,
-        updatedAt: now,
-      });
-      return { portalId, deliverableId };
+      return portalId;
     });
-
-    await expect(reviewer.mutation(api.clientPortals.updateDeliverableStatus, {
-      deliverableId,
-      status: "approved",
-    })).rejects.toThrow("Project access required");
-    await expect(reviewer.mutation(api.clientPortals.setAccessControls, {
-      portalId,
-      enabled: false,
-      expiresAt: null,
-    })).rejects.toThrow("Project access required");
-    await expect(reviewer.mutation(api.clientPortals.regenerateToken, {
-      portalId,
-    })).rejects.toThrow("Project access required");
-    await expect(reviewer.mutation(api.clientPortals.setPasswordProtection, {
-      portalId,
-      password: "4829",
-    })).rejects.toThrow("Project access required");
+    await expect(
+      reviewer.mutation(api.clientPortals.setAccessControls, {
+        portalId,
+        enabled: false,
+        expiresAt: null,
+      })
+    ).rejects.toThrow("Project access required");
+    await expect(
+      reviewer.mutation(api.clientPortals.regenerateToken, {
+        portalId,
+      })
+    ).rejects.toThrow("Project access required");
+    await expect(
+      reviewer.mutation(api.clientPortals.setPasswordProtection, {
+        portalId,
+        password: "4829",
+      })
+    ).rejects.toThrow("Project access required");
 
     await editor.mutation(api.clientPortals.setAccessControls, {
       portalId,
       enabled: false,
       expiresAt: null,
     });
-    const regenerated = await editor.mutation(api.clientPortals.regenerateToken, { portalId });
+    const regenerated = await editor.mutation(
+      api.clientPortals.regenerateToken,
+      { portalId }
+    );
     expect(regenerated.token).not.toBe("reviewer-permission-portal");
     await editor.mutation(api.clientPortals.setPasswordProtection, {
       portalId,
       password: "editor-managed-code",
     });
-    expect((await editor.query(api.clientPortals.getForProject, {
-      projectId: "project-files",
-    }))?.portal.passwordProtected).toBe(true);
+    expect(
+      (
+        await editor.query(api.clientPortals.getForProject, {
+          projectId: "project-files",
+        })
+      )?.portal.passwordProtected
+    ).toBe(true);
     await editor.mutation(api.clientPortals.setPasswordProtection, {
       portalId,
       password: null,
@@ -451,20 +841,31 @@ describe("project file management", () => {
       downloadable: false,
     });
 
-    const result = await owner.query(api.projectFiles.listForProject, { projectId: "project-files" });
+    const result = await owner.query(api.projectFiles.listForProject, {
+      projectId: "project-files",
+    });
     expect(result.files[0]).toMatchObject({ status: "approved" });
     expect(result.files[0].versions).toHaveLength(1);
-    expect(result.files[0].versions[0]).toMatchObject({ status: "approved", versionNumber: 1 });
+    expect(result.files[0].versions[0]).toMatchObject({
+      status: "approved",
+      versionNumber: 1,
+    });
     const activity = await t.run((ctx) =>
       ctx.db
         .query("projectActivity")
-        .withIndex("by_projectId_and_createdAt", (q) => q.eq("projectId", "project-files"))
+        .withIndex("by_projectId_and_createdAt", (q) =>
+          q.eq("projectId", "project-files")
+        )
         .order("desc")
         .take(10)
     );
-    expect(activity.some((event) =>
-      event.message === "Review cut approval changed from Sent to Client to Approved."
-    )).toBe(true);
+    expect(
+      activity.some(
+        (event) =>
+          event.message ===
+          "Review cut approval changed from Sent to Client to Approved."
+      )
+    ).toBe(true);
   });
 
   test("legacy portal addDeliverable creates client-visible project files", async () => {
@@ -477,7 +878,9 @@ describe("project file management", () => {
       revisionLimit: 2,
       clientStage: "Review",
     });
-    const editorPortal = await owner.query(api.clientPortals.getForProject, { projectId: "project-files" });
+    const editorPortal = await owner.query(api.clientPortals.getForProject, {
+      projectId: "project-files",
+    });
     if (!editorPortal) throw new Error("Expected editor portal");
 
     const result = await owner.mutation(api.clientPortals.addDeliverable, {
@@ -490,7 +893,9 @@ describe("project file management", () => {
     });
 
     expect(result.fileId).toBeTruthy();
-    const files = await owner.query(api.projectFiles.listForProject, { projectId: "project-files" });
+    const files = await owner.query(api.projectFiles.listForProject, {
+      projectId: "project-files",
+    });
     expect(files.files).toHaveLength(1);
     expect(files.files[0]).toMatchObject({
       title: "Review handoff",
@@ -511,30 +916,43 @@ describe("project file management", () => {
     const legacyRows = await t.run((ctx) =>
       ctx.db
         .query("portalDeliverables")
-        .withIndex("by_portalId_and_createdAt", (q) => q.eq("portalId", editorPortal.portal._id))
+        .withIndex("by_portalId_and_createdAt", (q) =>
+          q.eq("portalId", editorPortal.portal._id)
+        )
         .take(10)
     );
     expect(legacyRows).toHaveLength(0);
 
     const portal = await t.query(api.clientPortals.getByToken, { token });
     expect(portal.access).toBe("active");
-    if (portal.access !== "active") throw new Error("Expected an active portal");
-    expect(portal.deliverables).toContainEqual(expect.objectContaining({
-      title: "Review handoff",
-      detail: "Client review link",
-      url: "https://example.com/review-handoff",
-      status: "sent_to_client",
-      downloadable: true,
-    }));
+    if (portal.access !== "active")
+      throw new Error("Expected an active portal");
+    expect(portal.deliverables).toContainEqual(
+      expect.objectContaining({
+        title: "Review handoff",
+        detail: "Client review link",
+        url: "https://example.com/review-handoff",
+        status: "sent_to_client",
+        downloadable: true,
+      })
+    );
 
     const activity = await t.run((ctx) =>
       ctx.db
         .query("projectActivity")
-        .withIndex("by_projectId_and_createdAt", (q) => q.eq("projectId", "project-files"))
+        .withIndex("by_projectId_and_createdAt", (q) =>
+          q.eq("projectId", "project-files")
+        )
         .order("desc")
         .take(10)
     );
-    expect(activity.some((event) => event.kind === "project_file_added" && event.message === "Review handoff was added to deliverable files.")).toBe(true);
+    expect(
+      activity.some(
+        (event) =>
+          event.kind === "project_file_added" &&
+          event.message === "Review handoff was added to deliverable files."
+      )
+    ).toBe(true);
   });
   test("client portals hide drafts and expose approved and final deliverables safely", async () => {
     const { t, owner } = await setupProject();
@@ -598,48 +1016,30 @@ describe("project file management", () => {
       size: 9000,
       notes: "",
     });
-    const portalId = await t.run((ctx) => ctx.db.insert("clientPortals", {
-      ownerUserId: "owner",
-      projectId: "project-files",
-      token: "portal-token",
-      title: "Project Files",
-      clientName: "Client",
-      projectType: "Freelance",
-      status: "Delivered",
-      sourceStatus: "Delivered",
-      startDate: "2026-06-01",
-      dueDate: "2026-06-10",
-      progress: 100,
-      clientSummary: "",
-      clientNotes: "",
-      estimatedCompletion: "2026-06-10",
-      revisionLimit: 2,
-      published: true,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    }));
+    const portalId = await t.run((ctx) =>
+      ctx.db.insert("clientPortals", {
+        ownerUserId: "owner",
+        projectId: "project-files",
+        token: "portal-token",
+        title: "Project Files",
+        clientName: "Client",
+        projectType: "Freelance",
+        status: "Delivered",
+        sourceStatus: "Delivered",
+        startDate: "2026-06-01",
+        dueDate: "2026-06-10",
+        progress: 100,
+        clientSummary: "",
+        clientNotes: "",
+        estimatedCompletion: "2026-06-10",
+        revisionLimit: 2,
+        published: true,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      })
+    );
     expect(portalId).toBeTruthy();
     await t.run(async (ctx) => {
-      await ctx.db.insert("portalDeliverables", {
-        portalId,
-        title: "Legacy pending handoff",
-        detail: "Should remain private",
-        url: "https://example.com/pending",
-        status: "Pending",
-        downloadable: false,
-        createdAt: "2026-06-01T00:00:00.000Z",
-        updatedAt: "2026-06-01T00:00:00.000Z",
-      });
-      await ctx.db.insert("portalDeliverables", {
-        portalId,
-        title: "Manual approved handoff",
-        detail: "Safe for client",
-        url: "https://example.com/approved",
-        status: "approved",
-        downloadable: true,
-        createdAt: "2026-06-02T00:00:00.000Z",
-        updatedAt: "2026-06-02T00:00:00.000Z",
-      });
       for (let index = 0; index < 50; index += 1) {
         await ctx.db.insert("projectFiles", {
           projectId: "project-files",
@@ -658,28 +1058,44 @@ describe("project file management", () => {
       }
     });
 
-    const portal = await t.query(api.clientPortals.getByToken, { token: "portal-token" });
+    const portal = await t.query(api.clientPortals.getByToken, {
+      token: "portal-token",
+    });
     expect(portal.access).toBe("active");
-    if (portal.access !== "active") throw new Error("Expected an active portal");
+    if (portal.access !== "active")
+      throw new Error("Expected an active portal");
     expect(portal.deliverables.map((item) => item.title)).toEqual([
       "Approved preview",
       "Final master",
-      "Manual approved handoff",
     ]);
-    expect(portal.deliverables).toContainEqual(expect.objectContaining({
-      title: "Final master",
-      detail: "Approved 4K export",
-      status: "final_delivered",
-      downloadable: true,
-    }));
-    expect(portal.deliverables).toContainEqual(expect.objectContaining({
-      title: "Approved preview",
-      status: "approved",
-      downloadable: false,
-    }));
-    expect(portal.deliverables.some((item) => item.detail.includes("Internal upload note"))).toBe(false);
-    expect(portal.deliverables.some((item) => item.title === "Internal draft")).toBe(false);
-    expect(portal.deliverables.some((item) => item.title === "Legacy pending handoff")).toBe(false);
+    expect(portal.deliverables).toContainEqual(
+      expect.objectContaining({
+        title: "Final master",
+        detail: "Approved 4K export",
+        status: "final_delivered",
+        downloadable: true,
+      })
+    );
+    expect(portal.deliverables).toContainEqual(
+      expect.objectContaining({
+        title: "Approved preview",
+        status: "approved",
+        downloadable: false,
+      })
+    );
+    expect(
+      portal.deliverables.some((item) =>
+        item.detail.includes("Internal upload note")
+      )
+    ).toBe(false);
+    expect(
+      portal.deliverables.some((item) => item.title === "Internal draft")
+    ).toBe(false);
+    expect(
+      portal.deliverables.some(
+        (item) => item.title === "Legacy pending handoff"
+      )
+    ).toBe(false);
   });
 
   test("portal access controls block disabled and expired links and revision writes", async () => {
@@ -692,74 +1108,107 @@ describe("project file management", () => {
       revisionLimit: 2,
       clientStage: "Review",
     });
-    const editorPortal = await owner.query(api.clientPortals.getForProject, { projectId: "project-files" });
+    const editorPortal = await owner.query(api.clientPortals.getForProject, {
+      projectId: "project-files",
+    });
     if (!editorPortal) throw new Error("Expected editor portal");
 
-    expect((await t.query(api.clientPortals.getByToken, { token })).access).toBe("active");
+    expect(
+      (await t.query(api.clientPortals.getByToken, { token })).access
+    ).toBe("active");
 
     await owner.mutation(api.clientPortals.setAccessControls, {
       portalId: editorPortal.portal._id,
       enabled: false,
       expiresAt: null,
     });
-    expect(await t.query(api.clientPortals.getByToken, { token })).toEqual({ access: "unavailable" });
-    await expect(t.mutation(api.clientPortals.submitRevision, {
-      token,
-      clientName: "Client",
-      message: "This must not be accepted.",
-    })).rejects.toThrow("Client portal unavailable");
+    expect(await t.query(api.clientPortals.getByToken, { token })).toEqual({
+      access: "unavailable",
+    });
+    await expect(
+      t.mutation(api.clientPortals.submitRevision, {
+        token,
+        clientName: "Client",
+        message: "This must not be accepted.",
+      })
+    ).rejects.toThrow("Client portal unavailable");
 
     await owner.mutation(api.clientPortals.setAccessControls, {
       portalId: editorPortal.portal._id,
       enabled: true,
       expiresAt: "2000-01-01T00:00:00.000Z",
     });
-    expect(await t.query(api.clientPortals.getByToken, { token })).toEqual({ access: "expired" });
-    await expect(t.mutation(api.clientPortals.submitRevision, {
-      token,
-      clientName: "Client",
-      message: "Expired access must not accept feedback.",
-    })).rejects.toThrow("Client portal unavailable");
+    expect(await t.query(api.clientPortals.getByToken, { token })).toEqual({
+      access: "expired",
+    });
+    await expect(
+      t.mutation(api.clientPortals.submitRevision, {
+        token,
+        clientName: "Client",
+        message: "Expired access must not accept feedback.",
+      })
+    ).rejects.toThrow("Client portal unavailable");
 
     await owner.mutation(api.clientPortals.setAccessControls, {
       portalId: editorPortal.portal._id,
       enabled: true,
       expiresAt: null,
     });
-    expect((await t.query(api.clientPortals.getByToken, { token })).access).toBe("active");
+    expect(
+      (await t.query(api.clientPortals.getByToken, { token })).access
+    ).toBe("active");
 
     const activity = await t.run((ctx) =>
       ctx.db
         .query("projectActivity")
-        .withIndex("by_projectId_and_createdAt", (q) => q.eq("projectId", "project-files"))
+        .withIndex("by_projectId_and_createdAt", (q) =>
+          q.eq("projectId", "project-files")
+        )
         .order("desc")
         .take(20)
     );
-    expect(activity.some((event) => event.kind === "client_portal_disabled")).toBe(true);
-    expect(activity.some((event) => event.kind === "client_portal_enabled")).toBe(true);
+    expect(
+      activity.some((event) => event.kind === "client_portal_disabled")
+    ).toBe(true);
+    expect(
+      activity.some((event) => event.kind === "client_portal_enabled")
+    ).toBe(true);
   });
 
   test("regenerating a portal token invalidates the old link without losing portal data", async () => {
     const { owner, t } = await setupProject();
-    const { token: oldToken } = await owner.mutation(api.clientPortals.publish, {
+    const { token: oldToken } = await owner.mutation(
+      api.clientPortals.publish,
+      {
+        projectId: "project-files",
+        clientSummary: "Keep this snapshot",
+        clientNotes: "Shared note",
+        estimatedCompletion: "2026-07-01",
+        revisionLimit: 3,
+        clientStage: "In Progress",
+      }
+    );
+    const editorPortal = await owner.query(api.clientPortals.getForProject, {
       projectId: "project-files",
-      clientSummary: "Keep this snapshot",
-      clientNotes: "Shared note",
-      estimatedCompletion: "2026-07-01",
-      revisionLimit: 3,
-      clientStage: "In Progress",
     });
-    const editorPortal = await owner.query(api.clientPortals.getForProject, { projectId: "project-files" });
     if (!editorPortal) throw new Error("Expected editor portal");
 
-    const { token: newToken } = await owner.mutation(api.clientPortals.regenerateToken, {
-      portalId: editorPortal.portal._id,
-    });
+    const { token: newToken } = await owner.mutation(
+      api.clientPortals.regenerateToken,
+      {
+        portalId: editorPortal.portal._id,
+      }
+    );
     expect(newToken).not.toBe(oldToken);
-    expect(await t.query(api.clientPortals.getByToken, { token: oldToken })).toEqual({ access: "unavailable" });
-    const activePortal = await t.query(api.clientPortals.getByToken, { token: newToken });
+    expect(
+      await t.query(api.clientPortals.getByToken, { token: oldToken })
+    ).toEqual({ access: "unavailable" });
+    const activePortal = await t.query(api.clientPortals.getByToken, {
+      token: newToken,
+    });
     expect(activePortal.access).toBe("active");
-    if (activePortal.access !== "active") throw new Error("Expected regenerated token to be active");
+    if (activePortal.access !== "active")
+      throw new Error("Expected regenerated token to be active");
     expect(activePortal).toMatchObject({
       clientSummary: "Keep this snapshot",
       clientNotes: "Shared note",
@@ -769,11 +1218,15 @@ describe("project file management", () => {
     const activity = await t.run((ctx) =>
       ctx.db
         .query("projectActivity")
-        .withIndex("by_projectId_and_createdAt", (q) => q.eq("projectId", "project-files"))
+        .withIndex("by_projectId_and_createdAt", (q) =>
+          q.eq("projectId", "project-files")
+        )
         .order("desc")
         .take(10)
     );
-    expect(activity.some((event) => event.kind === "client_portal_token_regenerated")).toBe(true);
+    expect(
+      activity.some((event) => event.kind === "client_portal_token_regenerated")
+    ).toBe(true);
   });
 
   test("optional portal password protection stores only a hash and gates all public data", async () => {
@@ -786,10 +1239,14 @@ describe("project file management", () => {
       revisionLimit: 2,
       clientStage: "Review",
     });
-    const editorPortal = await owner.query(api.clientPortals.getForProject, { projectId: "project-files" });
+    const editorPortal = await owner.query(api.clientPortals.getForProject, {
+      projectId: "project-files",
+    });
     if (!editorPortal) throw new Error("Expected editor portal");
 
-    expect((await t.query(api.clientPortals.getByToken, { token })).access).toBe("active");
+    expect(
+      (await t.query(api.clientPortals.getByToken, { token })).access
+    ).toBe("active");
     await owner.mutation(api.clientPortals.setPasswordProtection, {
       portalId: editorPortal.portal._id,
       password: "4829-sensitive",
@@ -800,28 +1257,40 @@ describe("project file management", () => {
     expect(stored?.passwordSalt).toMatch(/^[0-9a-f]{32}$/);
     expect(stored?.passwordIterations).toBeGreaterThanOrEqual(100_000);
     expect(stored?.passwordHash).not.toBe("4829-sensitive");
-    expect(JSON.stringify(stored)).not.toContain("\"password\":\"4829-sensitive\"");
+    expect(JSON.stringify(stored)).not.toContain('"password":"4829-sensitive"');
 
-    const editorView = await owner.query(api.clientPortals.getForProject, { projectId: "project-files" });
+    const editorView = await owner.query(api.clientPortals.getForProject, {
+      projectId: "project-files",
+    });
     expect(editorView?.portal.passwordProtected).toBe(true);
     expect(editorView?.portal).not.toHaveProperty("passwordHash");
     expect(editorView?.portal).not.toHaveProperty("passwordSalt");
 
-    expect(await t.query(api.clientPortals.getByToken, { token })).toEqual({ access: "locked" });
-    expect(await t.query(api.clientPortals.getByToken, { token, password: "wrong-code" })).toEqual({ access: "locked" });
-    await expect(t.mutation(api.clientPortals.submitRevision, {
-      token,
-      password: "wrong-code",
-      clientName: "Client",
-      message: "This must stay blocked.",
-    })).rejects.toThrow("Client portal unavailable");
+    expect(await t.query(api.clientPortals.getByToken, { token })).toEqual({
+      access: "locked",
+    });
+    expect(
+      await t.query(api.clientPortals.getByToken, {
+        token,
+        password: "wrong-code",
+      })
+    ).toEqual({ access: "locked" });
+    await expect(
+      t.mutation(api.clientPortals.submitRevision, {
+        token,
+        password: "wrong-code",
+        clientName: "Client",
+        message: "This must stay blocked.",
+      })
+    ).rejects.toThrow("Client portal unavailable");
 
     const unlocked = await t.query(api.clientPortals.getByToken, {
       token,
       password: "4829-sensitive",
     });
     expect(unlocked.access).toBe("active");
-    if (unlocked.access !== "active") throw new Error("Expected password-protected portal to unlock");
+    if (unlocked.access !== "active")
+      throw new Error("Expected password-protected portal to unlock");
     expect(unlocked).toMatchObject({
       clientSummary: "Protected client summary",
       clientNotes: "Protected client notes",
@@ -839,14 +1308,20 @@ describe("project file management", () => {
       portalId: editorPortal.portal._id,
       password: "new-secure-code",
     });
-    expect(await t.query(api.clientPortals.getByToken, {
-      token,
-      password: "4829-sensitive",
-    })).toEqual({ access: "locked" });
-    expect((await t.query(api.clientPortals.getByToken, {
-      token,
-      password: "new-secure-code",
-    })).access).toBe("active");
+    expect(
+      await t.query(api.clientPortals.getByToken, {
+        token,
+        password: "4829-sensitive",
+      })
+    ).toEqual({ access: "locked" });
+    expect(
+      (
+        await t.query(api.clientPortals.getByToken, {
+          token,
+          password: "new-secure-code",
+        })
+      ).access
+    ).toBe("active");
 
     await owner.mutation(api.clientPortals.setPasswordProtection, {
       portalId: editorPortal.portal._id,
@@ -862,37 +1337,41 @@ describe("project file management", () => {
 
   test("client revision requests honor the configured portal limit", async () => {
     const { t } = await setupProject();
-    await t.run((ctx) => ctx.db.insert("clientPortals", {
-      ownerUserId: "owner",
-      projectId: "project-files",
-      token: "limited-portal",
-      title: "Project Files",
-      clientName: "Client",
-      projectType: "Freelance",
-      status: "Review",
-      sourceStatus: "Review",
-      startDate: "2026-06-01",
-      dueDate: "2026-06-10",
-      progress: 75,
-      clientSummary: "",
-      clientNotes: "",
-      estimatedCompletion: "2026-06-10",
-      revisionLimit: 1,
-      published: true,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    }));
+    await t.run((ctx) =>
+      ctx.db.insert("clientPortals", {
+        ownerUserId: "owner",
+        projectId: "project-files",
+        token: "limited-portal",
+        title: "Project Files",
+        clientName: "Client",
+        projectType: "Freelance",
+        status: "Review",
+        sourceStatus: "Review",
+        startDate: "2026-06-01",
+        dueDate: "2026-06-10",
+        progress: 75,
+        clientSummary: "",
+        clientNotes: "",
+        estimatedCompletion: "2026-06-10",
+        revisionLimit: 1,
+        published: true,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      })
+    );
 
     await t.mutation(api.clientPortals.submitRevision, {
       token: "limited-portal",
       clientName: "Client",
       message: "Please adjust the opening.",
     });
-    await expect(t.mutation(api.clientPortals.submitRevision, {
-      token: "limited-portal",
-      clientName: "Client",
-      message: "One more change.",
-    })).rejects.toThrow("This portal has reached its revision request limit");
+    await expect(
+      t.mutation(api.clientPortals.submitRevision, {
+        token: "limited-portal",
+        clientName: "Client",
+        message: "One more change.",
+      })
+    ).rejects.toThrow("This portal has reached its revision request limit");
   });
 
   test("client revisions support optional validated timecodes and expose only client-safe fields", async () => {
@@ -919,23 +1398,23 @@ describe("project file management", () => {
         timecode,
       });
     }
-    await expect(t.mutation(api.clientPortals.submitRevision, {
-      token,
-      clientName: "Client",
-      message: "This invalid timestamp must not be stored.",
-      timecode: "00:75",
-    })).rejects.toThrow("Use MM:SS or HH:MM:SS");
+    await expect(
+      t.mutation(api.clientPortals.submitRevision, {
+        token,
+        clientName: "Client",
+        message: "This invalid timestamp must not be stored.",
+        timecode: "00:75",
+      })
+    ).rejects.toThrow("Use MM:SS or HH:MM:SS");
 
     const publicPortal = await t.query(api.clientPortals.getByToken, { token });
     expect(publicPortal.access).toBe("active");
-    if (publicPortal.access !== "active") throw new Error("Expected an active portal");
+    if (publicPortal.access !== "active")
+      throw new Error("Expected an active portal");
     expect(publicPortal.revisions).toHaveLength(4);
-    expect(publicPortal.revisions.map((revision) => revision.timecode)).toEqual([
-      "00:01:25",
-      "01:05",
-      "00:12",
-      null,
-    ]);
+    expect(publicPortal.revisions.map((revision) => revision.timecode)).toEqual(
+      ["00:01:25", "01:05", "00:12", null]
+    );
     for (const revision of publicPortal.revisions) {
       expect(revision).not.toHaveProperty("_id");
       expect(revision).not.toHaveProperty("portalId");
@@ -944,12 +1423,22 @@ describe("project file management", () => {
     const editorPortal = await owner.query(api.clientPortals.getForProject, {
       projectId: "project-files",
     });
-    expect(editorPortal?.revisions.some((revision) => revision.timecode === "00:12")).toBe(true);
-    expect(editorPortal?.revisions.some((revision) => revision.timecode === undefined)).toBe(true);
+    expect(
+      editorPortal?.revisions.some((revision) => revision.timecode === "00:12")
+    ).toBe(true);
+    expect(
+      editorPortal?.revisions.some(
+        (revision) => revision.timecode === undefined
+      )
+    ).toBe(true);
 
     const activity = await owner.query(api.projectActivity.listForProject, {
       projectId: "project-files",
     });
-    expect(activity.some((event) => event.detail === "00:12 · Change requested at 00:12.")).toBe(true);
+    expect(
+      activity.some(
+        (event) => event.detail === "00:12 · Change requested at 00:12."
+      )
+    ).toBe(true);
   });
 });

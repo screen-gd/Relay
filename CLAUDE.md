@@ -11,3 +11,17 @@ Convex agent skills for common tasks can be installed by running
 `npx convex ai-files install`.
 
 <!-- convex-ai-end -->
+
+## Agent skills
+
+### Issue tracker
+
+Specs and issues live as local Markdown files under `.scratch/`. See `docs/agents/issue-tracker.md`.
+
+### Triage labels
+
+Local issue status uses the standard agent label names. See `docs/agents/triage-labels.md`.
+
+### Domain docs
+
+This repo uses one root `CONTEXT.md` and system decisions under `docs/adr/`. See `docs/agents/domain.md`.

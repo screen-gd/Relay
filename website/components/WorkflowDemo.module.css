@@ -1,0 +1,98 @@
+.workflow {
+  margin-top: 36px;
+}
+.stages {
+  display: flex;
+  gap: 28px;
+  border-bottom: 1px solid #303030;
+}
+.stages button {
+  padding: 14px 0;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  border-radius: 0;
+  background: transparent;
+  color: #b8b8bd;
+  font: inherit;
+  cursor: pointer;
+}
+.stages button[aria-pressed="true"] {
+  border-bottom-color: #c6ff00;
+  color: #c6ff00;
+}
+.stages button:focus-visible {
+  outline: 2px solid #c6ff00;
+  outline-offset: 4px;
+}
+.content {
+  display: grid;
+  grid-template-columns: minmax(0, 0.7fr) minmax(0, 1.3fr);
+  align-items: start;
+  gap: clamp(32px, 5vw, 80px);
+  min-height: 320px;
+  padding: 32px 0 0;
+}
+.explanation h3 {
+  margin: 0;
+  color: white;
+  font-size: clamp(1.4rem, 2vw, 2rem);
+  line-height: 1.15;
+  letter-spacing: -0.03em;
+}
+.explanation p {
+  max-width: 440px;
+  color: #b8b8bd;
+  font-size: 1rem;
+  line-height: 1.65;
+}
+.example {
+  min-height: 240px;
+  padding: 24px;
+  background: #0b0b0d;
+}
+.example > p {
+  margin: 0 0 20px;
+  color: white;
+  font-size: 14px;
+}
+.example dl {
+  margin: 0;
+}
+.example dl > div {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr);
+  gap: 20px;
+  padding: 14px 0;
+  border-top: 1px solid #27272a;
+  font-size: 14px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+.example dt {
+  color: #a1a1aa;
+}
+.example dd {
+  margin: 0;
+  color: white;
+}
+.video {
+  width: 100%;
+  max-height: 540px;
+  aspect-ratio: 16 / 9;
+  background: #090909;
+  object-fit: contain;
+}
+@media (max-width: 700px) {
+  .content {
+    grid-template-columns: 1fr;
+    gap: 16px;
+    min-height: 0;
+  }
+  .stages {
+    gap: 0;
+    justify-content: space-between;
+  }
+  .example {
+    padding: 16px;
+  }
+}

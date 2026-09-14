@@ -2,52 +2,48 @@
 
 import { useParams } from "next/navigation";
 import { useQuery } from "convex/react";
-import { api } from "../../../../convex/_generated/api";
 import {
-  Box,
-  Chip,
-  CircularProgress,
-  Divider,
-  LinearProgress,
-  Paper,
-  Stack,
-  Typography
-} from "@mui/material";
-import AccessTimeOutlinedIcon from "@mui/icons-material/AccessTimeOutlined";
-import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
-import PlaceOutlinedIcon from "@mui/icons-material/PlaceOutlined";
-import PlayArrowRoundedIcon from "@mui/icons-material/PlayArrowRounded";
-import PublicOutlinedIcon from "@mui/icons-material/PublicOutlined";
-import { CutLabLockup } from "../../cutlab-brand";
-import { cutlab, cutlabPanelSx } from "../../design-system";
+  CheckCircle2,
+  Clock3,
+  Globe2,
+  LoaderCircle,
+  MapPin,
+  Play,
+} from "lucide-react";
+
+import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
+import { RelayBrand } from "@/app/relay-brand";
+
+import { api } from "../../../../convex/_generated/api";
 import { emptyStateAssets } from "../../brand-assets";
 
-const headingFont = cutlab.font.heading;
-const accent = `var(--app-accent, ${cutlab.color.teal})`;
-const ink = `var(--app-ink, ${cutlab.color.softWhite})`;
-const muted = "var(--app-muted, #A5ADB4)";
-const border = "var(--app-border, #2A3138)";
-const panel = `var(--app-panel, ${cutlab.color.graphite})`;
-const canvas = `var(--app-canvas, ${cutlab.color.charcoal})`;
-const softPanel = "var(--app-soft-panel, #151B20)";
-const headerPanel = "var(--app-header-panel, #20272D)";
-const avatarSurface = `var(--app-avatar-surface, ${cutlab.color.slate})`;
-const panelSx = cutlabPanelSx;
+const panelClass =
+  "rounded-[6px] border border-[var(--app-border)] bg-[var(--app-panel)]";
 
 export function PublicProfilePage() {
   const params = useParams<{ slug: string }>();
   const slug = typeof params.slug === "string" ? params.slug : "";
-  const profile = useQuery(api.publicProfiles.getBySlug, slug ? { slug } : "skip");
+  const profile = useQuery(
+    api.publicProfiles.getBySlug,
+    slug ? { slug } : "skip"
+  );
 
   if (profile === undefined) {
     return (
       <PublicShell>
-        <Box sx={{ minHeight: "70dvh", display: "grid", placeItems: "center" }}>
-          <Stack alignItems="center" gap={1.2}>
-            <CircularProgress size={30} sx={{ color: accent }} />
-            <Typography sx={{ color: muted, fontSize: 13 }}>Loading public profile...</Typography>
-          </Stack>
-        </Box>
+        <div className="grid min-h-[70dvh] place-items-center">
+          <div
+            role="status"
+            className="flex flex-col items-center gap-3 text-[var(--app-muted)]"
+          >
+            <LoaderCircle
+              aria-hidden="true"
+              className="size-[30px] text-[var(--app-accent)]"
+            />
+            <p className="text-[13px]">Loading public profile...</p>
+          </div>
+        </div>
       </PublicShell>
     );
   }
@@ -55,107 +51,215 @@ export function PublicProfilePage() {
   if (!profile) {
     return (
       <PublicShell>
-        <Paper sx={{ ...panelSx, p: { xs: 2.5, md: 4 }, mt: 3 }}>
-          <Typography sx={{ color: ink, fontSize: 34, fontWeight: 760, fontFamily: headingFont }}>Profile not found</Typography>
-          <Typography sx={{ color: muted, fontSize: 14, mt: 1 }}>This public CutLab profile has not been published or the link is incorrect.</Typography>
-        </Paper>
+        <section className={cn(panelClass, "mt-6 p-5 md:p-8")}>
+          <h1 className="font-[family-name:var(--font-geist-sans)] text-[34px] font-bold">
+            Profile not found
+          </h1>
+          <p className="mt-2 text-sm text-[var(--app-muted)]">
+            This public Relay profile has not been published or the link is
+            incorrect.
+          </p>
+        </section>
       </PublicShell>
     );
   }
 
-  const turnaroundDays = Math.max(1, Math.floor(profile.avgTurnaroundDays || 3));
+  const turnaroundDays = Math.max(
+    1,
+    Math.floor(profile.avgTurnaroundDays || 3)
+  );
 
   return (
     <PublicShell>
-      <Paper sx={{ ...panelSx, mt: 2.5 }}>
-        <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", lg: "170px minmax(0, 1fr) 560px" }, gap: 4, p: { xs: 2.5, md: 4 }, alignItems: "center" }}>
-          <PublicAvatar name={profile.profileName} imageUrl={profile.profileImageUrl} />
-          <Box>
-            <Typography sx={{ color: ink, fontSize: 34, fontWeight: 760, lineHeight: 1.1 }}>{profile.profileName || "CutLab Editor"}</Typography>
-            {profile.profileUsername ? <Typography sx={{ color: accent, fontSize: 14, fontWeight: 720, mt: 0.6 }}>@{profile.profileUsername}</Typography> : null}
-            <Typography sx={{ color: ink, fontSize: 15, mt: 0.8 }}>{profile.profileTitle || "Video Editor"}</Typography>
-            <Typography sx={{ color: muted, fontSize: 14, mt: 1.5, maxWidth: 420 }}>{profile.profileBio || "Portfolio profile published from CutLab Studio."}</Typography>
-            <Stack direction="row" gap={2} sx={{ mt: 2, flexWrap: "wrap", color: muted }}>
-              {profile.profileLocation ? <InfoPill icon={<PlaceOutlinedIcon />} text={profile.profileLocation} /> : null}
-              {profile.timeZone ? <InfoPill icon={<PublicOutlinedIcon />} text={profile.timeZone} /> : null}
-            </Stack>
-          </Box>
-          <Box sx={{ display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", gap: 1.2 }}>
-            <ProfileMetric icon={<PlayArrowRoundedIcon />} label="Active Projects" value={String(profile.activeProjects)} />
-            <ProfileMetric icon={<CheckCircleOutlineIcon />} label="Delivered Edits" value={String(profile.deliveredEdits)} />
-            <ProfileMetric icon={<AccessTimeOutlinedIcon />} label="Turnaround" value={`${turnaroundDays} Days`} />
-          </Box>
-        </Box>
-        <Divider sx={{ borderColor: border }} />
-        <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", xl: "280px minmax(0, 1fr)" }, gap: 3, p: { xs: 2, md: 3 }, alignItems: "start" }}>
-          <Box>
-            <Typography sx={{ color: ink, fontSize: 28, fontWeight: 760, lineHeight: 1.05 }}>Portfolio timeline</Typography>
-            <Typography sx={{ color: muted, fontSize: 13, mt: 1, maxWidth: 260 }}>Recent public delivery context shared from CutLab Studio.</Typography>
-            <Typography sx={{ color: muted, fontSize: 12, mt: 2 }}>Updated {formatPublicDate(profile.updatedAt.slice(0, 10))}</Typography>
-          </Box>
-          <Stack gap={1.2}>
-            {profile.projects.length ? profile.projects.map((project) => (
-              <Box key={`${project.title}-${project.dueDate}`} sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", md: "minmax(0, 1fr) 150px 160px" }, gap: 1.4, p: 1.6, border: `1px solid ${border}`, borderRadius: "8px", bgcolor: panel, alignItems: "center" }}>
-                <Box sx={{ minWidth: 0 }}>
-                  <Typography sx={{ color: ink, fontSize: 15, fontWeight: 760 }}>{project.title}</Typography>
-                  <Typography sx={{ color: muted, fontSize: 12, mt: 0.35 }}>{project.workType}</Typography>
-                </Box>
-                <Typography sx={{ color: muted, fontSize: 12 }}>{formatPublicDate(project.dueDate)}</Typography>
-                <Box>
-                  <Stack direction="row" justifyContent="space-between" sx={{ mb: 0.65 }}>
-                    <Chip label={project.status} size="small" sx={{ bgcolor: softPanel, color: ink, borderRadius: "5px", fontSize: 11, fontWeight: 760 }} />
-                    <Typography sx={{ color: ink, fontSize: 12, fontWeight: 720 }}>{projectProgress(project.status)}%</Typography>
-                  </Stack>
-                  <LinearProgress variant="determinate" value={projectProgress(project.status)} sx={{ height: 6, borderRadius: 99, bgcolor: headerPanel, "& .MuiLinearProgress-bar": { bgcolor: accent } }} />
-                </Box>
-              </Box>
-            )) : (
-              <Box sx={{ p: 3, border: `1px solid ${border}`, borderRadius: "8px", bgcolor: softPanel, textAlign: "center" }}>
-                <Box component="img" src={emptyStateAssets.projects} alt="" aria-hidden="true" sx={{ width: 180, height: 126, objectFit: "contain", mx: "auto", mb: 1.5 }} />
-                <Typography sx={{ color: ink, fontSize: 14, fontWeight: 760 }}>No public projects shared yet</Typography>
-                <Typography sx={{ color: muted, fontSize: 12, mt: 0.4 }}>The editor can publish updated public work from their CutLab profile.</Typography>
-              </Box>
-            )}
-          </Stack>
-        </Box>
-      </Paper>
+      <article className={cn(panelClass, "mt-5")}>
+        <header className="grid items-center gap-8 p-5 md:grid-cols-[148px_minmax(0,1fr)] md:p-8">
+          <PublicAvatar
+            name={profile.profileName}
+            imageUrl={profile.profileImageUrl}
+          />
+          <div>
+            <h1 className="text-[34px] font-bold leading-tight">
+              {profile.profileName || "Relay Editor"}
+            </h1>
+            {profile.profileUsername ? (
+              <p className="mt-1 text-sm font-bold text-[var(--app-highlight)]">
+                @{profile.profileUsername}
+              </p>
+            ) : null}
+            <p className="mt-2 text-[15px]">
+              {profile.profileTitle || "Video Editor"}
+            </p>
+            <p className="mt-4 max-w-[420px] text-sm text-[var(--app-muted)]">
+              {profile.profileBio || "Portfolio profile published from Relay."}
+            </p>
+            <div className="mt-4 flex flex-wrap gap-x-4 gap-y-2 text-[var(--app-muted)]">
+              {profile.profileLocation ? (
+                <InfoPill icon={<MapPin />} text={profile.profileLocation} />
+              ) : null}
+              {profile.timeZone ? (
+                <InfoPill icon={<Globe2 />} text={profile.timeZone} />
+              ) : null}
+            </div>
+          </div>
+          <dl className="grid grid-cols-1 gap-3 md:col-span-2 sm:grid-cols-3">
+            <ProfileMetric
+              icon={<Play />}
+              label="Active Projects"
+              value={String(profile.activeProjects)}
+            />
+            <ProfileMetric
+              icon={<CheckCircle2 />}
+              label="Delivered Edits"
+              value={String(profile.deliveredEdits)}
+            />
+            <ProfileMetric
+              icon={<Clock3 />}
+              label="Turnaround"
+              value={`${turnaroundDays} Days`}
+            />
+          </dl>
+        </header>
+
+        <div className="border-t border-[var(--app-border)]" />
+
+        <section className="grid items-start gap-6 p-4 md:p-6 lg:grid-cols-[220px_minmax(0,1fr)]">
+          <div>
+            <h2 className="text-[28px] font-bold leading-tight">
+              Portfolio timeline
+            </h2>
+            <p className="mt-2 max-w-[260px] text-[13px] text-[var(--app-muted)]">
+              Recent public delivery context shared from Relay.
+            </p>
+            <p className="mt-4 text-xs text-[var(--app-muted)]">
+              Updated {formatPublicDate(profile.updatedAt.slice(0, 10))}
+            </p>
+          </div>
+
+          {profile.projects.length ? (
+            <ul className="space-y-3">
+              {profile.projects.map((project) => {
+                const progress = projectProgress(project.status);
+                return (
+                  <li
+                    key={`${project.title}-${project.dueDate}`}
+                    className="grid items-center gap-3 rounded-[6px] border border-[var(--app-border)] bg-[var(--app-panel)] p-3 md:grid-cols-[minmax(0,1fr)_120px_150px]"
+                  >
+                    <div className="min-w-0">
+                      <p className="text-[15px] font-bold">{project.title}</p>
+                      <p className="mt-1 text-xs text-[var(--app-muted)]">
+                        {project.workType}
+                      </p>
+                    </div>
+                    <time className="text-xs text-[var(--app-muted)]">
+                      {formatPublicDate(project.dueDate)}
+                    </time>
+                    <div>
+                      <div className="mb-1.5 flex items-center justify-between">
+                        <Badge className="rounded-md border-transparent bg-[var(--app-soft-panel)] text-[11px] font-bold text-[var(--app-ink)]">
+                          {project.status}
+                        </Badge>
+                        <span className="text-xs font-bold">{progress}%</span>
+                      </div>
+                      <ProgressBar
+                        value={progress}
+                        label={`${project.title} progress`}
+                      />
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
+          ) : (
+            <div className="rounded-[6px] border border-[var(--app-border)] bg-[var(--app-soft-panel)] p-6 text-center">
+              <img
+                src={emptyStateAssets.projects}
+                alt=""
+                aria-hidden="true"
+                className="mx-auto mb-3 h-[126px] w-[180px] object-contain"
+              />
+              <p className="text-sm font-bold">No public projects shared yet</p>
+              <p className="mt-1 text-xs text-[var(--app-muted)]">
+                The editor can publish updated public work from their Relay
+                profile.
+              </p>
+            </div>
+          )}
+        </section>
+      </article>
     </PublicShell>
   );
 }
 
 function PublicShell({ children }: { children: React.ReactNode }) {
   return (
-    <Box sx={{ minHeight: "100dvh", bgcolor: canvas, color: ink, px: { xs: 2, md: 4 }, py: 3 }}>
-      <CutLabLockup subtitle="Public editor profile" sx={{ pb: 2.5 }} />
-      {children}
-    </Box>
+    <main className="min-h-dvh bg-[var(--app-canvas)] px-4 py-6 text-[var(--app-ink)] md:px-8 md:py-10">
+      <div className="mx-auto w-full max-w-4xl">
+        <RelayBrand compact />
+        {children}
+      </div>
+    </main>
   );
 }
 
 function PublicAvatar({ name, imageUrl }: { name: string; imageUrl: string }) {
   return (
-    <Box sx={{ width: 148, height: 148, borderRadius: "50%", bgcolor: avatarSurface, border: `1px solid ${border}`, display: "grid", placeItems: "center", color: ink, fontSize: 40, fontWeight: 760, overflow: "hidden" }}>
-      {imageUrl ? <Box component="img" src={imageUrl} alt={name} sx={{ width: "100%", height: "100%", objectFit: "cover" }} /> : initials(name)}
-    </Box>
+    <div className="grid size-[148px] place-items-center overflow-hidden rounded-full border border-[var(--app-border)] bg-[var(--app-avatar-surface)] text-[40px] font-bold">
+      {imageUrl ? (
+        <img src={imageUrl} alt={name} className="size-full object-cover" />
+      ) : (
+        initials(name)
+      )}
+    </div>
   );
 }
 
-function ProfileMetric({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) {
+function ProfileMetric({
+  icon,
+  label,
+  value,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  value: string;
+}) {
   return (
-    <Box sx={{ p: 1.2, border: `1px solid ${border}`, borderRadius: "6px", bgcolor: softPanel }}>
-      <Box sx={{ color: accent }}>{icon}</Box>
-      <Typography sx={{ color: ink, fontSize: 20, fontWeight: 760, mt: 0.6 }}>{value}</Typography>
-      <Typography sx={{ color: muted, fontSize: 11, mt: 0.2 }}>{label}</Typography>
-    </Box>
+    <div className="flex flex-col rounded-md border border-[var(--app-border)] bg-[var(--app-soft-panel)] p-3">
+      <span className="text-[var(--app-accent)] [&_svg]:size-5">{icon}</span>
+      <dt className="order-3 mt-1 text-[11px] text-[var(--app-muted)]">
+        {label}
+      </dt>
+      <dd className="order-2 mt-2 text-xl font-bold">{value}</dd>
+    </div>
   );
 }
 
 function InfoPill({ icon, text }: { icon: React.ReactNode; text: string }) {
   return (
-    <Stack direction="row" alignItems="center" gap={0.6}>
-      <Box sx={{ color: accent, display: "grid", "& svg": { fontSize: 17 } }}>{icon}</Box>
-      <Typography sx={{ color: muted, fontSize: 13 }}>{text}</Typography>
-    </Stack>
+    <span className="flex items-center gap-1.5 text-[13px] text-[var(--app-muted)]">
+      <span className="text-[var(--app-accent)] [&_svg]:size-[17px]">
+        {icon}
+      </span>
+      {text}
+    </span>
+  );
+}
+
+function ProgressBar({ value, label }: { value: number; label: string }) {
+  const boundedValue = Math.max(0, Math.min(100, value));
+  return (
+    <div
+      role="progressbar"
+      aria-label={label}
+      aria-valuemin={0}
+      aria-valuemax={100}
+      aria-valuenow={boundedValue}
+      className="h-1.5 overflow-hidden rounded-full bg-[var(--app-header-panel)]"
+    >
+      <span
+        className="block h-full rounded-full bg-[var(--app-accent)]"
+        style={{ width: `${boundedValue}%` }}
+      />
+    </div>
   );
 }
 
@@ -165,15 +269,29 @@ function initials(name: string) {
 }
 
 function projectProgress(status: string) {
-  const s = status.toLowerCase();
-  if (s.includes("deliver") || s.includes("done") || s.includes("complete")) return 100;
-  if (s.includes("review")) return 72;
-  if (s.includes("progress") || s.includes("edit")) return 48;
+  const normalizedStatus = status.toLowerCase();
+  if (
+    normalizedStatus.includes("deliver") ||
+    normalizedStatus.includes("done") ||
+    normalizedStatus.includes("complete")
+  ) {
+    return 100;
+  }
+  if (normalizedStatus.includes("review")) return 72;
+  if (
+    normalizedStatus.includes("progress") ||
+    normalizedStatus.includes("edit")
+  )
+    return 48;
   return 18;
 }
 
 function formatPublicDate(value: string) {
   const date = new Date(`${value}T00:00:00`);
   if (Number.isNaN(date.getTime())) return value;
-  return new Intl.DateTimeFormat("en", { month: "short", day: "numeric", year: "numeric" }).format(date);
+  return new Intl.DateTimeFormat("en", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  }).format(date);
 }
