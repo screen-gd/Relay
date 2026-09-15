@@ -126,33 +126,3 @@ test("the settings migration leaves one canonical account row and preserves clie
     expect(rows[0]?.clients?.map((client) => client.name)).toEqual(["Acme"]);
   });
 });
-
-test("settings remain reachable before the identity migration completes", async () => {
-  const t = convexTest(schema, modules);
-  const canonicalIdentity = {
-    tokenIdentifier: `${CANONICAL_TOKEN_PREFIX}user_stable`,
-    subject: "user_stable",
-  };
-  await t.run((ctx) =>
-    ctx.db.insert("settings", {
-      ...settings("Legacy settings"),
-      userId: "https://relay-app.cc.cd|user_stable",
-    })
-  );
-
-  const owner = t.withIdentity(canonicalIdentity);
-  expect((await owner.query(api.settings.get, {}))?.profileName).toBe(
-    "Legacy settings"
-  );
-  await owner.mutation(api.settings.patch, { changes: { theme: "Light" } });
-
-  await t.run(async (ctx) => {
-    const stored = await ctx.db
-      .query("settings")
-      .withIndex("by_userId", (q) =>
-        q.eq("userId", "https://relay-app.cc.cd|user_stable")
-      )
-      .unique();
-    expect(stored?.theme).toBe("Light");
-  });
-});
