@@ -1717,7 +1717,7 @@ export function TrackerApp({
       onConfirm={confirmDeleteProject}
     />
   );
-  const loadingStatus = !isAuthLoaded ? <AppLoadingStatus /> : null;
+  if (!isAuthLoaded) return <AppLoadingStatus />;
 
   if (page === "profile") {
     return (
@@ -1730,7 +1730,6 @@ export function TrackerApp({
         </SettingsContext.Provider>
         {projectDialog}
         {deleteDialog}
-        {loadingStatus}
         <WelcomeChoiceDialog
           open={authChoiceOpen && !clerkIsSignedIn && !isSignedIn}
           variant={onboardingVariant}
@@ -1780,7 +1779,6 @@ export function TrackerApp({
       <AppToast toast={toast} onClose={() => setToast(null)} />
       {projectDialog}
       {deleteDialog}
-      {loadingStatus}
       <WelcomeChoiceDialog
         open={authChoiceOpen && !clerkIsSignedIn && !isSignedIn}
         variant={onboardingVariant}
@@ -2026,25 +2024,12 @@ function AppToast({
 }
 
 function AppLoadingStatus() {
-  const reduceMotion = useHydratedReducedMotion();
-
   return (
     <div
-      role="progressbar"
-      aria-label="Loading Relay"
-      aria-live="polite"
-      className="fixed top-[86px] right-0 left-0 z-[1450] h-0.5 overflow-hidden bg-transparent lg:top-0 lg:left-[76px]"
+      role="status"
+      className="fixed inset-0 z-[1450] grid place-items-center bg-[var(--app-canvas)] text-sm text-[var(--app-muted)]"
     >
-      <motion.span
-        className="block h-full w-1/2 bg-[var(--app-accent)]"
-        initial={reduceMotion ? false : { x: "-100%" }}
-        animate={reduceMotion ? { x: "50%" } : { x: ["-100%", "200%"] }}
-        transition={
-          reduceMotion
-            ? { duration: 0 }
-            : { duration: 1.1, ease: "easeInOut", repeat: Infinity }
-        }
-      />
+      Loading Relay…
     </div>
   );
 }
