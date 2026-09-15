@@ -15,6 +15,11 @@ import {
   workflowStageValidator,
 } from "./domainValidators";
 import { requireCurrentWorkspaceCapability } from "./workspaceSubscriptions";
+import {
+  CANONICAL_TOKEN_PREFIX,
+  LEGACY_APP_TOKEN_PREFIX,
+  LEGACY_DEV_TOKEN_PREFIX,
+} from "./migrations";
 
 const teamMemberSchema = v.object({
   id: v.string(),
@@ -45,6 +50,25 @@ const customProjectTemplateValidator = v.object({
 });
 
 type CustomProjectTemplate = Infer<typeof customProjectTemplateValidator>;
+
+type AuthIdentity = {
+  tokenIdentifier: string;
+  subject: string;
+};
+
+// Keep persisted settings reachable until runCanonicalIdentityMigration has
+// completed on the selected deployment.
+function identityKeys(identity: AuthIdentity): string[] {
+  return [
+    ...new Set([
+      identity.tokenIdentifier,
+      identity.subject,
+      `${LEGACY_DEV_TOKEN_PREFIX}${identity.subject}`,
+      `${LEGACY_APP_TOKEN_PREFIX}${identity.subject}`,
+      `${CANONICAL_TOKEN_PREFIX}${identity.subject}`,
+    ]),
+  ];
+}
 
 function normalizeCustomProjectTemplate(
   template: CustomProjectTemplate
@@ -97,11 +121,23 @@ export const get = query({
   handler: async (ctx) => {
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) return null;
-    const selected = await ctx.db
-      .query("settings")
-      .withIndex("by_userId", (q) => q.eq("userId", identity.tokenIdentifier))
-      .order("desc")
-      .first();
+    const rows = (
+      await Promise.all(
+        identityKeys(identity).map((userId) =>
+          ctx.db
+            .query("settings")
+            .withIndex("by_userId", (q) => q.eq("userId", userId))
+            .order("desc")
+            .take(10)
+        )
+      )
+    ).flat();
+    const selected =
+      rows.sort((a, b) => {
+        const aCanonical = a.userId === identity.tokenIdentifier ? 1 : 0;
+        const bCanonical = b.userId === identity.tokenIdentifier ? 1 : 0;
+        return bCanonical - aCanonical || b._creationTime - a._creationTime;
+      })[0] ?? null;
     if (!selected) return null;
     const clients = await readWorkspaceClients(
       ctx,
@@ -225,6 +261,17 @@ export const patch = mutation({
       .query("settings")
       .withIndex("by_userId", (q) => q.eq("userId", identity.tokenIdentifier))
       .unique();
+    if (!stored) {
+      for (const userId of identityKeys(identity).slice(1)) {
+        const legacy = await ctx.db
+          .query("settings")
+          .withIndex("by_userId", (q) => q.eq("userId", userId))
+          .first();
+        if (!legacy) continue;
+        stored = legacy;
+        break;
+      }
+    }
     if (!stored) throw new Error("Settings must be initialized before editing");
     if (
       changes.customProjectTemplates !== undefined &&

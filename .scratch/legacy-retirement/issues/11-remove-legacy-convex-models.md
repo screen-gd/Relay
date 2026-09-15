@@ -21,15 +21,20 @@ Status: in-progress
 Local narrowing is complete. Removed the `workItems`, `portalDeliverables`,
 and legacy `salaryBatches` tables; removed the old settings fields, string
 workflow-template validator, positional workflow fallback, portal access
-fallback, legacy identity settings readers, and their tests. `clientPortals`
-now requires `enabled` and all current test fixtures write it.
+fallback. `clientPortals` now requires `enabled` and all current test fixtures
+write it. Settings retain a narrow legacy-identity read/patch fallback until
+`runCanonicalIdentityMigration`, including `migrateSettingsIdentityV2`, is
+verified on the selected deployment.
 
 Verification evidence: local Convex typecheck via `pnpm lint`, focused Convex
 and persistence suite with 55 tests passing, `pnpm verify:team`, and
 `pnpm build` passing. The full local Vitest suite now passes 17 files and 92
 tests after updating the rebuilt hosted-file fixture to provision the current
-workspace model. Source search finds no retired Convex table, field, fallback
-reader, or removed migration reference under `convex/` or `src/`.
+workspace model. Source search finds no retired Convex table, field, or
+removed migration reference under `convex/` or `src/`; the only remaining
+compatibility reader is the documented settings identity fallback above. The
+focused migration suite now includes a regression test for settings
+reachability before the identity migration completes.
 
 Production schema verification and deployment were not run. They require
 explicit approval for the exact target and operation.
