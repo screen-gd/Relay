@@ -1,6 +1,6 @@
 # Remove CutLab and FrameDesk compatibility names
 
-Status: in-progress
+Status: resolved
 Blocked by: none
 
 ## Work
