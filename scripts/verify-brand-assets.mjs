@@ -6,11 +6,15 @@ import {
   brandSource,
   brandTargets,
   faviconSizes,
+  socialPreviewSource,
   vectorViewBoxes,
 } from "./brand-asset-contract.mjs";
 
 const root = resolve(import.meta.dirname, "..");
 const source = await readFile(resolve(root, brandSource), "utf8");
+const socialPreviewSourceBuffer = await readFile(
+  resolve(root, socialPreviewSource)
+);
 const sourceBody = source.match(/<svg[^>]*>([\s\S]*)<\/svg>/)?.[1];
 const targets = brandTargets.map((target) => resolve(root, target));
 
@@ -66,8 +70,12 @@ for (const target of targets) {
   const socialDimensions = pngDimensions(
     await readFile(resolve(target, "social-preview.png"))
   );
-  if (socialDimensions[0] !== 1600 || socialDimensions[1] !== 900)
-    throw new Error("Social preview must be 1600x900.");
+  const suppliedDimensions = pngDimensions(socialPreviewSourceBuffer);
+  if (
+    socialDimensions[0] !== suppliedDimensions[0] ||
+    socialDimensions[1] !== suppliedDimensions[1]
+  )
+    throw new Error("Social preview does not match the supplied source image.");
 }
 
 const appFiles = (await readdir(targets[0])).sort();

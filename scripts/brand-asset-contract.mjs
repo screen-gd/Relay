@@ -1,4 +1,5 @@
 export const brandSource = "docs/brand/relay-circular-mark.svg";
+export const socialPreviewSource = "docs/brand/relay/social-preview.png";
 export const brandTargets = [
   "public/brand/relay",
   "website/public/brand/relay",
