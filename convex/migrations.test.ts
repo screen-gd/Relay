@@ -127,22 +127,3 @@ test("the settings migration leaves one canonical account row and preserves clie
   });
 });
 
-test("settings lookup falls back to a legacy identity row with clients", async () => {
-  const t = convexTest(schema, modules);
-  const userId = `${CANONICAL_TOKEN_PREFIX}user_stable`;
-  await t.run(async (ctx) => {
-    await ctx.db.insert("settings", { ...settings("Canonical"), userId });
-    await ctx.db.insert("settings", {
-      ...settings("Legacy"),
-      customClients: ["Acme"],
-      userId: "user_stable",
-    });
-  });
-
-  const result = await t
-    .withIdentity({ tokenIdentifier: userId, subject: "user_stable" })
-    .query(api.settings.get, {});
-
-  expect(result?.profileName).toBe("Legacy");
-  expect(result?.customClients).toEqual(["Acme"]);
-});

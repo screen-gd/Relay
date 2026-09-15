@@ -30,7 +30,7 @@ const customProjectTemplateValidator = v.object({
   projectType: v.string(),
   workType: v.union(v.literal("channel"), v.literal("freelance")),
   durationDays: v.number(),
-  workflowStages: v.array(v.union(v.string(), workflowStageValidator)),
+  workflowStages: v.array(workflowStageValidator),
   deliverables: v.array(
     v.object({
       title: v.string(),
@@ -49,16 +49,11 @@ type CustomProjectTemplate = Infer<typeof customProjectTemplateValidator>;
 function normalizeCustomProjectTemplate(
   template: CustomProjectTemplate
 ): CustomProjectTemplate {
-  const workflowStages: CustomProjectTemplate["workflowStages"] = [];
-  for (const stage of template.workflowStages) {
-    if (typeof stage === "string") {
-      if (stage.trim()) workflowStages.push(stage.trim());
-      continue;
-    }
+  const workflowStages = template.workflowStages.flatMap((stage) => {
     const id = stage.id.trim().slice(0, 80);
     const label = stage.label.trim().slice(0, 80);
-    if (id && label) workflowStages.push({ ...stage, id, label });
-  }
+    return id && label ? [{ ...stage, id, label }] : [];
+  });
   return {
     id: template.id.trim().slice(0, 80),
     name: template.name.trim().slice(0, 120),
@@ -96,44 +91,17 @@ const integrationLinkValidator = v.record(
   })
 );
 
-function identityKeys(identity: {
-  tokenIdentifier: string;
-  subject: string;
-}): string[] {
-  const keys = [
-    identity.tokenIdentifier,
-    identity.subject,
-    `https://relay-dev.cc.cd|${identity.subject}`,
-    `https://relay-app.cc.cd|${identity.subject}`,
-    `https://clerk.relay-app.cc.cd|${identity.subject}`,
-  ];
-  return [...new Set(keys)];
-}
-
 export const get = query({
   args: {},
   returns: v.union(v.null(), schema.doc("settings")),
   handler: async (ctx) => {
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) return null;
-    const rows = (
-      await Promise.all(
-        identityKeys(identity).map((userId) =>
-          ctx.db
-            .query("settings")
-            .withIndex("by_userId", (q) => q.eq("userId", userId))
-            .order("desc")
-            .take(10)
-        )
-      )
-    ).flat();
-
-    const selected =
-      rows.sort((a, b) => {
-        const aCanonical = a.userId === identity.tokenIdentifier ? 1 : 0;
-        const bCanonical = b.userId === identity.tokenIdentifier ? 1 : 0;
-        return bCanonical - aCanonical || b._creationTime - a._creationTime;
-      })[0] ?? null;
+    const selected = await ctx.db
+      .query("settings")
+      .withIndex("by_userId", (q) => q.eq("userId", identity.tokenIdentifier))
+      .order("desc")
+      .first();
     if (!selected) return null;
     const clients = await readWorkspaceClients(
       ctx,
@@ -257,22 +225,6 @@ export const patch = mutation({
       .query("settings")
       .withIndex("by_userId", (q) => q.eq("userId", identity.tokenIdentifier))
       .unique();
-    if (!stored) {
-      for (const userId of identityKeys(identity)) {
-        const legacy = await ctx.db
-          .query("settings")
-          .withIndex("by_userId", (q) => q.eq("userId", userId))
-          .first();
-        if (!legacy) continue;
-        const { _id, _creationTime, ...preferences } = legacy;
-        const id = await ctx.db.insert("settings", {
-          ...preferences,
-          userId: identity.tokenIdentifier,
-        });
-        stored = await ctx.db.get(id);
-        break;
-      }
-    }
     if (!stored) throw new Error("Settings must be initialized before editing");
     if (
       changes.customProjectTemplates !== undefined &&

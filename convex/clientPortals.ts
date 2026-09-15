@@ -100,8 +100,7 @@ function portalAccessState(
   portal: Doc<"clientPortals">,
   now = Date.now()
 ): PortalAccessState {
-  const enabled = portal.enabled ?? portal.published;
-  if (!portal.published || !enabled) return "unavailable";
+  if (!portal.published || !portal.enabled) return "unavailable";
   if (!portal.expiresAt) return "active";
   const expiry = Date.parse(portal.expiresAt);
   return !Number.isFinite(expiry) || expiry <= now ? "expired" : "active";
@@ -439,7 +438,7 @@ export const getForProject = query({
         estimatedCompletion: portal.estimatedCompletion,
         revisionLimit: portal.revisionLimit,
         published: portal.published,
-        enabled: portal.enabled ?? portal.published,
+        enabled: portal.enabled,
         expiresAt: portal.expiresAt ?? null,
         passwordProtected: Boolean(portal.passwordHash && portal.passwordSalt),
         createdAt: portal.createdAt,
@@ -673,7 +672,7 @@ export const setAccessControls = mutation({
     );
     const now = new Date().toISOString();
     const expiresAt = normalizedExpiry(args.expiresAt);
-    const wasEnabled = portal.enabled ?? portal.published;
+    const wasEnabled = portal.enabled;
     await ctx.db.patch(args.portalId, {
       enabled: args.enabled,
       published: args.enabled ? true : portal.published,

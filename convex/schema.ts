@@ -15,7 +15,6 @@ import {
   projectPortalStatusValidator,
   revisionStatusValidator,
   settingsTeamRoleValidator,
-  storedDeliverableStatusValidator,
   storedFileStatusValidator,
   storedProjectStatusValidator,
   storedTeamRoleValidator,
@@ -171,59 +170,6 @@ export default defineSchema({
     .index("by_mediaVersionId", ["mediaVersionId"])
     .index("by_outputId_and_resolved", ["outputId", "resolved"]),
 
-  workItems: defineTable({
-    userId: v.string(),
-    id: v.string(),
-    teamId: v.optional(v.string()),
-    ownerUserId: v.optional(v.string()),
-    assigneeUserIds: v.optional(v.array(v.string())),
-    profileId: v.string(),
-    title: v.string(),
-    client: v.optional(v.string()),
-    clientId: v.optional(v.string()),
-    projectGroupId: v.optional(v.string()),
-    archived: v.optional(v.boolean()),
-    status: storedProjectStatusValidator,
-    workType: v.string(),
-    startDate: v.string(),
-    dueDate: v.string(),
-    earnings: v.number(),
-    paid: v.optional(v.boolean()),
-    paidDate: v.optional(v.string()),
-    completedAt: v.optional(v.string()),
-    notes: v.string(),
-    templateId: v.optional(v.string()),
-    templateProjectType: v.optional(v.string()),
-    workflowStages: v.optional(v.array(v.string())),
-    templateDeliverables: v.optional(
-      v.array(
-        v.object({
-          title: v.string(),
-          category: fileCategoryValidator,
-          initialStatus: fileStatusValidator,
-        })
-      )
-    ),
-    checklistItems: v.optional(v.array(v.string())),
-    checklistCompleted: v.optional(v.record(v.string(), v.boolean())),
-    integrationLinks: v.optional(
-      v.record(
-        v.string(),
-        v.object({
-          url: v.string(),
-          label: v.string(),
-          notes: v.string(),
-          updatedAt: v.string(),
-        })
-      )
-    ),
-    createdAt: v.optional(v.string()),
-  })
-    .index("by_userId_and_teamId", ["userId", "teamId"])
-    .index("by_workItemId", ["id"])
-    .index("by_teamId", ["teamId"])
-    .index("by_teamId_and_id", ["teamId", "id"]),
-
   projectGroups: defineTable({
     userId: v.string(),
     id: v.string(),
@@ -256,8 +202,7 @@ export default defineSchema({
     estimatedCompletion: v.string(),
     revisionLimit: v.number(),
     published: v.boolean(),
-    // Optional during the compatibility window. Legacy portals derive access from published.
-    enabled: v.optional(v.boolean()),
+    enabled: v.boolean(),
     expiresAt: v.optional(v.string()),
     passwordHash: v.optional(v.string()),
     passwordSalt: v.optional(v.string()),
@@ -267,17 +212,6 @@ export default defineSchema({
   })
     .index("by_projectId", ["projectId"])
     .index("by_token", ["token"]),
-
-  portalDeliverables: defineTable({
-    portalId: v.id("clientPortals"),
-    title: v.string(),
-    detail: v.string(),
-    url: v.string(),
-    status: storedDeliverableStatusValidator,
-    downloadable: v.boolean(),
-    createdAt: v.string(),
-    updatedAt: v.string(),
-  }).index("by_portalId_and_createdAt", ["portalId", "createdAt"]),
 
   portalRevisions: defineTable({
     portalId: v.id("clientPortals"),
@@ -581,7 +515,7 @@ export default defineSchema({
           projectType: v.string(),
           workType: v.union(v.literal("channel"), v.literal("freelance")),
           durationDays: v.number(),
-          workflowStages: v.array(v.union(v.string(), workflowStageValidator)),
+          workflowStages: v.array(workflowStageValidator),
           deliverables: v.array(
             v.object({
               title: v.string(),
@@ -602,8 +536,6 @@ export default defineSchema({
     salaryBatchAmount: v.optional(v.number()),
     projectStages: v.array(v.string()),
     notifications: v.record(v.string(), v.boolean()),
-    integrations: v.optional(v.record(v.string(), v.boolean())),
-    integrationAccounts: v.optional(v.record(v.string(), v.string())),
     integrationLinks: v.optional(
       v.record(
         v.string(),
@@ -624,7 +556,6 @@ export default defineSchema({
         email: v.string(),
       })
     ),
-    editorPermissions: v.optional(v.record(v.string(), v.boolean())),
     rolePermissions: v.record(v.string(), v.record(v.string(), v.boolean())),
     integrationConfigs: v.record(
       v.string(),
@@ -642,18 +573,6 @@ export default defineSchema({
     theme: v.string(),
     accentColor: v.string(),
     density: v.string(),
-  }).index("by_userId", ["userId"]),
-
-  salaryBatches: defineTable({
-    userId: v.string(),
-    id: v.string(),
-    number: v.number(),
-    completedDate: v.string(),
-    archived: v.boolean(),
-    archivedDate: v.string(),
-    amount: v.optional(v.number()),
-    paid: v.optional(v.boolean()),
-    paidDate: v.optional(v.string()),
   }).index("by_userId", ["userId"]),
 
   resourceLinks: defineTable({

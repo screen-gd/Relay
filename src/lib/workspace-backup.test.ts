@@ -5,7 +5,7 @@ describe("workspace backup", () => {
   it("round-trips workspace records without connected-account details", () => {
     const backup = createWorkspaceBackup({
       projects: [], clients: [], resources: [], salaryBatches: [],
-      settings: { integrationAccounts: { Slack: "secret@example.com" }, integrationConfigs: { Slack: { webhookUrl: "https://secret.example" } } },
+      settings: { integrationConfigs: { Slack: { webhookUrl: "https://secret.example" } } },
     });
     expect(backup).not.toContain("secret@example.com");
     expect(backup).not.toContain("secret.example");

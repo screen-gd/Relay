@@ -115,28 +115,6 @@ export const migrateMediaVersionCommentsIdentityV2 = migrations.define({
   },
 });
 
-export const migrateWorkItemsIdentityV2 = migrations.define({
-  table: "workItems",
-  migrateOne: async (ctx, doc) => {
-    const userId = rewriteLegacyIdentity(doc.userId);
-    const ownerUserId = doc.ownerUserId
-      ? rewriteLegacyIdentity(doc.ownerUserId)
-      : undefined;
-    const assigneeUserIds = doc.assigneeUserIds
-      ? rewriteIdentityList(doc.assigneeUserIds)
-      : undefined;
-    if (userId !== doc.userId) {
-      await ctx.db.patch(doc._id, { userId });
-    }
-    if (ownerUserId !== undefined && ownerUserId !== doc.ownerUserId) {
-      await ctx.db.patch(doc._id, { ownerUserId });
-    }
-    if (assigneeUserIds) {
-      await ctx.db.patch(doc._id, { assigneeUserIds });
-    }
-  },
-});
-
 export const migrateProjectGroupsIdentityV2 = migrations.define({
   table: "projectGroups",
   migrateOne: async (ctx, doc) => {
@@ -331,16 +309,6 @@ export const migrateSettingsIdentityV2 = migrations.define({
   },
 });
 
-export const migrateSalaryBatchesIdentityV2 = migrations.define({
-  table: "salaryBatches",
-  migrateOne: async (ctx, doc) => {
-    const userId = rewriteLegacyIdentity(doc.userId);
-    if (userId !== doc.userId) {
-      await ctx.db.patch(doc._id, { userId });
-    }
-  },
-});
-
 export const migrateResourceLinksIdentityV2 = migrations.define({
   table: "resourceLinks",
   migrateOne: async (ctx, doc) => {
@@ -367,7 +335,6 @@ export const runCanonicalIdentityMigration = migrations.runner([
   migrationRef("migrations:migrateProjectMediaVersionsIdentityV2"),
   migrationRef("migrations:migrateProjectPortalsIdentityV2"),
   migrationRef("migrations:migrateMediaVersionCommentsIdentityV2"),
-  migrationRef("migrations:migrateWorkItemsIdentityV2"),
   migrationRef("migrations:migrateProjectGroupsIdentityV2"),
   migrationRef("migrations:migrateClientPortalsIdentityV2"),
   migrationRef("migrations:migrateProjectActivityIdentityV2"),
@@ -383,6 +350,5 @@ export const runCanonicalIdentityMigration = migrations.runner([
   migrationRef("migrations:migrateTeamNotificationsIdentityV2"),
   migrationRef("migrations:migratePublicProfilesIdentityV2"),
   migrationRef("migrations:migrateSettingsIdentityV2"),
-  migrationRef("migrations:migrateSalaryBatchesIdentityV2"),
   migrationRef("migrations:migrateResourceLinksIdentityV2"),
 ]);

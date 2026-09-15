@@ -109,13 +109,10 @@ async function withPage(
             projectTags: ["Job / Salary", "Freelance"],
             projectStages: ["Planned", "In Progress", "Review", "Delivered"],
             notifications: {},
-            integrations: {},
-            integrationAccounts: {},
             integrationConfigs: {},
             integrationLinks: {},
             teamRole: "",
             teamMembers: [],
-            editorPermissions: {},
             rolePermissions: {},
           })
         );
@@ -457,6 +454,7 @@ async function assertDashboardAndProjectInspectorRefinements(page) {
   await page
     .getByRole("heading", { level: 1, name: "Good to see you, Jordan." })
     .waitFor();
+  await page.getByTestId("project-row").first().click();
   await page
     .getByRole("heading", { level: 2, name: "Interaction test edit 1" })
     .waitFor();

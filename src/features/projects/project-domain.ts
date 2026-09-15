@@ -9,7 +9,6 @@ import type {
 import type { StoredProjectStatus } from "@/lib/domain-values";
 import {
   DEFAULT_WORKFLOW_STAGES,
-  normalizeWorkflowStages,
 } from "@/lib/workflow-templates";
 import { z } from "zod";
 
@@ -254,7 +253,7 @@ function stageMatches(stage: WorkflowStage, requested: string | WorkflowStage) {
 export function getProjectWorkflowStages(
   project: Pick<WorkItem, "workflowStages">
 ): WorkflowStage[] {
-  const stages = normalizeWorkflowStages(project.workflowStages);
+  const stages = project.workflowStages ?? [];
   return stages.length
     ? stages
     : DEFAULT_WORKFLOW_STAGES.map((stage) => ({ ...stage }));
@@ -263,11 +262,11 @@ export function getProjectWorkflowStages(
 export function getProjectWorkflowStage(
   project: Pick<
     WorkItem,
-    "workflowStageId" | "workflowStage" | "workflowStages" | "status"
+    "workflowStageId" | "workflowStages" | "status"
   >
 ): WorkflowStage {
   const stages = getProjectWorkflowStages(project);
-  const currentStage = project.workflowStageId ?? project.workflowStage;
+  const currentStage = project.workflowStageId;
   const current = currentStage
     ? stages.find((stage) => stageMatches(stage, currentStage))
     : undefined;
@@ -297,7 +296,7 @@ export function getProjectWorkflowStage(
 export function getProjectProgress(
   project: Pick<
     WorkItem,
-    "workflowStageId" | "workflowStage" | "workflowStages" | "status"
+    "workflowStageId" | "workflowStages" | "status"
   >
 ) {
   if (project.status === "Cancelled") return 0;
@@ -415,7 +414,7 @@ export type ProjectStageMenuChoice = {
 export function getProjectStageMenuChoices(
   project: Pick<
     WorkItem,
-    "status" | "title" | "workflowStageId" | "workflowStage" | "workflowStages"
+    "status" | "title" | "workflowStageId" | "workflowStages"
   >,
   stages: readonly (WorkflowStage | string)[] = getProjectWorkflowStages(
     project
@@ -495,7 +494,6 @@ export function moveProjectToStage(
   return {
     ...project,
     workflowStageId: workflowStage,
-    workflowStage: undefined,
     ...projectStatusUpdate(project, status, changedAt),
   };
 }
