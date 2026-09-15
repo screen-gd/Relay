@@ -9,7 +9,7 @@ export function loadE2EEnvironment() {
       if (!match || process.env[match[1]] !== undefined) continue;
       let value = match[2].trim();
       if (
-        (value.startsWith("\"") && value.endsWith("\"")) ||
+        (value.startsWith('"') && value.endsWith('"')) ||
         (value.startsWith("'") && value.endsWith("'"))
       ) {
         value = value.slice(1, -1);
@@ -19,7 +19,7 @@ export function loadE2EEnvironment() {
   }
 
   if (process.env.CLERK_SECRET_KEY) {
-    process.env.E2E_CLERK_USER_EMAIL ??= "cutlab-e2e+clerk_test@example.com";
+    process.env.E2E_CLERK_USER_EMAIL ??= "relay-e2e+clerk_test@example.com";
   }
 }
 

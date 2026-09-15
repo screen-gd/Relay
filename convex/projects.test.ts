@@ -85,26 +85,6 @@ test("new Project activity loads in the Project workspace", async () => {
   })).resolves.toEqual([]);
 });
 
-test("stage transitions accept legacy positional stage ids", async () => {
-  const t = convexTest(schema, modules);
-  const owner = t.withIdentity({ tokenIdentifier: "owner" });
-  await owner.mutation(api.settings.upsert, settings());
-  await owner.mutation(projectsApi.create, { project: project("legacy-stage") });
-
-  await expect(owner.mutation(projectsApi.transitionStage, {
-    projectId: "legacy-stage",
-    stageId: "legacy-stage-99",
-  })).rejects.toThrow("Workflow stage does not belong");
-
-  await owner.mutation(projectsApi.transitionStage, {
-    projectId: "legacy-stage",
-    stageId: "legacy-stage-2",
-  });
-
-  expect((await owner.query(projectsApi.list, {}))[0])
-    .toMatchObject({ workflowStageId: "edit", status: "In Progress" });
-});
-
 test("stage transitions resist spoofing and settled Salary Batches stay immutable", async () => {
   const t = convexTest(schema, modules);
   const owner = t.withIdentity({ tokenIdentifier: "owner", name: "Owner" });

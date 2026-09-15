@@ -65,9 +65,6 @@ test("Project Groups persist per Workspace and enforce the Project Client", asyn
     settingsWithClients("client-a", "client-b")
   );
   const storedSettings = await t.run((ctx) => ctx.db.query("settings").first());
-  expect(storedSettings).not.toHaveProperty("integrations");
-  expect(storedSettings).not.toHaveProperty("integrationAccounts");
-  expect(storedSettings).not.toHaveProperty("editorPermissions");
   await expect(
     owner.mutation(api.projectGroups.upsert, {
       group: { ...group, id: "group-b", clientId: "missing" },

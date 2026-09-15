@@ -37,9 +37,6 @@ export function settingsPatch(previous: SettingsState, next: SettingsState) {
 }
 
 const legacySettingKeys = [
-  "integrations",
-  "integrationAccounts",
-  "editorPermissions",
   "density",
 ] as const;
 

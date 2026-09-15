@@ -72,8 +72,6 @@ export type WorkItem = {
   archived?: boolean;
   status: StoredProjectStatus;
   workflowStageId?: string;
-  /** Legacy persisted label; new projects use workflowStageId. */
-  workflowStage?: string;
   workType: string;
   startDate: string;
   dueDate: string;

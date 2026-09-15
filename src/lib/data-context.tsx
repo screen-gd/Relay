@@ -26,7 +26,9 @@ import type {
   ResourceLink,
   SavedProjectTemplate,
   ProjectGroup,
+  WorkflowStage,
 } from "./types";
+import { WORKFLOW_STAGE_PURPOSE_VALUES } from "./types";
 import { normalizeIntegrationLinks } from "./integrations";
 import { normalizeClientRecords, projectClientName } from "./clients";
 import {
@@ -50,7 +52,6 @@ import type {
 } from "@/features/projects/project-workflow-port";
 import {
   DEFAULT_WORKFLOW_STAGES,
-  normalizeWorkflowStages,
 } from "./workflow-templates";
 import {
   sampleStudioProjects,
@@ -370,6 +371,32 @@ function booleanRecordSetting(
   return record;
 }
 
+function parseWorkflowStages(value: unknown): WorkflowStage[] {
+  if (!Array.isArray(value)) return [];
+  return value.flatMap((candidate): WorkflowStage[] => {
+    if (!isPlainRecord(candidate)) return [];
+    const id = typeof candidate.id === "string" ? candidate.id.trim() : "";
+    const label =
+      typeof candidate.label === "string" ? candidate.label.trim() : "";
+    const purpose = candidate.purpose;
+    if (
+      !id ||
+      !label ||
+      typeof purpose !== "string" ||
+      !(WORKFLOW_STAGE_PURPOSE_VALUES as readonly string[]).includes(purpose)
+    ) {
+      return [];
+    }
+    return [
+      {
+        id: id.slice(0, 80),
+        label: label.slice(0, 80),
+        purpose: purpose as WorkflowStage["purpose"],
+      },
+    ];
+  });
+}
+
 function normalizeStoredItem(value: unknown): WorkItem | null {
   if (!isPlainRecord(value)) return null;
   const id = typeof value.id === "string" && value.id.trim() ? value.id : "";
@@ -424,8 +451,6 @@ function normalizeStoredItem(value: unknown): WorkItem | null {
       typeof value.workflowStageId === "string"
         ? value.workflowStageId
         : undefined,
-    workflowStage:
-      typeof value.workflowStage === "string" ? value.workflowStage : undefined,
     notes: typeof value.notes === "string" ? value.notes : "",
     templateId:
       typeof value.templateId === "string" && value.templateId.trim()
@@ -437,7 +462,7 @@ function normalizeStoredItem(value: unknown): WorkItem | null {
         ? value.templateProjectType.trim().slice(0, 80)
         : undefined,
     workflowStages: Array.isArray(value.workflowStages)
-      ? normalizeWorkflowStages(value.workflowStages).slice(0, 12)
+      ? parseWorkflowStages(value.workflowStages).slice(0, 12)
       : undefined,
     templateDeliverables: Array.isArray(value.templateDeliverables)
       ? value.templateDeliverables
@@ -633,9 +658,10 @@ function normalizeCustomProjectTemplates(
             1,
             Math.min(120, Math.floor(Number(template.durationDays) || 7))
           ),
-          workflowStages: normalizeWorkflowStages(
-            template.workflowStages
-          ).slice(0, 12),
+          workflowStages: parseWorkflowStages(template.workflowStages).slice(
+            0,
+            12
+          ),
           deliverables,
           checklistItems: Array.isArray(template.checklistItems)
             ? template.checklistItems
@@ -657,16 +683,13 @@ function normalizeCustomProjectTemplates(
     .slice(0, 24);
 }
 function normalizeIntegrationConfigs(
-  value: unknown,
-  legacyIntegrations?: unknown,
-  legacyAccounts?: unknown
+  value: unknown
 ): Record<string, IntegrationConfig> {
   const configs: Record<string, IntegrationConfig> = {};
   for (const name of integrationNames) {
     configs[name] = { ...emptyIntegrationConfig };
   }
 
-  // Merge from new integrationConfigs if present
   if (isPlainRecord(value)) {
     for (const name of integrationNames) {
       if (isPlainRecord(value[name])) {
@@ -675,39 +698,11 @@ function normalizeIntegrationConfigs(
     }
   }
 
-  // Migrate from legacy integrations + integrationAccounts if new configs are all empty
-  const allEmpty = Object.values(configs).every(
-    (c) => !c.connected && !c.account
-  );
-  if (
-    allEmpty &&
-    (isPlainRecord(legacyIntegrations) || isPlainRecord(legacyAccounts))
-  ) {
-    for (const name of integrationNames) {
-      const wasConnected =
-        isPlainRecord(legacyIntegrations) && legacyIntegrations[name] === true;
-      const account =
-        isPlainRecord(legacyAccounts) &&
-        typeof legacyAccounts[name] === "string"
-          ? legacyAccounts[name].trim()
-          : "";
-      if (wasConnected || account) {
-        configs[name] = {
-          ...emptyIntegrationConfig,
-          connected: wasConnected,
-          account,
-          connectedAt: wasConnected ? new Date().toISOString() : "",
-        };
-      }
-    }
-  }
-
   return configs;
 }
 
 function normalizeRolePermissions(
-  value: unknown,
-  legacyEditorPerms?: unknown
+  value: unknown
 ): Record<string, Record<string, boolean>> {
   const result: Record<string, Record<string, boolean>> = JSON.parse(
     JSON.stringify(defaultRolePermissions)
@@ -729,18 +724,6 @@ function normalizeRolePermissions(
       }
     }
     return result;
-  }
-
-  // Migrate from legacy flat editorPermissions → apply them as Editor role
-  if (isPlainRecord(legacyEditorPerms)) {
-    const editorPerms: Record<string, boolean> = {};
-    for (const perm of permissionKeys) {
-      editorPerms[perm] =
-        typeof legacyEditorPerms[perm] === "boolean"
-          ? (legacyEditorPerms[perm] as boolean)
-          : (defaultRolePermissions.Editor?.[perm] ?? false);
-    }
-    result.Editor = editorPerms;
   }
 
   return result;
@@ -878,16 +861,9 @@ function mergeSettings(stored: unknown): SettingsState {
       r.notifications,
       defaultSettings.notifications
     ),
-    integrationConfigs: normalizeIntegrationConfigs(
-      r.integrationConfigs,
-      r.integrations,
-      r.integrationAccounts
-    ),
+    integrationConfigs: normalizeIntegrationConfigs(r.integrationConfigs),
     integrationLinks: normalizeIntegrationLinks(r.integrationLinks),
-    rolePermissions: normalizeRolePermissions(
-      r.rolePermissions,
-      r.editorPermissions
-    ),
+    rolePermissions: normalizeRolePermissions(r.rolePermissions),
   };
 }
 
@@ -1570,7 +1546,7 @@ function LocalDataProvider({
   );
 
   const reconcileSalaryBatches = useCallback(
-    (workItems: WorkItem[]) => {
+    (projects: WorkItem[]) => {
       setSalaryBatches((prev: SalaryBatch[]) => {
         const requiredProjectCount = normalizedSalaryBatchSize(
           settings.salaryBatchSize
@@ -1578,7 +1554,7 @@ function LocalDataProvider({
         const settledProjectIds = new Set(
           prev.flatMap((batch) => batch.projectIds ?? [])
         );
-        const unsettledProjects = workItems
+        const unsettledProjects = projects
           .filter(
             (item) =>
               isSalaryWorkType(item.workType, settings) &&
@@ -2409,7 +2385,7 @@ function CloudDataProvider({ children }: { children: React.ReactNode }) {
   );
 
   const reconcileSalaryBatches = useCallback(
-    (workItems: WorkItem[]) => {
+    (projects: WorkItem[]) => {
       setSalaryBatches((prev: SalaryBatch[]) => {
         const requiredProjectCount = normalizedSalaryBatchSize(
           settings.salaryBatchSize
@@ -2417,7 +2393,7 @@ function CloudDataProvider({ children }: { children: React.ReactNode }) {
         const settledProjectIds = new Set(
           prev.flatMap((batch) => batch.projectIds ?? [])
         );
-        const unsettledProjects = workItems
+        const unsettledProjects = projects
           .filter(
             (workItem) =>
               isSalaryWorkType(workItem.workType, settings) &&

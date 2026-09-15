@@ -1,6 +1,6 @@
 ---
 name: Feature request
-about: Propose an improvement to a CutLab Studio workflow
+about: Propose an improvement to a Relay workflow
 title: "[Feature] "
 labels: enhancement
 assignees: ""

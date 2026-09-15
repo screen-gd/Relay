@@ -241,14 +241,7 @@ function normalizeWorkflow(stages: WorkflowStage[]) {
 }
 
 function findProjectStage(project: Doc<"projects">, requestedStageId: string) {
-  const exact = project.workflowStages.find(
-    (stage) => stage.id === requestedStageId
-  );
-  if (exact) return exact;
-  const legacyPosition = /^legacy-stage-(\d+)$/.exec(requestedStageId)?.[1];
-  return legacyPosition
-    ? project.workflowStages[Number(legacyPosition) - 1]
-    : undefined;
+  return project.workflowStages.find((stage) => stage.id === requestedStageId);
 }
 
 function statusForPurpose(purpose: WorkflowStage["purpose"]) {

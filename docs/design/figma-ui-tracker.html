@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="theme-color" content="#101417" />
-    <title>CutLab UI Build Tracker</title>
+    <title>Relay UI Build Tracker</title>
     <style>
       :root {
         color-scheme: dark;
@@ -182,7 +182,7 @@
     <main class="app">
       <header class="topbar">
         <div>
-          <p class="eyebrow">CutLab Studio · Figma workspace</p>
+          <p class="eyebrow">Relay · Figma workspace</p>
           <h1>Build the UI without losing the thread.</h1>
           <p class="lede">Use this tracker beside Figma to move from direction and foundations to one complete, tested product flow.</p>
         </div>
@@ -344,7 +344,7 @@
 
     <script>
       (() => {
-        const storageKey = "cutlab.figma-ui-tracker.v1";
+        const storageKey = "relay.figma-ui-tracker.v1";
         const checks = [...document.querySelectorAll("input[type=checkbox]")];
         const textFields = [...document.querySelectorAll("input[type=text], textarea")];
         const progressRing = document.getElementById("progressRing");
@@ -416,7 +416,7 @@
           const blob = new Blob([JSON.stringify({ ...state, exportedAt: new Date().toISOString() }, null, 2)], { type: "application/json" });
           const link = document.createElement("a");
           link.href = URL.createObjectURL(blob);
-          link.download = "cutlab-figma-ui-progress.json";
+          link.download = "relay-figma-ui-progress.json";
           link.click();
           URL.revokeObjectURL(link.href);
           saveStatus.textContent = "Exported";
@@ -427,3 +427,4 @@
     </script>
   </body>
 </html>
+

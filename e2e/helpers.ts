@@ -19,6 +19,7 @@ export async function waitForClerk(page: Page) {
 
 export async function chooseLocalMode(page: Page) {
   await page.addInitScript(() => {
+    // Compatibility identifier used by the app for existing local workspaces.
     window.localStorage.setItem("cutlab-studio:auth-mode:v1", "local");
   });
 }
@@ -58,3 +59,4 @@ export async function selectOption(select: Locator, page: Page, option: string) 
   await select.click();
   await page.getByRole("option", { name: option, exact: true }).click();
 }
+

@@ -39,6 +39,7 @@ const context = await browser.newContext({
   viewport: { width: 1440, height: 1000 },
 });
 await context.addInitScript(() => {
+  // Compatibility identifier used by the app for existing local workspaces.
   localStorage.setItem("cutlab-studio:auth-mode:v1", "local");
   localStorage.setItem(
     "video-editing-work-tracker:settings:v1",

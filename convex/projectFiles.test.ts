@@ -58,7 +58,7 @@ const reviewerPermissions = {
   useChat: true,
 };
 
-const editorPermissions = {
+const projectPermissions = {
   viewProjects: true,
   createProjects: true,
   editProjects: true,
@@ -116,7 +116,7 @@ async function setupProject(
         name: "Editor User",
         role: "Editor",
         status: "active",
-        permissions: editorPermissions,
+        permissions: projectPermissions,
         createdAt,
         joinedAt: createdAt,
       });
@@ -762,6 +762,7 @@ describe("project file management", () => {
         estimatedCompletion: "2026-06-10",
         revisionLimit: 2,
         published: true,
+        enabled: true,
         createdAt: now,
         updatedAt: now,
       });
@@ -913,16 +914,6 @@ describe("project file management", () => {
       status: "sent_to_client",
     });
 
-    const legacyRows = await t.run((ctx) =>
-      ctx.db
-        .query("portalDeliverables")
-        .withIndex("by_portalId_and_createdAt", (q) =>
-          q.eq("portalId", editorPortal.portal._id)
-        )
-        .take(10)
-    );
-    expect(legacyRows).toHaveLength(0);
-
     const portal = await t.query(api.clientPortals.getByToken, { token });
     expect(portal.access).toBe("active");
     if (portal.access !== "active")
@@ -1034,6 +1025,7 @@ describe("project file management", () => {
         estimatedCompletion: "2026-06-10",
         revisionLimit: 2,
         published: true,
+        enabled: true,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       })
@@ -1355,6 +1347,7 @@ describe("project file management", () => {
         estimatedCompletion: "2026-06-10",
         revisionLimit: 1,
         published: true,
+        enabled: true,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       })

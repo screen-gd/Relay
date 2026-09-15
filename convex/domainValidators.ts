@@ -151,14 +151,6 @@ export const deliverableStatusValidator = v.union(
   v.literal("final_delivered")
 );
 
-export const storedDeliverableStatusValidator = v.union(
-  deliverableStatusValidator,
-  v.literal("Pending"),
-  v.literal("In Progress"),
-  v.literal("Ready"),
-  v.literal("Delivered")
-);
-
 export const revisionStatusValidator = v.union(
   v.literal("Submitted"),
   v.literal("In Review"),

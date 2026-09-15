@@ -11,10 +11,10 @@ const { loadEnvConfig } = nextEnv;
 loadEnvConfig(process.cwd());
 
 const startupTimeoutMs = 30_000;
-const configuredBaseUrl = process.env.RELAY_UI_URL || process.env.CUTLAB_UI_URL;
+const configuredBaseUrl = process.env.RELAY_UI_URL;
 const captureFamilies =
-  (process.env.RELAY_CAPTURE_FAMILIES ||
-    process.env.CUTLAB_CAPTURE_FAMILIES) === "1";
+  (process.env.RELAY_CAPTURE_FAMILIES || process.env.RELAY_CAPTURE_FAMILIES) ===
+  "1";
 const workspaceRoutes = [
   ["/", "Good to see you, Jordan.", "data-index"],
   ["/projects", "Projects", "data-index"],
@@ -88,6 +88,7 @@ async function withPage(
           { length: clientCount },
           (_, index) => `Client ${index + 1}`
         );
+        // Compatibility identifier used by the app for existing local workspaces.
         localStorage.setItem("cutlab-studio:auth-mode:v1", "local");
         localStorage.setItem(
           "video-editing-work-tracker:settings:v1",
@@ -108,13 +109,10 @@ async function withPage(
             projectTags: ["Job / Salary", "Freelance"],
             projectStages: ["Planned", "In Progress", "Review", "Delivered"],
             notifications: {},
-            integrations: {},
-            integrationAccounts: {},
             integrationConfigs: {},
             integrationLinks: {},
             teamRole: "",
             teamMembers: [],
-            editorPermissions: {},
             rolePermissions: {},
           })
         );
@@ -456,6 +454,7 @@ async function assertDashboardAndProjectInspectorRefinements(page) {
   await page
     .getByRole("heading", { level: 1, name: "Good to see you, Jordan." })
     .waitFor();
+  await page.getByTestId("project-row").first().click();
   await page
     .getByRole("heading", { level: 2, name: "Interaction test edit 1" })
     .waitFor();

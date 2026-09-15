@@ -106,7 +106,7 @@ requires the Clerk secret:
 - `CLERK_SECRET_KEY`
 - `NEXT_PUBLIC_CONVEX_URL`
 
-The setup reuses `cutlab-e2e+clerk_test@example.com` in the Clerk development
+The setup reuses `relay-e2e+clerk_test@example.com` in the Clerk development
 instance. Override it with `E2E_CLERK_USER_EMAIL` when needed. The cloud test
 uses unique project names and removes its project afterward.
 
