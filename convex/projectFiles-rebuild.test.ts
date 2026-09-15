@@ -121,3 +121,40 @@ test("Project files validate uploads, retain quota, and require archive before d
   await owner.mutation(api.projectFiles.removeFile, { fileId });
   expect((await t.run((ctx) => ctx.db.query("projectFileVersions").collect())).length).toBe(0);
 });
+
+test("lists files for a personal project without a Workspace", async () => {
+  const t = convexTest(schema, modules);
+  await t.run((ctx) =>
+    ctx.db.insert("projects", {
+      ownerUserId: "owner",
+      id: "personal-project",
+      assigneeUserIds: [],
+      profileId: "video-editing",
+      title: "Personal Project",
+      clientId: "client-a",
+      archived: false,
+      status: "Planned",
+      workflowStageId: "planned",
+      workflowStages: [{ id: "planned", label: "Planned", purpose: "planned" }],
+      workType: "Freelance",
+      startDate: "2026-09-15",
+      dueDate: "2026-09-20",
+      earnings: 0,
+      paid: false,
+      notes: "",
+      createdAt: "2026-09-15T00:00:00.000Z",
+      updatedAt: "2026-09-15T00:00:00.000Z",
+    })
+  );
+
+  await expect(
+    t
+      .withIdentity({ tokenIdentifier: "owner" })
+      .query(api.projectFiles.listForProject, { projectId: "personal-project" })
+  ).resolves.toMatchObject({
+    retainedBytes: 0,
+    workspaceLimitBytes: 0,
+    files: [],
+    uploadHistory: [],
+  });
+});
