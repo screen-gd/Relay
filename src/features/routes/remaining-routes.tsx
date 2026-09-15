@@ -12,15 +12,6 @@ import {
 } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import { UserProfile } from "@clerk/nextjs";
-import { useConvexAuth, useMutation, useQuery } from "convex/react";
-import { makeFunctionReference } from "convex/server";
-import {
-  useData,
-  useProjectGroups,
-  useProjectWorkflow,
-} from "@/lib/data-context";
-import { useOptionalAuth } from "@/lib/optional-auth";
-import { api } from "../../../convex/_generated/api";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { DEFAULT_PROFILE_ID, getProfile } from "@/lib/profiles";
@@ -33,13 +24,6 @@ import type {
   ResourceLink,
   SavedProjectTemplate,
 } from "@/lib/types";
-import {
-  useProjectController,
-  useProjectCreationController,
-} from "@/features/projects/project-controller";
-import { NewProjectDialog } from "@/components/new-project-dialog";
-import { ProjectGroupsDialog } from "@/components/project-groups-dialog";
-import { mergeClientRecords } from "@/lib/clients";
 import {
   validateWorkflowStages,
   workflowStagesFromLabels,
@@ -77,7 +61,6 @@ import {
 import { relay } from "../../app/design-system";
 import { RelayBrand } from "../../app/relay-brand";
 import { emptyStateAssetFor, emptyStateAssets } from "../../app/brand-assets";
-import { WorkspaceShell } from "@/components/workspace-shell";
 import {
   ContentSection,
   FillViewport,
@@ -91,53 +74,12 @@ import {
   SplitPane,
   WorkspacePage,
 } from "@/components/workspace-page";
-import { PrecisionDashboard } from "@/components/precision-dashboard";
-import { PrecisionProjects } from "@/components/precision-projects";
-import { ProjectWorkspace } from "@/features/projects/project-workspace";
-import {
-  DeleteProjectDialog,
-  ProjectDialog,
-} from "@/features/projects/project-dialogs";
-import { createProjectPort } from "@/features/projects/project-port";
-import {
-  canDeleteProject as projectCanBeDeleted,
-  resolveProjectPermissions,
-} from "@/features/projects/project-permissions";
-import {
-  projectHref,
-  type ProjectActivityEvent,
-} from "@/features/projects/project-view";
-import {
-  useProjectsApplicationState,
-  type DueFilter,
-  type ProjectDashboardActivity as DashboardActivity,
-} from "@/features/projects/use-projects-application-state";
-import {
-  PrecisionCalendar,
-  PrecisionTimeline,
-} from "@/components/precision-schedule";
-import { PrecisionFiles } from "@/components/precision-files";
-import {
-  PrecisionClients,
-  PrecisionFeedback,
-  PrecisionReports,
-} from "@/components/precision-workspaces";
-import { PrecisionMedia } from "@/components/precision-media";
-import { SalaryPlansPanel } from "@/components/salary-plans-panel";
-import { FirstRunChecklist } from "@/components/first-run-checklist";
-import { SampleModeBar } from "@/components/sample-mode-bar";
 import { ClerkPricingPlans } from "@/components/subscription-plans";
 import {
   resolveOnboardingVariant,
   trackOnboardingEvent,
   type OnboardingVariant,
 } from "@/lib/onboarding";
-import { buildPayoutReport } from "@/lib/payout-reporting";
-import {
-  buildWorkspaceSearchIndex,
-  type WorkspaceFile,
-  type WorkspaceOutput,
-} from "@/features/workspace-discovery/workspace-discovery";
 import {
   getAnalyticsConsent,
   setAnalyticsConsent,
@@ -145,6 +87,17 @@ import {
   type AnalyticsConsent,
 } from "@/lib/telemetry";
 import { cn } from "@/lib/utils";
+import type { DueFilter } from "@/features/projects/use-projects-application-state";
+import {
+  useAccountController,
+  useNotificationController,
+  useProfileController,
+  useSettingsController,
+  useSubscriptionController,
+  useTeamChatController,
+  useTeamController,
+  useTemplateController,
+} from "./route-controllers";
 import {
   AlertDialog as OwnedAlertDialog,
   AlertDialogAction as OwnedAlertDialogAction,
@@ -156,41 +109,6 @@ import {
   AlertDialogTitle as OwnedAlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 
-const teamApi = {
-  updateWorkspaceSettings: makeFunctionReference<
-    "mutation",
-    {
-      teamId: string;
-      name: string;
-      currencyCode: string;
-      timeZone: string;
-      defaultWorkflowTemplateId?: string;
-      allowAllTeamProjects: boolean;
-    },
-    null
-  >("team:updateWorkspaceSettings"),
-  updateMemberPermissions: makeFunctionReference<
-    "mutation",
-    {
-      teamId: string;
-      memberId: string;
-      permissions: Record<string, boolean>;
-    },
-    null
-  >("team:updateMemberPermissions"),
-  transferOwnership: makeFunctionReference<
-    "mutation",
-    { teamId: string; memberId: string },
-    null
-  >("team:transferOwnership"),
-};
-const workspaceDiscoveryApi = {
-  list: makeFunctionReference<
-    "query",
-    { includeArchived?: boolean },
-    { outputs: WorkspaceOutput[]; files: WorkspaceFile[] }
-  >("workspaceDiscovery:list"),
-};
 import { Badge as OwnedBadge } from "@/components/ui/badge";
 import { Button as OwnedButton } from "@/components/ui/button";
 import { Card as OwnedCard } from "@/components/ui/card";
@@ -479,8 +397,8 @@ const defaultSettings: SettingsState = {
 
 const SettingsContext = createContext<SettingsState>(defaultSettings);
 export function AccountSettingsPage() {
-  const { isAuthEnabled } = useData();
-  const { isSignedIn, isLoaded, openSignIn, openSignUp } = useOptionalAuth();
+  const { isAuthEnabled, isSignedIn, isLoaded, openSignIn, openSignUp } =
+    useAccountController();
 
   return (
     <WorkspacePage
@@ -1383,7 +1301,7 @@ export function TemplatesDesignPage({
   onUseTemplate: (template: ProjectTemplate) => void;
   canManageTemplates: boolean;
 }) {
-  const { items, settings, setSettings } = useData();
+  const { items, settings, setSettings } = useTemplateController();
   const [templateForm, setTemplateForm] =
     useState<TemplateFormState>(emptyTemplateForm);
   const [builderOpen, setBuilderOpen] = useState(false);
@@ -1876,34 +1794,6 @@ export function TeamDesignPage({
   settings: SettingsState;
   setSettings: (settings: SettingsState) => void;
 }) {
-  const {
-    isSignedIn,
-    isLoaded: isUserLoaded,
-    openSignIn,
-    openSignUp,
-  } = useOptionalAuth();
-  const {
-    isAuthenticated: isConvexAuthenticated,
-    isLoading: isConvexAuthLoading,
-  } = useConvexAuth();
-  const teamData = useQuery(
-    api.team.getMyWorkspace,
-    isConvexAuthenticated ? {} : "skip"
-  );
-  const createWorkspace = useMutation(api.team.createWorkspace);
-  const joinWorkspace = useMutation(api.team.joinWorkspace);
-  const inviteMember = useMutation(api.team.inviteMember);
-  const updateMemberRole = useMutation(api.team.updateMemberRole);
-  const updateMemberPermissions = useMutation(teamApi.updateMemberPermissions);
-  const transferOwnership = useMutation(teamApi.transferOwnership);
-  const normalizeLegacyRoles = useMutation(api.team.normalizeLegacyRoles);
-  const removeMember = useMutation(api.team.removeMember);
-  const leaveWorkspace = useMutation(api.team.leaveWorkspace);
-  const addProjectComment = useMutation(api.team.addProjectComment);
-  const markNotificationRead = useMutation(api.team.markNotificationRead);
-  const markAllNotificationsRead = useMutation(
-    api.team.markAllNotificationsRead
-  );
   const [workspaceName, setWorkspaceName] = useState(
     settings.studioName || "Relay Team"
   );
@@ -1915,12 +1805,31 @@ export function TeamDesignPage({
   const [teamError, setTeamError] = useState("");
   const [inviteCopyLabel, setInviteCopyLabel] = useState("Copy Invite Code");
   const [busyAction, setBusyAction] = useState("");
-  const teamId = teamData?.workspace?._id;
-  const teamProjects = useMemo(
-    () =>
-      teamId ? projects.filter((project) => project.teamId === teamId) : [],
-    [projects, teamId]
-  );
+  const {
+    isSignedIn,
+    isUserLoaded,
+    openSignIn,
+    openSignUp,
+    isConvexAuthenticated,
+    isConvexAuthLoading,
+    teamData,
+    createWorkspace,
+    joinWorkspace,
+    inviteMember,
+    updateMemberRole,
+    updateMemberPermissions,
+    transferOwnership,
+    normalizeLegacyRoles,
+    removeMember,
+    leaveWorkspace,
+    addProjectComment,
+    markNotificationRead,
+    markAllNotificationsRead,
+    teamId,
+    teamProjects,
+    selectedProject,
+    projectComments,
+  } = useTeamController({ projects, selectedProjectId });
   const teamProjectTitles = useMemo(
     () =>
       Object.fromEntries(
@@ -1929,16 +1838,6 @@ export function TeamDesignPage({
     [teamProjects]
   );
   const clients = buildClientSummaries(teamProjects, settings.customClients);
-  const selectedProject =
-    teamProjects.find((project) => project.id === selectedProjectId) ??
-    teamProjects[0] ??
-    null;
-  const projectComments = useQuery(
-    api.team.listProjectComments,
-    isConvexAuthenticated && teamId && selectedProject
-      ? { teamId, projectId: selectedProject.id }
-      : "skip"
-  );
   const activeMembers =
     teamData?.members.filter((member) => member.status === "active") ?? [];
   const pendingInvites =
@@ -2818,16 +2717,15 @@ export function TeamDesignPage({
 }
 
 export function TeamChatPage() {
-  const { isSignedIn, isLoaded: isUserLoaded, openSignIn } = useOptionalAuth();
   const {
-    isAuthenticated: isConvexAuthenticated,
-    isLoading: isConvexAuthLoading,
-  } = useConvexAuth();
-  const teamData = useQuery(
-    api.team.getMyWorkspace,
-    isConvexAuthenticated ? {} : "skip"
-  );
-  const sendChatMessage = useMutation(api.team.sendChatMessage);
+    isSignedIn,
+    isUserLoaded,
+    openSignIn,
+    isConvexAuthenticated,
+    isConvexAuthLoading,
+    teamData,
+    sendChatMessage,
+  } = useTeamChatController();
   const messageInputId = useId();
   const messageCountId = `${messageInputId}-count`;
   const chatInputProps = { maxLength: TEAM_CHAT_MESSAGE_LIMIT };
@@ -3902,12 +3800,16 @@ export function SettingsDesignPage({
   teamWorkspace?: TeamWorkspaceContract;
   canManageWorkspace?: boolean;
 }) {
-  const { exportBackup, importBackup, settingsSaveState, retrySettingsSave } =
-    useData();
+  const {
+    exportBackup,
+    importBackup,
+    settingsSaveState,
+    retrySettingsSave,
+    updateWorkspaceSettings,
+  } = useSettingsController();
   const [optionalAnalytics, setOptionalAnalytics] = useState(
     () => getAnalyticsConsent() === "granted"
   );
-  const updateWorkspaceSettings = useMutation(teamApi.updateWorkspaceSettings);
   const backupInputRef = useRef<HTMLInputElement>(null);
   const [workspaceDraft, setWorkspaceDraft] = useState(() => ({
     name: teamWorkspace?.name ?? settings.studioName,
@@ -5111,8 +5013,7 @@ export function ProfileDesignPage({
   projects: WorkItem[];
   settings: SettingsState;
 }) {
-  const { isSignedIn } = useData();
-  const publishPublicProfile = useMutation(api.publicProfiles.publish);
+  const { isSignedIn, publishPublicProfile } = useProfileController();
   const timeline = [...projects]
     .sort((a, b) => dateTime(a.dueDate) - dateTime(b.dueDate))
     .slice(0, 5);
@@ -5679,19 +5580,15 @@ function ProfileEditSelect<T extends string>({
 
 export function NotificationBell({ settings }: { settings: SettingsState }) {
   const [notificationOpen, setNotificationOpen] = useState(false);
-  const { isSignedIn, isLoaded: isUserLoaded } = useOptionalAuth();
   const {
-    isAuthenticated: isConvexAuthenticated,
-    isLoading: isConvexAuthLoading,
-  } = useConvexAuth();
-  const teamData = useQuery(
-    api.team.getMyWorkspace,
-    isConvexAuthenticated ? {} : "skip"
-  );
-  const markNotificationRead = useMutation(api.team.markNotificationRead);
-  const markAllNotificationsRead = useMutation(
-    api.team.markAllNotificationsRead
-  );
+    isSignedIn,
+    isUserLoaded,
+    isConvexAuthenticated,
+    isConvexAuthLoading,
+    teamData,
+    markNotificationRead,
+    markAllNotificationsRead,
+  } = useNotificationController();
   const enabledNotifications = Object.entries(settings.notifications).filter(
     ([, enabled]) => enabled
   );
@@ -6184,16 +6081,16 @@ export function normalizeChecklistCompleted(
 }
 
 export function SubscriptionPage() {
-  const { isAuthEnabled } = useData();
-  const { isSignedIn, isLoaded, openSignIn, openSignUp } = useOptionalAuth();
   const {
-    isAuthenticated: isConvexAuthenticated,
-    isLoading: isConvexAuthLoading,
-  } = useConvexAuth();
-  const subscription = useQuery(
-    api.workspaceSubscriptions.getCurrent,
-    isSignedIn && isConvexAuthenticated ? {} : "skip"
-  );
+    isAuthEnabled,
+    isSignedIn,
+    isLoaded,
+    openSignIn,
+    openSignUp,
+    isConvexAuthenticated,
+    isConvexAuthLoading,
+    subscription,
+  } = useSubscriptionController();
   const [checkoutReturned, setCheckoutReturned] = useState(false);
 
   useEffect(() => {
