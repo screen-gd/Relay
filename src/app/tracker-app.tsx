@@ -259,6 +259,7 @@ const defaultProjectTags = ["Job / Salary", "Freelance", "Personal Channel"];
 const defaultSalaryWorkType = "Job / Salary";
 const defaultSalaryBatchSize = 20;
 const defaultSalaryBatchAmount = 10000;
+// Compatibility identifier: keep the persisted key so existing local workspaces stay readable.
 const AUTH_MODE_STORAGE_KEY = "cutlab-studio:auth-mode:v1";
 const TEAM_WORKSPACE_NAME_LIMIT = 80;
 const TEAM_CHAT_MESSAGE_LIMIT = 800;
@@ -272,6 +273,7 @@ const TEAM_MEMBER_PERMISSION_LABELS = [
   ["manageFinance", "Finance"],
 ] as const;
 const MIN_PUBLIC_SLUG_LENGTH = 2;
+// Compatibility identifier: keep the persisted key so existing local activity stays readable.
 const LOCAL_PROJECT_ACTIVITY_STORAGE_KEY = "cutlab-studio:project-activity:v1";
 const headingFont = relay.font.heading;
 const defaultAccent = relay.color.teal;

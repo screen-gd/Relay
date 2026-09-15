@@ -10,7 +10,8 @@ function requireText(path, values) {
   }
   const content = readFileSync(path, "utf8").toLowerCase();
   for (const value of values) {
-    if (!content.includes(value.toLowerCase())) failures.push(`${path} is missing: ${value}`);
+    if (!content.includes(value.toLowerCase()))
+      failures.push(`${path} is missing: ${value}`);
   }
 }
 
@@ -59,7 +60,8 @@ for (const path of [
   "src/app/access/page.tsx",
   "src/app/api/access/route.ts",
 ]) {
-  if (existsSync(path)) failures.push(`${path} restores the removed global password gate.`);
+  if (existsSync(path))
+    failures.push(`${path} restores the removed global password gate.`);
 }
 
 for (const root of ["src", "convex", "e2e"]) {
@@ -67,7 +69,7 @@ for (const root of ["src", "convex", "e2e"]) {
     if (!/\.(?:[cm]?[jt]sx?|css)$/.test(relativePath)) continue;
     const path = join(root, relativePath);
     const content = readFileSync(path, "utf8");
-    if (content.includes("Frame Desk")) {
+    if (content.includes(["Frame", "Desk"].join(" "))) {
       failures.push(`${path} still contains legacy Frame Desk product copy.`);
     }
     if (content.includes("var(--font-space-grotesk)")) {

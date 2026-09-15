@@ -1,5 +1,6 @@
 import { trackOptionalEvent } from "./telemetry";
 
+// Compatibility identifier: keep the persisted key so existing onboarding choices stay readable.
 const variantKey = "cutlab-studio:onboarding-variant:v2";
 
 export type OnboardingVariant = "control" | "v2";

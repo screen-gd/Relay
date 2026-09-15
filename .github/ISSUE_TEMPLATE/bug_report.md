@@ -1,6 +1,6 @@
 ---
 name: Bug report
-about: Report a reproducible problem in CutLab Studio
+about: Report a reproducible problem in Relay
 title: "[Bug] "
 labels: bug
 assignees: ""
