@@ -57,6 +57,8 @@ async function requireFileUploadCapability(
   project: ProjectRecord
 ) {
   const workspaceId = await workspaceIdForProject(ctx, project);
+  if (!workspaceId)
+    throw new Error("Select one Workspace before using hosted storage");
   const entitlement = await requireWorkspaceCapability(
     ctx,
     workspaceId,
@@ -79,6 +81,7 @@ async function workspaceIdForProject(
       q.eq("userId", project.ownerUserId).eq("status", "active")
     )
     .take(2);
+  if (memberships.length === 0) return null;
   if (memberships.length !== 1)
     throw new Error("Select one Workspace before using hosted storage");
   const workspaceId = ctx.db.normalizeId(
@@ -489,14 +492,18 @@ export const listForProject = query({
       }))
     );
     const workspaceId = await workspaceIdForProject(ctx, project);
-    const subscription = await ctx.db
-      .query("workspaceSubscriptions")
-      .withIndex("by_workspaceId", (q) => q.eq("workspaceId", workspaceId))
-      .unique();
-    const entitlement = await resolveWorkspaceEntitlements(ctx, workspaceId);
+    const subscription = workspaceId
+      ? await ctx.db
+          .query("workspaceSubscriptions")
+          .withIndex("by_workspaceId", (q) => q.eq("workspaceId", workspaceId))
+          .unique()
+      : null;
+    const entitlement = workspaceId
+      ? await resolveWorkspaceEntitlements(ctx, workspaceId)
+      : null;
     return {
       retainedBytes: subscription?.retainedStorageBytes ?? 0,
-      workspaceLimitBytes: entitlement.storageQuotaBytes,
+      workspaceLimitBytes: entitlement?.storageQuotaBytes ?? 0,
       files: visibleFiles.map((file) => ({
         _id: file._id,
         category: file.category,
@@ -1007,6 +1014,8 @@ export const removeFile = mutation({
     );
     if (retainedBytes > 0) {
       const workspaceId = await workspaceIdForProject(ctx, project);
+      if (!workspaceId)
+        throw new Error("Select one Workspace before using hosted storage");
       const subscription = await ctx.db
         .query("workspaceSubscriptions")
         .withIndex("by_workspaceId", (q) => q.eq("workspaceId", workspaceId))

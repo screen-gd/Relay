@@ -126,4 +126,3 @@ test("the settings migration leaves one canonical account row and preserves clie
     expect(rows[0]?.clients?.map((client) => client.name)).toEqual(["Acme"]);
   });
 });
-

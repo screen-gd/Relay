@@ -121,3 +121,112 @@ test("Project files validate uploads, retain quota, and require archive before d
   await owner.mutation(api.projectFiles.removeFile, { fileId });
   expect((await t.run((ctx) => ctx.db.query("projectFileVersions").collect())).length).toBe(0);
 });
+
+test("lists files for a personal project without a Workspace", async () => {
+  const t = convexTest(schema, modules);
+  await t.run((ctx) =>
+    ctx.db.insert("projects", {
+      ownerUserId: "owner",
+      id: "personal-project",
+      assigneeUserIds: [],
+      profileId: "video-editing",
+      title: "Personal Project",
+      clientId: "client-a",
+      archived: false,
+      status: "Planned",
+      workflowStageId: "planned",
+      workflowStages: [{ id: "planned", label: "Planned", purpose: "planned" }],
+      workType: "Freelance",
+      startDate: "2026-09-15",
+      dueDate: "2026-09-20",
+      earnings: 0,
+      paid: false,
+      notes: "",
+      createdAt: "2026-09-15T00:00:00.000Z",
+      updatedAt: "2026-09-15T00:00:00.000Z",
+    })
+  );
+
+  await expect(
+    t
+      .withIdentity({ tokenIdentifier: "owner" })
+      .query(api.projectFiles.listForProject, { projectId: "personal-project" })
+  ).resolves.toMatchObject({
+    retainedBytes: 0,
+    workspaceLimitBytes: 0,
+    files: [],
+    uploadHistory: [],
+  });
+
+  await expect(
+    t.withIdentity({ tokenIdentifier: "owner" }).mutation(
+      api.projectFiles.generateUploadUrl,
+      { projectId: "personal-project", size: 1 }
+    )
+  ).rejects.toThrow("Select one Workspace before using hosted storage");
+});
+
+test("rejects removing hosted files from a personal project without a Workspace", async () => {
+  const t = convexTest(schema, modules);
+  const fileId = await t.run(async (ctx) => {
+    const createdAt = "2026-09-15T00:00:00.000Z";
+    await ctx.db.insert("projects", {
+      ownerUserId: "owner",
+      id: "personal-project",
+      assigneeUserIds: [],
+      profileId: "video-editing",
+      title: "Personal Project",
+      clientId: "client-a",
+      archived: false,
+      status: "Planned",
+      workflowStageId: "planned",
+      workflowStages: [{ id: "planned", label: "Planned", purpose: "planned" }],
+      workType: "Freelance",
+      startDate: "2026-09-15",
+      dueDate: "2026-09-20",
+      earnings: 0,
+      paid: false,
+      notes: "",
+      createdAt,
+      updatedAt: createdAt,
+    });
+    const id = await ctx.db.insert("projectFiles", {
+      projectId: "personal-project",
+      ownerUserId: "owner",
+      category: "Asset",
+      title: "Source",
+      description: "",
+      status: "draft",
+      clientVisible: false,
+      downloadable: false,
+      archived: true,
+      createdByUserId: "owner",
+      createdByName: "Owner",
+      createdAt,
+      updatedAt: createdAt,
+    });
+    await ctx.db.insert("projectFileVersions", {
+      projectId: "personal-project",
+      projectFileId: id,
+      versionNumber: 1,
+      status: "draft",
+      provider: "r2",
+      r2Key: "personal-project/source.txt",
+      fileName: "source.txt",
+      mimeType: "text/plain",
+      size: 4,
+      uploadedByUserId: "owner",
+      uploadedByName: "Owner",
+      uploadedAt: createdAt,
+      notes: "",
+    });
+    return id;
+  });
+
+  await expect(
+    t.withIdentity({ tokenIdentifier: "owner" }).mutation(
+      api.projectFiles.removeFile,
+      { fileId }
+    )
+  ).rejects.toThrow("Select one Workspace before using hosted storage");
+});
