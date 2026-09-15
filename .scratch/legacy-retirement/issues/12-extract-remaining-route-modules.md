@@ -1,7 +1,6 @@
 # Extract the remaining route modules
 
 Status: in-progress
-Blocked by: 10 Extract the Projects application module
 
 ## Work
 

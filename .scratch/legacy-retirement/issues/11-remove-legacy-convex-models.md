@@ -1,7 +1,6 @@
 # Remove migrated Convex models and fields
 
 Status: in-progress
-Blocked by: 03 Migrate workItems into Projects, 04 Migrate portal deliverables, 05 Normalize Client Portal access, 06 Normalize Salary Batches, 07 Normalize Workflow Stages, 08 Normalize integration and permission settings
 
 ## Work
 
