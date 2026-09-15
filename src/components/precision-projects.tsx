@@ -151,6 +151,23 @@ function ProjectDropdown<T extends string>({
   );
 }
 
+function FilterField({
+  label,
+  children,
+}: {
+  label: string;
+  children: ReactNode;
+}) {
+  return (
+    <div className="grid gap-1.5">
+      <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--app-subtle)]">
+        {label}
+      </span>
+      {children}
+    </div>
+  );
+}
+
 type PrecisionProjectsProps = {
   settings: SettingsState;
   personalProjects: WorkItem[];
@@ -376,6 +393,7 @@ export function PrecisionProjects(props: PrecisionProjectsProps) {
   const [scope, setScope] = useState<WorkspaceScope>("personal");
   const [selectedId, setSelectedId] = useState("");
   const [mobileInspectorOpen, setMobileInspectorOpen] = useState(false);
+  const [filtersOpen, setFiltersOpen] = useState(false);
   const reduceMotion = useHydratedReducedMotion();
   const hasTeam = Boolean(props.teamName);
   const sensors = useSensors(
@@ -427,6 +445,14 @@ export function PrecisionProjects(props: PrecisionProjectsProps) {
 
   const selected =
     source.find((project) => project.id === selectedId) ?? projects[0] ?? null;
+  const activeFilterCount = [
+    tableState.stage !== "all",
+    Boolean(tableState.clientId),
+    tableState.payment !== "all",
+    tableState.salary !== "all",
+    tableState.archive !== "active",
+    Boolean(tableState.assigneeUserId),
+  ].filter(Boolean).length;
   const projectName = (id: string | number) =>
     projects.find((project) => project.id === String(id))?.title ?? "Project";
   const dropStage = (id: string | number | undefined) => {
@@ -673,124 +699,20 @@ export function PrecisionProjects(props: PrecisionProjectsProps) {
                       className="h-9 rounded-lg border-[var(--app-border)] !bg-[var(--app-panel)] pl-8 text-xs transition-shadow focus-visible:ring-2"
                     />
                   </div>
-                  <div className="flex min-w-[150px] items-center gap-2">
-                    <SlidersHorizontal className="size-4 shrink-0 text-[var(--app-muted)]" />
-                    <ProjectDropdown
-                      value={tableState.stage}
-                      onChange={(value) =>
-                        setTableState((state) => ({
-                          ...state,
-                          stage: parseProjectTableSearch(
-                            `stage=${encodeURIComponent(value)}`
-                          ).stage,
-                        }))
-                      }
-                      ariaLabel="Filter projects by status"
-                      className="w-full"
-                      options={[
-                        { value: "all", label: "All stages" },
-                        { value: "Planned", label: "Planned" },
-                        { value: "In Progress", label: "In Progress" },
-                        { value: "Review", label: "Review" },
-                        { value: "Client Review", label: "Client Review" },
-                        { value: "Revision", label: "Revision" },
-                        { value: "Delivered", label: "Delivered" },
-                        { value: "Cancelled", label: "Cancelled" },
-                      ]}
-                    />
-                  </div>
-                  <ProjectDropdown
-                    value={tableState.clientId || "all"}
-                    onChange={(value) =>
-                      setTableState((state) => ({
-                        ...state,
-                        clientId: value === "all" ? "" : value,
-                      }))
-                    }
-                    ariaLabel="Filter projects by client"
-                    className="w-[140px]"
-                    options={[
-                      { value: "all", label: "All clients" },
-                      ...props.settings.clients
-                        .filter((client) => !client.archived)
-                        .map((client) => ({
-                          value: client.id,
-                          label: client.name,
-                        })),
-                    ]}
-                  />
-                  <ProjectDropdown
-                    value={tableState.payment}
-                    onChange={(value) =>
-                      setTableState((state) => ({
-                        ...state,
-                        payment: parseProjectTableSearch(`payment=${value}`)
-                          .payment,
-                      }))
-                    }
-                    ariaLabel="Filter projects by payment"
-                    className="w-[130px]"
-                    options={[
-                      { value: "all", label: "All payments" },
-                      { value: "paid", label: "Paid" },
-                      { value: "unpaid", label: "Unpaid" },
-                      { value: "not-billable", label: "Not billable" },
-                    ]}
-                  />
-                  <ProjectDropdown
-                    value={tableState.salary}
-                    onChange={(value) =>
-                      setTableState((state) => ({
-                        ...state,
-                        salary: parseProjectTableSearch(`salary=${value}`)
-                          .salary,
-                      }))
-                    }
-                    ariaLabel="Filter projects by salary type"
-                    className="w-[125px]"
-                    options={[
-                      { value: "all", label: "All work" },
-                      { value: "salary", label: "Salary" },
-                      { value: "client", label: "Client work" },
-                    ]}
-                  />
-                  <ProjectDropdown
-                    value={tableState.archive}
-                    onChange={(value) =>
-                      setTableState((state) => ({
-                        ...state,
-                        archive: parseProjectTableSearch(`archive=${value}`)
-                          .archive,
-                      }))
-                    }
-                    ariaLabel="Filter archived projects"
-                    className="w-[120px]"
-                    options={[
-                      { value: "active", label: "Unarchived" },
-                      { value: "archived", label: "Archived" },
-                      { value: "all", label: "All records" },
-                    ]}
-                  />
-                  {showAssignees ? (
-                    <ProjectDropdown
-                      value={tableState.assigneeUserId || "all"}
-                      onChange={(value) =>
-                        setTableState((state) => ({
-                          ...state,
-                          assigneeUserId: value === "all" ? "" : value,
-                        }))
-                      }
-                      ariaLabel="Filter projects by assignee"
-                      className="w-[135px]"
-                      options={[
-                        { value: "all", label: "All assignees" },
-                        ...props.settings.teamMembers.map((member) => ({
-                          value: member.id,
-                          label: member.name,
-                        })),
-                      ]}
-                    />
-                  ) : null}
+                  <Button
+                    variant="outline"
+                    className="h-9 shrink-0 gap-2 rounded-lg !bg-[var(--app-panel)]"
+                    onClick={() => setFiltersOpen(true)}
+                    aria-label="Open project filters"
+                  >
+                    <SlidersHorizontal className="size-3.5" />
+                    Filters
+                    {activeFilterCount ? (
+                      <span className="grid size-4 place-items-center rounded-full bg-[var(--app-active)] text-[10px] tabular-nums">
+                        {activeFilterCount}
+                      </span>
+                    ) : null}
+                  </Button>
                 </>
               }
               secondary={
@@ -899,6 +821,169 @@ export function PrecisionProjects(props: PrecisionProjectsProps) {
                 </>
               }
             />
+
+            <Sheet open={filtersOpen} onOpenChange={setFiltersOpen}>
+              <SheetContent
+                side="right"
+                className="w-[min(92vw,400px)] gap-0 border-[var(--app-border)] bg-[var(--app-panel)] p-0"
+              >
+                <SheetHeader className="border-b border-[var(--app-border)] px-5 py-4">
+                  <SheetTitle>Project filters</SheetTitle>
+                  <SheetDescription>
+                    Narrow the project list without crowding the workspace
+                    toolbar.
+                  </SheetDescription>
+                </SheetHeader>
+                <div className="grid gap-4 overflow-y-auto px-5 py-5">
+                  <FilterField label="Stage">
+                    <ProjectDropdown
+                      value={tableState.stage}
+                      onChange={(value) =>
+                        setTableState((state) => ({
+                          ...state,
+                          stage: parseProjectTableSearch(
+                            `stage=${encodeURIComponent(value)}`
+                          ).stage,
+                        }))
+                      }
+                      ariaLabel="Filter projects by status"
+                      className="w-full"
+                      options={[
+                        { value: "all", label: "All stages" },
+                        { value: "Planned", label: "Planned" },
+                        { value: "In Progress", label: "In Progress" },
+                        { value: "Review", label: "Review" },
+                        { value: "Client Review", label: "Client Review" },
+                        { value: "Revision", label: "Revision" },
+                        { value: "Delivered", label: "Delivered" },
+                        { value: "Cancelled", label: "Cancelled" },
+                      ]}
+                    />
+                  </FilterField>
+                  <FilterField label="Client">
+                    <ProjectDropdown
+                      value={tableState.clientId || "all"}
+                      onChange={(value) =>
+                        setTableState((state) => ({
+                          ...state,
+                          clientId: value === "all" ? "" : value,
+                        }))
+                      }
+                      ariaLabel="Filter projects by client"
+                      className="w-full"
+                      options={[
+                        { value: "all", label: "All clients" },
+                        ...props.settings.clients
+                          .filter((client) => !client.archived)
+                          .map((client) => ({
+                            value: client.id,
+                            label: client.name,
+                          })),
+                      ]}
+                    />
+                  </FilterField>
+                  <FilterField label="Payment">
+                    <ProjectDropdown
+                      value={tableState.payment}
+                      onChange={(value) =>
+                        setTableState((state) => ({
+                          ...state,
+                          payment: parseProjectTableSearch(`payment=${value}`)
+                            .payment,
+                        }))
+                      }
+                      ariaLabel="Filter projects by payment"
+                      className="w-full"
+                      options={[
+                        { value: "all", label: "All payments" },
+                        { value: "paid", label: "Paid" },
+                        { value: "unpaid", label: "Unpaid" },
+                        { value: "not-billable", label: "Not billable" },
+                      ]}
+                    />
+                  </FilterField>
+                  <FilterField label="Work type">
+                    <ProjectDropdown
+                      value={tableState.salary}
+                      onChange={(value) =>
+                        setTableState((state) => ({
+                          ...state,
+                          salary: parseProjectTableSearch(`salary=${value}`)
+                            .salary,
+                        }))
+                      }
+                      ariaLabel="Filter projects by salary type"
+                      className="w-full"
+                      options={[
+                        { value: "all", label: "All work" },
+                        { value: "salary", label: "Salary" },
+                        { value: "client", label: "Client work" },
+                      ]}
+                    />
+                  </FilterField>
+                  <FilterField label="Archive">
+                    <ProjectDropdown
+                      value={tableState.archive}
+                      onChange={(value) =>
+                        setTableState((state) => ({
+                          ...state,
+                          archive: parseProjectTableSearch(`archive=${value}`)
+                            .archive,
+                        }))
+                      }
+                      ariaLabel="Filter archived projects"
+                      className="w-full"
+                      options={[
+                        { value: "active", label: "Unarchived" },
+                        { value: "archived", label: "Archived" },
+                        { value: "all", label: "All records" },
+                      ]}
+                    />
+                  </FilterField>
+                  {showAssignees ? (
+                    <FilterField label="Assignee">
+                      <ProjectDropdown
+                        value={tableState.assigneeUserId || "all"}
+                        onChange={(value) =>
+                          setTableState((state) => ({
+                            ...state,
+                            assigneeUserId: value === "all" ? "" : value,
+                          }))
+                        }
+                        ariaLabel="Filter projects by assignee"
+                        className="w-full"
+                        options={[
+                          { value: "all", label: "All assignees" },
+                          ...props.settings.teamMembers.map((member) => ({
+                            value: member.id,
+                            label: member.name,
+                          })),
+                        ]}
+                      />
+                    </FilterField>
+                  ) : null}
+                </div>
+                <div className="mt-auto flex items-center justify-between border-t border-[var(--app-border)] px-5 py-4">
+                  <span className="text-xs text-[var(--app-muted)]">
+                    {activeFilterCount} active{" "}
+                    {activeFilterCount === 1 ? "filter" : "filters"}
+                  </span>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={!activeFilterCount}
+                    onClick={() =>
+                      setTableState((state) => ({
+                        ...DEFAULT_PROJECT_TABLE_STATE,
+                        view: state.view,
+                      }))
+                    }
+                  >
+                    Clear filters
+                  </Button>
+                </div>
+              </SheetContent>
+            </Sheet>
 
             <motion.div
               initial={reduceMotion ? false : { opacity: 0, y: 12 }}

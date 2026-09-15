@@ -15,9 +15,9 @@ export const siteOpenGraph = {
   images: [
     {
       url: "/brand/relay/social-preview.png",
-      width: 1600,
-      height: 900,
-      alt: "Relay. From first cut to final handoff.",
+      width: 1774,
+      height: 887,
+      alt: "Relay. Video production workspace for editors.",
     },
   ],
 } satisfies Metadata["openGraph"];

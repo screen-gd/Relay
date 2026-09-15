@@ -153,8 +153,9 @@ export function PrecisionMedia({
           <PageContent mode="fill">
             <LayoutGroup id="media-workspace">
               <FillViewport
+                className="h-full min-h-0"
                 bodyLabel="Media workspace"
-                bodyClassName="overflow-auto lg:overflow-hidden"
+                bodyClassName="min-h-0 overflow-auto lg:overflow-hidden"
               >
                 <MasterDetail
                   className="h-full min-h-0 overflow-hidden rounded-[6px] border border-[var(--app-border)] bg-[var(--app-panel)]"
@@ -563,7 +564,7 @@ export function PrecisionMedia({
                   }
                   inspector={
                     <aside
-                      className="min-h-[360px] min-w-0 overflow-auto bg-[var(--app-soft-panel)] p-4 lg:min-h-0"
+                      className="h-full min-h-0 min-w-0 overflow-auto bg-[var(--app-soft-panel)] p-4 lg:min-h-0"
                       aria-label="Selected package details"
                     >
                       <AnimatePresence mode="wait" initial={false}>

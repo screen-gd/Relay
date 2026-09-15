@@ -530,7 +530,12 @@ export function TrackerApp({
     setGroupArchived,
   } = useProjectGroups();
   const router = useRouter();
-  const { openSignIn, openSignUp } = useOptionalAuth();
+  const {
+    isLoaded: clerkAuthLoaded,
+    isSignedIn: clerkIsSignedIn,
+    openSignIn,
+    openSignUp,
+  } = useOptionalAuth();
   const isSample = experienceMode === "sample";
   const {
     isAuthenticated: isConvexAuthenticated,
@@ -624,16 +629,20 @@ export function TrackerApp({
   }, [isSample]);
 
   useEffect(() => {
-    if (typeof window === "undefined" || !isAuthLoaded || isSample) return;
-    if (isSignedIn) {
+    if (typeof window === "undefined" || isSample) return;
+    if (clerkIsSignedIn || isSignedIn) {
       window.localStorage.setItem(AUTH_MODE_STORAGE_KEY, "account");
+      setAuthChoiceOpen(false);
+      return;
+    }
+    if (!clerkAuthLoaded || !isAuthLoaded) {
       setAuthChoiceOpen(false);
       return;
     }
 
     const savedMode = window.localStorage.getItem(AUTH_MODE_STORAGE_KEY);
     setAuthChoiceOpen(!savedMode);
-  }, [isAuthLoaded, isSample, isSignedIn]);
+  }, [clerkAuthLoaded, clerkIsSignedIn, isAuthLoaded, isSample, isSignedIn]);
 
   useEffect(() => {
     if (!authChoiceOpen) return;
@@ -1723,7 +1732,7 @@ export function TrackerApp({
         {deleteDialog}
         {loadingStatus}
         <WelcomeChoiceDialog
-          open={authChoiceOpen}
+          open={authChoiceOpen && !clerkIsSignedIn && !isSignedIn}
           variant={onboardingVariant}
           onChooseLocal={chooseLocalMode}
           onCreateAccount={() => launchAccountFlow("sign-up")}
@@ -1773,7 +1782,7 @@ export function TrackerApp({
       {deleteDialog}
       {loadingStatus}
       <WelcomeChoiceDialog
-        open={authChoiceOpen}
+        open={authChoiceOpen && !clerkIsSignedIn && !isSignedIn}
         variant={onboardingVariant}
         onChooseLocal={chooseLocalMode}
         onCreateAccount={() => launchAccountFlow("sign-up")}
@@ -5540,18 +5549,18 @@ function SettingsDesignPage({
           </OwnedSelect>
         </PageToolbar>
         <FillViewport
-          className="h-full min-h-[32rem]"
+          className="h-full min-h-0"
           bodyLabel="Settings workspace"
-          bodyClassName="overflow-visible lg:overflow-hidden"
+          bodyClassName="min-h-0 overflow-auto lg:overflow-hidden"
         >
           <MasterDetail
-            className="min-h-full lg:h-full lg:min-h-0 lg:overflow-hidden"
+            className="h-full min-h-0 gap-4 overflow-hidden rounded-xl border border-[var(--app-border)] bg-[var(--app-panel)] p-2 sm:p-3 lg:gap-5 lg:p-4"
             master={
               <nav
                 aria-label="Settings sections"
                 data-slot="settings-navigation"
                 data-navigation-kind="icon-index"
-                className="hidden h-full overflow-hidden bg-transparent text-card-foreground lg:flex lg:flex-col"
+                className="hidden h-full min-h-0 overflow-hidden rounded-lg border border-[var(--app-border)] bg-[var(--app-soft-panel)] text-card-foreground lg:flex lg:flex-col"
               >
                 <div className="border-b border-border px-4 py-3">
                   <p className="text-[10px] font-bold uppercase tracking-[0.08em] text-[var(--app-accent)]">
@@ -5602,7 +5611,7 @@ function SettingsDesignPage({
               <section
                 aria-label={`${settingsNavigation.find((item) => item.id === activeSection)?.label} settings`}
                 className={cn(
-                  "grid min-h-full min-w-0 content-start overflow-visible lg:h-full lg:overflow-y-auto lg:overscroll-contain lg:pr-2 [&_[data-slot=content-section]]:border-0 [&_[data-slot=content-section]]:shadow-none",
+                  "grid h-full min-h-0 min-w-0 content-start overflow-y-auto overscroll-contain rounded-lg border border-[var(--app-border)] bg-[var(--app-soft-panel)] p-3 sm:p-4 lg:pr-3 [&_[data-slot=content-section]]:border-0 [&_[data-slot=content-section]]:shadow-none",
                   "gap-3"
                 )}
                 tabIndex={0}

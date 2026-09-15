@@ -22,8 +22,8 @@ export function FillViewport({
     <div
       data-slot="fill-viewport"
       className={cn(
-        "grid min-h-[32rem] min-w-0 flex-1 grid-rows-[auto_minmax(0,1fr)_auto] overflow-hidden",
-        className,
+        "grid min-h-0 min-w-0 flex-1 grid-rows-[auto_minmax(0,1fr)_auto] overflow-hidden",
+        className
       )}
       {...props}
     >
