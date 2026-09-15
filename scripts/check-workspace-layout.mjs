@@ -7,6 +7,7 @@ const authenticatedPresentationFiles = [
   "src/components/precision-workspaces.tsx",
   "src/components/precision-media.tsx",
   "src/app/tracker-app.tsx",
+  "src/features/routes/remaining-routes.tsx",
 ];
 
 const forbidden = [
@@ -55,11 +56,15 @@ for (const file of authenticatedPresentationFiles) {
 }
 
 const trackerSource = readFileSync("src/app/tracker-app.tsx", "utf8");
+const routeSource = readFileSync(
+  "src/features/routes/remaining-routes.tsx",
+  "utf8"
+);
 if (/function PageFrame\(/.test(trackerSource)) {
   failures.push("src/app/tracker-app.tsx still defines the retired PageFrame wrapper.");
 }
 for (const slot of ["conversation-header", "conversation-history", "conversation-composer"]) {
-  if (!trackerSource.includes(`data-slot="${slot}"`)) {
+  if (!routeSource.includes(`data-slot="${slot}"`)) {
     failures.push(`Team Chat is missing the shared ${slot} region.`);
   }
 }

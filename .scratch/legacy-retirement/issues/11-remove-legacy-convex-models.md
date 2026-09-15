@@ -27,8 +27,10 @@ now requires `enabled` and all current test fixtures write it.
 
 Verification evidence: local Convex typecheck via `pnpm lint`, focused Convex
 and persistence suite with 55 tests passing, `pnpm verify:team`, and
-`pnpm build` passing. Source search finds no retired Convex table, field,
-fallback reader, or removed migration reference under `convex/` or `src/`.
+`pnpm build` passing. The full local Vitest suite now passes 17 files and 92
+tests after updating the rebuilt hosted-file fixture to provision the current
+workspace model. Source search finds no retired Convex table, field, fallback
+reader, or removed migration reference under `convex/` or `src/`.
 
 Production schema verification and deployment were not run. They require
 explicit approval for the exact target and operation.

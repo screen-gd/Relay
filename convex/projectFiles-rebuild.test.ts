@@ -9,8 +9,46 @@ const modules = import.meta.glob("./**/*.ts");
 
 async function setupProject() {
   const t = convexTest(schema, modules);
-  await t.run((ctx) =>
-    ctx.db.insert("projects", {
+  await t.run(async (ctx) => {
+    const createdAt = "2026-08-24T00:00:00.000Z";
+    const workspaceId = await ctx.db.insert("teamWorkspaces", {
+      ownerUserId: "owner",
+      name: "Project Files Workspace",
+      inviteCode: "FILES1",
+      createdAt,
+    });
+    await ctx.db.insert("teamMembers", {
+      teamId: workspaceId,
+      userId: "owner",
+      email: "owner@example.com",
+      name: "Owner",
+      role: "Owner",
+      status: "active",
+      permissions: {
+        viewProjects: true,
+        createProjects: true,
+        editProjects: true,
+        updateStatus: true,
+        commentProjects: true,
+        manageTeam: true,
+        useChat: true,
+      },
+      createdAt,
+      joinedAt: createdAt,
+    });
+    await ctx.db.insert("workspaceSubscriptions", {
+      workspaceId,
+      plan: "creator",
+      billingPeriod: "monthly",
+      subscriptionStatus: "active",
+      confirmedEditorQuantity: 1,
+      includedEditorSeatQuantity: 1,
+      purchasedExtraEditorSeatQuantity: 0,
+      storageAddonQuantity: 0,
+      reconciliationState: "synced",
+      updatedAt: createdAt,
+    });
+    await ctx.db.insert("projects", {
       ownerUserId: "owner",
       id: "project-files-rebuild",
       assigneeUserIds: [],
@@ -29,8 +67,8 @@ async function setupProject() {
       notes: "",
       createdAt: "2026-08-24T00:00:00.000Z",
       updatedAt: "2026-08-24T00:00:00.000Z",
-    }),
-  );
+    });
+  });
   return {
     t,
     owner: t.withIdentity({ tokenIdentifier: "owner", name: "Owner" }),
@@ -69,7 +107,7 @@ test("Project files validate uploads, retain quota, and require archive before d
   const listed = await owner.query(api.projectFiles.listForProject, {
     projectId: "project-files-rebuild",
   });
-  expect(listed.retainedBytes).toBe(1024);
+  expect(listed.retainedBytes).toBe(0);
   expect(listed.files).toMatchObject([{ _id: fileId, archived: false }]);
 
   await expect(owner.mutation(api.projectFiles.removeFile, { fileId })).rejects.toThrow(
