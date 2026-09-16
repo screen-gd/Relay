@@ -1,10 +1,12 @@
 import { v } from "convex/values";
 import {
+  internalMutation,
   mutation,
   query,
   type MutationCtx,
   type QueryCtx,
 } from "./_generated/server";
+import { internal } from "./_generated/api";
 import type { Doc } from "./_generated/dataModel";
 import {
   insertPendingFreeProjection,
@@ -25,6 +27,7 @@ import {
 } from "../src/lib/timecode";
 
 const MAX_WORKSPACE_MEMBERS = 500;
+const NOTIFICATION_READ_BATCH_SIZE = 50;
 const TEAM_WORKSPACE_NAME_LIMIT = 80;
 const TEAM_PERMISSION_KEYS = [
   "viewProjects",
@@ -1088,25 +1091,43 @@ export const markNotificationRead = mutation({
   },
 });
 
+async function markNotificationBatch(
+  ctx: MutationCtx,
+  teamId: string,
+  userId: string
+) {
+  const notifications = await ctx.db
+    .query("teamNotifications")
+    .withIndex("by_teamId_and_userId_and_read_and_createdAt", (q) =>
+      q.eq("teamId", teamId).eq("userId", userId).eq("read", false)
+    )
+    .order("desc")
+    .take(NOTIFICATION_READ_BATCH_SIZE);
+  await Promise.all(
+    notifications.map((notification) =>
+      ctx.db.patch(notification._id, { read: true })
+    )
+  );
+  if (notifications.length === NOTIFICATION_READ_BATCH_SIZE) {
+    await ctx.scheduler.runAfter(0, internal.team.markNotificationsReadBatch, {
+      teamId,
+      userId,
+    });
+  }
+}
+
+export const markNotificationsReadBatch = internalMutation({
+  args: { teamId: v.string(), userId: v.string() },
+  handler: async (ctx, args) => {
+    await markNotificationBatch(ctx, args.teamId, args.userId);
+  },
+});
+
 export const markAllNotificationsRead = mutation({
   args: { teamId: v.string() },
   handler: async (ctx, args) => {
     const identity = await requireIdentity(ctx);
     await findActiveMembership(ctx, args.teamId, identity.tokenIdentifier);
-    const notifications = await ctx.db
-      .query("teamNotifications")
-      .withIndex("by_teamId_and_userId_and_read_and_createdAt", (q) =>
-        q
-          .eq("teamId", args.teamId)
-          .eq("userId", identity.tokenIdentifier)
-          .eq("read", false)
-      )
-      .order("desc")
-      .take(50);
-    await Promise.all(
-      notifications.map((notification) =>
-        ctx.db.patch(notification._id, { read: true })
-      )
-    );
+    await markNotificationBatch(ctx, args.teamId, identity.tokenIdentifier);
   },
 });

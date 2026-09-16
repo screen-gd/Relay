@@ -126,3 +126,30 @@ test("the settings migration leaves one canonical account row and preserves clie
     expect(rows[0]?.clients?.map((client) => client.name)).toEqual(["Acme"]);
   });
 });
+
+test("the settings cleanup removes legacy settings fields", async () => {
+  const t = convexTest(schema, modules);
+  migrationsComponent.register(t);
+  const settingsId = await t.run(async (ctx) => {
+    return await ctx.db.insert("settings", {
+      ...settings("Legacy permissions"),
+      userId: `${CANONICAL_TOKEN_PREFIX}user_legacy_permissions`,
+      editorPermissions: { "Create and edit projects": true },
+      integrationAccounts: { Dropbox: "legacy@example.com" },
+      integrations: { Dropbox: true },
+    });
+  });
+
+  await t.run(async (ctx) => {
+    await runToCompletion(
+      ctx,
+      components.migrations,
+      internal.migrations.removeLegacySettingsFields
+    );
+  });
+
+  const row = await t.run(async (ctx) => await ctx.db.get(settingsId));
+  expect(row).not.toHaveProperty("editorPermissions");
+  expect(row).not.toHaveProperty("integrationAccounts");
+  expect(row).not.toHaveProperty("integrations");
+});

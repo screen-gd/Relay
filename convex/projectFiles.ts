@@ -39,6 +39,7 @@ const MAX_PROJECT_VERSIONS = 500;
 const MAX_VERSIONS_PER_FILE = 20;
 const MAX_FILE_BYTES = 20_000_000;
 const UPLOAD_RESERVATION_MS = 15 * 60 * 1000;
+const MULTIPLE_WORKSPACES = "multiple" as const;
 type FileActivityKind = ProjectActivityKind & TeamActivityKind;
 
 type ProjectRecord = Pick<
@@ -57,7 +58,7 @@ async function requireFileUploadCapability(
   project: ProjectRecord
 ) {
   const workspaceId = await workspaceIdForProject(ctx, project);
-  if (!workspaceId)
+  if (!workspaceId || workspaceId === MULTIPLE_WORKSPACES)
     throw new Error("Select one Workspace before using hosted storage");
   const entitlement = await requireWorkspaceCapability(
     ctx,
@@ -81,9 +82,8 @@ async function workspaceIdForProject(
       q.eq("userId", project.ownerUserId).eq("status", "active")
     )
     .take(2);
+  if (memberships.length > 1) return MULTIPLE_WORKSPACES;
   if (memberships.length === 0) return null;
-  if (memberships.length !== 1)
-    throw new Error("Select one Workspace before using hosted storage");
   const workspaceId = ctx.db.normalizeId(
     "teamWorkspaces",
     memberships[0].teamId
@@ -453,6 +453,15 @@ export const listForProject = query({
       args.projectId,
       "viewProjects"
     );
+    const workspaceId = await workspaceIdForProject(ctx, project);
+    if (workspaceId === MULTIPLE_WORKSPACES) {
+      return {
+        retainedBytes: 0,
+        workspaceLimitBytes: 0,
+        files: [],
+        uploadHistory: [],
+      };
+    }
     const [files, versions] = await Promise.all([
       ctx.db
         .query("projectFiles")
@@ -491,7 +500,6 @@ export const listForProject = query({
         notes: version.notes,
       }))
     );
-    const workspaceId = await workspaceIdForProject(ctx, project);
     const subscription = workspaceId
       ? await ctx.db
           .query("workspaceSubscriptions")
@@ -1014,7 +1022,7 @@ export const removeFile = mutation({
     );
     if (retainedBytes > 0) {
       const workspaceId = await workspaceIdForProject(ctx, project);
-      if (!workspaceId)
+      if (!workspaceId || workspaceId === MULTIPLE_WORKSPACES)
         throw new Error("Select one Workspace before using hosted storage");
       const subscription = await ctx.db
         .query("workspaceSubscriptions")

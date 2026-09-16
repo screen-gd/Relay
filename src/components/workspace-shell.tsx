@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  Accessibility,
   Bell,
   CalendarDays,
   ChartNoAxesCombined,
@@ -15,14 +16,15 @@ import {
   Library,
   LogIn,
   LogOut,
+  Mail,
   MessageSquareText,
   MoreHorizontal,
-  PanelLeftClose,
-  PanelLeftOpen,
   Plus,
   Search,
   Settings,
   Sparkles,
+  ShieldCheck,
+  ScrollText,
   Users,
   UsersRound,
   UserPlus,
@@ -229,12 +231,17 @@ const mobileRoutes: RouteItem[] = [
   allRoutes.find((route) => route.page === "clients")!,
 ];
 
+const compactSupportLinks = [
+  { label: "Contact", href: "/contact", icon: Mail },
+  { label: "Privacy", href: "/privacy", icon: ShieldCheck },
+  { label: "Terms", href: "/terms", icon: ScrollText },
+  { label: "Accessibility", href: "/accessibility", icon: Accessibility },
+] as const;
+
 const shellTransition = {
   duration: 0.22,
   ease: [0.22, 1, 0.36, 1] as const,
 };
-
-let desktopSidebarCollapsed = false;
 
 const quickRouteShortcuts: Record<string, string> = {
   d: "/",
@@ -292,11 +299,6 @@ export function WorkspaceShell({
   const commandReturnFocusRef = useRef<HTMLElement | null>(null);
   const reduceMotion = useHydratedReducedMotion();
   const router = useRouter();
-  const [collapsed, setCollapsedState] = useState(desktopSidebarCollapsed);
-  const setCollapsed = (next: boolean) => {
-    desktopSidebarCollapsed = next;
-    setCollapsedState(next);
-  };
   const openCommand = () => {
     if (document.activeElement instanceof HTMLElement) {
       commandReturnFocusRef.current = document.activeElement;
@@ -365,24 +367,10 @@ export function WorkspaceShell({
         page={page}
         starterNavigation={starterNavigation}
         showTeamNavigation={showTeamNavigation}
-        collapsed={collapsed}
-        onCollapsedChange={setCollapsed}
       />
 
-      <div
-        className={cn(
-          "min-h-dvh transition-[padding] ease-[cubic-bezier(0.22,1,0.36,1)]",
-          reduceMotion ? "duration-0" : "duration-[220ms]",
-          collapsed ? "lg:pl-[52px]" : "lg:pl-[216px]"
-        )}
-      >
-        <header
-          className={cn(
-            "fixed inset-x-0 top-0 z-30 flex h-[54px] items-center bg-[var(--app-sidebar)] px-2.5 transition-[left] ease-[cubic-bezier(0.22,1,0.36,1)] lg:justify-between lg:px-3",
-            reduceMotion ? "duration-0" : "duration-[220ms]",
-            collapsed ? "lg:left-[52px]" : "lg:left-[216px]"
-          )}
-        >
+      <div className="min-h-dvh lg:pl-[52px]">
+        <header className="fixed inset-x-0 top-0 z-30 flex h-[54px] items-center bg-[var(--app-sidebar)] px-2.5 lg:left-[52px] lg:justify-between lg:px-3">
           <div className="flex h-full min-w-0 flex-1 items-center gap-2 lg:flex-none">
             <RelayBrand compact className="lg:hidden" />
             <p className="truncate text-sm font-semibold lg:hidden">{title}</p>
@@ -402,7 +390,7 @@ export function WorkspaceShell({
 
           <Button
             variant="outline"
-            className="absolute left-1/2 top-1/2 hidden h-9 w-[220px] -translate-x-1/2 -translate-y-1/2 justify-start rounded-lg border-[var(--app-border)] !bg-[var(--app-control)] px-2.5 text-xs text-[var(--app-muted)] shadow-none hover:bg-[var(--app-hover)] lg:flex"
+            className="absolute left-1/2 top-1/2 hidden h-9 w-[220px] -translate-x-1/2 -translate-y-1/2 justify-start rounded-lg border-[var(--app-border)] !bg-[var(--app-control)] px-2.5 text-xs text-[var(--app-muted)] shadow-none hover:bg-[var(--app-hover)] active:-translate-y-1/2 active:scale-100 lg:flex"
             onClick={openCommand}
             aria-label="Quick Search (Ctrl K)"
           >
@@ -452,11 +440,7 @@ export function WorkspaceShell({
           id="main-content"
           data-testid="workspace-content-surface"
           tabIndex={-1}
-          className={cn(
-            "workspace-scrollbar-hidden h-[calc(100dvh_-_68px_-_env(safe-area-inset-bottom))] overflow-y-auto bg-[var(--app-canvas)] pt-12 outline-none lg:fixed lg:bottom-1.5 lg:right-1.5 lg:top-[54px] lg:h-auto lg:min-h-0 lg:overscroll-contain lg:rounded-2xl lg:border-x lg:border-b lg:border-[var(--app-border)] lg:pt-0 lg:transition-[left] lg:ease-[cubic-bezier(0.22,1,0.36,1)]",
-            reduceMotion ? "lg:duration-0" : "lg:duration-[220ms]",
-            collapsed ? "lg:left-[58px]" : "lg:left-[222px]"
-          )}
+          className="workspace-scrollbar-hidden h-[calc(100dvh_-_68px_-_env(safe-area-inset-bottom))] overflow-y-auto bg-[var(--app-canvas)] pt-12 outline-none lg:fixed lg:bottom-1.5 lg:right-1.5 lg:top-[54px] lg:left-[58px] lg:h-auto lg:min-h-0 lg:overscroll-contain lg:rounded-2xl lg:border lg:border-[var(--app-border)] lg:pt-0"
         >
           <div className="min-h-full lg:h-full">{children}</div>
         </main>
@@ -497,16 +481,11 @@ function DesktopSidebar({
   page,
   starterNavigation,
   showTeamNavigation,
-  collapsed,
-  onCollapsedChange,
 }: {
   page: ShellPage;
   starterNavigation: boolean;
   showTeamNavigation: boolean;
-  collapsed: boolean;
-  onCollapsedChange: (collapsed: boolean) => void;
 }) {
-  const reduceMotion = useHydratedReducedMotion();
   const [showAllTools, setShowAllTools] = useState(false);
   const availableGroups = routeGroups
     .map((group) => ({
@@ -531,32 +510,9 @@ function DesktopSidebar({
       : availableGroups;
 
   return (
-    <motion.aside
-      initial={false}
-      animate={{ width: collapsed ? 52 : 216 }}
-      transition={reduceMotion ? { duration: 0 } : shellTransition}
-      className="fixed inset-y-0 left-0 z-40 hidden overflow-hidden bg-[var(--app-sidebar)] lg:flex lg:flex-col"
-    >
-      <div
-        className={cn(
-          "grid h-[54px] grid-cols-1 items-center justify-items-center bg-[var(--app-sidebar)] px-1.5"
-        )}
-      >
-        <div
-          className={cn(
-            "flex h-full w-full items-center",
-            collapsed ? "justify-center" : "px-2"
-          )}
-        >
-          <motion.div
-            initial={false}
-            animate={{ opacity: collapsed ? 0.88 : 1 }}
-            transition={reduceMotion ? { duration: 0 } : shellTransition}
-            className={cn("shrink-0", collapsed ? "mx-auto" : "mr-auto")}
-          >
-            <RelayBrand variant={collapsed ? "mark" : "lockup"} compact />
-          </motion.div>
-        </div>
+    <aside className="fixed inset-y-0 left-0 z-40 hidden w-[52px] overflow-hidden bg-[var(--app-sidebar)] lg:flex lg:flex-col">
+      <div className="grid h-[54px] grid-cols-1 items-center justify-items-center bg-[var(--app-sidebar)] px-1.5">
+        <RelayBrand variant="mark" compact />
       </div>
 
       <nav
@@ -565,133 +521,104 @@ function DesktopSidebar({
       >
         {visibleGroups.map((group, groupIndex) => (
           <div key={group.label} className="mb-2.5">
-            {!collapsed ? (
-              <motion.p
-                initial={reduceMotion ? false : { opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={reduceMotion ? { duration: 0 } : shellTransition}
-                className="mb-1.5 px-2 text-[9px] font-semibold uppercase tracking-[0.08em] text-[var(--app-subtle)]"
-              >
-                {group.label}
-              </motion.p>
-            ) : (
-              <div
-                className="mb-1 flex h-2 items-center justify-center"
-                aria-hidden="true"
-              >
-                {groupIndex > 0 ? (
-                  <span className="h-px w-8 bg-[var(--app-border)]" />
-                ) : null}
-              </div>
-            )}
+            <SidebarGroupLabel label={group.label} groupIndex={groupIndex} />
             <div className="space-y-0.5">
               {group.items.map((item) => (
                 <SidebarRoute
                   key={item.page}
                   item={item}
                   active={routeIsActive(page, item)}
-                  collapsed={collapsed}
-                  reduceMotion={reduceMotion}
                 />
               ))}
             </div>
           </div>
         ))}
         {starterNavigation ? (
-          <Button
-            type="button"
-            variant="ghost"
-            className={cn(
-              "mt-1 flex min-h-9 w-full items-center rounded-md text-xs font-semibold text-[var(--app-muted)] outline-none hover:bg-[var(--app-hover)] hover:text-[var(--app-ink)] focus-visible:ring-2 focus-visible:ring-[var(--app-accent)]",
-              collapsed ? "justify-center" : "gap-2 px-2.5"
-            )}
-            onClick={() => setShowAllTools((value) => !value)}
-            aria-expanded={showAllTools}
-          >
-            <MoreHorizontal className="size-4" />
-            {collapsed ? (
-              <span className="sr-only">
-                {showAllTools ? "Show starter tools" : "Show all tools"}
-              </span>
-            ) : showAllTools ? (
-              "Show starter tools"
-            ) : (
-              "Show all tools"
-            )}
-          </Button>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                type="button"
+                variant="ghost"
+                className="mt-1 flex min-h-9 w-full items-center justify-center rounded-md px-0 text-xs font-semibold text-[var(--app-muted)] outline-none hover:bg-[var(--app-hover)] hover:text-[var(--app-ink)] focus-visible:ring-2 focus-visible:ring-[var(--app-accent)]"
+                onClick={() => setShowAllTools((value) => !value)}
+                aria-expanded={showAllTools}
+                aria-label={
+                  showAllTools ? "Show starter tools" : "Show all tools"
+                }
+              >
+                <MoreHorizontal className="size-4" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent side="right">
+              {showAllTools ? "Show starter tools" : "Show all tools"}
+            </TooltipContent>
+          </Tooltip>
         ) : null}
       </nav>
-
-      <div className="border-t border-[var(--app-border)] p-1.5">
-        {!collapsed ? (
-          <footer className="mb-2 border-b border-[var(--app-border)] px-2 pb-2 text-[11px] leading-5 text-[var(--app-subtle)]">
-            <nav
-              aria-label="Support and legal"
-              className="flex flex-wrap gap-x-3 gap-y-1"
-            >
-              <Link className="hover:text-[var(--app-ink)]" href="/contact">
-                Contact
-              </Link>
-              <Link className="hover:text-[var(--app-ink)]" href="/privacy">
-                Privacy
-              </Link>
-              <Link className="hover:text-[var(--app-ink)]" href="/terms">
-                Terms
-              </Link>
-              <Link
-                className="hover:text-[var(--app-ink)]"
-                href="/accessibility"
-              >
-                Accessibility
-              </Link>
-            </nav>
-            <p className="mt-1">© {new Date().getFullYear()} Relay</p>
-          </footer>
-        ) : null}
-        <Button
-          type="button"
-          variant="ghost"
-          className={cn(
-            "flex min-h-9 w-full items-center rounded-md text-xs font-semibold text-[var(--app-muted)] outline-none hover:bg-[var(--app-hover)] hover:text-[var(--app-ink)] focus-visible:ring-2 focus-visible:ring-[var(--app-accent)]",
-            collapsed ? "justify-center px-0" : "gap-2.5 px-2.5"
-          )}
-          onClick={() => onCollapsedChange(!collapsed)}
-          aria-label={collapsed ? "Expand navigation" : "Collapse navigation"}
-          aria-expanded={!collapsed}
-        >
-          {collapsed ? (
-            <PanelLeftOpen className="size-4" />
-          ) : (
-            <PanelLeftClose className="size-4" />
-          )}
-          {!collapsed ? <span>Collapse sidebar</span> : null}
-        </Button>
-      </div>
-    </motion.aside>
+      <footer className="border-t border-[var(--app-border)] p-1.5">
+        <nav aria-label="Support and legal" className="grid gap-0.5">
+          {compactSupportLinks.map(({ label, href, icon: Icon }) => (
+            <Tooltip key={label}>
+              <TooltipTrigger asChild>
+                <Link
+                  href={href}
+                  aria-label={label}
+                  className="flex h-8 w-full items-center justify-center rounded-md text-[var(--app-muted)] outline-none transition-[background-color,color] duration-150 hover:bg-[var(--app-hover)] hover:text-[var(--app-ink)] focus-visible:ring-2 focus-visible:ring-[var(--app-accent)] focus-visible:ring-inset"
+                >
+                  <Icon className="size-4" strokeWidth={1.8} />
+                </Link>
+              </TooltipTrigger>
+              <TooltipContent side="right">{label}</TooltipContent>
+            </Tooltip>
+          ))}
+        </nav>
+      </footer>
+    </aside>
   );
 }
 
-function SidebarRoute({
-  item,
-  active,
-  collapsed,
-  reduceMotion,
+function SidebarGroupLabel({
+  label,
+  groupIndex,
 }: {
-  item: RouteItem;
-  active: boolean;
-  collapsed: boolean;
-  reduceMotion: boolean | null;
+  label: string;
+  groupIndex: number;
 }) {
+  const heading = (
+    <div
+      role="heading"
+      aria-level={2}
+      aria-label={label}
+      className="relative mb-1.5 flex h-3.5 items-center justify-center overflow-hidden text-[9px] font-semibold uppercase leading-none tracking-[0.08em] text-[var(--app-subtle)]"
+    >
+      {groupIndex > 0 ? (
+        <span
+          aria-hidden="true"
+          className="pointer-events-none absolute h-px w-8 bg-[var(--app-border)]"
+        />
+      ) : null}
+    </div>
+  );
+
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>{heading}</TooltipTrigger>
+      <TooltipContent side="right">{label}</TooltipContent>
+    </Tooltip>
+  );
+}
+
+function SidebarRoute({ item, active }: { item: RouteItem; active: boolean }) {
   const Icon = item.icon;
 
   const link = (
     <Link
       href={item.href}
-      aria-label={collapsed ? item.label : undefined}
+      aria-label={item.label}
       aria-current={active ? "page" : undefined}
       className={cn(
         "group relative flex h-8 items-center overflow-hidden rounded-lg text-[12px] font-medium outline-none transition-[background-color,color] duration-150 ease-out focus-visible:ring-2 focus-visible:ring-[var(--app-accent)] focus-visible:ring-inset",
-        collapsed ? "mx-auto w-9 justify-center px-0" : "gap-2 px-2",
+        "mx-auto w-9 justify-center px-0",
         active
           ? "bg-[var(--app-active)] text-[var(--app-ink)]"
           : "text-[var(--app-muted)] hover:bg-[var(--app-hover)] hover:text-[var(--app-ink)]"
@@ -705,20 +632,9 @@ function SidebarRoute({
       >
         <Icon className="size-4" strokeWidth={active ? 2.1 : 1.8} />
       </span>
-      {!collapsed ? (
-        <motion.span
-          initial={reduceMotion ? false : { opacity: 0, x: -4 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={reduceMotion ? { duration: 0 } : shellTransition}
-          className="relative z-10 truncate"
-        >
-          {item.label}
-        </motion.span>
-      ) : null}
     </Link>
   );
 
-  if (!collapsed) return link;
   return (
     <Tooltip>
       <TooltipTrigger asChild>{link}</TooltipTrigger>
@@ -754,7 +670,7 @@ function ProfileMenu({
           type="button"
           variant="ghost"
           className={cn(
-            "flex items-center rounded-md text-left outline-none transition-[background-color,box-shadow] hover:bg-[var(--app-hover)] focus-visible:ring-2 focus-visible:ring-[var(--app-accent)]",
+            "group flex items-center rounded-md text-left outline-none transition-[background-color,box-shadow] hover:bg-[var(--app-hover)] active:translate-y-0 active:scale-100 focus-visible:ring-2 focus-visible:ring-[var(--app-accent)] data-[state=open]:bg-[var(--app-active)]",
             compact
               ? "h-9 w-9 justify-center p-0"
               : collapsed
@@ -763,8 +679,12 @@ function ProfileMenu({
           )}
           aria-label="Open profile menu"
         >
-          <Avatar className="size-8 border border-[var(--app-border)]">
-            <AvatarImage src={settings.profileImageUrl || undefined} alt="" />
+          <Avatar className="size-8 border border-[var(--app-strong-border)] bg-[var(--app-avatar-surface)] ring-1 ring-transparent transition-[border-color,box-shadow] group-data-[state=open]:border-[var(--app-accent)]">
+            <AvatarImage
+              src={settings.profileImageUrl || undefined}
+              alt={name}
+              className="object-cover"
+            />
             <AvatarFallback className="bg-[var(--app-avatar-surface)] text-[11px] font-semibold text-[var(--app-ink)]">
               {initials(name)}
             </AvatarFallback>

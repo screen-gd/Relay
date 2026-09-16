@@ -1,7 +1,7 @@
 /// <reference types="vite/client" />
 
 import { convexTest } from "convex-test";
-import { describe, expect, test } from "vitest";
+import { describe, expect, test, vi } from "vitest";
 import { api } from "./_generated/api";
 import schema from "./schema";
 
@@ -193,19 +193,25 @@ describe("team workspace permissions and synchronization", () => {
   test("mark all notifications reads the full unread batch", async () => {
     const { t, teamId, owner } = await setupTeam();
     await t.run(async (ctx) => {
-      for (let index = 0; index < 2; index += 1) {
+      for (let index = 0; index < 55; index += 1) {
         await ctx.db.insert("teamNotifications", {
           teamId,
           userId: "test|owner",
           kind: "project_update",
           message: `Unread notification ${index}`,
           read: false,
-          createdAt: `2026-06-10T12:0${index}:00.000Z`,
+          createdAt: new Date(Date.UTC(2026, 5, 10, 12, index)).toISOString(),
         });
       }
     });
 
-    await owner.mutation(api.team.markAllNotificationsRead, { teamId });
+    vi.useFakeTimers();
+    try {
+      await owner.mutation(api.team.markAllNotificationsRead, { teamId });
+      await t.finishAllScheduledFunctions(() => vi.runAllTimers());
+    } finally {
+      vi.useRealTimers();
+    }
 
     const unread = await t.run((ctx) =>
       ctx.db
@@ -213,7 +219,7 @@ describe("team workspace permissions and synchronization", () => {
         .withIndex("by_teamId_and_userId_and_read_and_createdAt", (q) =>
           q.eq("teamId", teamId).eq("userId", "test|owner").eq("read", false)
         )
-        .take(10)
+        .take(100)
     );
     expect(unread).toHaveLength(0);
   });

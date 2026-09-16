@@ -309,6 +309,23 @@ export const migrateSettingsIdentityV2 = migrations.define({
   },
 });
 
+export const removeLegacySettingsFields = migrations.define({
+  table: "settings",
+  migrateOne: async (ctx, doc) => {
+    if (
+      doc.editorPermissions !== undefined ||
+      doc.integrationAccounts !== undefined ||
+      doc.integrations !== undefined
+    ) {
+      await ctx.db.patch(doc._id, {
+        editorPermissions: undefined,
+        integrationAccounts: undefined,
+        integrations: undefined,
+      });
+    }
+  },
+});
+
 export const migrateResourceLinksIdentityV2 = migrations.define({
   table: "resourceLinks",
   migrateOne: async (ctx, doc) => {
