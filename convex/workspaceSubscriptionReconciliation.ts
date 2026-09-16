@@ -94,12 +94,12 @@ async function reconcileCurrentHandler(
 ): Promise<ReconciliationResult> {
   const identity = await ctx.auth.getUserIdentity();
   if (!identity) throw new Error("Not authenticated");
-  const canReconcile: boolean = await ctx.runQuery(
-    internal.workspaceSubscriptions.canReconcileCurrent,
-    {}
-  );
-  if (!canReconcile)
+  const reconciliationAccess: { isOwner: boolean; isLinked: boolean } =
+    await ctx.runQuery(internal.workspaceSubscriptions.canReconcileCurrent, {});
+  if (!reconciliationAccess.isOwner)
     throw new Error("Only the Workspace Owner can reconcile billing");
+  if (!reconciliationAccess.isLinked)
+    throw new Error("Billing must be repaired first");
   const eventAtFallback = new Date().toISOString();
   const confirmation = parseAuthoritativeSubscription(
     await clerkSubscriptionForUser(identity.subject),

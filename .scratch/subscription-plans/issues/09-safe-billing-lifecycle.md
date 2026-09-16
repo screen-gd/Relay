@@ -14,7 +14,7 @@
 - [x] Downgrades never delete files or Team Members.
 - [x] Over-quota Workspaces keep read access but cannot upload until compliant.
 - [x] Over-seat Workspaces keep existing members but cannot invite or promote Editors until compliant.
-- [x] Ownership transfer relinks billing safely to the new Owner's Clerk user.
+- [x] Ownership transfer detaches the former Owner's billing link, preserves Workspace data, requires the new Owner to complete authenticated repair before relinking billing to the new Owner's Clerk user, and neither transfers nor cancels the former Owner's external paid subscription.
 - [ ] Tests cover retries, replays, missed events, reconciliation, state ordering, and every lifecycle transition.
 - [ ] Type checking, billing-event tests, and relevant Convex tests pass.
 

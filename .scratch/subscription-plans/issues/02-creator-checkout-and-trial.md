@@ -8,11 +8,9 @@
 
 ## September 16 decision
 
-September 18 launches Free only. Razorpay is the future payment provider; Clerk
-remains authentication. The Clerk checkout scope and checklist below are
-superseded implementation history. Do not connect Stripe or enable Clerk Billing.
-Before this ticket resumes, replace its acceptance criteria with an approved
-Razorpay checkout, subscription mapping, currency, trial, and webhook design.
+September 18 launches Free only. Launch acceptance must not depend on Stripe,
+Clerk pricing or trials, or a signed Clerk webhook. Razorpay checkout and
+paid-plan verification remain deferred.
 
 - [x] Clerk development has Free and Creator User plans with stable Relay slugs.
 - [ ] Creator production prices and trial terms receive a final review before checkout opens.

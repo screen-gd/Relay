@@ -462,14 +462,19 @@ export const confirmForClerkUser = internalMutation({
 
 export const canReconcileCurrent = internalQuery({
   args: {},
-  returns: v.boolean(),
+  returns: v.object({ isOwner: v.boolean(), isLinked: v.boolean() }),
   handler: async (ctx) => {
     const identity = await ctx.auth.getUserIdentity();
-    if (!identity) return false;
+    if (!identity) return { isOwner: false, isLinked: false };
     const current = await currentWorkspace(ctx, identity.tokenIdentifier);
-    if (!current || current.membership.role !== "Owner") return false;
+    if (!current || current.membership.role !== "Owner") {
+      return { isOwner: false, isLinked: false };
+    }
     const projection = await projectionForWorkspace(ctx, current.workspace._id);
-    return projection?.clerkUserId === identity.subject;
+    return {
+      isOwner: true,
+      isLinked: projection?.clerkUserId === identity.subject,
+    };
   },
 });
 

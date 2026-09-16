@@ -117,8 +117,12 @@ function confirmationFromParts(
   const responseUserId = stringValue(
     payer?.user_id,
     payer?.userId,
+    value.payerId,
+    value.payer_id,
     itemPayer?.user_id,
-    itemPayer?.userId
+    itemPayer?.userId,
+    item.payerId,
+    item.payer_id
   );
   const clerkUserId = responseUserId ?? requestedUserId;
   if (!clerkUserId) return null;
@@ -130,6 +134,7 @@ function confirmationFromParts(
       ? "annual"
       : "monthly";
   const status = stringValue(statusOverride, item.status) ?? "";
+  if (!plan.isDefault && !status) return null;
   const currentItemStatus = itemStatus(item);
   const effectiveStatus =
     [
@@ -185,15 +190,23 @@ export function clerkUserIdFromBillingEvent(event: unknown) {
   const data = event.data;
   const payer = recordValue(data.payer);
   const items = arrayValue(data.items, data.subscription_items);
+  const itemRecords = items?.filter(isRecord) ?? [];
   const itemPayer =
-    items
-      ?.map((item) => (isRecord(item) ? recordValue(item.payer) : null))
-      .find((item): item is Record<string, unknown> => item !== null) ?? null;
+    itemRecords
+      .map((item) => recordValue(item.payer))
+      .find((item): item is Record<string, unknown> => item !== undefined) ??
+    null;
+  const itemPayerId = itemRecords
+    .map((item) => stringValue(item.payerId, item.payer_id))
+    .find((payerId): payerId is string => payerId !== undefined);
   return stringValue(
     payer?.user_id,
     payer?.userId,
+    data.payerId,
+    data.payer_id,
     itemPayer?.user_id,
-    itemPayer?.userId
+    itemPayer?.userId,
+    itemPayerId
   );
 }
 

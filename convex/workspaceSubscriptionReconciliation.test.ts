@@ -43,12 +43,12 @@ async function createWorkspace(
 function creatorSubscription(overrides: Record<string, unknown> = {}) {
   return {
     id: "sub_creator",
-    payerId: "opaque_payer_id",
+    payerId: "owner",
     status: "active",
     updatedAt: Date.parse("2026-09-03T00:00:00.000Z"),
     subscriptionItems: [
       {
-        payerId: "opaque_payer_id",
+        payerId: "owner",
         status: "active",
         planPeriod: "month",
         periodStart: Date.parse("2026-09-03T00:00:00.000Z"),
@@ -137,6 +137,35 @@ describe("authenticated billing reconciliation", () => {
     expect(clerkBillingMock.getUserBillingSubscription).not.toHaveBeenCalled();
   });
 
+  test("requires billing repair before an unlinked new Owner can reconcile", async () => {
+    const t = convexTest(schema, modules);
+    const workspaceId = await createWorkspace(t);
+    const nextOwnerId = await t.run((ctx) =>
+      ctx.db.insert("teamMembers", {
+        teamId: workspaceId,
+        userId: "test|next-owner",
+        email: "next-owner@example.com",
+        name: "Next Owner",
+        role: "Editor",
+        status: "active",
+        permissions: {},
+        createdAt: "2026-09-03T00:00:00.000Z",
+      })
+    );
+    await asUser(t, "owner").mutation(api.team.transferOwnership, {
+      teamId: workspaceId,
+      memberId: nextOwnerId,
+    });
+
+    await expect(
+      asUser(t, "next-owner").action(
+        api.workspaceSubscriptionReconciliation.reconcileCurrent,
+        {}
+      )
+    ).rejects.toThrow("Billing must be repaired first");
+    expect(clerkBillingMock.getUserBillingSubscription).not.toHaveBeenCalled();
+  });
+
   test("maps a missing Backend API subscription to confirmed Free", async () => {
     const t = convexTest(schema, modules);
     await createWorkspace(t);
@@ -155,11 +184,11 @@ describe("authenticated billing reconciliation", () => {
     ).resolves.toMatchObject({ plan: "free", subscriptionStatus: "free" });
   });
 
-  test("rejects an explicit response payer mismatch", async () => {
+  test("rejects a Backend API top-level payer mismatch", async () => {
     const t = convexTest(schema, modules);
     await createWorkspace(t);
     clerkBillingMock.getUserBillingSubscription.mockResolvedValue(
-      creatorSubscription({ payer: { user_id: "another-user" } })
+      creatorSubscription({ payerId: "another-user" })
     );
 
     await expect(

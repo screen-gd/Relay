@@ -1318,6 +1318,7 @@ export function TemplatesDesignPage({
   );
 
   function openBuilder(template?: ProjectTemplate) {
+    if (customTemplatesLocked) return;
     setTemplateError("");
     setTemplateForm(
       template ? templateToForm(template) : { ...emptyTemplateForm, id: "" }
@@ -1327,6 +1328,7 @@ export function TemplatesDesignPage({
 
   function saveTemplate(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (customTemplatesLocked) return;
     if (!templateForm.name.trim()) return;
     const previousTemplate = customTemplates.find(
       (template) => template.id === templateForm.id
@@ -1378,6 +1380,7 @@ export function TemplatesDesignPage({
   }
 
   function deleteTemplate(templateId: string) {
+    if (customTemplatesLocked) return;
     if (items.some((item) => item.templateId === templateId)) {
       setTemplateError(
         "This template is in use. Reassign its Projects before deleting it."
@@ -1393,6 +1396,7 @@ export function TemplatesDesignPage({
   }
 
   function copyTemplate(template: ProjectTemplate) {
+    if (customTemplatesLocked) return;
     const copy = {
       ...template,
       id: `custom-copy-${Date.now().toString(36)}`,
@@ -1413,6 +1417,7 @@ export function TemplatesDesignPage({
   }
 
   function archiveTemplate(template: SavedProjectTemplate) {
+    if (customTemplatesLocked) return;
     setSettings((current) => ({
       ...current,
       customProjectTemplates: current.customProjectTemplates.map((item) =>
@@ -1433,7 +1438,7 @@ export function TemplatesDesignPage({
               type="button"
               variant="outline"
               onClick={() => openBuilder()}
-              disabled={!canManageTemplates}
+              disabled={!canManageTemplates || customTemplatesLocked}
             >
               <Plus aria-hidden="true" />
               Custom Template
@@ -1585,7 +1590,10 @@ export function TemplatesDesignPage({
                   variant="link"
                   className="h-auto p-0"
                   onClick={() => onUseTemplate(template)}
-                  disabled={template.archived}
+                  disabled={
+                    template.archived ||
+                    (customTemplatesLocked && template.custom)
+                  }
                 >
                   Use template
                   <Plus aria-hidden="true" />
@@ -1596,7 +1604,7 @@ export function TemplatesDesignPage({
                   variant="ghost"
                   aria-label={`Copy ${template.name} template`}
                   onClick={() => copyTemplate(template)}
-                  disabled={!canManageTemplates}
+                  disabled={!canManageTemplates || customTemplatesLocked}
                 >
                   <Copy aria-hidden="true" />
                   Copy
@@ -1609,6 +1617,7 @@ export function TemplatesDesignPage({
                       variant="ghost"
                       aria-label={`Edit ${template.name} template`}
                       onClick={() => openBuilder(template)}
+                      disabled={customTemplatesLocked}
                     >
                       <Pencil aria-hidden="true" />
                       Edit
@@ -1618,6 +1627,7 @@ export function TemplatesDesignPage({
                       size="sm"
                       variant="ghost"
                       onClick={() => archiveTemplate(template)}
+                      disabled={customTemplatesLocked}
                     >
                       {template.archived ? "Restore" : "Archive"}
                     </OwnedButton>
@@ -1628,6 +1638,7 @@ export function TemplatesDesignPage({
                       className="text-destructive hover:bg-destructive/10 hover:text-destructive"
                       aria-label={`Delete ${template.name} template`}
                       onClick={() => deleteTemplate(template.id)}
+                      disabled={customTemplatesLocked}
                     >
                       <Trash2 aria-hidden="true" />
                       Delete
@@ -1783,7 +1794,10 @@ export function TemplatesDesignPage({
               >
                 Cancel
               </OwnedButton>
-              <OwnedButton type="submit" disabled={!templateForm.name.trim()}>
+              <OwnedButton
+                type="submit"
+                disabled={customTemplatesLocked || !templateForm.name.trim()}
+              >
                 Save Template
               </OwnedButton>
             </OwnedDialogFooter>

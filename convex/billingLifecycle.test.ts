@@ -96,12 +96,12 @@ describe("Clerk billing parsing", () => {
       parseClerkBillingSubscription(
         {
           id: "sub_creator",
-          payerId: "owner",
+          payerId: "top-level-owner",
           status: "active",
           updatedAt: Date.parse("2026-09-03T00:00:00.000Z"),
           subscriptionItems: [
             {
-              payerId: "owner",
+              payer_id: "item-owner",
               status: "active",
               planPeriod: "month",
               periodStart: Date.parse("2026-09-03T00:00:00.000Z"),
@@ -112,10 +112,10 @@ describe("Clerk billing parsing", () => {
           ],
         },
         "2026-09-01T00:00:00.000Z",
-        "owner"
+        "fallback-owner"
       )
     ).toMatchObject({
-      clerkUserId: "owner",
+      clerkUserId: "top-level-owner",
       clerkPlanId: "creator_plan",
       billingPeriod: "monthly",
       subscriptionStatus: "active",
@@ -200,6 +200,39 @@ describe("Clerk billing parsing", () => {
       clerkPlanId: "free_user",
       subscriptionStatus: "canceled",
     });
+
+    expect(
+      parseClerkBillingEvent(
+        {
+          type: "subscription.updated",
+          data: {
+            payerId: "owner",
+            updatedAt: Date.parse("2026-09-03T00:00:00.000Z"),
+            subscriptionItems: [
+              {
+                payerId: "owner",
+                plan: { slug: "creator_plan", isDefault: false },
+              },
+            ],
+          },
+        },
+        "2026-09-01T00:00:00.000Z"
+      )
+    ).toBeNull();
+
+    expect(
+      parseClerkBillingSubscription(
+        {
+          payerId: "owner",
+          subscriptionItems: [{ plan: { slug: "free_user", isDefault: true } }],
+        },
+        "2026-09-01T00:00:00.000Z",
+        "fallback-owner"
+      )
+    ).toMatchObject({
+      clerkUserId: "owner",
+      subscriptionStatus: "free",
+    });
   });
 });
 
@@ -268,5 +301,54 @@ describe("Clerk billing delivery lifecycle", () => {
           .unique()
       )
     ).resolves.toBeNull();
+  });
+
+  test("does not change a paid projection when billing status is missing", async () => {
+    const t = convexTest(schema, modules);
+    const workspaceId = await createWorkspace(t, "owner");
+    await expect(
+      t.mutation(internal.workspaceSubscriptions.processClerkBillingDelivery, {
+        deliveryId: "delivery_paid",
+        eventType: "subscription.active",
+        receivedAt: "2026-09-03T00:00:00.000Z",
+        confirmation: creatorConfirmation,
+      })
+    ).resolves.toBe("synced");
+
+    const confirmation = parseClerkBillingEvent(
+      {
+        type: "subscription.updated",
+        data: {
+          payerId: "owner",
+          subscriptionItems: [
+            {
+              payerId: "owner",
+              plan: { slug: "creator_plan", isDefault: false },
+            },
+          ],
+        },
+      },
+      "2026-09-04T00:00:00.000Z"
+    );
+    expect(confirmation).toBeNull();
+    await expect(
+      t.mutation(internal.workspaceSubscriptions.processClerkBillingDelivery, {
+        deliveryId: "delivery_missing_status",
+        eventType: "subscription.updated",
+        receivedAt: "2026-09-04T00:00:00.000Z",
+      })
+    ).resolves.toBe("ignored");
+
+    await expect(
+      t.run((ctx) =>
+        ctx.db
+          .query("workspaceSubscriptions")
+          .withIndex("by_workspaceId", (q) => q.eq("workspaceId", workspaceId))
+          .unique()
+      )
+    ).resolves.toMatchObject({
+      plan: "creator",
+      subscriptionStatus: "active",
+    });
   });
 });
