@@ -586,6 +586,8 @@ function SidebarGroupLabel({
 }) {
   const heading = (
     <div
+      role="heading"
+      aria-level={2}
       aria-label={label}
       className="relative mb-1.5 flex h-3.5 items-center justify-center overflow-hidden text-[9px] font-semibold uppercase leading-none tracking-[0.08em] text-[var(--app-subtle)]"
     >

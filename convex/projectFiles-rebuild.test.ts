@@ -205,6 +205,35 @@ test("lists files for a personal project when the owner belongs to multiple Work
       createdAt,
       updatedAt: createdAt,
     });
+    const fileId = await ctx.db.insert("projectFiles", {
+      projectId: "personal-project",
+      ownerUserId: "owner",
+      category: "Asset",
+      title: "Hidden source",
+      description: "",
+      status: "draft",
+      clientVisible: false,
+      downloadable: false,
+      createdByUserId: "owner",
+      createdByName: "Owner",
+      createdAt,
+      updatedAt: createdAt,
+    });
+    await ctx.db.insert("projectFileVersions", {
+      projectId: "personal-project",
+      projectFileId: fileId,
+      versionNumber: 1,
+      status: "draft",
+      provider: "external",
+      externalUrl: "https://example.com/hidden-source.txt",
+      fileName: "hidden-source.txt",
+      mimeType: "text/plain",
+      size: 4,
+      uploadedByUserId: "owner",
+      uploadedByName: "Owner",
+      uploadedAt: createdAt,
+      notes: "",
+    });
     for (const [name, inviteCode] of [
       ["First Workspace", "FIRST1"],
       ["Second Workspace", "SECOND2"],
