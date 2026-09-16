@@ -40,26 +40,26 @@ test("shows section and route names on hover in the compact desktop sidebar", as
   await expect(page.getByRole("tooltip", { name: "Overview" })).toBeVisible();
 });
 
-test("moves the active sidebar indicator between routes", async ({ page }) => {
+test("marks the active sidebar route across navigation", async ({ page }) => {
   await chooseLocalMode(page);
   await openApp(page, "/projects");
 
   const sidebar = page.locator("aside").first();
-  const activeIndicator = '[data-slot="sidebar-active-indicator"]';
-  await expect(
-    sidebar
-      .getByRole("link", { name: "Projects", exact: true })
-      .locator(activeIndicator)
-  ).toBeVisible();
+  const projectsLink = sidebar.getByRole("link", {
+    name: "Projects",
+    exact: true,
+  });
+  await expect(projectsLink).toHaveAttribute("aria-current", "page");
 
-  await sidebar.getByRole("link", { name: "Dashboard", exact: true }).click();
+  const dashboardLink = sidebar.getByRole("link", {
+    name: "Dashboard",
+    exact: true,
+  });
+  await dashboardLink.click();
   await expect(page).toHaveURL("/");
-  await expect(
-    sidebar
-      .getByRole("link", { name: "Dashboard", exact: true })
-      .locator(activeIndicator)
-  ).toBeVisible();
-  await expect(sidebar.locator(activeIndicator)).toHaveCount(1);
+  await expect(dashboardLink).toHaveAttribute("aria-current", "page");
+  await expect(projectsLink).not.toHaveAttribute("aria-current", "page");
+  await expect(sidebar.locator('[aria-current="page"]')).toHaveCount(1);
 });
 
 test("uses balanced workspace density without a Density setting", async ({
@@ -328,10 +328,10 @@ test("uses the Studio Split desktop shell", async ({ page }) => {
   const sidebarBox = await sidebar.boundingBox();
   const topbarBox = await topbar.boundingBox();
   const contentSurfaceBox = await contentSurface.boundingBox();
-  expect(sidebarBox?.width).toBe(240);
-  expect(topbarBox?.height).toBe(48);
-  expect(topbarBox?.x).toBe(240);
-  expect(contentSurfaceBox?.x).toBe(246);
+  expect(sidebarBox?.width).toBe(52);
+  expect(topbarBox?.height).toBe(54);
+  expect(topbarBox?.x).toBe(52);
+  expect(contentSurfaceBox?.x).toBe(58);
   expect(contentSurfaceBox?.y).toBe(54);
   await expect(
     topbar.getByRole("button", { name: "Quick Search (Ctrl K)" })
@@ -377,7 +377,7 @@ test("uses the Studio Split desktop shell", async ({ page }) => {
   expect(surfaces.topbar).toBe(surfaces.sidebar);
   expect(surfaces.sidebarBorder).toBe("0px");
   expect(surfaces.topbarBorder).toBe("0px");
-  expect(parseFloat(surfaces.contentRadius ?? "0")).toBe(6);
+  expect(parseFloat(surfaces.contentRadius ?? "0")).toBe(16);
   expect(surfaces.contentOverflow).toBe("auto");
 
   await contentSurface.evaluate((element) => {
@@ -391,7 +391,7 @@ test("uses the Studio Split desktop shell", async ({ page }) => {
     .poll(() => contentSurface.evaluate((element) => element.scrollTop))
     .toBeGreaterThan(0);
   const scrolledSurfaceBox = await contentSurface.boundingBox();
-  expect(scrolledSurfaceBox?.x).toBe(246);
+  expect(scrolledSurfaceBox?.x).toBe(58);
   expect(scrolledSurfaceBox?.y).toBe(54);
   expect(await page.evaluate(() => window.scrollY)).toBe(0);
 });
