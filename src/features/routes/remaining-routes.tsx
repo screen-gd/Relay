@@ -74,7 +74,10 @@ import {
   SplitPane,
   WorkspacePage,
 } from "@/components/workspace-page";
-import { ClerkPricingPlans } from "@/components/subscription-plans";
+import {
+  CapabilityUpgradePrompt,
+  ClerkPricingPlans,
+} from "@/components/subscription-plans";
 import {
   resolveOnboardingVariant,
   trackOnboardingEvent,
@@ -1296,10 +1299,12 @@ export function TemplatesDesignPage({
   onUseBlank,
   onUseTemplate,
   canManageTemplates,
+  customTemplatesLocked = false,
 }: {
   onUseBlank: () => void;
   onUseTemplate: (template: ProjectTemplate) => void;
   canManageTemplates: boolean;
+  customTemplatesLocked?: boolean;
 }) {
   const { items, settings, setSettings } = useTemplateController();
   const [templateForm, setTemplateForm] =
@@ -1313,6 +1318,7 @@ export function TemplatesDesignPage({
   );
 
   function openBuilder(template?: ProjectTemplate) {
+    if (customTemplatesLocked) return;
     setTemplateError("");
     setTemplateForm(
       template ? templateToForm(template) : { ...emptyTemplateForm, id: "" }
@@ -1322,6 +1328,7 @@ export function TemplatesDesignPage({
 
   function saveTemplate(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (customTemplatesLocked) return;
     if (!templateForm.name.trim()) return;
     const previousTemplate = customTemplates.find(
       (template) => template.id === templateForm.id
@@ -1373,6 +1380,7 @@ export function TemplatesDesignPage({
   }
 
   function deleteTemplate(templateId: string) {
+    if (customTemplatesLocked) return;
     if (items.some((item) => item.templateId === templateId)) {
       setTemplateError(
         "This template is in use. Reassign its Projects before deleting it."
@@ -1388,6 +1396,7 @@ export function TemplatesDesignPage({
   }
 
   function copyTemplate(template: ProjectTemplate) {
+    if (customTemplatesLocked) return;
     const copy = {
       ...template,
       id: `custom-copy-${Date.now().toString(36)}`,
@@ -1408,6 +1417,7 @@ export function TemplatesDesignPage({
   }
 
   function archiveTemplate(template: SavedProjectTemplate) {
+    if (customTemplatesLocked) return;
     setSettings((current) => ({
       ...current,
       customProjectTemplates: current.customProjectTemplates.map((item) =>
@@ -1428,7 +1438,7 @@ export function TemplatesDesignPage({
               type="button"
               variant="outline"
               onClick={() => openBuilder()}
-              disabled={!canManageTemplates}
+              disabled={!canManageTemplates || customTemplatesLocked}
             >
               <Plus aria-hidden="true" />
               Custom Template
@@ -1448,6 +1458,9 @@ export function TemplatesDesignPage({
           >
             {templateError}
           </p>
+        ) : null}
+        {customTemplatesLocked ? (
+          <CapabilityUpgradePrompt capability="customWorkflowTemplates" />
         ) : null}
         <ContentSection
           title="Template library"
@@ -1577,7 +1590,10 @@ export function TemplatesDesignPage({
                   variant="link"
                   className="h-auto p-0"
                   onClick={() => onUseTemplate(template)}
-                  disabled={template.archived}
+                  disabled={
+                    template.archived ||
+                    (customTemplatesLocked && template.custom)
+                  }
                 >
                   Use template
                   <Plus aria-hidden="true" />
@@ -1588,7 +1604,7 @@ export function TemplatesDesignPage({
                   variant="ghost"
                   aria-label={`Copy ${template.name} template`}
                   onClick={() => copyTemplate(template)}
-                  disabled={!canManageTemplates}
+                  disabled={!canManageTemplates || customTemplatesLocked}
                 >
                   <Copy aria-hidden="true" />
                   Copy
@@ -1601,6 +1617,7 @@ export function TemplatesDesignPage({
                       variant="ghost"
                       aria-label={`Edit ${template.name} template`}
                       onClick={() => openBuilder(template)}
+                      disabled={customTemplatesLocked}
                     >
                       <Pencil aria-hidden="true" />
                       Edit
@@ -1610,6 +1627,7 @@ export function TemplatesDesignPage({
                       size="sm"
                       variant="ghost"
                       onClick={() => archiveTemplate(template)}
+                      disabled={customTemplatesLocked}
                     >
                       {template.archived ? "Restore" : "Archive"}
                     </OwnedButton>
@@ -1620,6 +1638,7 @@ export function TemplatesDesignPage({
                       className="text-destructive hover:bg-destructive/10 hover:text-destructive"
                       aria-label={`Delete ${template.name} template`}
                       onClick={() => deleteTemplate(template.id)}
+                      disabled={customTemplatesLocked}
                     >
                       <Trash2 aria-hidden="true" />
                       Delete
@@ -1775,7 +1794,10 @@ export function TemplatesDesignPage({
               >
                 Cancel
               </OwnedButton>
-              <OwnedButton type="submit" disabled={!templateForm.name.trim()}>
+              <OwnedButton
+                type="submit"
+                disabled={customTemplatesLocked || !templateForm.name.trim()}
+              >
                 Save Template
               </OwnedButton>
             </OwnedDialogFooter>
@@ -2319,7 +2341,7 @@ export function TeamDesignPage({
                               onClick={() => {
                                 if (
                                   window.confirm(
-                                    `Transfer workspace ownership to ${member.name}?`
+                                    `Transfer workspace ownership to ${member.name}? Workspace billing will not transfer. The current owner's personal Clerk subscription remains separate; manage or cancel it in Clerk as needed.`
                                   )
                                 ) {
                                   void runTeamAction("transfer", () =>
@@ -3449,7 +3471,7 @@ export function IntegrationsDesignPage({
                   onChange={(event) =>
                     updateIntegrationConfig({ workspace: event.target.value })
                   }
-                  placeholder="Studio Workspace"
+                  placeholder="Relay Workspace"
                 />
               </FieldLayout>
             ) : null}
@@ -6107,7 +6129,7 @@ export function SubscriptionPage() {
       <PageHeader
         eyebrow="Workspace / Subscription"
         title="Plans and billing"
-        description="Choose a plan and manage your Relay subscription through Clerk."
+        description="Relay launches with Free only. Paid plans are coming later."
         actions={
           <OwnedBadge variant={isSignedIn ? "default" : "secondary"}>
             {isSignedIn ? "Signed in" : "Local mode"}
@@ -6117,7 +6139,7 @@ export function SubscriptionPage() {
       <PageContent data-family-region="subscription-administration">
         <ContentSection
           title="Subscription"
-          description="Plan selection, checkout, and subscription status."
+          description="Free access and Workspace plan status."
           bodyMode="flush"
         >
           {!isLoaded ||
@@ -6144,7 +6166,8 @@ export function SubscriptionPage() {
                 Account required
               </h2>
               <p className="text-sm leading-6 text-muted-foreground">
-                Sign in or create an account to view and manage a subscription.
+                Sign in or create an account to start a Free Workspace. No
+                payment is required.
               </p>
               {isAuthEnabled ? (
                 <div className="flex flex-col gap-2 sm:flex-row">
@@ -6477,7 +6500,10 @@ export function isDoneStatus(status: string) {
   ].some((word) => status.toLowerCase().includes(word));
 }
 
-export function formatDate(value: string, dateFormat = defaultSettings.dateFormat) {
+export function formatDate(
+  value: string,
+  dateFormat = defaultSettings.dateFormat
+) {
   const date = new Date(`${value}T00:00:00`);
   if (dateFormat === "Day Month Year") {
     return new Intl.DateTimeFormat("en", {
@@ -6529,7 +6555,10 @@ export function publicMetric(value: unknown, fallback = 0) {
   return Number.isFinite(number) && number >= 0 ? Math.floor(number) : fallback;
 }
 
-export function money(value: number, currencyCode = defaultSettings.currencyCode) {
+export function money(
+  value: number,
+  currencyCode = defaultSettings.currencyCode
+) {
   return new Intl.NumberFormat("en", {
     style: "currency",
     currency: currencyCode,

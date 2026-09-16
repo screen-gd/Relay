@@ -1,8 +1,19 @@
 # Relay subscription plans
 
-Status: proposed launch model for review
+Status: Free-only launch on September 18, 2026; future payments use Razorpay
 
-Relay has three public plans. A Workspace owns one Subscription Plan. Clients and Client Contacts do not consume internal seats.
+Only Free is available for the September 18 launch. Creator, Team, extra Editor
+Seats, and Storage Add-ons are future offers, not available for purchase. Free-only
+does not unlock paid capabilities for everyone: the existing Free limits apply.
+A Workspace owns one Subscription Plan. Clerk remains the authentication provider;
+Razorpay is the selected future payment provider. Convex remains the authority for
+Workspace entitlements. Clients and Client Contacts do not consume internal seats.
+
+Checkout stays disabled for launch. Do not connect Stripe or activate Clerk
+Billing. Razorpay integration and migration of the existing Clerk-specific billing
+code are separate post-launch work. The paid prices and trial terms below are
+planning inputs, not live offers. The implementation checklist lives in
+`.scratch/subscription-plans/`.
 
 ## Plan summary
 
@@ -35,7 +46,7 @@ Limits:
 
 External Video Embeds let users reference video hosted on Vimeo, YouTube, Frame.io, or another external service without using Relay storage.
 
-## Creator
+## Creator (post-launch)
 
 Creator is for one freelance editor managing stored project media and client relationships.
 
@@ -52,7 +63,7 @@ Includes everything in Free, plus:
 
 Creator supports one internal Workspace owner. Client Contacts remain free and do not become Team Members.
 
-## Team
+## Team (deferred)
 
 Team is for a small editing team working in one shared Workspace.
 
@@ -75,7 +86,7 @@ Examples:
 - 4 paid Editors, including the owner: 17 GB shared
 - 5 paid Editors, including the owner: 19 GB shared
 
-## Storage add-ons
+## Storage add-ons (deferred)
 
 Storage add-ons increase the Workspace's shared Storage Quota.
 
@@ -126,8 +137,7 @@ These items are not included in the current launch promise:
 
 ## Review points
 
-- Confirm whether the Workspace owner counts as one of the 3 included Team Editor seats.
-- Confirm that $5 extra Editor pricing includes only the seat and 2 GB quota increase, not extra storage packs.
-- Confirm that annual storage add-ons receive the same two-month discount.
+- Verify Razorpay account eligibility, recurring-payment support, currencies, prices, and trial handling before enabling checkout.
+- Design Razorpay subscription-to-Workspace mapping, signed webhooks, reconciliation, and safe migration before replacing the existing Clerk billing paths.
 - Confirm Convex and Cloudflare R2 cost assumptions before publishing Team storage add-ons.
-- Rename the old `Studio` plan to `Team` in the billing configuration when implementation begins.
+- Retire Clerk purchase surfaces and billing authority during the Razorpay migration; keep Clerk authentication.

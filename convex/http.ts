@@ -2,7 +2,10 @@ import { httpRouter } from "convex/server";
 import { verifyWebhook } from "@clerk/backend/webhooks";
 import { internal } from "./_generated/api";
 import { httpAction } from "./_generated/server";
-import { relayPlanForClerkId } from "./workspaceSubscriptions";
+import {
+  clerkUserIdFromBillingEvent,
+  parseClerkBillingEvent,
+} from "./billingParsing";
 
 type WaitlistAudience = "freelancer" | "team";
 
@@ -63,70 +66,44 @@ http.route({
       return json({ kind: "invalid_signature" }, 400);
     }
 
+    const deliveryId = request.headers.get("svix-id")?.trim();
+    if (!deliveryId) return json({ kind: "invalid_delivery_id" }, 400);
+    const webhookTimestamp = Number(request.headers.get("svix-timestamp"));
+    if (!Number.isFinite(webhookTimestamp))
+      return json({ kind: "invalid_timestamp" }, 400);
+    const eventAtFallback = new Date(webhookTimestamp * 1000).toISOString();
+    const receivedAt = new Date().toISOString();
     if (
-      event.type === "subscriptionItem.ended" ||
-      event.type === "subscriptionItem.abandoned"
+      event.type.startsWith("subscriptionItem.") ||
+      event.type.startsWith("paymentAttempt.")
     ) {
-      const { data } = event;
-      if (!data.payer?.user_id) return json({ kind: "ignored" }, 200);
-      const webhookTimestamp = Number(request.headers.get("svix-timestamp"));
-      if (!Number.isFinite(webhookTimestamp))
-        return json({ kind: "invalid_timestamp" }, 400);
-      await ctx.runMutation(
-        internal.workspaceSubscriptions.confirmForClerkUser,
-        {
-          clerkUserId: data.payer.user_id,
-          clerkPlanId: "free_user",
-          billingPeriod: data.plan_period === "annual" ? "annual" : "monthly",
-          subscriptionStatus: "canceled",
-          confirmedEditorQuantity: 1,
-          includedEditorSeatQuantity: 1,
-          purchasedExtraEditorSeatQuantity: 0,
-          storageAddonQuantity: 0,
-          clerkEventAt: new Date(webhookTimestamp * 1000).toISOString(),
-        }
-      );
-      return json({ kind: "synced" }, 200);
+      const clerkUserId = clerkUserIdFromBillingEvent(event);
+      if (clerkUserId) {
+        const result = await ctx.runAction(
+          internal.workspaceSubscriptionReconciliation
+            .reconcileClerkUserDelivery,
+          {
+            deliveryId,
+            eventType: event.type,
+            clerkUserId,
+            receivedAt,
+          }
+        );
+        return json({ kind: result }, 200);
+      }
     }
-
-    if (!event.type.startsWith("subscription.")) {
-      return json({ kind: "ignored" }, 200);
-    }
-    const { data } = event;
-    if (!("items" in data) || !data.payer.user_id) {
-      return json({ kind: "ignored" }, 200);
-    }
-
-    const item =
-      data.items.find(
-        ({ plan, status }) =>
-          !plan?.is_default && (status === "active" || status === "past_due")
-      ) ?? data.items.find(({ status }) => status === "active");
-    const plan = item?.plan;
-    if (!item || !plan) return json({ kind: "ignored" }, 200);
-
-    const subscriptionStatus = plan.is_default
-      ? "free"
-      : data.status === "active"
-        ? "active"
-        : data.status === "past_due"
-          ? "past_due"
-          : "canceled";
-    const relayPlan = relayPlanForClerkId(plan.slug);
-
-    await ctx.runMutation(internal.workspaceSubscriptions.confirmForClerkUser, {
-      clerkUserId: data.payer.user_id,
-      clerkSubscriptionId: data.id,
-      clerkPlanId: plan.slug,
-      billingPeriod: item.plan_period === "annual" ? "annual" : "monthly",
-      subscriptionStatus,
-      confirmedEditorQuantity: relayPlan === "team" ? 3 : 1,
-      includedEditorSeatQuantity: relayPlan === "team" ? 3 : 1,
-      purchasedExtraEditorSeatQuantity: 0,
-      storageAddonQuantity: 0,
-      clerkEventAt: new Date(data.updated_at).toISOString(),
-    });
-    return json({ kind: "synced" }, 200);
+    const confirmation = parseClerkBillingEvent(event, eventAtFallback);
+    const result = await ctx.runMutation(
+      internal.workspaceSubscriptions.processClerkBillingDelivery,
+      {
+        deliveryId,
+        eventType: event.type,
+        clerkUserId: confirmation?.clerkUserId,
+        receivedAt,
+        ...(confirmation ? { confirmation } : {}),
+      }
+    );
+    return json({ kind: result }, 200);
   }),
 });
 

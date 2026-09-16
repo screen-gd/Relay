@@ -1,6 +1,6 @@
 "use client";
 
-import { PricingTable, UserProfile, useUser } from "@clerk/nextjs";
+import { UserProfile, useUser } from "@clerk/nextjs";
 import type { FunctionReturnType } from "convex/server";
 import Link from "next/link";
 import { useState } from "react";
@@ -23,30 +23,37 @@ export type WorkspaceSubscriptionState = NonNullable<
   FunctionReturnType<typeof api.workspaceSubscriptions.getCurrent>
 >;
 
-const pricingAppearance = {
-  variables: {
-    borderRadius: "6px",
-    colorPrimary: "var(--app-accent)",
-    colorBackground: "var(--app-panel)",
-    colorForeground: "var(--app-ink)",
-    colorMutedForeground: "var(--app-muted)",
-    spacing: "1.125rem",
-  },
-  elements: {
-    pricingTable: "items-stretch",
-    pricingTableCard: "min-h-[32rem] h-full",
-    pricingTableCardHeader: "min-h-40",
-    pricingTableCardBody: "flex-1",
-    pricingTableCardFeatures: "mt-5 border-t border-[var(--app-border)] pt-5",
-    pricingTableCardFeaturesList: "gap-0",
-    pricingTableCardFeaturesListItem:
-      "min-h-11 border-b border-[var(--app-border)] py-3 last:border-b-0",
-    pricingTableCardFooter: "mt-auto",
-  },
-};
+const capabilityUpgradeCopy = {
+  fileUploads: "File uploads",
+  customWorkflowTemplates: "Custom Workflow Templates",
+  advancedReports: "Advanced reports",
+  salaryPlans: "Salary Plans",
+  customPortalBranding: "Custom portal branding",
+  clientHub: "Client Hub",
+} as const;
 
-const billingPurchasesEnabled =
-  process.env.NEXT_PUBLIC_BILLING_PURCHASES_ENABLED === "true";
+export type PaidWorkspaceCapability = keyof typeof capabilityUpgradeCopy;
+
+export function CapabilityUpgradePrompt({
+  capability,
+}: {
+  capability: PaidWorkspaceCapability;
+}) {
+  const name = capabilityUpgradeCopy[capability];
+  return (
+    <div className="flex flex-col gap-3 rounded-md border border-border/70 bg-muted/30 p-4 sm:flex-row sm:items-center sm:justify-between">
+      <div>
+        <p className="text-sm font-medium">Creator unlocks {name}.</p>
+        <p className="mt-1 text-xs text-muted-foreground">
+          Paid plans are coming later. Relay launches with Free only.
+        </p>
+      </div>
+      <Button asChild size="sm" variant="outline">
+        <Link href="/subscription">View plans</Link>
+      </Button>
+    </div>
+  );
+}
 
 type BillingStatusContent = {
   title: string;
@@ -61,7 +68,7 @@ function getBillingStatus(
   if (subscription.subscriptionStatus === "past_due") {
     return {
       title: "Payment needs attention",
-      body: "Relay is using safe Free limits until Clerk confirms payment.",
+      body: "Relay is using safe Free limits. Existing work is preserved.",
       variant: "destructive",
     };
   }
@@ -77,7 +84,7 @@ function getBillingStatus(
       title: "Creator trial active",
       body: subscription.trialEndsAt
         ? `Trial ends ${new Intl.DateTimeFormat(undefined, { dateStyle: "medium" }).format(new Date(subscription.trialEndsAt))}.`
-        : "Clerk will manage the first charge when the trial ends.",
+        : "This is an existing confirmed trial; new trials are unavailable.",
       variant: "secondary",
     };
   }
@@ -130,50 +137,36 @@ export function SubscriptionPricingView({
 }) {
   return (
     <div className="min-h-[calc(100dvh-15rem)] p-4 md:p-6">
-      <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        {subscription ? (
-          <div className="flex items-center gap-2">
-            <span className="text-sm text-muted-foreground">
-              Confirmed plan
-            </span>
-            <Badge variant="outline">{subscription.plan}</Badge>
-          </div>
-        ) : (
-          <span className="text-sm text-muted-foreground">
-            Choose your Relay plan
-          </span>
-        )}
-        {billingPurchasesEnabled ? (
-          <Button asChild variant="outline" size="sm">
-            <Link href="/account#billing">Manage billing in Clerk</Link>
-          </Button>
-        ) : (
-          <Button type="button" variant="outline" size="sm" disabled>
-            Purchases paused
-          </Button>
-        )}
+      <div className="mb-4 flex items-center gap-2">
+        <span className="text-sm text-muted-foreground">
+          September 18 launch
+        </span>
+        <Badge variant="outline">Free only</Badge>
       </div>
-      {subscription ? (
-        <BillingStatus
-          checkoutReturned={checkoutReturned}
-          subscription={subscription}
-        />
+      <Card className="mb-4">
+        <CardContent className="space-y-3 py-5">
+          <h2 className="text-lg font-semibold">Start with Free</h2>
+          <p>
+            Unlimited Projects and Clients, basic workflow tracking, standard
+            Client Portals, and external video embeds.
+          </p>
+          <p className="text-sm text-muted-foreground">
+            Free supports one Workspace owner. Hosted uploads and paid
+            capabilities remain unavailable on Free.
+          </p>
+          <p role="status" className="text-sm text-muted-foreground">
+            Paid plans are coming later. Purchases are unavailable for the
+            Free-only launch.
+          </p>
+        </CardContent>
+      </Card>
+      {subscription && subscription.subscriptionStatus !== "free" ? (
+        <BillingStatus checkoutReturned={false} subscription={subscription} />
       ) : null}
-      {!billingPurchasesEnabled ? (
-        <p role="status" className="mb-4 text-sm text-muted-foreground">
-          Plan selection and new subscriptions are paused.
+      {checkoutReturned ? (
+        <p role="status" className="text-sm text-muted-foreground">
+          A checkout redirect does not confirm payment or unlock paid access.
         </p>
-      ) : null}
-      {billingPurchasesEnabled ? (
-        <PricingTable
-          for="user"
-          highlightedPlan="creator_plan"
-          collapseFeatures={false}
-          ctaPosition="bottom"
-          newSubscriptionRedirectUrl="/subscription?checkout=return"
-          appearance={pricingAppearance}
-          checkoutProps={{ appearance: pricingAppearance }}
-        />
       ) : null}
     </div>
   );
@@ -244,8 +237,8 @@ export function FirstLoginPlanDialog() {
         <DialogHeader>
           <DialogTitle>Welcome to Relay</DialogTitle>
           <DialogDescription>
-            Your Workspace starts on Free. The Workspace Owner can compare Clerk
-            plans from Subscription settings.
+            Your Workspace starts on Free. Paid plans are coming later; no
+            payment is required for the Free launch.
           </DialogDescription>
         </DialogHeader>
         {error ? (

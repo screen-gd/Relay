@@ -104,6 +104,8 @@ export function ProjectWorkspace({
   canEdit,
   canManagePayment,
   canManagePortal,
+  clientHubEnabled,
+  customPortalBrandingEnabled,
   canDelete,
   canUpdateStatus,
   canComment,
@@ -123,6 +125,8 @@ export function ProjectWorkspace({
   canEdit: boolean;
   canManagePayment: boolean;
   canManagePortal: boolean;
+  clientHubEnabled: boolean;
+  customPortalBrandingEnabled: boolean;
   canDelete: boolean;
   canUpdateStatus: boolean;
   canComment: boolean;
@@ -352,6 +356,8 @@ export function ProjectWorkspace({
                   <ProjectPortalPanel
                     project={project}
                     canEdit={canEdit && canManagePortal}
+                    clientHubEnabled={clientHubEnabled}
+                    customPortalBrandingEnabled={customPortalBrandingEnabled}
                   />
                 </div>
               ) : null}

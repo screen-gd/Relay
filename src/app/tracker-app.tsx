@@ -126,7 +126,10 @@ import { PrecisionMedia } from "@/components/precision-media";
 import { SalaryPlansPanel } from "@/components/salary-plans-panel";
 import { FirstRunChecklist } from "@/components/first-run-checklist";
 import { SampleModeBar } from "@/components/sample-mode-bar";
-import { ClerkPricingPlans } from "@/components/subscription-plans";
+import {
+  CapabilityUpgradePrompt,
+  ClerkPricingPlans,
+} from "@/components/subscription-plans";
 import {
   resolveOnboardingVariant,
   trackOnboardingEvent,
@@ -776,6 +779,27 @@ export function TrackerApp({
     role: teamData?.currentMember.role,
     permissions: teamData?.currentMember.permissions,
   });
+  const customWorkflowTemplatesLocked = Boolean(
+    isSignedIn &&
+    isConvexAuthenticated &&
+    workspaceSubscription &&
+    !workspaceSubscription.capabilities.customWorkflowTemplates
+  );
+  const salaryPlansCapabilityEnabled = Boolean(
+    !isAuthEnabled ||
+    !isSignedIn ||
+    workspaceSubscription?.capabilities.salaryPlans
+  );
+  const clientHubCapabilityEnabled = Boolean(
+    !isAuthEnabled ||
+    !isSignedIn ||
+    workspaceSubscription?.capabilities.clientHub
+  );
+  const customPortalBrandingCapabilityEnabled = Boolean(
+    !isAuthEnabled ||
+    !isSignedIn ||
+    workspaceSubscription?.capabilities.customPortalBranding
+  );
 
   useEffect(() => {
     if (!teamWorkspace) return;
@@ -1437,6 +1461,8 @@ export function TrackerApp({
           canManagePortal={
             !isSample && (canManagePortals || !detailProject.teamId)
           }
+          clientHubEnabled={clientHubCapabilityEnabled}
+          customPortalBrandingEnabled={customPortalBrandingCapabilityEnabled}
           canDelete={canDeleteProject(detailProject)}
           canUpdateStatus={
             !isSample &&
@@ -1613,6 +1639,7 @@ export function TrackerApp({
               workspaceSubscription?.capabilities.customWorkflowTemplates
             ))
         }
+        customTemplatesLocked={customWorkflowTemplatesLocked}
       />
     ) : page === "reports" ? (
       <div className="grid gap-4">
@@ -1633,19 +1660,17 @@ export function TrackerApp({
         ) : (
           <ContentSection
             title="Advanced reports"
-            description="Creator or Team plan required."
+            description="Analyze project delivery and workload with the Creator plan."
           >
-            <OwnedButton asChild size="sm">
-              <Link href="/subscription">View plans</Link>
-            </OwnedButton>
+            <CapabilityUpgradePrompt capability="advancedReports" />
           </ContentSection>
         )}
-        {(!teamData || teamData.currentMember.role === "Owner") &&
-        (!isAuthEnabled || workspaceSubscription?.capabilities.salaryPlans) ? (
+        {!teamData || teamData.currentMember.role === "Owner" ? (
           <SalaryPlansPanel
             settings={settings}
             projects={personalProjects}
             isOwner
+            capabilityEnabled={salaryPlansCapabilityEnabled}
           />
         ) : null}
       </div>

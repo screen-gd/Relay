@@ -1,7 +1,20 @@
 # Relay Workspace subscription plans
 
-Status: paused-billing
-Date: 2026-09-02
+Status: Free-only launch; Razorpay billing deferred
+Date: 2026-09-16
+
+## Current launch decision
+
+The September 18 public launch is Free-only. Existing Free limits and paid
+capability gates stay enforced. Purchases remain disabled. Razorpay replaces Clerk
+Billing as the selected future payment provider; Clerk remains authentication.
+Do not connect Stripe or activate Clerk checkout. Razorpay implementation is
+post-launch work, not a prerequisite for releasing Free.
+
+The Clerk-specific specification and checklists below describe the existing
+implementation and superseded payment-provider plan. They are historical inputs
+for migration, not authorization to activate Clerk Billing. The current execution
+order and ticket disposition are in `launch-workflow.md`.
 
 ## Problem Statement
 

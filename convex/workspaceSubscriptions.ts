@@ -2,6 +2,7 @@ import { v } from "convex/values";
 import type { Doc, Id } from "./_generated/dataModel";
 import {
   internalMutation,
+  internalQuery,
   mutation,
   query,
   type MutationCtx,
@@ -43,6 +44,21 @@ const entitlementValidator = v.object({
   ),
   capabilities: capabilityValidator,
   canManageBilling: v.boolean(),
+});
+
+const billingConfirmationValidator = v.object({
+  clerkUserId: v.string(),
+  clerkSubscriptionId: v.optional(v.string()),
+  clerkPlanId: v.string(),
+  billingPeriod: billingPeriodValidator,
+  subscriptionStatus: subscriptionStatusValidator,
+  trialStartsAt: v.optional(v.string()),
+  trialEndsAt: v.optional(v.string()),
+  confirmedEditorQuantity: v.number(),
+  includedEditorSeatQuantity: v.number(),
+  purchasedExtraEditorSeatQuantity: v.number(),
+  storageAddonQuantity: v.number(),
+  clerkEventAt: v.string(),
 });
 
 const CLERK_PLAN_ID_TO_RELAY_PLAN = {
@@ -441,5 +457,80 @@ export const confirmForClerkUser = internalMutation({
     if (!projection) throw new Error("Clerk user subscription missing");
     await confirmProjection(ctx, projection, args);
     return null;
+  },
+});
+
+export const canReconcileCurrent = internalQuery({
+  args: {},
+  returns: v.object({ isOwner: v.boolean(), isLinked: v.boolean() }),
+  handler: async (ctx) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) return { isOwner: false, isLinked: false };
+    const current = await currentWorkspace(ctx, identity.tokenIdentifier);
+    if (!current || current.membership.role !== "Owner") {
+      return { isOwner: false, isLinked: false };
+    }
+    const projection = await projectionForWorkspace(ctx, current.workspace._id);
+    return {
+      isOwner: true,
+      isLinked: projection?.clerkUserId === identity.subject,
+    };
+  },
+});
+
+export const processClerkBillingDelivery = internalMutation({
+  args: {
+    deliveryId: v.string(),
+    eventType: v.string(),
+    clerkUserId: v.optional(v.string()),
+    receivedAt: v.string(),
+    confirmation: v.optional(billingConfirmationValidator),
+  },
+  returns: v.union(
+    v.literal("synced"),
+    v.literal("ignored"),
+    v.literal("duplicate")
+  ),
+  handler: async (ctx, args) => {
+    const existing = await ctx.db
+      .query("clerkBillingWebhookDeliveries")
+      .withIndex("by_deliveryId", (q) => q.eq("deliveryId", args.deliveryId))
+      .unique();
+    if (existing) return "duplicate";
+
+    const confirmation = args.confirmation;
+    let synced = false;
+    if (confirmation) {
+      const projection = await ctx.db
+        .query("workspaceSubscriptions")
+        .withIndex("by_clerkUserId", (q) =>
+          q.eq("clerkUserId", confirmation.clerkUserId)
+        )
+        .unique();
+      if (projection) {
+        await confirmProjection(ctx, projection, confirmation);
+        synced = true;
+      }
+    }
+
+    await ctx.db.insert("clerkBillingWebhookDeliveries", {
+      deliveryId: args.deliveryId,
+      eventType: args.eventType,
+      clerkUserId: confirmation?.clerkUserId ?? args.clerkUserId,
+      receivedAt: args.receivedAt,
+    });
+    return synced ? "synced" : "ignored";
+  },
+});
+
+export const hasClerkBillingDelivery = internalQuery({
+  args: { deliveryId: v.string() },
+  returns: v.boolean(),
+  handler: async (ctx, args) => {
+    const delivery = await ctx.db
+      .query("clerkBillingWebhookDeliveries")
+      .withIndex("by_deliveryId", (q) => q.eq("deliveryId", args.deliveryId))
+      .unique();
+    return delivery !== null;
   },
 });

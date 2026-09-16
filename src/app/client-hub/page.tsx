@@ -43,7 +43,7 @@ export default function ClientHubPage() {
                 : "Sign in to view your projects"}
         </h1>
         <p className="mt-2 text-sm text-zinc-400">
-          Only projects your studio has published to you appear here.
+          Only projects your Workspace has published to you appear here.
         </p>
 
         <div className="mt-10 overflow-x-auto border-t border-white/20">
