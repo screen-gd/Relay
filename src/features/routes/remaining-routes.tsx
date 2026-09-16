@@ -5625,7 +5625,14 @@ export function NotificationBell({ settings }: { settings: SettingsState }) {
   return (
     <OwnedDropdownMenu
       open={notificationOpen}
-      onOpenChange={setNotificationOpen}
+      onOpenChange={(open) => {
+        setNotificationOpen(open);
+        if (open && teamData && unreadCount) {
+          void markAllNotificationsRead({
+            teamId: teamData.workspace._id,
+          }).catch(() => undefined);
+        }
+      }}
     >
       <OwnedDropdownMenuTrigger asChild>
         <OwnedButton
@@ -5648,8 +5655,6 @@ export function NotificationBell({ settings }: { settings: SettingsState }) {
             >
               {unreadCount > 99 ? "99+" : unreadCount}
             </span>
-          ) : enabledNotifications.length ? (
-            <span className="absolute top-1.5 right-[7px] size-2 rounded-full border border-[var(--app-panel)] bg-[var(--app-accent)]" />
           ) : null}
         </OwnedButton>
       </OwnedDropdownMenuTrigger>
@@ -5657,7 +5662,7 @@ export function NotificationBell({ settings }: { settings: SettingsState }) {
         align="end"
         sideOffset={6}
         aria-label="Notifications"
-        className="w-[290px] border-[var(--app-border)] bg-[var(--app-panel)] p-0 text-[var(--app-ink)] shadow-none"
+        className="max-h-[min(32rem,calc(100dvh-4rem))] w-[310px] overflow-hidden border-[var(--app-border)] bg-[var(--app-panel)] p-0 text-[var(--app-ink)] shadow-[var(--app-shadow-2)]"
       >
         <div className="px-3 py-2">
           <div className="flex items-center justify-between gap-2">
@@ -5701,8 +5706,8 @@ export function NotificationBell({ settings }: { settings: SettingsState }) {
             sync before relying on shared notifications.
           </p>
         ) : teamNotifications.length ? (
-          <ul className="max-h-80 overflow-y-auto">
-            {teamNotifications.slice(0, 8).map((notification) => (
+          <ul className="workspace-scrollbar-hidden max-h-[min(26rem,calc(100dvh-10rem))] overscroll-contain overflow-y-auto">
+            {teamNotifications.map((notification) => (
               <li
                 key={notification._id}
                 className={`px-3 py-2 ${notification.read ? "bg-[var(--app-panel)]" : "bg-[var(--app-active)]"}`}
@@ -5751,7 +5756,7 @@ export function NotificationBell({ settings }: { settings: SettingsState }) {
             ))}
           </ul>
         ) : enabledNotifications.length ? (
-          <ul>
+          <ul className="workspace-scrollbar-hidden max-h-[min(26rem,calc(100dvh-10rem))] overscroll-contain overflow-y-auto">
             {enabledNotifications.map(([name]) => (
               <li key={name} className="px-3 py-2">
                 <p className="text-[13px] font-semibold">{name}</p>

@@ -81,9 +81,7 @@ async function workspaceIdForProject(
       q.eq("userId", project.ownerUserId).eq("status", "active")
     )
     .take(2);
-  if (memberships.length === 0) return null;
-  if (memberships.length !== 1)
-    throw new Error("Select one Workspace before using hosted storage");
+  if (memberships.length !== 1) return null;
   const workspaceId = ctx.db.normalizeId(
     "teamWorkspaces",
     memberships[0].teamId

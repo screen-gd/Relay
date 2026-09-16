@@ -563,6 +563,9 @@ export default defineSchema({
         email: v.string(),
       })
     ),
+    editorPermissions: v.optional(v.record(v.string(), v.boolean())),
+    integrationAccounts: v.optional(v.record(v.string(), v.string())),
+    integrations: v.optional(v.record(v.string(), v.boolean())),
     rolePermissions: v.record(v.string(), v.record(v.string(), v.boolean())),
     integrationConfigs: v.record(
       v.string(),

@@ -8,33 +8,36 @@ import {
   projectRow,
 } from "./helpers";
 
-test("keeps the desktop sidebar collapsed across navigation with a fixed toggle position", async ({
+test("keeps the desktop sidebar collapsed across navigation without a toggle", async ({
   page,
 }) => {
   await chooseLocalMode(page);
   await openApp(page, "/projects");
 
-  const collapse = page.getByRole("button", { name: "Collapse navigation" });
-  const expandedBox = await collapse.boundingBox();
-  await collapse.click();
+  const sidebar = page.locator("aside").first();
+  await expect(
+    sidebar.getByRole("button", { name: /(?:Collapse|Expand) navigation/ })
+  ).toHaveCount(0);
+  await expect(
+    sidebar.getByRole("link", { name: "Dashboard", exact: true })
+  ).toBeVisible();
 
-  const expand = page.getByRole("button", { name: "Expand navigation" });
-  const collapsedBox = await expand.boundingBox();
-  if (!expandedBox || !collapsedBox)
-    throw new Error("Sidebar toggle was not measurable");
-  expect(
-    Math.abs(
-      expandedBox.y +
-        expandedBox.height -
-        (collapsedBox.y + collapsedBox.height)
-    )
-  ).toBeLessThanOrEqual(1);
-
-  await page.getByRole("link", { name: "Dashboard", exact: true }).click();
+  await sidebar.getByRole("link", { name: "Dashboard", exact: true }).click();
   await expect(page).toHaveURL("/");
   await expect(
-    page.getByRole("button", { name: "Expand navigation" })
-  ).toBeVisible();
+    sidebar.getByRole("button", { name: /(?:Collapse|Expand) navigation/ })
+  ).toHaveCount(0);
+});
+
+test("shows section and route names on hover in the compact desktop sidebar", async ({
+  page,
+}) => {
+  await openApp(page, "/sample-studio");
+
+  const sidebar = page.locator("aside").first();
+  const overviewSection = sidebar.locator('[aria-label="Overview"]');
+  await overviewSection.hover();
+  await expect(page.getByRole("tooltip", { name: "Overview" })).toBeVisible();
 });
 
 test("moves the active sidebar indicator between routes", async ({ page }) => {

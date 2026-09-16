@@ -93,33 +93,46 @@ test("Project files validate uploads, retain quota, and require archive before d
     notes: "",
   };
 
-  await expect(owner.mutation(api.projectFiles.saveExternalVersion, {
-    ...validFile,
-    fileName: "final-export.exe",
-    mimeType: "application/octet-stream",
-  })).rejects.toThrow("Only PDF");
-  await expect(owner.mutation(api.projectFiles.saveExternalVersion, {
-    ...validFile,
-    size: 20 * 1024 * 1024 + 1,
-  })).rejects.toThrow("20 MB or smaller");
+  await expect(
+    owner.mutation(api.projectFiles.saveExternalVersion, {
+      ...validFile,
+      fileName: "final-export.exe",
+      mimeType: "application/octet-stream",
+    })
+  ).rejects.toThrow("Only PDF");
+  await expect(
+    owner.mutation(api.projectFiles.saveExternalVersion, {
+      ...validFile,
+      size: 20 * 1024 * 1024 + 1,
+    })
+  ).rejects.toThrow("20 MB or smaller");
 
-  const fileId = await owner.mutation(api.projectFiles.saveExternalVersion, validFile);
+  const fileId = await owner.mutation(
+    api.projectFiles.saveExternalVersion,
+    validFile
+  );
   const listed = await owner.query(api.projectFiles.listForProject, {
     projectId: "project-files-rebuild",
   });
   expect(listed.retainedBytes).toBe(0);
   expect(listed.files).toMatchObject([{ _id: fileId, archived: false }]);
 
-  await expect(owner.mutation(api.projectFiles.removeFile, { fileId })).rejects.toThrow(
-    "Archive this file before deleting it permanently",
-  );
+  await expect(
+    owner.mutation(api.projectFiles.removeFile, { fileId })
+  ).rejects.toThrow("Archive this file before deleting it permanently");
   await owner.mutation(api.projectFiles.archiveFile, { fileId });
-  expect((await owner.query(api.projectFiles.listForProject, {
-    projectId: "project-files-rebuild",
-  })).files).toEqual([]);
+  expect(
+    (
+      await owner.query(api.projectFiles.listForProject, {
+        projectId: "project-files-rebuild",
+      })
+    ).files
+  ).toEqual([]);
 
   await owner.mutation(api.projectFiles.removeFile, { fileId });
-  expect((await t.run((ctx) => ctx.db.query("projectFileVersions").collect())).length).toBe(0);
+  expect(
+    (await t.run((ctx) => ctx.db.query("projectFileVersions").collect())).length
+  ).toBe(0);
 });
 
 test("lists files for a personal project without a Workspace", async () => {
@@ -159,10 +172,87 @@ test("lists files for a personal project without a Workspace", async () => {
   });
 
   await expect(
-    t.withIdentity({ tokenIdentifier: "owner" }).mutation(
-      api.projectFiles.generateUploadUrl,
-      { projectId: "personal-project", size: 1 }
-    )
+    t
+      .withIdentity({ tokenIdentifier: "owner" })
+      .mutation(api.projectFiles.generateUploadUrl, {
+        projectId: "personal-project",
+        size: 1,
+      })
+  ).rejects.toThrow("Select one Workspace before using hosted storage");
+});
+
+test("lists files for a personal project when the owner belongs to multiple Workspaces", async () => {
+  const t = convexTest(schema, modules);
+  await t.run(async (ctx) => {
+    const createdAt = "2026-09-16T00:00:00.000Z";
+    await ctx.db.insert("projects", {
+      ownerUserId: "owner",
+      id: "personal-project",
+      assigneeUserIds: [],
+      profileId: "video-editing",
+      title: "Personal Project",
+      clientId: "client-a",
+      archived: false,
+      status: "Planned",
+      workflowStageId: "planned",
+      workflowStages: [{ id: "planned", label: "Planned", purpose: "planned" }],
+      workType: "Freelance",
+      startDate: "2026-09-16",
+      dueDate: "2026-09-20",
+      earnings: 0,
+      paid: false,
+      notes: "",
+      createdAt,
+      updatedAt: createdAt,
+    });
+    for (const [name, inviteCode] of [
+      ["First Workspace", "FIRST1"],
+      ["Second Workspace", "SECOND2"],
+    ] as const) {
+      const teamId = await ctx.db.insert("teamWorkspaces", {
+        ownerUserId: "owner",
+        name,
+        inviteCode,
+        createdAt,
+      });
+      await ctx.db.insert("teamMembers", {
+        teamId,
+        userId: "owner",
+        email: "owner@example.com",
+        name: "Owner",
+        role: "Owner",
+        status: "active",
+        permissions: {
+          viewProjects: true,
+          createProjects: true,
+          editProjects: true,
+          updateStatus: true,
+          commentProjects: true,
+          manageTeam: true,
+          useChat: true,
+        },
+        createdAt,
+        joinedAt: createdAt,
+      });
+    }
+  });
+
+  const owner = t.withIdentity({ tokenIdentifier: "owner" });
+  await expect(
+    owner.query(api.projectFiles.listForProject, {
+      projectId: "personal-project",
+    })
+  ).resolves.toMatchObject({
+    retainedBytes: 0,
+    workspaceLimitBytes: 0,
+    files: [],
+    uploadHistory: [],
+  });
+  await expect(
+    owner.mutation(api.projectFiles.generateUploadUrl, {
+      projectId: "personal-project",
+      size: 1,
+    })
   ).rejects.toThrow("Select one Workspace before using hosted storage");
 });
 
@@ -224,9 +314,8 @@ test("rejects removing hosted files from a personal project without a Workspace"
   });
 
   await expect(
-    t.withIdentity({ tokenIdentifier: "owner" }).mutation(
-      api.projectFiles.removeFile,
-      { fileId }
-    )
+    t
+      .withIdentity({ tokenIdentifier: "owner" })
+      .mutation(api.projectFiles.removeFile, { fileId })
   ).rejects.toThrow("Select one Workspace before using hosted storage");
 });
