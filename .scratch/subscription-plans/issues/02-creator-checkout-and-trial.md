@@ -4,7 +4,15 @@
 
 **Blocked by:** 01: Establish Workspace subscription authority.
 
-**Status:** paused
+**Status:** deferred (post-launch Razorpay integration)
+
+## September 16 decision
+
+September 18 launches Free only. Razorpay is the future payment provider; Clerk
+remains authentication. The Clerk checkout scope and checklist below are
+superseded implementation history. Do not connect Stripe or enable Clerk Billing.
+Before this ticket resumes, replace its acceptance criteria with an approved
+Razorpay checkout, subscription mapping, currency, trial, and webhook design.
 
 - [x] Clerk development has Free and Creator User plans with stable Relay slugs.
 - [ ] Creator production prices and trial terms receive a final review before checkout opens.

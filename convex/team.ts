@@ -8,6 +8,7 @@ import {
 import type { Doc } from "./_generated/dataModel";
 import {
   insertPendingFreeProjection,
+  pendingFreeProjection,
   requireWorkspaceCapability,
   resolveWorkspaceEntitlements,
 } from "./workspaceSubscriptions";
@@ -806,6 +807,22 @@ export const transferOwnership = mutation({
     );
     if (!workspace) throw new Error("Workspace not found");
     const now = new Date().toISOString();
+    const subscription = await ctx.db
+      .query("workspaceSubscriptions")
+      .withIndex("by_workspaceId", (q) => q.eq("workspaceId", workspace._id))
+      .unique();
+    const resetSubscription = {
+      ...pendingFreeProjection(workspace._id),
+      reconciliationState: "repair" as const,
+      clerkOrganizationId: subscription?.clerkOrganizationId,
+      retainedStorageBytes: subscription?.retainedStorageBytes,
+      reservedStorageBytes: subscription?.reservedStorageBytes,
+    };
+    if (subscription) {
+      await ctx.db.replace(subscription._id, resetSubscription);
+    } else {
+      await ctx.db.insert("workspaceSubscriptions", resetSubscription);
+    }
     await ctx.db.patch(workspace._id, { ownerUserId: nextOwner.userId });
     await ctx.db.patch(currentOwner._id, {
       role: "Editor",

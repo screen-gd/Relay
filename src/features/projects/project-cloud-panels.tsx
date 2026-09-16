@@ -31,6 +31,7 @@ import {
   TabsTrigger as OwnedTabsTrigger,
 } from "@/components/ui/tabs";
 import { Textarea as OwnedTextarea } from "@/components/ui/textarea";
+import { CapabilityUpgradePrompt } from "@/components/subscription-plans";
 import {
   APPROVAL_STATUS_LABELS,
   approvalStatusLabel,
@@ -55,7 +56,6 @@ import {
   History,
   Upload,
 } from "lucide-react";
-import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import {
   useProjectActivityAdapter,
@@ -525,11 +525,11 @@ export function ProjectFileManager({
                 Upload File
               </OwnedButton>
             </div>
+          ) : canEdit && isConvexAuthenticated && !canUploadFiles ? (
+            <CapabilityUpgradePrompt capability="fileUploads" />
           ) : canEdit && isConvexAuthenticated ? (
-            <OwnedButton asChild variant="outline">
-              <Link href="/subscription">
-                {canUploadFiles ? "Upgrade storage" : "Upgrade to upload files"}
-              </Link>
+            <OwnedButton type="button" variant="outline" disabled>
+              Storage limit reached
             </OwnedButton>
           ) : null}
         </div>

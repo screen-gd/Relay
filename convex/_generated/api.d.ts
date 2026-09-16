@@ -8,6 +8,7 @@
  * @module
  */
 
+import type * as billingParsing from "../billingParsing.js";
 import type * as clientHub from "../clientHub.js";
 import type * as clientPortals from "../clientPortals.js";
 import type * as domainValidators from "../domainValidators.js";
@@ -31,6 +32,7 @@ import type * as waitlist from "../waitlist.js";
 import type * as workspaceClients from "../workspaceClients.js";
 import type * as workspaceDiscovery from "../workspaceDiscovery.js";
 import type * as workspaceSubscriptionProvisioning from "../workspaceSubscriptionProvisioning.js";
+import type * as workspaceSubscriptionReconciliation from "../workspaceSubscriptionReconciliation.js";
 import type * as workspaceSubscriptions from "../workspaceSubscriptions.js";
 
 import type {
@@ -40,6 +42,7 @@ import type {
 } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
+  billingParsing: typeof billingParsing;
   clientHub: typeof clientHub;
   clientPortals: typeof clientPortals;
   domainValidators: typeof domainValidators;
@@ -63,6 +66,7 @@ declare const fullApi: ApiFromModules<{
   workspaceClients: typeof workspaceClients;
   workspaceDiscovery: typeof workspaceDiscovery;
   workspaceSubscriptionProvisioning: typeof workspaceSubscriptionProvisioning;
+  workspaceSubscriptionReconciliation: typeof workspaceSubscriptionReconciliation;
   workspaceSubscriptions: typeof workspaceSubscriptions;
 }>;
 

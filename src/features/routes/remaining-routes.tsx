@@ -74,7 +74,10 @@ import {
   SplitPane,
   WorkspacePage,
 } from "@/components/workspace-page";
-import { ClerkPricingPlans } from "@/components/subscription-plans";
+import {
+  CapabilityUpgradePrompt,
+  ClerkPricingPlans,
+} from "@/components/subscription-plans";
 import {
   resolveOnboardingVariant,
   trackOnboardingEvent,
@@ -1296,10 +1299,12 @@ export function TemplatesDesignPage({
   onUseBlank,
   onUseTemplate,
   canManageTemplates,
+  customTemplatesLocked = false,
 }: {
   onUseBlank: () => void;
   onUseTemplate: (template: ProjectTemplate) => void;
   canManageTemplates: boolean;
+  customTemplatesLocked?: boolean;
 }) {
   const { items, settings, setSettings } = useTemplateController();
   const [templateForm, setTemplateForm] =
@@ -1448,6 +1453,9 @@ export function TemplatesDesignPage({
           >
             {templateError}
           </p>
+        ) : null}
+        {customTemplatesLocked ? (
+          <CapabilityUpgradePrompt capability="customWorkflowTemplates" />
         ) : null}
         <ContentSection
           title="Template library"
@@ -2319,7 +2327,7 @@ export function TeamDesignPage({
                               onClick={() => {
                                 if (
                                   window.confirm(
-                                    `Transfer workspace ownership to ${member.name}?`
+                                    `Transfer workspace ownership to ${member.name}? Workspace billing will not transfer. The current owner's personal Clerk subscription remains separate; manage or cancel it in Clerk as needed.`
                                   )
                                 ) {
                                   void runTeamAction("transfer", () =>
@@ -3449,7 +3457,7 @@ export function IntegrationsDesignPage({
                   onChange={(event) =>
                     updateIntegrationConfig({ workspace: event.target.value })
                   }
-                  placeholder="Studio Workspace"
+                  placeholder="Relay Workspace"
                 />
               </FieldLayout>
             ) : null}
@@ -6107,7 +6115,7 @@ export function SubscriptionPage() {
       <PageHeader
         eyebrow="Workspace / Subscription"
         title="Plans and billing"
-        description="Choose a plan and manage your Relay subscription through Clerk."
+        description="Relay launches with Free only. Paid plans are coming later."
         actions={
           <OwnedBadge variant={isSignedIn ? "default" : "secondary"}>
             {isSignedIn ? "Signed in" : "Local mode"}
@@ -6117,7 +6125,7 @@ export function SubscriptionPage() {
       <PageContent data-family-region="subscription-administration">
         <ContentSection
           title="Subscription"
-          description="Plan selection, checkout, and subscription status."
+          description="Free access and Workspace plan status."
           bodyMode="flush"
         >
           {!isLoaded ||
@@ -6144,7 +6152,8 @@ export function SubscriptionPage() {
                 Account required
               </h2>
               <p className="text-sm leading-6 text-muted-foreground">
-                Sign in or create an account to view and manage a subscription.
+                Sign in or create an account to start a Free Workspace. No
+                payment is required.
               </p>
               {isAuthEnabled ? (
                 <div className="flex flex-col gap-2 sm:flex-row">
@@ -6477,7 +6486,10 @@ export function isDoneStatus(status: string) {
   ].some((word) => status.toLowerCase().includes(word));
 }
 
-export function formatDate(value: string, dateFormat = defaultSettings.dateFormat) {
+export function formatDate(
+  value: string,
+  dateFormat = defaultSettings.dateFormat
+) {
   const date = new Date(`${value}T00:00:00`);
   if (dateFormat === "Day Month Year") {
     return new Intl.DateTimeFormat("en", {
@@ -6529,7 +6541,10 @@ export function publicMetric(value: unknown, fallback = 0) {
   return Number.isFinite(number) && number >= 0 ? Math.floor(number) : fallback;
 }
 
-export function money(value: number, currencyCode = defaultSettings.currencyCode) {
+export function money(
+  value: number,
+  currencyCode = defaultSettings.currencyCode
+) {
   return new Intl.NumberFormat("en", {
     style: "currency",
     currency: currencyCode,

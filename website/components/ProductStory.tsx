@@ -49,7 +49,7 @@ const plans = [
       "Salary plans and advanced reports",
       "Client hub and custom portal branding",
     ],
-    note: null,
+    note: "Coming later. Creator is not available for purchase at launch.",
     cta: "Join the waitlist",
   },
   {
@@ -67,7 +67,7 @@ const plans = [
       "Team payouts and workload reports",
       "Free viewer access",
     ],
-    note: "Extra editor seats cost $5/month and add 2 GB of shared upload storage.",
+    note: "Coming later. Team and extra editor seats are not available for purchase at launch.",
     cta: "Join the waitlist",
   },
 ] as const;
@@ -381,10 +381,12 @@ export default function ProductStory() {
         aria-label="Pricing"
       >
         <div className="story-heading">
-          <SectionTitle>Planned pricing.</SectionTitle>
+          <SectionTitle>Launching with Free.</SectionTitle>
           <p>
-            Early access storage, limits, and features may differ from these
-            planned tiers. Storage covers uploaded images, files, and videos.
+            The September 18 launch is Free only. Paid plans, prices, and trial
+            terms below are planned for later, not available to purchase. Free
+            does not include hosted uploads or internal Team members. Storage
+            covers uploaded images, files, and videos on future paid plans.
             Embedded videos stay with the third-party host and do not count
             toward your storage limit.
           </p>

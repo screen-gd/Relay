@@ -378,6 +378,13 @@ export default defineSchema({
     .index("by_clerkUserId", ["clerkUserId"])
     .index("by_clerkOrganizationId", ["clerkOrganizationId"]),
 
+  clerkBillingWebhookDeliveries: defineTable({
+    deliveryId: v.string(),
+    eventType: v.string(),
+    clerkUserId: v.optional(v.string()),
+    receivedAt: v.string(),
+  }).index("by_deliveryId", ["deliveryId"]),
+
   teamMembers: defineTable({
     teamId: v.string(),
     userId: v.string(),

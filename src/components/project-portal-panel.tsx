@@ -11,6 +11,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { FieldLayout } from "@/components/ui/field-layout";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { CapabilityUpgradePrompt } from "@/components/subscription-plans";
 import { useProjectOutputs } from "@/lib/project-output-data";
 import type { WorkItem } from "@/lib/types";
 import {
@@ -30,11 +31,15 @@ const reviewStateLabels: Record<string, string> = {
 type ProjectPortalPanelProps = {
   project: WorkItem;
   canEdit: boolean;
+  clientHubEnabled?: boolean;
+  customPortalBrandingEnabled?: boolean;
 };
 
 export function ProjectPortalPanel({
   project,
   canEdit,
+  clientHubEnabled = true,
+  customPortalBrandingEnabled = true,
 }: ProjectPortalPanelProps) {
   const outputData = useProjectOutputs(project, canEdit);
   const outputs = useMemo(
@@ -257,7 +262,7 @@ export function ProjectPortalPanel({
       ) : null}
 
       <div className="grid gap-6 py-5">
-        {canEdit && hubSettings?.available ? (
+        {canEdit && clientHubEnabled && hubSettings?.available ? (
           <section
             className="grid gap-4 border-b pb-6"
             aria-labelledby="client-hub-title"
@@ -280,26 +285,47 @@ export function ProjectPortalPanel({
               />
               Publish to Client Hub
             </label>
-            <div className="grid gap-3 sm:grid-cols-[1fr_110px_auto]">
-              <Input
-                value={brandName}
-                onChange={(event) => setBrandName(event.target.value)}
-                aria-label="Portal brand name"
-              />
-              <Input
-                type="color"
-                value={accentColor}
-                onChange={(event) => setAccentColor(event.target.value)}
-                aria-label="Portal accent color"
-              />
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => void saveHubBranding()}
-              >
-                Save branding
-              </Button>
+            {customPortalBrandingEnabled ? (
+              <div className="grid gap-3 sm:grid-cols-[1fr_110px_auto]">
+                <Input
+                  value={brandName}
+                  onChange={(event) => setBrandName(event.target.value)}
+                  aria-label="Portal brand name"
+                />
+                <Input
+                  type="color"
+                  value={accentColor}
+                  onChange={(event) => setAccentColor(event.target.value)}
+                  aria-label="Portal accent color"
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => void saveHubBranding()}
+                >
+                  Save branding
+                </Button>
+              </div>
+            ) : (
+              <CapabilityUpgradePrompt capability="customPortalBranding" />
+            )}
+          </section>
+        ) : canEdit && !clientHubEnabled ? (
+          <section
+            className="grid gap-3 border-b pb-6"
+            aria-labelledby="client-hub-title"
+          >
+            <div>
+              <h3 id="client-hub-title" className="font-medium">
+                Client Hub and branding
+              </h3>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Publish Projects to signed-in Client Contacts and customize
+                their presentation.
+              </p>
             </div>
+            <CapabilityUpgradePrompt capability="clientHub" />
+            <CapabilityUpgradePrompt capability="customPortalBranding" />
           </section>
         ) : null}
         <section

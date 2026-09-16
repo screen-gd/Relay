@@ -36,6 +36,21 @@ async function requireSalaryPlans(
   );
 }
 
+async function canReadSalaryPlans(
+  ctx: QueryCtx,
+  identity: Awaited<ReturnType<typeof requireIdentity>>
+) {
+  const membership = await ctx.db
+    .query("teamMembers")
+    .withIndex("by_userId_and_status", (q) =>
+      q.eq("userId", identity.tokenIdentifier).eq("status", "active")
+    )
+    .first();
+  if (!membership) return false;
+  await requireSalaryPlans(ctx, identity);
+  return true;
+}
+
 async function requireClient(
   ctx: FunctionCtx,
   ownerUserId: string,
@@ -85,6 +100,7 @@ export const list = query({
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) return [];
+    if (!(await canReadSalaryPlans(ctx, identity))) return [];
     if (args.includeArchived) {
       return await ctx.db
         .query("salaryPlans")
@@ -177,6 +193,7 @@ export const listBatches = query({
   handler: async (ctx) => {
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) return [];
+    if (!(await canReadSalaryPlans(ctx, identity))) return [];
     return await ctx.db
       .query("projectSalaryBatches")
       .withIndex("by_ownerUserId", (q) =>
