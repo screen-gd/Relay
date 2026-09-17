@@ -45,7 +45,8 @@ const routes = [
     expectedText: [
       "Reports",
       "Advanced reports",
-      "Creator or Team plan required.",
+      "Creator unlocks",
+      "Paid plans are coming later. Relay launches with Free only.",
       "View plans",
     ],
   },
