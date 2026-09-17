@@ -8,11 +8,9 @@ export default function robots(): MetadataRoute.Robots {
       allow: "/",
       disallow: [
         "/account",
-        "/api/early-access",
         "/calendar",
         "/client-portal/",
         "/clients",
-        "/early-access",
         "/feedback",
         "/integrations",
         "/media",
