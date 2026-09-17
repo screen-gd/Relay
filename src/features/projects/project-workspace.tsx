@@ -246,8 +246,9 @@ export function ProjectWorkspace({
 
         <SplitPane
           ratio="inspector"
+          className="min-h-0 flex-1 lg:h-full"
           primary={
-            <div className="min-h-0 overflow-y-auto">
+            <div className="h-full min-h-0 overflow-y-auto overscroll-contain">
               {view === "overview" ? (
                 <div className="grid gap-4 overflow-y-auto pb-5">
                   <MetricStrip columns={4}>

@@ -728,13 +728,30 @@ function ProfileMenu({
       <DropdownMenuContent
         side={compact ? "bottom" : collapsed ? "right" : "top"}
         align={compact ? "end" : "start"}
-        className="w-64"
+        sideOffset={8}
+        className="workspace-flyout w-[280px] rounded-xl border-[var(--app-border)] bg-[var(--app-panel)] p-1.5 text-[var(--app-ink)] shadow-[var(--app-shadow-2)] [&_[data-slot=dropdown-menu-item]]:h-9 [&_[data-slot=dropdown-menu-item]]:rounded-lg [&_[data-slot=dropdown-menu-item]]:text-[13px] [&_[data-slot=dropdown-menu-item]]:transition-colors"
       >
-        <DropdownMenuLabel>
-          <p className="text-sm font-semibold">{name}</p>
-          <p className="text-xs font-normal text-muted-foreground">{handle}</p>
+        <DropdownMenuLabel className="flex items-center gap-3 px-2.5 py-2.5">
+          <Avatar className="size-9 border border-[var(--app-strong-border)] bg-[var(--app-avatar-surface)]">
+            <AvatarImage
+              src={settings.profileImageUrl || undefined}
+              alt=""
+              className="object-cover"
+            />
+            <AvatarFallback className="bg-[var(--app-avatar-surface)] text-xs font-semibold text-[var(--app-ink)]">
+              {initials(name)}
+            </AvatarFallback>
+          </Avatar>
+          <span className="min-w-0">
+            <span className="block truncate text-[13px] font-semibold">
+              {name}
+            </span>
+            <span className="block truncate text-xs font-normal text-[var(--app-muted)]">
+              {handle}
+            </span>
+          </span>
         </DropdownMenuLabel>
-        <DropdownMenuSeparator />
+        <DropdownMenuSeparator className="mx-0.5 bg-[var(--app-border)]" />
         {!isSignedIn ? (
           <>
             <DropdownMenuLabel className="text-xs font-normal text-muted-foreground">

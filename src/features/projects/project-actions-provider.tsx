@@ -40,7 +40,6 @@ import {
 } from "@/lib/project-templates";
 import { mergeClientRecords } from "@/lib/clients";
 import { canDeleteProject as projectCanBeDeleted } from "./project-permissions";
-import { IntegrationLinkManager } from "@/features/integrations/integrations-page";
 import {
   normalizeChecklistCompleted,
   normalizeProjectIntegrationLinks,
@@ -628,6 +627,7 @@ function ProjectActionsRuntime({
             : undefined
         }
         currencyCode={settings.currencyCode}
+        settings={settings}
         returnFocusRef={projectLauncherTriggerRef}
         onCreateClient={(client) =>
           addClient({
@@ -670,18 +670,6 @@ function ProjectActionsRuntime({
         workTypeOptions={projectTagOptions}
         settings={settings}
         teamMembers={access.activeTeamMembers}
-        integrationEditor={
-          <IntegrationLinkManager
-            title="Project Integrations"
-            subtitle="Attach service links that belong only to this project."
-            links={form.integrationLinks}
-            emptyTitle="No project links"
-            emptyBody="Add links to this project's folders, reviews, channels, or calendar events."
-            onChange={(integrationLinks) =>
-              setForm({ ...form, integrationLinks })
-            }
-          />
-        }
         formError={formError}
         onClose={() => setDialogOpen(false)}
         onSave={saveProject}

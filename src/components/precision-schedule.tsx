@@ -563,77 +563,79 @@ export function PrecisionCalendar({
               )
             }
             secondary={
-              selectedEvents.length ? (
-                <ContentSection
-                  title={formatLongDate(selectedDate)}
-                  description={`${selectedEvents.length} scheduled commitments`}
-                  className="h-full"
-                  bodyClassName="h-full"
-                >
+              <ContentSection
+                title={
+                  selectedEvents.length
+                    ? formatLongDate(selectedDate)
+                    : undefined
+                }
+                description={
+                  selectedEvents.length
+                    ? `${selectedEvents.length} scheduled commitments`
+                    : undefined
+                }
+                className="h-full"
+                bodyClassName="min-h-0 flex-1 overflow-y-auto"
+                aria-label={
+                  selectedEvents.length
+                    ? `Schedule for ${formatLongDate(selectedDate)}`
+                    : "No schedule selected"
+                }
+              >
+                {selectedEvents.length ? (
                   <div className="mt-8 space-y-3">
-                    {selectedEvents.length ? (
-                      selectedEvents.map((event) => {
-                        const project = projects.find(
-                          (item) => item.id === event.projectId
-                        );
-                        if (!project) return null;
-                        return (
-                          <motion.div
-                            key={event.id}
-                            initial={
-                              reduceMotion ? false : { opacity: 0, y: 4 }
-                            }
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={
-                              reduceMotion ? { duration: 0 } : revealTransition
-                            }
-                            className="rounded-md border border-[var(--app-border)] bg-[var(--app-soft-panel)] p-3"
-                          >
-                            <div className="flex items-start justify-between gap-3">
-                              <div className="min-w-0">
-                                <p className="truncate text-sm font-semibold">
-                                  {event.title}
-                                </p>
-                                <p className="mt-1 truncate text-xs text-[var(--app-muted)]">
-                                  {event.detail ?? event.kind}
-                                </p>
-                              </div>
-                              <Badge
-                                variant="outline"
-                                className="h-5 shrink-0 rounded px-1.5 text-[10px] capitalize"
-                              >
-                                {event.kind}
-                              </Badge>
+                    {selectedEvents.map((event) => {
+                      const project = projects.find(
+                        (item) => item.id === event.projectId
+                      );
+                      if (!project) return null;
+                      return (
+                        <motion.div
+                          key={event.id}
+                          initial={reduceMotion ? false : { opacity: 0, y: 4 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={
+                            reduceMotion ? { duration: 0 } : revealTransition
+                          }
+                          className="rounded-md border border-[var(--app-border)] bg-[var(--app-soft-panel)] p-3"
+                        >
+                          <div className="flex items-start justify-between gap-3">
+                            <div className="min-w-0">
+                              <p className="truncate text-sm font-semibold">
+                                {event.title}
+                              </p>
+                              <p className="mt-1 truncate text-xs text-[var(--app-muted)]">
+                                {event.detail ?? event.kind}
+                              </p>
                             </div>
-                            <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-[var(--app-progress-track)]">
-                              <div
-                                className="h-full rounded-full bg-[var(--app-highlight)]"
-                                style={{
-                                  width: `${getProjectProgress(project)}%`,
-                                }}
-                              />
-                            </div>
-                            <Button
-                              variant="ghost"
-                              className="mt-3 h-8 px-0 text-xs text-[var(--app-highlight)] hover:bg-transparent"
-                              onClick={() => onViewProject(project)}
+                            <Badge
+                              variant="outline"
+                              className="h-5 shrink-0 rounded px-1.5 text-[10px] capitalize"
                             >
-                              Open project <ArrowRight className="size-3.5" />
-                            </Button>
-                          </motion.div>
-                        );
-                      })
-                    ) : (
-                      <PageEmptyState
-                        icon={<CalendarDays className="size-5" />}
-                        title="Nothing scheduled"
-                        description="Select a date with project deliveries or add a project due date."
-                        className="min-h-[20rem]"
-                      />
-                    )}
+                              {event.kind}
+                            </Badge>
+                          </div>
+                          <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-[var(--app-progress-track)]">
+                            <div
+                              className="h-full rounded-full bg-[var(--app-highlight)]"
+                              style={{
+                                width: `${getProjectProgress(project)}%`,
+                              }}
+                            />
+                          </div>
+                          <Button
+                            variant="ghost"
+                            className="mt-3 h-8 px-0 text-xs text-[var(--app-highlight)] hover:bg-transparent"
+                            onClick={() => onViewProject(project)}
+                          >
+                            Open project <ArrowRight className="size-3.5" />
+                          </Button>
+                        </motion.div>
+                      );
+                    })}
                   </div>
-                </ContentSection>
-              ) : null
+                ) : null}
+              </ContentSection>
             }
           />
         </FillViewport>

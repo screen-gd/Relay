@@ -2,19 +2,16 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import type { SettingsState } from "@/lib/types";
 import { useNotificationController } from "./notification-controller";
-import { notificationCopy } from "./notification-copy";
 import { Button as OwnedButton } from "@/components/ui/button";
 import {
-  DropdownMenu as OwnedDropdownMenu,
-  DropdownMenuContent as OwnedDropdownMenuContent,
-  DropdownMenuSeparator as OwnedDropdownMenuSeparator,
-  DropdownMenuTrigger as OwnedDropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Bell } from "lucide-react";
+  Popover as OwnedPopover,
+  PopoverContent as OwnedPopoverContent,
+  PopoverTrigger as OwnedPopoverTrigger,
+} from "@/components/ui/popover";
+import { Bell, Check, Settings } from "lucide-react";
 
-export function NotificationBell({ settings }: { settings: SettingsState }) {
+export function NotificationBell() {
   const [notificationOpen, setNotificationOpen] = useState(false);
   const {
     isSignedIn,
@@ -25,9 +22,6 @@ export function NotificationBell({ settings }: { settings: SettingsState }) {
     markNotificationRead,
     markAllNotificationsRead,
   } = useNotificationController();
-  const enabledNotifications = Object.entries(settings.notifications).filter(
-    ([, enabled]) => enabled
-  );
   const teamNotifications = teamData?.notifications ?? [];
   const unreadCount = teamNotifications.filter(
     (notification) => !notification.read
@@ -37,7 +31,7 @@ export function NotificationBell({ settings }: { settings: SettingsState }) {
   );
 
   return (
-    <OwnedDropdownMenu
+    <OwnedPopover
       open={notificationOpen}
       onOpenChange={(open) => {
         setNotificationOpen(open);
@@ -48,15 +42,14 @@ export function NotificationBell({ settings }: { settings: SettingsState }) {
         }
       }}
     >
-      <OwnedDropdownMenuTrigger asChild>
+      <OwnedPopoverTrigger asChild>
         <OwnedButton
           type="button"
           variant="ghost"
           size="icon"
           title="Notifications"
           aria-label="Open notifications"
-          aria-haspopup="dialog"
-          className="relative text-[var(--app-ink)]"
+          className="relative text-[var(--app-ink)] transition-colors data-[state=open]:bg-[var(--app-active)]"
         >
           <Bell aria-hidden="true" className="size-[18px]" />
           {unreadCount ? (
@@ -71,14 +64,14 @@ export function NotificationBell({ settings }: { settings: SettingsState }) {
             </span>
           ) : null}
         </OwnedButton>
-      </OwnedDropdownMenuTrigger>
-      <OwnedDropdownMenuContent
+      </OwnedPopoverTrigger>
+      <OwnedPopoverContent
         align="end"
-        sideOffset={6}
+        sideOffset={8}
         aria-label="Notifications"
-        className="max-h-[min(32rem,calc(100dvh-4rem))] w-[310px] overflow-hidden border-[var(--app-border)] bg-[var(--app-panel)] p-0 text-[var(--app-ink)] shadow-[var(--app-shadow-2)]"
+        className="workspace-flyout max-h-[min(32rem,calc(100dvh-4rem))] w-[min(340px,calc(100vw-1rem))] overflow-hidden rounded-xl border-[var(--app-border)] bg-[var(--app-panel)] p-1.5 text-[var(--app-ink)] shadow-[var(--app-shadow-2)]"
       >
-        <div className="px-3 py-2">
+        <div className="px-2.5 py-2">
           <div className="flex items-center justify-between gap-2">
             <h2 className="text-[13px] font-semibold">Notifications</h2>
             {teamData && unreadCount ? (
@@ -104,12 +97,10 @@ export function NotificationBell({ settings }: { settings: SettingsState }) {
                 ? "Team notifications are not connected"
                 : teamNotifications.length
                   ? `${unreadCount} unread team notification${unreadCount === 1 ? "" : "s"}`
-                  : enabledNotifications.length
-                    ? `${enabledNotifications.length} notification types enabled`
-                    : "No notifications yet"}
+                  : "Project activity and feedback"}
           </p>
         </div>
-        <OwnedDropdownMenuSeparator className="border-[var(--app-border)]" />
+        <div className="mx-0.5 my-1 h-px bg-[var(--app-border)]" />
         {isConvexAuthLoading ? (
           <p className="px-3 py-2.5 text-xs leading-relaxed text-[var(--app-muted)]">
             Waiting for Convex auth before loading Team notifications.
@@ -120,11 +111,11 @@ export function NotificationBell({ settings }: { settings: SettingsState }) {
             sync before relying on shared notifications.
           </p>
         ) : teamNotifications.length ? (
-          <ul className="workspace-scrollbar-hidden max-h-[min(26rem,calc(100dvh-10rem))] overscroll-contain overflow-y-auto">
+          <ul className="workspace-scrollbar-hidden max-h-[min(26rem,calc(100dvh-10rem))] space-y-1 overscroll-contain overflow-y-auto py-1">
             {teamNotifications.map((notification) => (
               <li
                 key={notification._id}
-                className={`px-3 py-2 ${notification.read ? "bg-[var(--app-panel)]" : "bg-[var(--app-active)]"}`}
+                className={`rounded-lg px-2.5 py-2 transition-colors hover:bg-[var(--app-hover)] ${notification.read ? "" : "bg-[var(--app-active)]"}`}
               >
                 <p className="text-[13px] font-semibold">
                   {notification.message}
@@ -169,24 +160,31 @@ export function NotificationBell({ settings }: { settings: SettingsState }) {
               </li>
             ))}
           </ul>
-        ) : enabledNotifications.length ? (
-          <ul className="workspace-scrollbar-hidden max-h-[min(26rem,calc(100dvh-10rem))] overscroll-contain overflow-y-auto">
-            {enabledNotifications.map(([name]) => (
-              <li key={name} className="px-3 py-2">
-                <p className="text-[13px] font-semibold">{name}</p>
-                <p className="text-xs text-[var(--app-muted)]">
-                  {notificationCopy(name)}
-                </p>
-              </li>
-            ))}
-          </ul>
         ) : (
-          <p className="px-3 py-2.5 text-xs leading-relaxed text-[var(--app-muted)]">
-            Turn on deadline, feedback, or weekly summary notifications from
-            Settings.
-          </p>
+          <div className="grid justify-items-center gap-2 px-4 py-7 text-center">
+            <Check
+              className="size-5 text-[var(--app-accent)]"
+              aria-hidden="true"
+            />
+            <p className="text-[13px] font-semibold">No new notifications</p>
+            <p className="max-w-56 text-xs text-[var(--app-muted)]">
+              Project updates and feedback will appear here.
+            </p>
+          </div>
         )}
-      </OwnedDropdownMenuContent>
-    </OwnedDropdownMenu>
+        <div className="mx-0.5 my-1 h-px bg-[var(--app-border)]" />
+        <Link
+          href="/settings"
+          onClick={() => setNotificationOpen(false)}
+          className="flex h-9 items-center gap-2 rounded-lg px-2.5 text-xs font-medium outline-none transition-colors hover:bg-[var(--app-hover)] focus-visible:bg-[var(--app-hover)]"
+        >
+          <Settings
+            className="size-4 text-[var(--app-muted)]"
+            aria-hidden="true"
+          />
+          Notification settings
+        </Link>
+      </OwnedPopoverContent>
+    </OwnedPopover>
   );
 }

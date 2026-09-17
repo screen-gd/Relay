@@ -51,7 +51,7 @@ import {
   Plus,
   Trash2,
 } from "lucide-react";
-import { useState, type ReactNode, type RefObject } from "react";
+import { useState, type RefObject } from "react";
 import type { WorkspaceMemberOption } from "./project-view";
 import { ProjectSelect } from "@/features/projects/project-select";
 
@@ -186,7 +186,6 @@ export function ProjectDialog({
   workTypeOptions,
   settings,
   teamMembers,
-  integrationEditor,
   onClose,
   onSave,
 }: {
@@ -200,7 +199,6 @@ export function ProjectDialog({
   workTypeOptions: string[];
   settings: SettingsState;
   teamMembers: WorkspaceMemberOption[];
-  integrationEditor: ReactNode;
   onClose: () => void;
   onSave: () => void;
 }) {
@@ -326,7 +324,6 @@ export function ProjectDialog({
               }
             />
           ) : null}
-          {integrationEditor}
           {formError ? (
             <p role="alert" className="text-sm text-destructive">
               {formError}
@@ -742,7 +739,7 @@ export function DeleteProjectDialog({
   );
 }
 
-function ProjectDatePicker({
+export function ProjectDatePicker({
   label,
   value,
   settings,

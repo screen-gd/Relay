@@ -437,12 +437,6 @@ export function PrecisionProjects(props: PrecisionProjectsProps) {
     if (!hasTeam && scope === "team") setScope("personal");
   }, [hasTeam, scope]);
 
-  useEffect(() => {
-    if (!projects.some((project) => project.id === selectedId)) {
-      setSelectedId(projects[0]?.id ?? "");
-    }
-  }, [projects, selectedId]);
-
   const selected =
     source.find((project) => project.id === selectedId) ?? projects[0] ?? null;
   const activeFilterCount = [
@@ -1420,94 +1414,87 @@ function ProjectInspector({
           project={project}
           className="mb-3 aspect-video h-auto w-full"
         />
-        <AnimatePresence mode="wait" initial={false}>
-          <motion.div
-            key={project.id}
-            initial={reduceMotion ? false : { opacity: 0, y: 6 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={reduceMotion ? undefined : { opacity: 0, y: -6 }}
-          >
-            <div className="border-b border-[var(--app-border)] pb-4">
-              <div className="min-w-0 flex-1">
-                <h2 className="truncate text-sm font-semibold">
-                  {project.title}
-                </h2>
-                <p className="mt-0.5 truncate text-[11px] text-[var(--app-muted)]">
-                  {project.client || "No client"}
-                </p>
-                <Badge
-                  variant="outline"
-                  className={cn(
-                    "mt-2 h-5 rounded px-1.5 text-[10px] font-semibold",
-                    projectStatusTone(project.status)
-                  )}
-                >
-                  {project.status}
-                </Badge>
-              </div>
+        <div>
+          <div className="border-b border-[var(--app-border)] pb-4">
+            <div className="min-w-0 flex-1">
+              <h2 className="truncate text-sm font-semibold">
+                {project.title}
+              </h2>
+              <p className="mt-0.5 truncate text-[11px] text-[var(--app-muted)]">
+                {project.client || "No client"}
+              </p>
+              <Badge
+                variant="outline"
+                className={cn(
+                  "mt-2 h-5 rounded px-1.5 text-[10px] font-semibold",
+                  projectStatusTone(project.status)
+                )}
+              >
+                {project.status}
+              </Badge>
             </div>
-            <div className="space-y-4 pt-4">
-              <dl className="grid grid-cols-2 gap-x-4 gap-y-5">
-                <Detail label="Client" value={project.client || "No client"} />
-                <Detail label="Work type" value={project.workType} />
-                <Detail label="Due date" value={formatDate(project.dueDate)} />
-                <Detail
-                  label="Value"
-                  value={
-                    project.workType === settings.salaryWorkType
-                      ? "Batch tracked"
-                      : money(project.earnings, settings.currencyCode)
-                  }
+          </div>
+          <div className="space-y-4 pt-4">
+            <dl className="grid grid-cols-2 gap-x-4 gap-y-5">
+              <Detail label="Client" value={project.client || "No client"} />
+              <Detail label="Work type" value={project.workType} />
+              <Detail label="Due date" value={formatDate(project.dueDate)} />
+              <Detail
+                label="Value"
+                value={
+                  project.workType === settings.salaryWorkType
+                    ? "Batch tracked"
+                    : money(project.earnings, settings.currencyCode)
+                }
+              />
+            </dl>
+            <div className="border-t border-[var(--app-border)] pt-4">
+              <div className="flex justify-between text-xs font-semibold">
+                <span>Progress</span>
+                <span>{value}%</span>
+              </div>
+              <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-[var(--app-progress-track)]">
+                <motion.div
+                  className="h-full origin-left rounded-full bg-[var(--app-accent)]"
+                  initial={reduceMotion ? false : { scaleX: 0 }}
+                  animate={{ scaleX: value / 100 }}
                 />
-              </dl>
-              <div className="border-t border-[var(--app-border)] pt-4">
-                <div className="flex justify-between text-xs font-semibold">
-                  <span>Progress</span>
-                  <span>{value}%</span>
-                </div>
-                <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-[var(--app-progress-track)]">
-                  <motion.div
-                    className="h-full origin-left rounded-full bg-[var(--app-accent)]"
-                    initial={reduceMotion ? false : { scaleX: 0 }}
-                    animate={{ scaleX: value / 100 }}
-                  />
-                </div>
-              </div>
-              <div className="border-t border-[var(--app-border)] pt-4">
-                <p className="text-[10px] font-semibold uppercase text-[var(--app-subtle)]">
-                  Project note
-                </p>
-                <p className="mt-2 text-xs leading-5 text-[var(--app-muted)]">
-                  {project.notes || "No project notes yet."}
-                </p>
-              </div>
-              <div className="border-t border-[var(--app-border)] pt-4">
-                <p className="text-[10px] font-semibold uppercase text-[var(--app-subtle)]">
-                  Next action
-                </p>
-                <p className="mt-2 text-xs leading-5 text-[var(--app-ink)]">
-                  {projectNextAction(project)}
-                </p>
-              </div>
-              <div className="grid grid-cols-2 gap-2 pt-1">
-                <Button
-                  variant="outline"
-                  className="h-9 !bg-[var(--app-panel)] transition-transform active:scale-[0.98]"
-                  disabled={!canEdit && Boolean(project.teamId)}
-                  onClick={() => onEdit(project)}
-                >
-                  <Edit3 /> Edit
-                </Button>
-                <Button
-                  className="h-9 transition-transform active:scale-[0.98]"
-                  onClick={() => onOpen(project)}
-                >
-                  Open <ArrowRight />
-                </Button>
               </div>
             </div>
-          </motion.div>
-        </AnimatePresence>
+            <div className="border-t border-[var(--app-border)] pt-4">
+              <p className="text-[10px] font-semibold uppercase text-[var(--app-subtle)]">
+                Project note
+              </p>
+              <p className="mt-2 text-xs leading-5 text-[var(--app-muted)]">
+                {project.notes || "No project notes yet."}
+              </p>
+            </div>
+            <div className="border-t border-[var(--app-border)] pt-4">
+              <p className="text-[10px] font-semibold uppercase text-[var(--app-subtle)]">
+                Next action
+              </p>
+              <p className="mt-2 text-xs leading-5 text-[var(--app-ink)]">
+                {projectNextAction(project)}
+              </p>
+            </div>
+            <div className="grid grid-cols-2 gap-2 pt-1">
+              <Button
+                variant="outline"
+                className="h-9 !bg-[var(--app-panel)] transition-transform active:scale-[0.98]"
+                disabled={!canEdit && Boolean(project.teamId)}
+                onClick={() => onEdit(project)}
+              >
+                <Edit3 /> Edit
+              </Button>
+              <Button
+                className="h-9 transition-transform active:scale-[0.98]"
+                onClick={() => onOpen(project)}
+              >
+                Open <ArrowRight />
+              </Button>
+            </div>
+          </div>
+        </div>
       </div>
     </MotionCard>
   );
