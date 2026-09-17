@@ -27,7 +27,6 @@ const capabilityUpgradeCopy = {
   fileUploads: "File uploads",
   customWorkflowTemplates: "Custom Workflow Templates",
   advancedReports: "Advanced reports",
-  salaryPlans: "Salary Plans",
   customPortalBranding: "Custom portal branding",
   clientHub: "Client Hub",
 } as const;

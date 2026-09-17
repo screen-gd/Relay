@@ -46,7 +46,6 @@ export type ProjectAccess = {
   canManageFinance: boolean;
   canManageTeamProjects: boolean;
   customWorkflowTemplatesLocked: boolean;
-  salaryPlansCapabilityEnabled: boolean;
   clientHubCapabilityEnabled: boolean;
   customPortalBrandingCapabilityEnabled: boolean;
 };
@@ -137,11 +136,6 @@ function useProjectAccessValue(sample: boolean): ProjectAccess {
     workspaceSubscription &&
     !workspaceSubscription.capabilities.customWorkflowTemplates
   );
-  const salaryPlansCapabilityEnabled = Boolean(
-    !isAuthEnabled ||
-    !isSignedIn ||
-    workspaceSubscription?.capabilities.salaryPlans
-  );
   const clientHubCapabilityEnabled = Boolean(
     !isAuthEnabled ||
     !isSignedIn ||
@@ -173,7 +167,6 @@ function useProjectAccessValue(sample: boolean): ProjectAccess {
     workspaceSubscription,
     ...permissions,
     customWorkflowTemplatesLocked,
-    salaryPlansCapabilityEnabled,
     clientHubCapabilityEnabled,
     customPortalBrandingCapabilityEnabled,
   };

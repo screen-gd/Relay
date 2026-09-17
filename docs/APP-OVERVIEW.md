@@ -274,7 +274,7 @@ Salary Plans support repeat contracts:
 - Add correction notes.
 - Archive Plans while keeping completed batch history.
 
-Local Mode keeps a simpler legacy salary batch flow. Durable Salary Plans require an authenticated cloud workspace and an eligible plan.
+Local Mode keeps a simpler legacy salary batch flow. Durable Salary Plans are available to authenticated Workspace owners on Free and paid plans, and remain limited to solo Projects.
 
 ### Reports
 
@@ -395,13 +395,13 @@ Only the information selected for publication is shown.
 
 The app has a subscription surface backed by Clerk and Convex Workspace entitlements. The current capability model is:
 
-| Plan    | Main access                                                                                                                                                        |
-| ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Free    | Unlimited basic Projects and Clients, basic workflow tracking, standard Client Portals, and external video links. No hosted file uploads or internal Team members. |
-| Creator | Free features plus hosted file uploads, 5 GB storage, Client Hub, custom Portal branding, custom Workflow Templates, advanced Reports, and Salary Plans.           |
-| Team    | Creator features plus Team Workspaces, roles, assignments, Team payouts, workload reporting, and included Editor seats.                                            |
+| Plan    | Main access                                                                                                                                                                                    |
+| ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Free    | Unlimited basic Projects and Clients, basic workflow tracking, standard Client Portals, external video links, and owner-managed Salary Plans. No hosted file uploads or internal Team members. |
+| Creator | Free features plus hosted file uploads, 5 GB storage, Client Hub, custom Portal branding, custom Workflow Templates, and advanced Reports.                                                     |
+| Team    | Creator features plus Team Workspaces, roles, assignments, Team payouts, workload reporting, and included Editor seats.                                                                        |
 
-The current backend gates file uploads, custom templates, advanced Reports, Salary Plans, custom Portal branding, Client Hub, and Team features by plan. The public plan document is marked as a proposed launch model, and the app can pause new purchases through configuration.
+The current backend gates file uploads, custom templates, advanced Reports, custom Portal branding, Client Hub, and Team features by plan. Salary Plans are available on Free for authenticated Workspace owners. The public plan document is marked as a proposed launch model, and the app can pause new purchases through configuration.
 
 ## Public, support, and access surfaces
 

@@ -7,7 +7,6 @@ import {
   type QueryCtx,
 } from "./_generated/server";
 import type { Doc } from "./_generated/dataModel";
-import { requireCurrentWorkspaceCapability } from "./workspaceSubscriptions";
 
 type FunctionCtx = QueryCtx | MutationCtx;
 
@@ -23,32 +22,6 @@ async function requireIdentity(ctx: FunctionCtx) {
   const identity = await ctx.auth.getUserIdentity();
   if (!identity) throw new Error("Not authenticated");
   return identity;
-}
-
-async function requireSalaryPlans(
-  ctx: FunctionCtx,
-  identity: Awaited<ReturnType<typeof requireIdentity>>
-) {
-  await requireCurrentWorkspaceCapability(
-    ctx,
-    identity.tokenIdentifier,
-    "salaryPlans"
-  );
-}
-
-async function canReadSalaryPlans(
-  ctx: QueryCtx,
-  identity: Awaited<ReturnType<typeof requireIdentity>>
-) {
-  const membership = await ctx.db
-    .query("teamMembers")
-    .withIndex("by_userId_and_status", (q) =>
-      q.eq("userId", identity.tokenIdentifier).eq("status", "active")
-    )
-    .first();
-  if (!membership) return false;
-  await requireSalaryPlans(ctx, identity);
-  return true;
 }
 
 async function requireClient(
@@ -100,7 +73,6 @@ export const list = query({
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) return [];
-    if (!(await canReadSalaryPlans(ctx, identity))) return [];
     if (args.includeArchived) {
       return await ctx.db
         .query("salaryPlans")
@@ -122,7 +94,6 @@ export const create = mutation({
   args: planFields,
   handler: async (ctx, args) => {
     const identity = await requireIdentity(ctx);
-    await requireSalaryPlans(ctx, identity);
     validateTerms(
       args.requiredProjectCount,
       args.amount,
@@ -152,7 +123,6 @@ export const update = mutation({
   },
   handler: async (ctx, { planId, changes }) => {
     const identity = await requireIdentity(ctx);
-    await requireSalaryPlans(ctx, identity);
     await getOwnedPlan(ctx, planId, identity.tokenIdentifier);
     validateTerms(
       changes.requiredProjectCount,
@@ -178,7 +148,6 @@ export const setArchived = mutation({
   args: { planId: v.id("salaryPlans"), archived: v.boolean() },
   handler: async (ctx, { planId, archived }) => {
     const identity = await requireIdentity(ctx);
-    await requireSalaryPlans(ctx, identity);
     await getOwnedPlan(ctx, planId, identity.tokenIdentifier);
     await ctx.db.patch(planId, {
       archived,
@@ -193,7 +162,6 @@ export const listBatches = query({
   handler: async (ctx) => {
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) return [];
-    if (!(await canReadSalaryPlans(ctx, identity))) return [];
     return await ctx.db
       .query("projectSalaryBatches")
       .withIndex("by_ownerUserId", (q) =>
@@ -211,7 +179,6 @@ export const setReceived = mutation({
   },
   handler: async (ctx, args) => {
     const identity = await requireIdentity(ctx);
-    await requireSalaryPlans(ctx, identity);
     const batch = await getOwnedBatch(
       ctx,
       args.batchId,
@@ -239,7 +206,6 @@ export const setCorrectionNote = mutation({
   args: { batchId: v.id("projectSalaryBatches"), correctionNote: v.string() },
   handler: async (ctx, args) => {
     const identity = await requireIdentity(ctx);
-    await requireSalaryPlans(ctx, identity);
     const batch = await getOwnedBatch(
       ctx,
       args.batchId,
