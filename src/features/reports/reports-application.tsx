@@ -17,7 +17,6 @@ export function ReportsApplication() {
     activeTeamMembers,
     workspaceSubscription,
     canManageFinance,
-    salaryPlansCapabilityEnabled,
   } = useProjectAccess();
   return (
     <div className="grid gap-4">
@@ -47,7 +46,6 @@ export function ReportsApplication() {
           settings={settings}
           projects={personalProjects}
           isOwner
-          capabilityEnabled={salaryPlansCapabilityEnabled}
         />
       ) : null}
     </div>

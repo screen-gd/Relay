@@ -253,7 +253,7 @@ function entitlements(projection: SubscriptionProjection) {
       fileUploads: plan !== "free",
       customWorkflowTemplates: plan !== "free",
       advancedReports: plan !== "free",
-      salaryPlans: plan !== "free",
+      salaryPlans: true,
       customPortalBranding: plan !== "free",
       clientHub: plan !== "free",
       teamFeatures: plan === "team",
@@ -271,7 +271,7 @@ const capabilityErrors: Record<WorkspaceCapability, string> = {
   customWorkflowTemplates:
     "Custom Workflow Templates require a Creator or Team plan.",
   advancedReports: "Advanced reports require a Creator or Team plan.",
-  salaryPlans: "Salary Plans require a Creator or Team plan.",
+  salaryPlans: "Salary Plans are available on every plan.",
   customPortalBranding:
     "Custom portal branding requires a Creator or Team plan.",
   clientHub: "Client Hub requires a Creator or Team plan.",

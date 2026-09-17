@@ -61,4 +61,4 @@ Google Drive, Dropbox, or Frame.io OAuth integrations can later resolve provider
 
 `projectFiles` is the only runtime source for portal deliverables. Production had no
 `portalDeliverables` rows when this path was retired, so no backfill was needed.
-The legacy table remains in the schema until the final model cleanup.
+The legacy table and its runtime compatibility path have been removed.

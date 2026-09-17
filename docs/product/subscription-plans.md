@@ -11,19 +11,21 @@ Workspace entitlements. Clients and Client Contacts do not consume internal seat
 
 Checkout stays disabled for launch. Do not connect Stripe or activate Clerk
 Billing. Razorpay integration and migration of the existing Clerk-specific billing
-code are separate post-launch work. The paid prices and trial terms below are
-planning inputs, not live offers. The implementation checklist lives in
+code are separate post-launch work. Paid prices, currencies, billing periods,
+trials, cancellations, and refund terms await ticket 02 approval. No former
+Clerk or Stripe commercial terms carry forward. The implementation checklist lives in
 `.scratch/subscription-plans/`.
 
 ## Plan summary
 
-| Plan    | Monthly | Annual | Trial  | Storage                 | Internal Editors   |
-| ------- | ------: | -----: | ------ | ----------------------- | ------------------ |
-| Free    |      $0 |     $0 | None   | No Relay-hosted uploads | 1 Workspace owner  |
-| Creator |      $9 |    $90 | 7 days | 5 GB                    | 1 Workspace owner  |
-| Team    |     $24 |   $240 | None   | 15 GB shared            | 3 included Editors |
+| Plan    |  Monthly |   Annual | Trial    | Storage                 | Internal Editors   |
+| ------- | -------: | -------: | -------- | ----------------------- | ------------------ |
+| Free    |       $0 |       $0 | None     | No Relay-hosted uploads | 1 Workspace owner  |
+| Creator |  Pending |  Pending | Pending  | 5 GB                    | 1 Workspace owner  |
+| Team    | Deferred | Deferred | Deferred | 15 GB shared            | 3 included Editors |
 
-Annual pricing gives two months free. Team customers can contact Relay for discounted bundles. A bundle is a negotiated Team price, not a fourth public plan.
+Paid capacities describe the current product design, not approved commercial
+offers. Annual discounts and negotiated bundles are not approved.
 
 ## Free
 
@@ -37,6 +39,7 @@ Included:
 - Basic Reviews and delivery
 - Standard project-specific Client Portals
 - External Video Embeds
+- Owner-managed Salary Plans and Salary Batches
 
 Limits:
 
@@ -58,8 +61,6 @@ Includes everything in Free, plus:
 - Custom portal branding
 - Custom Workflow Templates
 - Advanced reports
-- Retainers, using Relay's existing Salary Plan model
-- 7-day trial
 
 Creator supports one internal Workspace owner. Client Contacts remain free and do not become Team Members.
 
@@ -78,7 +79,8 @@ Includes everything in Creator, plus:
 - Workload reports
 - Free internal Viewer access
 
-Each extra paid Editor costs $5/month or $50/year and adds 2 GB to the shared Storage Quota.
+The current capacity design adds 2 GB per extra Editor. Seat pricing and billing
+terms remain deferred, and this capacity is not available for purchase.
 
 Examples:
 
@@ -90,11 +92,12 @@ Examples:
 
 Storage add-ons increase the Workspace's shared Storage Quota.
 
-| Add-on | Monthly | Annual |
-| ------ | ------: | -----: |
-| 50 GB  |      $5 |    $50 |
+| Add-on |  Monthly |   Annual |
+| ------ | -------: | -------: |
+| 50 GB  | Deferred | Deferred |
 
-Additional storage packs can be added after Relay measures real Convex and Cloudflare R2 usage. A larger custom storage bundle can be included in a negotiated Team bundle.
+Storage pack pricing and billing mechanics require a later review of real Convex
+and Cloudflare R2 usage and Razorpay support. No custom bundle is approved.
 
 ## Access rules
 

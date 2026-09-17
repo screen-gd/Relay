@@ -278,7 +278,7 @@ test("Salary Plans are owner-only and archive without deleting history", async (
   ).toMatchObject([{ _id: planId, archived: true }]);
 });
 
-test("Free Workspaces cannot create Salary Plans", async () => {
+test("Free Workspaces can create Salary Plans", async () => {
   const t = convexTest(schema, modules);
   await addWorkspace(t, "free");
   const owner = t.withIdentity({ tokenIdentifier: "owner" });
@@ -292,7 +292,7 @@ test("Free Workspaces cannot create Salary Plans", async () => {
       startDate: "2026-08-24",
       notes: "",
     })
-  ).rejects.toThrow("Creator or Team");
+  ).resolves.toBeDefined();
 });
 
 test("custom Workflow Template changes use Workspace entitlements", async () => {

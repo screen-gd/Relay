@@ -4,7 +4,6 @@ import { useEffect, useMemo, useState } from "react";
 import { makeFunctionReference } from "convex/server";
 import { useConvexAuth, useMutation, useQuery } from "convex/react";
 
-import { CapabilityUpgradePrompt } from "@/components/subscription-plans";
 import { ContentSection } from "@/components/workspace-page";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -133,17 +132,15 @@ type SalaryPlansPanelProps = {
   settings: SettingsState;
   projects: readonly WorkItem[];
   isOwner: boolean;
-  capabilityEnabled?: boolean;
 };
 
 export function SalaryPlansPanel({
   settings,
   projects,
   isOwner,
-  capabilityEnabled = true,
 }: SalaryPlansPanelProps) {
   const { isAuthenticated } = useConvexAuth();
-  const enabled = isOwner && isAuthenticated && capabilityEnabled;
+  const enabled = isOwner && isAuthenticated;
   const plans = useQuery(
     salaryPlansApi.list,
     enabled ? { includeArchived: true } : "skip"
@@ -184,17 +181,6 @@ export function SalaryPlansPanel({
   }, [batches]);
 
   if (!isOwner) return null;
-
-  if (isAuthenticated && !capabilityEnabled) {
-    return (
-      <ContentSection
-        title="Salary Plans"
-        description="Owner-only plan management for authenticated workspaces."
-      >
-        <CapabilityUpgradePrompt capability="salaryPlans" />
-      </ContentSection>
-    );
-  }
 
   async function savePlan() {
     const requiredProjectCount = Number(draft.requiredProjectCount);

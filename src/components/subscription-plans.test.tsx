@@ -42,7 +42,7 @@ const freeSubscription = {
     fileUploads: false,
     customWorkflowTemplates: false,
     advancedReports: false,
-    salaryPlans: false,
+    salaryPlans: true,
     customPortalBranding: false,
     clientHub: false,
     teamFeatures: false,
