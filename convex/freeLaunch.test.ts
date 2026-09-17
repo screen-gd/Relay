@@ -43,6 +43,109 @@ const settings = {
   density: "compact",
 };
 
+test("a Free owner completes a Salary Batch with immutable terms and owner-only payment updates", async () => {
+  const t = convexTest(schema, modules);
+  const owner = t.withIdentity({
+    subject: "owner",
+    tokenIdentifier: "test|owner",
+  });
+  const other = t.withIdentity({
+    subject: "other",
+    tokenIdentifier: "test|other",
+  });
+  await owner.mutation(api.team.createWorkspace, { name: "Free Studio" });
+  await owner.mutation(api.settings.upsert, settings);
+  const planId = await owner.mutation(api.salaryPlans.create, {
+    clientId: "client",
+    requiredProjectCount: 1,
+    amount: 250,
+    startDate: "2026-09-17",
+    notes: "Original terms",
+  });
+  await owner.mutation(api.projects.create, {
+    project: {
+      id: "salary-project",
+      assigneeUserIds: [],
+      profileId: "video-editing",
+      title: "Salary Project",
+      clientId: "client",
+      salaryPlanId: planId,
+      workflowStages: [
+        { id: "edit", label: "Edit", purpose: "editing" },
+        { id: "done", label: "Delivered", purpose: "delivered" },
+      ],
+      workType: "Salary",
+      startDate: "2026-09-17",
+      dueDate: "2026-09-18",
+      earnings: 0,
+      notes: "",
+    },
+  });
+  expect(
+    await owner.mutation(api.projects.transitionStage, {
+      projectId: "salary-project",
+      stageId: "done",
+    })
+  ).toMatchObject({ kind: "salary", batchCreated: true });
+  const batches = await owner.query(api.salaryPlans.listBatches, {});
+  expect(batches).toHaveLength(1);
+  const batch = batches[0];
+  expect(batch).toMatchObject({
+    salaryPlanId: planId,
+    clientId: "client",
+    requiredProjectCount: 1,
+    amount: 250,
+    planStartDate: "2026-09-17",
+    planNotes: "Original terms",
+    projectIds: ["salary-project"],
+    paid: false,
+    received: false,
+  });
+  await owner.mutation(api.salaryPlans.update, {
+    planId,
+    changes: {
+      clientId: "client",
+      requiredProjectCount: 2,
+      amount: 500,
+      startDate: "2026-09-18",
+      notes: "New terms",
+    },
+  });
+  expect(await other.query(api.salaryPlans.listBatches, {})).toEqual([]);
+  await expect(
+    other.mutation(api.salaryPlans.setReceived, {
+      batchId: batch._id,
+      received: true,
+    })
+  ).rejects.toThrow("Salary Batch not found");
+  await expect(
+    t.mutation(api.salaryPlans.setReceived, {
+      batchId: batch._id,
+      received: true,
+    })
+  ).rejects.toThrow("Not authenticated");
+  await owner.mutation(api.salaryPlans.setReceived, {
+    batchId: batch._id,
+    received: true,
+    correctionNote: "Bank transfer",
+  });
+  expect(await owner.query(api.salaryPlans.listBatches, {})).toMatchObject([
+    {
+      _id: batch._id,
+      requiredProjectCount: 1,
+      amount: 250,
+      planStartDate: "2026-09-17",
+      planNotes: "Original terms",
+      paid: true,
+      received: true,
+      correctionNote: "Bank transfer",
+    },
+  ]);
+  expect(
+    await owner.query(api.workspaceSubscriptions.getCurrent, {})
+  ).toMatchObject({ plan: "free" });
+});
+
 test("a new Free owner can create a Client, Project, external video, portal, delivery and Salary Plan", async () => {
   const t = convexTest(schema, modules);
   const owner = t.withIdentity({
