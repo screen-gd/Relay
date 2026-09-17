@@ -30,8 +30,6 @@ This index defines the unified UI contract for the Relay workspace. It keeps the
 - [Profiles and portals](features/profiles-portals.md)
 - [Access and support](features/access-support.md)
 
-The remaining implementation work and acceptance gates live in the [legacy retirement spec](../../.scratch/legacy-retirement/spec.md).
-
 ---
 
 ## Existing brand foundations
