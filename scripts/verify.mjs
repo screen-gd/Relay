@@ -6,8 +6,11 @@ const required = [
   ["src/app/globals.css", "--surface-canvas: #000000"],
   ["src/components/workspace-shell.tsx", "Quick Search"],
   ["src/components/workspace-shell.tsx", "Quick create"],
-  ["src/app/tracker-app.tsx", "Choose how to use Relay"],
-  ["src/app/tracker-app.tsx", "Export backup"],
+  [
+    "src/features/onboarding/welcome-choice-dialog.tsx",
+    "Choose how to use Relay",
+  ],
+  ["src/features/settings/settings-page.tsx", "Export backup"],
   ["src/lib/types.ts", "clientId?: string"],
   ["src/lib/workspace-backup.ts", "version: 1"],
 ];
