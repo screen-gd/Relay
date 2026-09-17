@@ -1,6 +1,7 @@
 "use client";
 
-import { UserButton, useAuth } from "@clerk/nextjs";
+import { UserButton } from "@clerk/nextjs";
+import { useOptionalAuth } from "@/lib/optional-auth";
 import { useConvexAuth, useQuery } from "convex/react";
 import { api } from "../../../convex/_generated/api";
 
@@ -13,7 +14,7 @@ function formatDate(value: string) {
 }
 
 export default function ClientHubPage() {
-  const { isLoaded, isSignedIn } = useAuth();
+  const { isLoaded, isSignedIn } = useOptionalAuth();
   const { isAuthenticated, isLoading } = useConvexAuth();
   const hub = useQuery(
     api.clientHub.getMine,
@@ -26,7 +27,7 @@ export default function ClientHubPage() {
       <header className="border-b border-white/15 px-6 py-5 md:px-10">
         <div className="mx-auto flex max-w-6xl items-center justify-between">
           <span className="text-lg font-semibold">Relay Client Hub</span>
-          <UserButton />
+          {isSignedIn ? <UserButton /> : null}
         </div>
       </header>
       <div className="mx-auto max-w-6xl px-6 py-10 md:px-10">

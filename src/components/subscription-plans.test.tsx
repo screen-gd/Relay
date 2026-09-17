@@ -27,6 +27,10 @@ vi.mock("convex/react", () => ({
   useMutation: () => vi.fn(),
 }));
 
+vi.mock("@/lib/optional-auth", () => ({
+  useOptionalAuth: () => ({ isSignedIn: true }),
+}));
+
 const freeSubscription = {
   clerkOrganizationId: "org_workspace",
   plan: "free",

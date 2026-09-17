@@ -1,6 +1,7 @@
 "use client";
 
 import { UserProfile, useUser } from "@clerk/nextjs";
+import { useOptionalAuth } from "@/lib/optional-auth";
 import type { FunctionReturnType } from "convex/server";
 import Link from "next/link";
 import { useState } from "react";
@@ -187,6 +188,8 @@ export function ClerkPricingPlans({
 }
 
 export function UserBillingProfile() {
+  const { isSignedIn } = useOptionalAuth();
+  if (!isSignedIn) return <p>Sign in to view your billing profile.</p>;
   return <UserProfile routing="hash" />;
 }
 

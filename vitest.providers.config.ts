@@ -9,6 +9,10 @@ export default defineConfig({
   },
   test: {
     environment: "node",
-    include: ["src/app/providers.test.tsx", "src/app/api/access/route.test.ts"],
+    include: [
+      "src/app/providers.test.tsx",
+      "src/app/client-hub/page.test.tsx",
+      "src/components/subscription-plans.test.tsx",
+    ],
   },
 });
