@@ -5,6 +5,7 @@ out/
 dist/
 .open-next/
 .wrangler/
+.vercel/
 .dev.vars
 cloudflare-env.d.ts
 

@@ -1,3 +1,4 @@
+import assert from "node:assert/strict";
 import { spawn, spawnSync } from "node:child_process";
 import { createServer } from "node:net";
 import { join } from "node:path";
@@ -14,8 +15,6 @@ const serverArgs = [
   "-p",
   String(port),
 ];
-const accessPassword =
-  process.env.ACCESS_WALL_PASSWORD || "relay-production-verifier";
 
 let server;
 
@@ -23,7 +22,6 @@ try {
   server = spawn(serverCommand, serverArgs, {
     env: {
       ...process.env,
-      ACCESS_WALL_PASSWORD: accessPassword,
       PORT: String(port),
     },
     stdio: ["ignore", "pipe", "pipe"],
@@ -40,10 +38,14 @@ try {
 
   await waitForServer(baseUrl, () => output);
 
+  for (const path of ["/early-access", "/api/early-access"]) {
+    const response = await fetch(`${baseUrl}${path}`, { redirect: "manual" });
+    assert.equal(response.status, 404, `${path} must stay removed`);
+  }
+
   const verifier = spawn(process.execPath, ["scripts/verify.mjs"], {
     env: {
       ...process.env,
-      RELAY_VERIFY_ACCESS_PASSWORD: accessPassword,
       RELAY_VERIFY_URL: baseUrl,
     },
     stdio: "inherit",

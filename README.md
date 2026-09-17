@@ -116,9 +116,39 @@ pnpm test:e2e      # Playwright journeys
 pnpm verify        # Route and source-invariant checks
 ```
 
-## Cloudflare Deployment
+## Vercel Deployment
 
-The app deploys to Cloudflare Workers through OpenNext; it is not a static upload.
+Import this repository into Vercel with the root directory set to the repository
+root, not `website`. Use the Next.js framework preset, Node.js 22 or 24, and the
+default pnpm install command. `vercel.json` uses `pnpm build` (`next build`);
+Vercel does not need the Cloudflare OpenNext bundle or a custom output directory.
+
+Configure these environment variables before building:
+
+- `NEXT_PUBLIC_CONVEX_URL`: the existing approved Convex deployment URL.
+- `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`: the matching Clerk instance's public key.
+- `CLERK_SECRET_KEY`: the matching server secret, stored only in Vercel settings.
+- `NEXT_PUBLIC_SITE_URL`: the public app origin for metadata and sitemap links.
+- `NEXT_PUBLIC_BILLING_PURCHASES_ENABLED=false`.
+- `NEXT_PUBLIC_FILE_STORAGE_PROVIDER=convex`.
+
+Use an approved test backend and Clerk instance for previews. Changing the host
+does not deploy Convex or migrate data. Do not add `convex deploy` to the build
+command. Keep Clerk issuer configuration on the existing Convex deployment.
+
+Before production cutover, configure the intended domain and permitted origins
+in Clerk and Vercel, then verify sign-in and signed-in Project journeys. Production
+Clerk keys may require the configured custom domain rather than a `vercel.app`
+preview URL. DNS, live configuration and deployment require separate approval.
+
+The shared early-access password page and endpoint have been removed. Clerk
+sign-in and Convex authorization remain in place. Vercel Deployment Protection
+is a separate hosting setting; configure its audience in Vercel if enabled.
+
+## Cloudflare Deployment (optional)
+
+The existing Cloudflare alternative uses OpenNext; it is not a static upload.
+These commands are not used by Vercel.
 
 For a local Worker preview:
 
@@ -146,7 +176,6 @@ Set these in the Worker environment:
 - `NEXT_PUBLIC_CONVEX_URL`
 - `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`
 - `NEXT_PUBLIC_SITE_URL`
-- `ACCESS_WALL_PASSWORD` (secret)
 
 Clerk issuer variables belong in the Convex deployment environment, not the Worker. Set `NEXT_PUBLIC_SITE_URL` to the production domain so metadata, canonical links, robots.txt, and sitemap.xml use the deployed address.
 

@@ -19,6 +19,9 @@ const forbiddenFiles = [
   "src/middleware.ts",
   "src/app/access/page.tsx",
   "src/app/api/access/route.ts",
+  "src/app/early-access/page.tsx",
+  "src/app/api/early-access/route.ts",
+  "src/lib/early-access.ts",
 ];
 const failures = [];
 
