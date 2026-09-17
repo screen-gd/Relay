@@ -142,11 +142,15 @@ Security telemetry must not retain secrets or sensitive raw payment details.
 | Team, extra Editors, Storage Add-ons                                     | Deferred, no commercial approval                               |
 | Integration, credentials, test-object creation and production operations | Not authorized by this review                                  |
 
-After the business decisions, test the chosen account/currency/method through
-authentication, first charge, renewal, cancellation, refund, failure/recovery,
-duplicate/out-of-order webhook handling and missed-event reconciliation under
-separate scoped approval. Capture test-mode object references and results without
-secrets. Only then approve a versioned contract and unblock ticket 03.
+Before approving ticket 02, verify the chosen account, currency and payment
+methods through provider test-mode checks under separate scoped approval. Record
+the supported lifecycle and approved commercial terms in a versioned contract;
+that contract unblocks ticket 03. These checks do not require a Relay integration.
+
+Tickets 03–04 implement the subscription boundary and integration. Tickets 04–06
+then verify Relay checkout, renewal, cancellation, refunds, failure recovery,
+duplicate/out-of-order webhooks and missed-event reconciliation before paid
+release. Capture test-mode references and results without secrets.
 
 ## Primary sources
 

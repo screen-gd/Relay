@@ -46,6 +46,11 @@ tests and the review-comment suite; 42 component/library tests in
 `node node_modules/next/dist/bin/next build` because the device's pnpm shim
 resolves Corepack to an invalid Windows path. No package configuration changed.
 
+Review follow-up: a fourth Free test now delivers a Salary Plan-linked Project,
+verifies the completed Salary Batch retains its original terms after a plan edit,
+and proves only its owner can record receipt. The focused Free, Salary Plan,
+Salary Plan access and subscription run passed 21 tests; type checking passed.
+
 ## Checks deliberately left open
 
 The signed-in journey and complete interface-denial criteria above remain open.
