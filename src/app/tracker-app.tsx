@@ -1793,8 +1793,6 @@ export function TrackerApp({
       onConfirm={confirmDeleteProject}
     />
   );
-  if (!isAuthLoaded) return <AppLoadingStatus />;
-
   if (page === "profile") {
     return (
       <div
@@ -1804,6 +1802,7 @@ export function TrackerApp({
         <SettingsContext.Provider value={settings}>
           {pageContent}
         </SettingsContext.Provider>
+        {!isAuthLoaded ? <AppLoadingStatus /> : null}
         {projectDialog}
         {deleteDialog}
         <WelcomeChoiceDialog
@@ -1852,6 +1851,7 @@ export function TrackerApp({
           </SettingsContext.Provider>
         </div>
       </WorkspaceShell>
+      {!isAuthLoaded ? <AppLoadingStatus /> : null}
       <AppToast toast={toast} onClose={() => setToast(null)} />
       {projectDialog}
       {deleteDialog}
