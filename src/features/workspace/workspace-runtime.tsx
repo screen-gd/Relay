@@ -99,8 +99,6 @@ function WorkspaceFrame({ children }: { children: ReactNode }) {
     document.getElementById("main-content")?.scrollTo(0, 0);
   }, [pathname]);
 
-  if (!isAuthLoaded) return <AppLoadingStatus />;
-
   const standalone = pathname === "/profile";
   return (
     <>
@@ -139,6 +137,7 @@ function WorkspaceFrame({ children }: { children: ReactNode }) {
       {!standalone ? (
         <AppToast toast={toast} onClose={() => setToast(null)} />
       ) : null}
+      {!isAuthLoaded ? <AppLoadingStatus /> : null}
       <WorkspaceOnboarding sample={sample} />
     </>
   );
