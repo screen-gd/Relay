@@ -411,12 +411,6 @@ export function PrecisionDashboard(props: DashboardProps) {
   const [mobileInspectorOpen, setMobileInspectorOpen] = useState(false);
   const activityScrollTopRef = useRef<number | null>(null);
 
-  useEffect(() => {
-    if (!props.visibleProjects.some((project) => project.id === selectedId)) {
-      setSelectedId("");
-    }
-  }, [props.visibleProjects, selectedId]);
-
   useLayoutEffect(() => {
     if (activityScrollTopRef.current === null) return;
     const contentViewport = document.getElementById("main-content");
@@ -1299,17 +1293,15 @@ export function PrecisionDashboard(props: DashboardProps) {
                 </div>
               }
               secondary={
-                selected ? (
-                  <div className="h-full min-w-0">
-                    <ProjectInspector
-                      project={selected}
-                      settings={props.settings}
-                      onOpen={props.onViewProject}
-                      onEdit={props.onEditProject}
-                      canEdit={props.canEditProjects}
-                    />
-                  </div>
-                ) : null
+                <div className="h-full min-w-0">
+                  <ProjectInspector
+                    project={selected}
+                    settings={props.settings}
+                    onOpen={props.onViewProject}
+                    onEdit={props.onEditProject}
+                    canEdit={props.canEditProjects}
+                  />
+                </div>
               }
             />
           </motion.div>
@@ -1680,7 +1672,7 @@ function ProjectInspector({
   const progress = getProjectProgress(project);
 
   return (
-    <AnimatePresence mode="wait">
+    <AnimatePresence mode="popLayout" initial={false}>
       <MotionCard
         key={project.id}
         className={cn(
@@ -1689,17 +1681,16 @@ function ProjectInspector({
             ? "min-h-dvh overflow-y-auto rounded-none border-0"
             : "hidden h-full overflow-hidden rounded-[10px] xl:block"
         )}
-        initial={reduceMotion ? false : { opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        exit={reduceMotion ? { opacity: 0 } : { opacity: 0, y: -6 }}
-        transition={{ duration: reduceMotion ? 0 : 0.35, ease: easing }}
+        initial={reduceMotion ? false : { opacity: 0.65, scale: 0.99 }}
+        animate={{ opacity: 1, scale: 1 }}
+        exit={{ opacity: 0 }}
+        transition={{ duration: reduceMotion ? 0 : 0.16, ease: easing }}
       >
         <motion.div
           className={cn(
             "flex items-start gap-3 border-b border-[var(--app-border)]",
             mobile ? "p-5" : "p-3.5"
           )}
-          layout
         >
           <span className="mt-1.5 size-1.5 shrink-0 rounded-full bg-[var(--app-accent)]" />
           <div className="min-w-0 flex-1">

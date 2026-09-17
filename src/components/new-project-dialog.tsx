@@ -7,6 +7,7 @@ import type {
   ProjectGroup,
   SalaryPlan,
   SavedProjectTemplate,
+  SettingsState,
 } from "@/lib/types";
 import {
   newProjectFormSchema,
@@ -31,6 +32,7 @@ import {
 import { FieldLayout } from "@/components/ui/field-layout";
 import { Input } from "@/components/ui/input";
 import { Check, ChevronDown } from "lucide-react";
+import { ProjectDatePicker } from "@/features/projects/project-dialogs";
 
 type NewProjectDialogProps = {
   open: boolean;
@@ -41,6 +43,7 @@ type NewProjectDialogProps = {
   salaryPlanLabel: string;
   salaryPlans?: readonly SalaryPlan[];
   currencyCode?: string;
+  settings: SettingsState;
   returnFocusRef: RefObject<HTMLElement | null>;
   onCreateClient: (
     input: Pick<Client, "name" | "email" | "company">
@@ -148,6 +151,7 @@ export function NewProjectDialog({
   salaryPlanLabel,
   salaryPlans,
   currencyCode = "USD",
+  settings,
   returnFocusRef,
   onCreateClient,
   onClose,
@@ -229,7 +233,7 @@ export function NewProjectDialog({
       }}
     >
       <DialogContent
-        className="studio-motion-gooey border-border bg-background text-foreground sm:max-w-lg"
+        className="max-h-[min(94dvh,900px)] overflow-y-auto border-border bg-background text-foreground sm:max-w-2xl"
         onCloseAutoFocus={(event) => {
           const target = returnFocusRef.current;
           if (!target?.isConnected) return;
@@ -238,13 +242,14 @@ export function NewProjectDialog({
         }}
       >
         <DialogHeader>
-          <DialogTitle>New Project</DialogTitle>
+          <DialogTitle className="text-2xl">New Project</DialogTitle>
           <DialogDescription>
-            Start with the choices needed to schedule the work.
+            Set the schedule, ownership, and production details for this
+            project.
           </DialogDescription>
         </DialogHeader>
         <form
-          className="grid gap-4"
+          className="grid gap-5"
           onSubmit={(event) => {
             event.preventDefault();
             event.stopPropagation();
@@ -306,64 +311,74 @@ export function NewProjectDialog({
                       );
                     }}
                   </form.Subscribe>
-                  {creatingClient ? (
-                    <div className="mt-2 grid gap-2 border-l border-border pl-3">
-                      <Input
-                        aria-label="New Client name"
-                        placeholder="Client name"
-                        value={clientDraft.name}
-                        onChange={(event) =>
-                          setClientDraft((current) => ({
-                            ...current,
-                            name: event.target.value,
-                          }))
-                        }
-                      />
-                      <div className="grid gap-2 sm:grid-cols-2">
+                  <div
+                    aria-hidden={!creatingClient}
+                    inert={!creatingClient}
+                    className={`grid transition-[grid-template-rows,opacity] duration-300 ease-out ${creatingClient ? "grid-rows-[1fr] opacity-100" : "pointer-events-none grid-rows-[0fr] opacity-0"}`}
+                  >
+                    <div className="min-h-0 overflow-hidden">
+                      <div className="mt-2 grid gap-2 border-l border-border pl-3">
                         <Input
-                          aria-label="New Client email"
-                          type="email"
-                          placeholder="Email (optional)"
-                          value={clientDraft.email}
+                          aria-label="New Client name"
+                          placeholder="Client name"
+                          value={clientDraft.name}
                           onChange={(event) =>
                             setClientDraft((current) => ({
                               ...current,
-                              email: event.target.value,
+                              name: event.target.value,
                             }))
                           }
                         />
-                        <Input
-                          aria-label="New Client company"
-                          placeholder="Company (optional)"
-                          value={clientDraft.company}
-                          onChange={(event) =>
-                            setClientDraft((current) => ({
-                              ...current,
-                              company: event.target.value,
-                            }))
-                          }
-                        />
-                      </div>
-                      {clientError ? (
-                        <p role="alert" className="text-sm text-destructive">
-                          {clientError}
-                        </p>
-                      ) : null}
-                      <div className="flex gap-2">
-                        <Button type="button" size="sm" onClick={createClient}>
-                          Add Client
-                        </Button>
-                        <Button
-                          type="button"
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => setCreatingClient(false)}
-                        >
-                          Cancel
-                        </Button>
+                        <div className="grid gap-2 sm:grid-cols-2">
+                          <Input
+                            aria-label="New Client email"
+                            type="email"
+                            placeholder="Email (optional)"
+                            value={clientDraft.email}
+                            onChange={(event) =>
+                              setClientDraft((current) => ({
+                                ...current,
+                                email: event.target.value,
+                              }))
+                            }
+                          />
+                          <Input
+                            aria-label="New Client company"
+                            placeholder="Company (optional)"
+                            value={clientDraft.company}
+                            onChange={(event) =>
+                              setClientDraft((current) => ({
+                                ...current,
+                                company: event.target.value,
+                              }))
+                            }
+                          />
+                        </div>
+                        {clientError ? (
+                          <p role="alert" className="text-sm text-destructive">
+                            {clientError}
+                          </p>
+                        ) : null}
+                        <div className="flex gap-2">
+                          <Button
+                            type="button"
+                            size="sm"
+                            onClick={createClient}
+                          >
+                            Add Client
+                          </Button>
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => setCreatingClient(false)}
+                          >
+                            Cancel
+                          </Button>
+                        </div>
                       </div>
                     </div>
-                  ) : null}
+                  </div>
                 </div>
               </FieldLayout>
             )}
@@ -420,13 +435,12 @@ export function NewProjectDialog({
           <div className="grid gap-4 sm:grid-cols-2">
             <form.Field name="dueDate">
               {(field) => (
-                <FieldLayout label="Due date">
-                  <Input
-                    type="date"
-                    value={field.state.value}
-                    onChange={(event) => field.handleChange(event.target.value)}
-                  />
-                </FieldLayout>
+                <ProjectDatePicker
+                  label="Due date"
+                  value={field.state.value}
+                  settings={settings}
+                  onChange={field.handleChange}
+                />
               )}
             </form.Field>
             <form.Field name="financialType">
@@ -465,6 +479,7 @@ export function NewProjectDialog({
                     <FieldLayout
                       label="Salary Plan"
                       description="The Plan fixes the Client and keeps Project earnings at zero."
+                      className="animate-in fade-in slide-in-from-top-2 duration-300"
                     >
                       <ContextMenuSelect
                         value={field.state.value || "none"}

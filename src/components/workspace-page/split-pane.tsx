@@ -25,15 +25,15 @@ export function SplitPane({
     <div
       data-slot="split-pane"
       className={cn(
-        "grid min-h-0 min-w-0 gap-5",
+        "grid h-full min-h-0 min-w-0 gap-5",
         secondary != null && ratioClasses[ratio],
         className
       )}
       {...props}
     >
-      <div className="min-h-0 min-w-0">{primary}</div>
+      <div className="h-full min-h-0 min-w-0">{primary}</div>
       {secondary != null ? (
-        <div className="min-h-0 min-w-0">{secondary}</div>
+        <div className="h-full min-h-0 min-w-0">{secondary}</div>
       ) : null}
     </div>
   );

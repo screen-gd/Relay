@@ -278,7 +278,7 @@ export function PrecisionMedia({
                       </PageToolbar>
 
                       <div className="flex min-h-10 items-center gap-3 border-b border-[var(--app-border)] px-4 py-2">
-                        <AnimatePresence mode="wait" initial={false}>
+                        <AnimatePresence mode="popLayout" initial={false}>
                           <motion.h2
                             key={collection}
                             className="text-xs font-semibold"
@@ -314,7 +314,7 @@ export function PrecisionMedia({
                         tabIndex={0}
                         aria-label="Scrollable media packages"
                       >
-                        <AnimatePresence mode="wait" initial={false}>
+                        <AnimatePresence mode="popLayout" initial={false}>
                           {filtered.length ? (
                             <motion.div
                               key={mode}
@@ -567,7 +567,7 @@ export function PrecisionMedia({
                       className="h-full min-h-0 min-w-0 overflow-auto bg-[var(--app-soft-panel)] p-4 lg:min-h-0"
                       aria-label="Selected package details"
                     >
-                      <AnimatePresence mode="wait" initial={false}>
+                      <AnimatePresence mode="popLayout" initial={false}>
                         {selected ? (
                           <motion.div
                             key={selected.id}

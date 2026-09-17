@@ -499,18 +499,9 @@ export function PrecisionClients({
               </aside>
             }
             detail={
-              <AnimatePresence mode="wait" initial={false}>
+              <div className="h-full">
                 {selected ? (
-                  <motion.main
-                    key={selected.name}
-                    initial={reduceMotion ? false : { opacity: 0, x: 8 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={reduceMotion ? { opacity: 1 } : { opacity: 0, x: -6 }}
-                    transition={
-                      reduceMotion ? { duration: 0 } : revealTransition
-                    }
-                    className="flex min-h-0 min-w-0 flex-col overflow-hidden rounded-xl border border-[var(--app-border)] bg-[var(--app-panel)] lg:h-full"
-                  >
+                  <main className="flex min-h-0 min-w-0 flex-col overflow-hidden rounded-xl border border-[var(--app-border)] bg-[var(--app-panel)] lg:h-full">
                     <div className="flex flex-col gap-4 border-b border-[var(--app-border)] p-5 sm:flex-row sm:items-start">
                       <span className="grid size-12 shrink-0 place-items-center rounded-lg bg-[var(--app-active)] text-sm font-semibold text-[var(--app-highlight)] ring-1 ring-[var(--app-border)]">
                         {clientInitials(selected.name)}
@@ -657,25 +648,10 @@ export function PrecisionClients({
                           {selected.projects
                             .slice()
                             .sort((a, b) => b.dueDate.localeCompare(a.dueDate))
-                            .map((project, index) => (
-                              <motion.button
+                            .map((project) => (
+                              <button
                                 key={project.id}
                                 type="button"
-                                initial={
-                                  reduceMotion ? false : { opacity: 0, y: 4 }
-                                }
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={
-                                  reduceMotion
-                                    ? { duration: 0 }
-                                    : {
-                                        ...revealTransition,
-                                        delay: Math.min(index * 0.025, 0.15),
-                                      }
-                                }
-                                whileTap={
-                                  reduceMotion ? undefined : { scale: 0.995 }
-                                }
                                 className="grid w-full gap-2 px-3 py-3 text-left transition-colors hover:bg-[var(--app-hover)] focus-visible:z-10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--app-highlight)] sm:grid-cols-[minmax(0,1fr)_120px_100px_auto] sm:items-center"
                                 aria-label={`Open ${project.title}`}
                                 onClick={() => onViewProject(project)}
@@ -701,7 +677,7 @@ export function PrecisionClients({
                                   {project.status}
                                 </Badge>
                                 <ArrowRight className="size-3.5 text-[var(--app-muted)]" />
-                              </motion.button>
+                              </button>
                             ))}
                         </div>
                       ) : (
@@ -718,15 +694,9 @@ export function PrecisionClients({
                         </div>
                       )}
                     </section>
-                  </motion.main>
+                  </main>
                 ) : (
-                  <motion.main
-                    key="empty-clients"
-                    initial={reduceMotion ? false : { opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={reduceMotion ? { opacity: 1 } : { opacity: 0 }}
-                    className="grid min-h-[420px] place-items-center p-6 text-center"
-                  >
+                  <main className="grid h-full min-h-[420px] place-items-center rounded-xl border border-[var(--app-border)] bg-[var(--app-panel)] p-6 text-center">
                     <div>
                       <UsersRound className="mx-auto size-7 text-[var(--app-muted)]" />
                       <p className="mt-2 text-sm font-semibold">
@@ -744,9 +714,9 @@ export function PrecisionClients({
                         <Plus /> New Client
                       </Button>
                     </div>
-                  </motion.main>
+                  </main>
                 )}
-              </AnimatePresence>
+              </div>
             }
           />
         </FillViewport>
@@ -1013,7 +983,7 @@ export function PrecisionFeedback({
                 aria-labelledby={`review-${filter.toLowerCase()}-tab`}
                 className="border-t border-[var(--app-border)]"
               >
-                <AnimatePresence mode="wait" initial={false}>
+                <AnimatePresence mode="popLayout" initial={false}>
                   {visibleQueue.length ? (
                     <motion.div
                       key={filter}
@@ -1123,7 +1093,7 @@ export function PrecisionFeedback({
               }
             >
               {selected ? (
-                <AnimatePresence mode="wait" initial={false}>
+                <AnimatePresence mode="popLayout" initial={false}>
                   <motion.div
                     key={selected.id}
                     initial={reduceMotion ? false : { opacity: 0, x: 6 }}

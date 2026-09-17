@@ -121,7 +121,7 @@ function WorkspaceFrame({ children }: { children: ReactNode }) {
             settings.teamMembers.length > 0
           }
           searchRecords={searchRecords}
-          notificationSlot={<NotificationBell settings={settings} />}
+          notificationSlot={<NotificationBell />}
         >
           <div className="flex min-h-full flex-col lg:h-full">
             {sample ? <SampleModeBar /> : null}
