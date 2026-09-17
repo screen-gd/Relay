@@ -82,7 +82,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 
-type ShellPage =
+export type ShellPage =
   | "dashboard"
   | "projects"
   | "clients"
@@ -216,6 +216,21 @@ const routeGroups: RouteGroup[] = [
 ];
 
 const allRoutes = routeGroups.flatMap((group) => group.items);
+
+export function workspacePageForPath(pathname: string): ShellPage {
+  if (pathname === "/sample-studio") return "dashboard";
+  if (pathname.startsWith("/sample-studio/projects/")) return "projects";
+  if (pathname.startsWith("/projects/")) return "projects";
+  if (pathname === "/profile/edit") return "profile-edit";
+  if (pathname === "/profile") return "profile";
+  if (pathname === "/organization") return "organization-profile";
+  if (pathname === "/account") return "account";
+  if (pathname === "/subscription") return "subscription";
+  return (
+    allRoutes.find((route) => route.href === pathname)?.page ?? "dashboard"
+  );
+}
+
 const starterPages = new Set<ShellPage>([
   "dashboard",
   "projects",
@@ -838,7 +853,7 @@ function WorkspaceCommand({
             ease: [0.2, 0.8, 0.2, 1],
           }}
         >
-          <Command>
+          <Command className="**:data-[slot=command-input-wrapper]:pr-12">
             <CommandInput
               aria-label="Search workspace commands"
               placeholder="Search pages and actions..."
