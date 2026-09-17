@@ -1,4 +1,3 @@
-import { DataProvider } from "@/lib/data-context";
 import { ProjectsApplication } from "@/features/projects/projects-application";
 
 export default async function SampleProjectRoute({
@@ -11,12 +10,10 @@ export default async function SampleProjectRoute({
   const { projectId } = await params;
   const { view } = await searchParams;
   return (
-    <DataProvider mode="sample">
-      <ProjectsApplication
-        projectId={projectId}
-        projectView={Array.isArray(view) ? view[0] : view}
-        sample
-      />
-    </DataProvider>
+    <ProjectsApplication
+      projectId={projectId}
+      projectView={Array.isArray(view) ? view[0] : view}
+      sample
+    />
   );
 }
