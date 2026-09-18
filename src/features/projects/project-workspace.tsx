@@ -257,13 +257,7 @@ export function ProjectWorkspace({
                       <MetricItem label="Value" value={amount} />
                       <MetricItem
                         label="Payment"
-                        value={
-                          isClientBillable
-                            ? project.paid
-                              ? "Paid"
-                              : "Unpaid"
-                            : "Not billable"
-                        }
+                        value={paymentLabel}
                       />
                     </MetricStrip>
                     <ContentSection
