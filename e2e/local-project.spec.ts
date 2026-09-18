@@ -467,7 +467,8 @@ test("shows the compact dashboard overview and links to all projects", async ({
   ).toBeLessThanOrEqual(5);
 
   const pulse = page.getByRole("region", { name: "Operational pulse" });
-  await expect(pulse).toContainText("Earned");
+  await expect(pulse).toContainText("In motion");
+  await expect(pulse).toContainText("Collected");
   await expect(pulse).toContainText("Salary batch");
   await expect(pulse.getByTestId("salary-batch-progress")).toContainText(
     /5\s*\/\s*5 edits/
@@ -476,40 +477,24 @@ test("shows the compact dashboard overview and links to all projects", async ({
   await expect(markPayment).toBeEnabled();
 
   const ledger = page.getByRole("region", { name: "Project ledger" });
-  await expect(ledger.getByTestId("project-row")).toHaveCount(5);
+  await expect(ledger.getByTestId("project-row")).toHaveCount(2);
   const viewAll = ledger.getByRole("link", { name: "View all projects" });
   await expect(viewAll).toHaveAttribute("href", "/projects");
 
-  const followUp = page.getByRole("region", { name: "Workspace follow-up" });
-  const attentionBox = await followUp
-    .getByRole("region", { name: "Attention queue" })
-    .boundingBox();
-  const activityBox = await followUp
-    .getByRole("region", { name: "Activity" })
-    .boundingBox();
+  const attention = page.getByRole("region", { name: "Needs attention" });
+
+  const attentionBox = await attention.boundingBox();
+  const ledgerBox = await ledger.boundingBox();
+  const activity = page.getByRole("region", { name: "Activity" });
+  const activityBox = await activity.boundingBox();
   expect(attentionBox?.width ?? 0).toBeGreaterThan(500);
   expect(activityBox?.width ?? 0).toBeGreaterThan(500);
-  expect(
-    Math.abs((attentionBox?.y ?? 0) - (activityBox?.y ?? 0))
-  ).toBeLessThanOrEqual(2);
+  expect(attentionBox?.y ?? 0).toBeLessThan(ledgerBox?.y ?? 0);
+  expect(ledgerBox?.y ?? 0).toBeLessThan(activityBox?.y ?? 0);
 
-  const contentViewport = page.getByTestId("workspace-content-surface");
-  await contentViewport.evaluate((element) => {
-    element.scrollTop = element.scrollHeight;
-  });
-  const scrollBeforeActivitySwitch = await contentViewport.evaluate(
-    (element) => element.scrollTop
-  );
-  expect(scrollBeforeActivitySwitch).toBeGreaterThan(0);
-  await followUp.getByRole("tab", { name: "Team" }).click();
-  await expect
-    .poll(async () =>
-      Math.abs(
-        (await contentViewport.evaluate((element) => element.scrollTop)) -
-          scrollBeforeActivitySwitch
-      )
-    )
-    .toBeLessThanOrEqual(2);
+  const teamActivityTab = activity.getByRole("tab", { name: "Team" });
+  await teamActivityTab.click();
+  await expect(teamActivityTab).toHaveAttribute("aria-selected", "true");
 
   await markPayment.click();
   await expect(pulse.getByTestId("salary-batch-progress")).toContainText(
