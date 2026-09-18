@@ -18,7 +18,6 @@ import {
   MetricStrip,
   PageContent,
   PageHeader,
-  PageToolbar,
   SplitPane,
   WorkspacePage,
 } from "@/components/workspace-page";
@@ -30,6 +29,7 @@ import {
 } from "@/lib/integrations";
 import { projectStatusTone } from "@/lib/project-status-style";
 import type { SettingsState, WorkItem } from "@/lib/types";
+import { cn } from "@/lib/utils";
 import { ExternalLink, MoreHorizontal } from "lucide-react";
 import {
   formatShortDateTime,
@@ -153,6 +153,17 @@ export function ProjectWorkspace({
     teamMembers.find((member) => member.userId === project.ownerUserId)?.name ||
     settings.profileName ||
     "You";
+  const progress = getProjectProgress(project);
+  const assigneeLabel = assignedMembers.length
+    ? assignedMembers.map((member) => member.name || member.email).join(", ")
+    : "No assignees";
+  const paymentLabel = isClientBillable
+    ? project.paid
+      ? "Paid"
+      : "Outstanding"
+    : isSalaryWorkType(project.workType, settings)
+      ? "Batch tracked"
+      : "Not billable";
   const configuredLinks = integrationServices
     .map((service) => ({
       service,
@@ -208,230 +219,267 @@ export function ProjectWorkspace({
         }
       />
       <PageContent mode="fill">
-        <PageToolbar
-          primary={
-            <nav
-              aria-label="Project workspace views"
-              className="flex flex-wrap gap-1"
-            >
-              {views.map((item) => (
-                <OwnedButton
-                  key={item.id}
-                  size="sm"
-                  variant={view === item.id ? "secondary" : "ghost"}
-                  aria-current={view === item.id ? "page" : undefined}
-                  onClick={() => onViewChange(item.id)}
-                >
-                  {item.label}
-                </OwnedButton>
-              ))}
-            </nav>
-          }
-          secondary={
-            canUpdateStatus ? (
-              <ProjectSelect
-                value={project.status}
-                options={statusOptions}
-                onChange={(status) => {
-                  if (status !== "Client Review")
-                    onStatusChange(project, status);
-                }}
-                compact
-              />
-            ) : (
-              <ProjectStatusBadge status={project.status} />
-            )
-          }
-        />
-
         <SplitPane
           ratio="inspector"
           className="min-h-0 flex-1 lg:h-full"
           primary={
-            <div className="h-full min-h-0 overflow-y-auto overscroll-contain">
-              {view === "overview" ? (
-                <div className="grid gap-4 overflow-y-auto pb-5">
-                  <MetricStrip columns={4}>
-                    <MetricItem label="Stage" value={project.status} />
-                    <MetricItem
-                      label="Due"
-                      value={formatDate(project.dueDate, settings.dateFormat)}
-                    />
-                    <MetricItem label="Value" value={amount} />
-                    <MetricItem
-                      label="Payment"
-                      value={
-                        isClientBillable
-                          ? project.paid
-                            ? "Paid"
-                            : "Unpaid"
-                          : "Not billable"
-                      }
-                    />
-                  </MetricStrip>
-                  <ContentSection
-                    title="Workflow"
-                    description={`${getProjectProgress(project)}% complete`}
+            <div className="flex h-full min-h-0 flex-col">
+              <nav
+                aria-label="Project workspace views"
+                className="flex min-w-0 shrink-0 items-stretch overflow-x-auto border-b border-[var(--app-border)]"
+              >
+                {views.map((item) => (
+                  <OwnedButton
+                    key={item.id}
+                    size="sm"
+                    variant="ghost"
+                    aria-current={view === item.id ? "page" : undefined}
+                    className={cn(
+                      "relative h-11 min-w-[8.5rem] flex-1 shrink-0 rounded-none border-b-2 border-transparent px-3 text-xs font-medium text-[var(--app-muted)] transition-colors hover:bg-[var(--app-hover)] hover:text-[var(--app-ink)] focus-visible:z-10 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--app-accent)] sm:min-w-0",
+                      view === item.id &&
+                        "border-b-[var(--app-accent)] bg-transparent text-[var(--app-ink)] hover:bg-transparent"
+                    )}
+                    onClick={() => onViewChange(item.id)}
                   >
-                    <ProjectStageTracker status={project.status} />
-                  </ContentSection>
-                  <ContentSection
-                    title="Project details"
-                    actions={
-                      canEdit ? (
-                        <OwnedButton
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => onEdit(project)}
-                        >
-                          Edit details
-                        </OwnedButton>
-                      ) : null
-                    }
-                  >
-                    <dl className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                      <ProjectMetadataRow
-                        label="Client"
-                        value={project.client || "Not assigned"}
+                    {item.label}
+                  </OwnedButton>
+                ))}
+              </nav>
+              <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
+                {view === "overview" ? (
+                  <div className="grid gap-4 overflow-y-auto pb-5">
+                    <MetricStrip columns={4}>
+                      <MetricItem label="Stage" value={project.status} />
+                      <MetricItem
+                        label="Due"
+                        value={formatDate(project.dueDate, settings.dateFormat)}
                       />
-                      <ProjectMetadataRow
-                        label="Project Group"
-                        value={projectGroup?.name || "None"}
-                      />
-                      <ProjectMetadataRow
-                        label="Financial type"
-                        value={project.workType}
-                      />
-                      <ProjectMetadataRow
-                        label="Created"
+                      <MetricItem label="Value" value={amount} />
+                      <MetricItem
+                        label="Payment"
                         value={
-                          project.createdAt
-                            ? formatShortDateTime(project.createdAt)
-                            : "Not recorded"
+                          isClientBillable
+                            ? project.paid
+                              ? "Paid"
+                              : "Unpaid"
+                            : "Not billable"
                         }
                       />
-                    </dl>
-                    <p className="mt-4 whitespace-pre-wrap text-sm leading-6 text-muted-foreground">
-                      {project.notes || "No internal notes."}
-                    </p>
-                  </ContentSection>
-                  <ContentSection
-                    title="Client payment"
-                    actions={
-                      <OwnedSwitch
-                        checked={Boolean(project.paid)}
-                        disabled={!canManagePayment || !isClientBillable}
-                        aria-label={`${project.paid ? "Mark unpaid" : "Mark paid"}: ${project.title}`}
-                        onCheckedChange={(paid) =>
-                          onPaymentChange(project, paid)
-                        }
-                      />
-                    }
-                  >
-                    <p className="text-sm text-muted-foreground">
-                      {isClientBillable
-                        ? project.paid
-                          ? `Collected${project.paidDate ? ` ${formatShortDateTime(project.paidDate)}` : ""}.`
-                          : "Delivered and outstanding."
-                        : "Payment tracking starts after delivery for client-priced work."}
-                    </p>
-                  </ContentSection>
-                </div>
-              ) : null}
+                    </MetricStrip>
+                    <ContentSection
+                      title="Workflow"
+                      description={`${getProjectProgress(project)}% complete`}
+                    >
+                      <ProjectStageTracker status={project.status} />
+                    </ContentSection>
+                    <ContentSection
+                      title="Project details"
+                      actions={
+                        canEdit ? (
+                          <OwnedButton
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => onEdit(project)}
+                          >
+                            Edit details
+                          </OwnedButton>
+                        ) : null
+                      }
+                    >
+                      <dl className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                        <ProjectMetadataRow
+                          label="Client"
+                          value={project.client || "Not assigned"}
+                        />
+                        <ProjectMetadataRow
+                          label="Project Group"
+                          value={projectGroup?.name || "None"}
+                        />
+                        <ProjectMetadataRow
+                          label="Financial type"
+                          value={project.workType}
+                        />
+                        <ProjectMetadataRow
+                          label="Created"
+                          value={
+                            project.createdAt
+                              ? formatShortDateTime(project.createdAt)
+                              : "Not recorded"
+                          }
+                        />
+                      </dl>
+                      <p className="mt-4 whitespace-pre-wrap text-sm leading-6 text-muted-foreground">
+                        {project.notes || "No internal notes."}
+                      </p>
+                    </ContentSection>
+                    <ContentSection
+                      title="Client payment"
+                      actions={
+                        <OwnedSwitch
+                          checked={Boolean(project.paid)}
+                          disabled={!canManagePayment || !isClientBillable}
+                          aria-label={`${project.paid ? "Mark unpaid" : "Mark paid"}: ${project.title}`}
+                          onCheckedChange={(paid) =>
+                            onPaymentChange(project, paid)
+                          }
+                        />
+                      }
+                    >
+                      <p className="text-sm text-muted-foreground">
+                        {isClientBillable
+                          ? project.paid
+                            ? `Collected${project.paidDate ? ` ${formatShortDateTime(project.paidDate)}` : ""}.`
+                            : "Delivered and outstanding."
+                          : "Payment tracking starts after delivery for client-priced work."}
+                      </p>
+                    </ContentSection>
+                  </div>
+                ) : null}
 
-              {view === "outputs" ? (
-                <ProjectOutputsPanel
-                  project={project}
-                  canEdit={canEdit}
-                  canResolveComments={canComment}
-                />
-              ) : null}
-
-              {view === "review" ? (
-                <div className="grid gap-4 overflow-y-auto pb-5">
-                  <ProjectDetailCollaborationPanel
+                {view === "outputs" ? (
+                  <ProjectOutputsPanel
                     project={project}
-                    teamMembers={teamMembers}
-                    canComment={canComment}
+                    canEdit={canEdit}
+                    canResolveComments={canComment}
                   />
-                  <ProjectPortalPanel
+                ) : null}
+
+                {view === "review" ? (
+                  <div className="grid gap-4 overflow-y-auto pb-5">
+                    <ProjectDetailCollaborationPanel
+                      project={project}
+                      teamMembers={teamMembers}
+                      canComment={canComment}
+                    />
+                    <ProjectPortalPanel
+                      project={project}
+                      canEdit={canEdit && canManagePortal}
+                      clientHubEnabled={clientHubEnabled}
+                      customPortalBrandingEnabled={customPortalBrandingEnabled}
+                    />
+                  </div>
+                ) : null}
+
+                {view === "files" ? (
+                  <div className="grid gap-4 overflow-y-auto pb-5">
+                    <ContentSection
+                      title="External links"
+                      metadata={
+                        <OwnedBadge variant="secondary">
+                          {configuredLinks.length}
+                        </OwnedBadge>
+                      }
+                    >
+                      <div className="divide-y divide-border">
+                        {configuredLinks.length ? (
+                          configuredLinks.map(({ service, link }) =>
+                            link ? (
+                              <a
+                                key={service.id}
+                                href={link.url}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="flex items-center justify-between gap-3 py-3 text-sm hover:underline"
+                              >
+                                <span>
+                                  {integrationDisplayText(link, service.name)}
+                                </span>
+                                <ExternalLink className="size-4" />
+                              </a>
+                            ) : null
+                          )
+                        ) : (
+                          <p className="py-6 text-center text-sm text-muted-foreground">
+                            No external links yet.
+                          </p>
+                        )}
+                      </div>
+                    </ContentSection>
+                    <ProjectFileManager project={project} canEdit={canEdit} />
+                  </div>
+                ) : null}
+
+                {view === "activity" ? (
+                  <ProjectActivityFeed
                     project={project}
-                    canEdit={canEdit && canManagePortal}
-                    clientHubEnabled={clientHubEnabled}
-                    customPortalBrandingEnabled={customPortalBrandingEnabled}
+                    localActivity={localActivity}
                   />
-                </div>
-              ) : null}
-
-              {view === "files" ? (
-                <div className="grid gap-4 overflow-y-auto pb-5">
-                  <ContentSection
-                    title="External links"
-                    metadata={
-                      <OwnedBadge variant="secondary">
-                        {configuredLinks.length}
-                      </OwnedBadge>
-                    }
-                  >
-                    <div className="divide-y divide-border">
-                      {configuredLinks.length ? (
-                        configuredLinks.map(({ service, link }) =>
-                          link ? (
-                            <a
-                              key={service.id}
-                              href={link.url}
-                              target="_blank"
-                              rel="noreferrer"
-                              className="flex items-center justify-between gap-3 py-3 text-sm hover:underline"
-                            >
-                              <span>
-                                {integrationDisplayText(link, service.name)}
-                              </span>
-                              <ExternalLink className="size-4" />
-                            </a>
-                          ) : null
-                        )
-                      ) : (
-                        <p className="py-6 text-center text-sm text-muted-foreground">
-                          No external links yet.
-                        </p>
-                      )}
-                    </div>
-                  </ContentSection>
-                  <ProjectFileManager project={project} canEdit={canEdit} />
-                </div>
-              ) : null}
-
-              {view === "activity" ? (
-                <ProjectActivityFeed
-                  project={project}
-                  localActivity={localActivity}
-                />
-              ) : null}
+                ) : null}
+              </div>
             </div>
           }
           secondary={
-            <aside
-              aria-label="Project context"
-              className="rounded-[6px] bg-card p-4 text-card-foreground"
-            >
-              <h2 className="text-sm font-semibold">Project context</h2>
-              <dl className="mt-4 grid gap-3 text-sm">
-                <ProjectMetadataRow
-                  label="Client"
-                  value={project.client || "Not assigned"}
-                />
-                <ProjectMetadataRow
-                  label="Project Group"
-                  value={projectGroup?.name || "None"}
-                />
-                <ProjectMetadataRow label="Stage" value={project.status} />
-                <ProjectMetadataRow
-                  label="Due"
-                  value={formatDate(project.dueDate, settings.dateFormat)}
-                />
-              </dl>
-            </aside>
+            <div className="h-full min-h-0 pt-11">
+              <aside
+                aria-label="Project details"
+                className="h-fit rounded-xl border border-[var(--app-border)] bg-[var(--app-panel)] p-4 text-card-foreground lg:sticky lg:top-0"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <h2 className="text-[10px] font-semibold uppercase tracking-[0.12em] text-[var(--app-muted)]">
+                      Project details
+                    </h2>
+                  </div>
+                  {canUpdateStatus ? (
+                    <ProjectSelect
+                      value={project.status}
+                      options={statusOptions}
+                      onChange={(status) => {
+                        if (status !== "Client Review")
+                          onStatusChange(project, status);
+                      }}
+                      compact
+                      className="min-w-[8.5rem]"
+                    />
+                  ) : (
+                    <ProjectStatusBadge status={project.status} />
+                  )}
+                </div>
+
+                <div className="mt-4 border-y border-[var(--app-border)] py-3">
+                  <div className="flex items-center justify-between gap-3 text-[11px]">
+                    <span className="font-medium text-[var(--app-muted)]">
+                      Workflow
+                    </span>
+                    <span className="font-mono tabular-nums text-[var(--app-ink)]">
+                      {progress}%
+                    </span>
+                  </div>
+                  <OwnedProgress
+                    value={progress}
+                    aria-label="Project workflow progress"
+                    className="mt-2"
+                  />
+                  <p className="mt-2 text-[11px] text-[var(--app-muted)]">
+                    {clientPortalStage(project.status)}
+                  </p>
+                </div>
+
+                <dl className="mt-2 grid gap-0 text-sm">
+                  <ProjectMetadataRow
+                    label="Client"
+                    value={project.client || "Not assigned"}
+                  />
+                  <ProjectMetadataRow
+                    label="Project Group"
+                    value={projectGroup?.name || "None"}
+                  />
+                  <ProjectMetadataRow label="Stage" value={project.status} />
+                  <ProjectMetadataRow label="Lead" value={lead} />
+                  <ProjectMetadataRow label="Assignees" value={assigneeLabel} />
+                  <ProjectMetadataRow
+                    label="Due"
+                    value={formatDate(project.dueDate, settings.dateFormat)}
+                  />
+                  <ProjectMetadataRow
+                    label="Work type"
+                    value={project.workType}
+                  />
+                  <ProjectMetadataRow label="Value" value={amount} />
+                  <ProjectMetadataRow label="Payment" value={paymentLabel} />
+                </dl>
+              </aside>
+            </div>
           }
         />
       </PageContent>

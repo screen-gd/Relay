@@ -69,7 +69,6 @@ import {
   DataTableFrame,
   MetricStrip,
   PageContent,
-  PageHeader,
   PageToolbar,
   SplitPane,
   WorkspacePage,
@@ -337,6 +336,18 @@ function priorityFor(project: WorkItem) {
   if (!delivered(project) && days <= 2) return "High";
   if (!delivered(project) && days <= 7) return "Medium";
   return "Low";
+}
+
+function projectNextAction(project: WorkItem) {
+  if (project.status === "Delivered")
+    return "Archive final exports and confirm payment.";
+  if (["Review", "Client Review"].includes(project.status))
+    return "Collect review notes and prepare the next cut.";
+  if (project.status === "Revision")
+    return "Apply the requested revisions and send the updated cut.";
+  if (project.status === "In Progress")
+    return "Complete the current production pass.";
+  return "Confirm the brief and first production milestone.";
 }
 
 function formatDate(value: string, options?: Intl.DateTimeFormatOptions) {
@@ -716,63 +727,54 @@ export function PrecisionDashboard(props: DashboardProps) {
         animate={entry.animate}
         transition={{ duration: reduceMotion ? 0 : 0.5, ease: easing }}
       >
-        <PageHeader
-          title={
-            <>
-              Good to see you,{" "}
-              {props.settings.profileName?.split(" ")[0] || "editor"}.
-            </>
+        <PageToolbar
+          className="pb-4"
+          primary={
+            <div className="relative min-w-[220px] flex-1 lg:w-[300px] lg:flex-none">
+              <Search
+                className="pointer-events-none absolute left-3 top-1/2 size-3.5 -translate-y-1/2 text-[var(--app-muted)]"
+                strokeWidth={1.75}
+              />
+              <Input
+                value={props.query}
+                onChange={(event) => props.setQuery(event.target.value)}
+                placeholder="Search the project ledger"
+                aria-label="Search dashboard projects"
+                className="h-9 rounded-lg border-[var(--app-border)] bg-[var(--app-panel)] pl-9 text-xs shadow-none focus-visible:border-[var(--app-accent)]"
+              />
+            </div>
           }
-          actions={
-            <PageToolbar
-              primary={
-                <div className="relative min-w-[220px] flex-1 lg:w-[300px] lg:flex-none">
-                  <Search
-                    className="pointer-events-none absolute left-3 top-1/2 size-3.5 -translate-y-1/2 text-[var(--app-muted)]"
-                    strokeWidth={1.75}
-                  />
-                  <Input
-                    value={props.query}
-                    onChange={(event) => props.setQuery(event.target.value)}
-                    placeholder="Search the project ledger"
-                    aria-label="Search dashboard projects"
-                    className="h-9 rounded-lg border-[var(--app-border)] bg-[var(--app-panel)] pl-9 text-xs shadow-none focus-visible:border-[var(--app-accent)]"
-                  />
-                </div>
-              }
-              secondary={
-                <>
-                  <Button
-                    variant="outline"
-                    className="h-9 rounded-lg border-[var(--app-border)] bg-[var(--app-panel)] px-3 text-[11px] shadow-none"
-                    aria-expanded={showFilters}
-                    aria-controls="dashboard-filters"
-                    onClick={() => setShowFilters((value) => !value)}
-                  >
-                    <ListFilter className="size-3.5" strokeWidth={1.75} />
-                    Filters{activeFilterCount ? ` · ${activeFilterCount}` : ""}
-                  </Button>
-                  <DashboardDropdown
-                    value={props.sortKey}
-                    options={sortOptions}
-                    onChange={props.setSortKey}
-                    ariaLabel="Sort dashboard projects"
-                    className="h-9 w-[142px] bg-[var(--app-panel)]"
-                    contentClassName="min-w-[142px]"
-                  />
-                  {activeFilterCount > 0 || props.query ? (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-9 px-2 text-[11px] text-[var(--app-muted)]"
-                      onClick={clearFilters}
-                    >
-                      Clear all
-                    </Button>
-                  ) : null}
-                </>
-              }
-            />
+          secondary={
+            <>
+              <Button
+                variant="outline"
+                className="h-9 rounded-lg border-[var(--app-border)] bg-[var(--app-panel)] px-3 text-[11px] shadow-none"
+                aria-expanded={showFilters}
+                aria-controls="dashboard-filters"
+                onClick={() => setShowFilters((value) => !value)}
+              >
+                <ListFilter className="size-3.5" strokeWidth={1.75} />
+                Filters{activeFilterCount ? ` · ${activeFilterCount}` : ""}
+              </Button>
+              <DashboardDropdown
+                value={props.sortKey}
+                options={sortOptions}
+                onChange={props.setSortKey}
+                ariaLabel="Sort dashboard projects"
+                className="h-9 w-[142px] bg-[var(--app-panel)]"
+                contentClassName="min-w-[142px]"
+              />
+              {activeFilterCount > 0 || props.query ? (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-9 px-2 text-[11px] text-[var(--app-muted)]"
+                  onClick={clearFilters}
+                >
+                  Clear all
+                </Button>
+              ) : null}
+            </>
           }
         />
         <PageContent className="flex flex-col gap-4 space-y-0">
@@ -931,7 +933,7 @@ export function PrecisionDashboard(props: DashboardProps) {
                         Salary batch
                       </p>
                       <span className="font-mono text-[11px] tabular-nums text-[var(--app-muted)]">
-                        <AnimatedNumber value={salaryPercent} />%
+                        {salaryPercent}%
                       </span>
                     </div>
                     <div className="mt-1 flex items-end justify-between gap-3">
@@ -980,6 +982,93 @@ export function PrecisionDashboard(props: DashboardProps) {
             animate={entry.animate}
             transition={{
               delay: reduceMotion ? 0 : 0.08,
+              duration: reduceMotion ? 0 : 0.55,
+              ease: easing,
+            }}
+          >
+            <WorkspaceSection
+              title="Needs attention"
+              count={attentionContext.length}
+              icon={CalendarClock}
+              action={
+                <div className="flex flex-wrap items-center justify-end gap-2">
+                  {overdue.length ? (
+                    <span className="font-mono text-[11px] text-[var(--app-danger)]">
+                      {overdue.length} overdue
+                    </span>
+                  ) : null}
+                </div>
+              }
+            >
+              {attentionContext.length ? (
+                <div className="divide-y divide-[var(--app-border)]">
+                  {attentionContext.map((project) => {
+                    const days = daysFromToday(project.dueDate);
+                    return (
+                      <button
+                        key={project.id}
+                        type="button"
+                        className={cn(
+                          "grid w-full gap-3 px-4 py-3 text-left outline-none transition-colors hover:bg-[var(--app-hover)] focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--app-accent)] sm:grid-cols-[minmax(180px,0.8fr)_minmax(220px,1.4fr)_auto] sm:items-center",
+                          selected?.id === project.id &&
+                            "bg-[var(--app-active)]"
+                        )}
+                        onClick={() => {
+                          setSelectedId(project.id);
+                          if (window.matchMedia("(max-width: 1279px)").matches)
+                            setMobileInspectorOpen(true);
+                        }}
+                      >
+                        <span className="min-w-0">
+                          <span className="block truncate text-xs font-medium text-[var(--app-ink)]">
+                            {project.title}
+                          </span>
+                          <span className="mt-0.5 block truncate text-[10px] text-[var(--app-muted)]">
+                            {project.client || project.workType}
+                          </span>
+                        </span>
+                        <span className="min-w-0">
+                          <span className="block truncate text-[11px] text-[var(--app-muted)]">
+                            {projectNextAction(project)}
+                          </span>
+                          <span className="mt-1 flex items-center gap-2">
+                            <StatusBadge status={project.status} />
+                            <PriorityBadge project={project} />
+                          </span>
+                        </span>
+                        <span
+                          className={cn(
+                            "font-mono text-[10px] tabular-nums sm:text-right",
+                            days < 0
+                              ? "text-[var(--app-danger)]"
+                              : "text-[var(--app-muted)]"
+                          )}
+                        >
+                          {days < 0
+                            ? `${Math.abs(days)}d late`
+                            : days === 0
+                              ? "Due today"
+                              : formatDate(project.dueDate, {
+                                  month: "short",
+                                  day: "numeric",
+                                })}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              ) : (
+                <EmptySection label="No deadlines, blockers, or reviews need attention." />
+              )}
+            </WorkspaceSection>
+          </motion.div>
+
+          <motion.div
+            className="order-3"
+            initial={entry.initial}
+            animate={entry.animate}
+            transition={{
+              delay: reduceMotion ? 0 : 0.12,
               duration: reduceMotion ? 0 : 0.55,
               ease: easing,
             }}
@@ -1307,7 +1396,7 @@ export function PrecisionDashboard(props: DashboardProps) {
           </motion.div>
 
           <motion.section
-            className="order-3"
+            className="order-4"
             initial={entry.initial}
             animate={entry.animate}
             transition={{
@@ -1317,183 +1406,106 @@ export function PrecisionDashboard(props: DashboardProps) {
             }}
             aria-label="Workspace follow-up"
           >
-            <SplitPane
-              ratio="balanced"
-              primary={
-                <WorkspaceSection
-                  title="Attention queue"
-                  count={attentionContext.length}
-                  icon={CalendarClock}
-                  className="h-full"
-                  action={
-                    overdue.length ? (
-                      <span className="font-mono text-[11px] text-[var(--app-danger)]">
-                        {overdue.length} overdue
-                      </span>
-                    ) : null
+            <WorkspaceSection
+              title="Activity"
+              count={activity.length}
+              icon={Clock3}
+              action={
+                <Tabs
+                  value={activityMode}
+                  onValueChange={(value) =>
+                    changeActivityMode(value === "team" ? "team" : "recent")
                   }
+                  className="block"
                 >
-                  {attentionContext.length ? (
-                    <div className="divide-y divide-[var(--app-border)]">
-                      {attentionContext.map((project) => {
-                        const days = daysFromToday(project.dueDate);
-                        return (
-                          <button
-                            key={project.id}
-                            type="button"
-                            className={cn(
-                              "grid w-full grid-cols-[minmax(0,1fr)_auto] items-center gap-4 px-4 py-3 text-left outline-none transition-colors hover:bg-[var(--app-hover)] focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--app-accent)]",
-                              selected?.id === project.id &&
-                                "bg-[var(--app-active)]"
-                            )}
-                            onClick={() => {
-                              setSelectedId(project.id);
-                              if (
-                                window.matchMedia("(max-width: 1279px)").matches
-                              )
-                                setMobileInspectorOpen(true);
-                            }}
-                          >
-                            <span className="min-w-0">
-                              <span className="block truncate text-xs font-medium text-[var(--app-ink)]">
-                                {project.title}
-                              </span>
-                              <span className="mt-0.5 block truncate text-[10px] text-[var(--app-muted)]">
-                                {project.client || project.workType}
-                              </span>
-                            </span>
-                            <span
-                              className={cn(
-                                "font-mono text-[10px] tabular-nums",
-                                days < 0
-                                  ? "text-[var(--app-danger)]"
-                                  : "text-[var(--app-muted)]"
-                              )}
-                            >
-                              {days < 0
-                                ? `${Math.abs(days)}d late`
-                                : days === 0
-                                  ? "Today"
-                                  : formatDate(project.dueDate, {
-                                      month: "short",
-                                      day: "numeric",
-                                    })}
-                            </span>
-                          </button>
-                        );
-                      })}
-                    </div>
-                  ) : (
-                    <EmptySection label="No deadlines, blockers, or reviews need attention." />
-                  )}
-                </WorkspaceSection>
-              }
-              secondary={
-                <WorkspaceSection
-                  title="Activity"
-                  count={activity.length}
-                  icon={Clock3}
-                  className="h-full"
-                  action={
-                    <Tabs
-                      value={activityMode}
-                      onValueChange={(value) =>
-                        changeActivityMode(value === "team" ? "team" : "recent")
-                      }
-                      className="block"
+                  <TabsList aria-label="Activity view">
+                    <TabsTrigger
+                      id="activity-recent-tab"
+                      aria-controls="activity-panel"
+                      value="recent"
+                      className="text-[11px] uppercase tracking-[0.05em]"
                     >
-                      <TabsList aria-label="Activity view">
-                        <TabsTrigger
-                          id="activity-recent-tab"
-                          aria-controls="activity-panel"
-                          value="recent"
-                          className="text-[11px] uppercase tracking-[0.05em]"
-                        >
-                          Recent
-                        </TabsTrigger>
-                        <TabsTrigger
-                          id="activity-team-tab"
-                          aria-controls="activity-panel"
-                          value="team"
-                          className="text-[11px] uppercase tracking-[0.05em]"
-                        >
-                          Team
-                        </TabsTrigger>
-                      </TabsList>
-                    </Tabs>
-                  }
-                >
-                  <div
-                    id="activity-panel"
-                    role="tabpanel"
-                    aria-labelledby={`activity-${activityMode}-tab`}
-                    className="min-h-[224px]"
+                      Recent
+                    </TabsTrigger>
+                    <TabsTrigger
+                      id="activity-team-tab"
+                      aria-controls="activity-panel"
+                      value="team"
+                      className="text-[11px] uppercase tracking-[0.05em]"
+                    >
+                      Team
+                    </TabsTrigger>
+                  </TabsList>
+                </Tabs>
+              }
+            >
+              <div
+                id="activity-panel"
+                role="tabpanel"
+                aria-labelledby={`activity-${activityMode}-tab`}
+                className="min-h-[224px]"
+              >
+                {props.teamLoading && activityMode === "team" ? (
+                  <ActivitySkeleton />
+                ) : activity.length ? (
+                  <motion.div
+                    key={activityMode}
+                    className="divide-y divide-[var(--app-border)]"
+                    initial={reduceMotion ? false : { opacity: 0, y: 6 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{
+                      duration: reduceMotion ? 0 : 0.3,
+                      ease: easing,
+                    }}
                   >
-                    {props.teamLoading && activityMode === "team" ? (
-                      <ActivitySkeleton />
-                    ) : activity.length ? (
+                    {activity.slice(0, 4).map((item, index) => (
                       <motion.div
-                        key={activityMode}
-                        className="divide-y divide-[var(--app-border)]"
+                        key={item.id}
+                        className="flex items-start gap-3 px-4 py-3"
                         initial={reduceMotion ? false : { opacity: 0, y: 6 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{
-                          duration: reduceMotion ? 0 : 0.3,
+                          delay: reduceMotion ? 0 : index * 0.08,
                           ease: easing,
                         }}
                       >
-                        {activity.slice(0, 4).map((item, index) => (
-                          <motion.div
-                            key={item.id}
-                            className="flex items-start gap-3 px-4 py-3"
-                            initial={
-                              reduceMotion ? false : { opacity: 0, y: 6 }
-                            }
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{
-                              delay: reduceMotion ? 0 : index * 0.08,
-                              ease: easing,
-                            }}
-                          >
-                            <span
-                              className={cn(
-                                "mt-0.5 grid size-5 shrink-0 place-items-center rounded-md",
-                                item.kind === "delivered"
-                                  ? "bg-[var(--app-success-bg)] text-[var(--app-success)]"
-                                  : "bg-[var(--app-active)] text-[var(--app-highlight)]"
-                              )}
-                            >
-                              {item.kind === "delivered" ? (
-                                <CheckCircle2
-                                  className="size-3"
-                                  strokeWidth={1.75}
-                                />
-                              ) : (
-                                <MessageSquareText
-                                  className="size-3"
-                                  strokeWidth={1.75}
-                                />
-                              )}
-                            </span>
-                            <span className="min-w-0 flex-1">
-                              <span className="line-clamp-2 block text-[11px] font-medium leading-4 text-[var(--app-ink)]">
-                                {item.message}
-                              </span>
-                              <span className="mt-0.5 block font-mono text-[11px] text-[var(--app-muted)]">
-                                {item.actor || props.teamName || "Workspace"} ·{" "}
-                                {relativeActivityTime(item.createdAt)}
-                              </span>
-                            </span>
-                          </motion.div>
-                        ))}
+                        <span
+                          className={cn(
+                            "mt-0.5 grid size-5 shrink-0 place-items-center rounded-md",
+                            item.kind === "delivered"
+                              ? "bg-[var(--app-success-bg)] text-[var(--app-success)]"
+                              : "bg-[var(--app-active)] text-[var(--app-highlight)]"
+                          )}
+                        >
+                          {item.kind === "delivered" ? (
+                            <CheckCircle2
+                              className="size-3"
+                              strokeWidth={1.75}
+                            />
+                          ) : (
+                            <MessageSquareText
+                              className="size-3"
+                              strokeWidth={1.75}
+                            />
+                          )}
+                        </span>
+                        <span className="min-w-0 flex-1">
+                          <span className="line-clamp-2 block text-[11px] font-medium leading-4 text-[var(--app-ink)]">
+                            {item.message}
+                          </span>
+                          <span className="mt-0.5 block font-mono text-[11px] text-[var(--app-muted)]">
+                            {item.actor || props.teamName || "Workspace"} ·{" "}
+                            {relativeActivityTime(item.createdAt)}
+                          </span>
+                        </span>
                       </motion.div>
-                    ) : (
-                      <EmptySection label="No activity has been recorded yet." />
-                    )}
-                  </div>
-                </WorkspaceSection>
-              }
-            />
+                    ))}
+                  </motion.div>
+                ) : (
+                  <EmptySection label="No activity has been recorded yet." />
+                )}
+              </div>
+            </WorkspaceSection>
           </motion.section>
         </PageContent>
 
