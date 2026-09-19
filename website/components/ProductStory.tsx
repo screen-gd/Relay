@@ -469,7 +469,7 @@ export default function ProductStory() {
               >
                 X
               </a>
-              <a href="mailto:zns.studioss@gmail.com">Email</a>
+              <a href="mailto:connect.relay@protonmail.com">Email</a>
             </nav>
           </div>
         </div>

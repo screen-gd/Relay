@@ -185,6 +185,11 @@ test("chooses a workspace mode on first entry and remembers Local Mode", async (
 }) => {
   await openApp(page, "/");
 
+  const disclaimer = page.getByRole("dialog", { name: "A quick note" });
+  await expect(disclaimer).toBeVisible();
+  await disclaimer.getByRole("button", { name: "Continue to Relay" }).click();
+  await expect(disclaimer).toBeHidden();
+
   const welcome = page.getByRole("dialog", { name: "Choose how to use Relay" });
   await expect(
     welcome.getByRole("button", { name: "Use Local Mode" })

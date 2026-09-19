@@ -7,12 +7,16 @@ export async function openApp(page: Page, path: string) {
     await setupClerkTestingToken({ page });
   }
   await page.goto(path);
-  await expect(page.getByText("Loading workspace", { exact: true })).toBeHidden();
+  await expect(
+    page.getByText("Loading workspace", { exact: true })
+  ).toBeHidden();
 }
 
 export async function waitForClerk(page: Page) {
   await page.waitForFunction(() => {
-    const clerkWindow = window as typeof window & { Clerk?: { loaded?: boolean } };
+    const clerkWindow = window as typeof window & {
+      Clerk?: { loaded?: boolean };
+    };
     return clerkWindow.Clerk?.loaded === true;
   });
 }
@@ -21,11 +25,22 @@ export async function chooseLocalMode(page: Page) {
   await page.addInitScript(() => {
     // Compatibility identifier used by the app for existing local workspaces.
     window.localStorage.setItem("cutlab-studio:auth-mode:v1", "local");
+    window.localStorage.setItem(
+      "relay:development-disclaimer:v1",
+      "acknowledged"
+    );
   });
 }
 
-export async function createProject(page: Page, title: string, client = "E2E Client") {
-  await page.getByRole("button", { name: /New (?:Personal |Team )?Project/ }).first().click();
+export async function createProject(
+  page: Page,
+  title: string,
+  client = "E2E Client"
+) {
+  await page
+    .getByRole("button", { name: /New (?:Personal |Team )?Project/ })
+    .first()
+    .click();
   await page.getByRole("button", { name: "Blank project" }).click();
   const dialog = page.getByRole("dialog", { name: "New Project" });
   await dialog.getByLabel("Project name").fill(title);
@@ -34,7 +49,9 @@ export async function createProject(page: Page, title: string, client = "E2E Cli
   await page.keyboard.press("Escape");
   await selectOption(dialog.getByLabel("Tag"), page, "Freelance");
   await dialog.getByLabel("Earnings").fill("1250");
-  await dialog.getByLabel("Notes").fill("Created by the Playwright core workflow.");
+  await dialog
+    .getByLabel("Notes")
+    .fill("Created by the Playwright core workflow.");
   await dialog.getByRole("button", { name: "Save" }).click();
   await expect(projectRow(page, title)).toBeVisible();
 }
@@ -55,8 +72,11 @@ export async function openProject(page: Page, title: string) {
   return detail;
 }
 
-export async function selectOption(select: Locator, page: Page, option: string) {
+export async function selectOption(
+  select: Locator,
+  page: Page,
+  option: string
+) {
   await select.click();
   await page.getByRole("option", { name: option, exact: true }).click();
 }
-

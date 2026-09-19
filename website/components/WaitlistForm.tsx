@@ -152,7 +152,10 @@ export default function WaitlistForm() {
         We use these details to manage early-access requests. Read our{" "}
         <a href="https://relay-app.cc.cd/privacy">privacy policy</a>. For
         questions or removal, email{" "}
-        <a href="mailto:zns.studioss@gmail.com">zns.studioss@gmail.com</a>.
+        <a href="mailto:connect.relay@protonmail.com">
+          connect.relay@protonmail.com
+        </a>
+        .
       </p>
       <p className="waitlist-status" role="status" aria-live="polite">
         {state.kind === "error" ? state.message : ""}

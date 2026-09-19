@@ -15,7 +15,7 @@ export function ContactForm() {
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const supportEmail = "zns.stuioss@gmail.com";
+    const supportEmail = "connect.relay@protonmail.com";
     const form = new FormData(event.currentTarget);
     const name = String(form.get("name") || "").trim();
     const email = String(form.get("email") || "").trim();

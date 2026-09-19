@@ -70,7 +70,7 @@ const structuredData = {
     "@type": "Organization",
     name: "Relay",
     url: siteUrl,
-    email: "zns.stuioss@gmail.com",
+    email: "connect.relay@protonmail.com",
   },
 };
 

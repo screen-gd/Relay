@@ -560,6 +560,11 @@ try {
       await page.goto(`${baseUrl}/?onboarding=v2`, {
         waitUntil: "domcontentloaded",
       });
+      const disclaimer = page.getByRole("dialog", { name: "A quick note" });
+      await disclaimer.waitFor();
+      await disclaimer
+        .getByRole("button", { name: "Continue to Relay" })
+        .click();
       await page
         .getByRole("heading", { name: "Choose how to use Relay" })
         .waitFor();
@@ -621,6 +626,11 @@ try {
       await page.goto(`${baseUrl}/?onboarding=v2`, {
         waitUntil: "domcontentloaded",
       });
+      const disclaimer = page.getByRole("dialog", { name: "A quick note" });
+      await disclaimer.waitFor();
+      await disclaimer
+        .getByRole("button", { name: "Continue to Relay" })
+        .click();
       await page
         .getByRole("heading", { name: "Choose how to use Relay" })
         .waitFor();
