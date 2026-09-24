@@ -618,5 +618,3 @@ export function ProjectPortalPanel({
     </section>
   );
 }
-
-export type { ProjectPortalPanelProps };

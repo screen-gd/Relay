@@ -7,9 +7,7 @@ import type {
   WorkflowStage,
 } from "@/lib/types";
 import type { StoredProjectStatus } from "@/lib/domain-values";
-import {
-  DEFAULT_WORKFLOW_STAGES,
-} from "@/lib/workflow-templates";
+import { DEFAULT_WORKFLOW_STAGES } from "@/lib/workflow-templates";
 import { z } from "zod";
 
 export type { ProjectGroup } from "@/lib/types";
@@ -260,10 +258,7 @@ export function getProjectWorkflowStages(
 }
 
 export function getProjectWorkflowStage(
-  project: Pick<
-    WorkItem,
-    "workflowStageId" | "workflowStages" | "status"
-  >
+  project: Pick<WorkItem, "workflowStageId" | "workflowStages" | "status">
 ): WorkflowStage {
   const stages = getProjectWorkflowStages(project);
   const currentStage = project.workflowStageId;
@@ -294,10 +289,7 @@ export function getProjectWorkflowStage(
 }
 
 export function getProjectProgress(
-  project: Pick<
-    WorkItem,
-    "workflowStageId" | "workflowStages" | "status"
-  >
+  project: Pick<WorkItem, "workflowStageId" | "workflowStages" | "status">
 ) {
   if (project.status === "Cancelled") return 0;
   if (project.status === "Delivered") return 100;
@@ -450,38 +442,6 @@ export function getProjectStageMenuChoices(
         : `Move ${project.title} to ${stage.label}`,
     };
   });
-}
-
-export type ProjectDeliveryEffect =
-  | { kind: "earnings"; amount: number }
-  | {
-      kind: "salary-plan";
-      completedProjects: number;
-      requiredProjects: number;
-      batchAmount: number;
-    };
-
-export type ProjectDeliveryConfirmation = {
-  required: boolean;
-  title?: string;
-  detail?: string;
-  effect?: ProjectDeliveryEffect;
-};
-
-/** Returns the confirmation state before a project first enters Delivered. */
-export function getProjectDeliveryConfirmation(
-  project: Pick<WorkItem, "title" | "status">,
-  nextStatus: StoredProjectStatus,
-  effect?: ProjectDeliveryEffect
-): ProjectDeliveryConfirmation {
-  if (nextStatus !== "Delivered" || project.status === "Delivered")
-    return { required: false };
-  return {
-    required: true,
-    title: `Mark ${project.title} as Delivered?`,
-    detail: "Relay will record the delivery time.",
-    ...(effect ? { effect } : {}),
-  };
 }
 
 export function moveProjectToStage(

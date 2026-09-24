@@ -43,19 +43,31 @@ import {
 } from "lucide-react";
 import { ProjectSelect } from "@/features/projects/project-select";
 
+type EditableTeamRole = "Editor" | "Viewer";
+
+function editableTeamRole(role: string): EditableTeamRole {
+  return role === "Reviewer" ? "Viewer" : "Editor";
+}
+
+function serverTeamRole(role: EditableTeamRole): "Editor" | "Reviewer" {
+  return role === "Viewer" ? "Reviewer" : "Editor";
+}
+
 export function TeamDesignPage({
   projects,
   settings,
 }: {
   projects: WorkItem[];
   settings: SettingsState;
-  setSettings: (settings: SettingsState) => void;
 }) {
   const [workspaceName, setWorkspaceName] = useState(
     settings.studioName || "Relay Team"
   );
   const [inviteCode, setInviteCode] = useState("");
-  const [inviteForm, setInviteForm] = useState({ email: "", role: "Editor" });
+  const [inviteForm, setInviteForm] = useState<{
+    email: string;
+    role: EditableTeamRole;
+  }>({ email: "", role: "Editor" });
   const [commentBody, setCommentBody] = useState("");
   const [commentTimecode, setCommentTimecode] = useState("");
   const [selectedProjectId, setSelectedProjectId] = useState("");
@@ -111,8 +123,8 @@ export function TeamDesignPage({
   const inviteCodeIsValid = TEAM_INVITE_CODE_PATTERN.test(inviteCode.trim());
   const inviteEmailIsValid = isValidEmail(inviteForm.email);
 
-  function displayTeamRole(role: string) {
-    return role === "Reviewer" ? "Viewer" : role;
+  function displayTeamRole(role: string): EditableTeamRole {
+    return editableTeamRole(role);
   }
 
   useEffect(() => {
@@ -143,7 +155,7 @@ export function TeamDesignPage({
     );
   }, [canManageTeam, normalizeLegacyRoles, teamData]);
 
-  async function runTeamAction(label: string, action: () => Promise<unknown>) {
+  async function runTeamAction<T>(label: string, action: () => Promise<T>) {
     setBusyAction(label);
     setTeamError("");
     try {
@@ -509,9 +521,7 @@ export function TeamDesignPage({
                                     updateMemberRole({
                                       teamId: teamData.workspace._id,
                                       memberId: member._id,
-                                      role: (role === "Viewer"
-                                        ? "Reviewer"
-                                        : role) as "Editor" | "Reviewer",
+                                      role: serverTeamRole(role),
                                     })
                                   )
                                 }
@@ -649,7 +659,7 @@ export function TeamDesignPage({
                           onChange={(value) =>
                             setInviteForm({
                               ...inviteForm,
-                              role: value === "Viewer" ? "Reviewer" : value,
+                              role: value,
                             })
                           }
                         />
@@ -662,7 +672,7 @@ export function TeamDesignPage({
                               await inviteMember({
                                 teamId: teamData.workspace._id,
                                 email: inviteForm.email,
-                                role: inviteForm.role as "Editor" | "Reviewer",
+                                role: serverTeamRole(inviteForm.role),
                               });
                               setInviteForm({ email: "", role: "Editor" });
                             })

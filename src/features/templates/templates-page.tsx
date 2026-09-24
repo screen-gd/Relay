@@ -18,7 +18,7 @@ import {
   WorkspacePage,
 } from "@/components/workspace-page";
 import { CapabilityUpgradePrompt } from "@/components/subscription-plans";
-import { useTemplateController } from "./template-controller";
+import { useData } from "@/lib/data-context";
 import { Badge as OwnedBadge } from "@/components/ui/badge";
 import { Button as OwnedButton } from "@/components/ui/button";
 import {
@@ -125,8 +125,8 @@ function customTemplateFromForm(
       : ["Final master"]
     ).map((title) => ({
       title: title.slice(0, 120),
-      category: "Deliverable" as FileCategory,
-      initialStatus: "draft" as FileStatus,
+      category: "Deliverable" satisfies FileCategory,
+      initialStatus: "draft" satisfies FileStatus,
     })),
     checklistItems: linesFromText(form.checklistText, 20),
     custom: true,
@@ -145,7 +145,7 @@ export function TemplatesDesignPage({
   canManageTemplates: boolean;
   customTemplatesLocked?: boolean;
 }) {
-  const { items, settings, setSettings } = useTemplateController();
+  const { items, settings, setSettings } = useData();
   const [templateForm, setTemplateForm] =
     useState<TemplateFormState>(emptyTemplateForm);
   const [builderOpen, setBuilderOpen] = useState(false);
@@ -549,7 +549,7 @@ export function TemplatesDesignPage({
                 onValueChange={(value) =>
                   setTemplateForm({
                     ...templateForm,
-                    workType: value as "channel" | "freelance",
+                    workType: value === "channel" ? "channel" : "freelance",
                   })
                 }
               >

@@ -2,13 +2,14 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useConvexAuth, useMutation, useQuery } from "convex/react";
-import { makeFunctionReference } from "convex/server";
+import { api } from "../../convex/_generated/api";
 import type { WorkItem } from "./types";
 import { useData } from "./data-context";
 import {
   addMediaVersionFromUrl,
   createProjectOutput,
   normalizeMediaUrl,
+  parseProjectOutputSnapshot,
   selectCurrentMediaVersion,
   setProjectOutputReviewState,
   unresolvedOldVersionComments,
@@ -51,68 +52,6 @@ type VersionWire = {
   title: string;
   notes: string;
   createdAt: string;
-};
-
-const outputApi = {
-  listForProject: makeFunctionReference<
-    "query",
-    { projectId: string; includeArchived?: boolean },
-    OutputWire[]
-  >("projectOutputs:listForProject"),
-  initializeFromTemplate: makeFunctionReference<
-    "mutation",
-    {
-      projectId: string;
-      outputs: Array<{
-        id: string;
-        title: string;
-        category: FileCategory;
-        reviewState: ProjectOutputReviewState;
-        dueDate?: string;
-      }>;
-    },
-    unknown
-  >("projectOutputs:initializeFromTemplate"),
-  create: makeFunctionReference<
-    "mutation",
-    {
-      projectId: string;
-      output: {
-        id: string;
-        title: string;
-        category: FileCategory;
-        reviewState: ProjectOutputReviewState;
-        dueDate?: string;
-      };
-    },
-    unknown
-  >("projectOutputs:create"),
-  update: makeFunctionReference<
-    "mutation",
-    {
-      outputId: string;
-      changes: {
-        title?: string;
-        category?: FileCategory;
-        reviewState?: ProjectOutputReviewState;
-        dueDate?: string | null;
-      };
-    },
-    null
-  >("projectOutputs:update"),
-  setArchived: makeFunctionReference<
-    "mutation",
-    { outputId: string; archived: boolean },
-    null
-  >("projectOutputs:setArchived"),
-  addLinkedMediaVersion: makeFunctionReference<
-    "mutation",
-    {
-      outputId: string;
-      version: { id: string; url: string; title: string; notes?: string };
-    },
-    unknown
-  >("projectOutputs:addLinkedMediaVersion"),
 };
 
 function wireVersion(outputId: string, wire: VersionWire): MediaVersion {
@@ -162,20 +101,7 @@ function readLocalSnapshot(): ProjectOutputSnapshot {
     const parsed: unknown = JSON.parse(
       window.localStorage.getItem(STORAGE_KEY) ?? "null"
     );
-    if (
-      !parsed ||
-      typeof parsed !== "object" ||
-      !("outputs" in parsed) ||
-      !("versions" in parsed) ||
-      !("comments" in parsed)
-    )
-      return emptySnapshot();
-    const value = parsed as Partial<ProjectOutputSnapshot>;
-    return {
-      outputs: Array.isArray(value.outputs) ? value.outputs : [],
-      versions: Array.isArray(value.versions) ? value.versions : [],
-      comments: Array.isArray(value.comments) ? value.comments : [],
-    };
+    return parseProjectOutputSnapshot(parsed) ?? emptySnapshot();
   } catch {
     return emptySnapshot();
   }
@@ -194,14 +120,16 @@ export function useProjectOutputs(project: WorkItem, editable: boolean) {
   const { isAuthenticated } = useConvexAuth();
   const cloud = isSignedIn && isAuthenticated;
   const cloudWires = useQuery(
-    outputApi.listForProject,
+    api.projectOutputs.listForProject,
     cloud ? { projectId: project.id, includeArchived: true } : "skip"
   );
-  const initializeCloud = useMutation(outputApi.initializeFromTemplate);
-  const createCloud = useMutation(outputApi.create);
-  const updateCloud = useMutation(outputApi.update);
-  const archiveCloud = useMutation(outputApi.setArchived);
-  const addVersionCloud = useMutation(outputApi.addLinkedMediaVersion);
+  const initializeCloud = useMutation(
+    api.projectOutputs.initializeFromTemplate
+  );
+  const createCloud = useMutation(api.projectOutputs.create);
+  const updateCloud = useMutation(api.projectOutputs.update);
+  const archiveCloud = useMutation(api.projectOutputs.setArchived);
+  const addVersionCloud = useMutation(api.projectOutputs.addLinkedMediaVersion);
   const [local, setLocal] = useState<ProjectOutputSnapshot>(emptySnapshot);
   const [localReady, setLocalReady] = useState(false);
   const [error, setError] = useState("");

@@ -22,7 +22,7 @@ export function isStoredProjectStatus(
 ): value is StoredProjectStatus {
   return (
     typeof value === "string" &&
-    (STORED_PROJECT_STATUS_VALUES as readonly string[]).includes(value)
+    STORED_PROJECT_STATUS_VALUES.some((candidate) => candidate === value)
   );
 }
 
@@ -60,19 +60,10 @@ export const APPROVAL_STATUS_LABELS: Record<ApprovalStatus, string> = {
 export const FILE_STATUS_VALUES = APPROVAL_STATUS_VALUES;
 export type FileStatus = (typeof FILE_STATUS_VALUES)[number];
 
-export const LEGACY_FILE_STATUS_VALUES = [
-  "Working",
-  "In Review",
-  "Approved",
-  "Delivered",
-] as const;
-export type LegacyFileStatus = (typeof LEGACY_FILE_STATUS_VALUES)[number];
-
 export function normalizeFileStatus(value: unknown): FileStatus {
   if (typeof value !== "string") return "draft";
-  if ((FILE_STATUS_VALUES as readonly string[]).includes(value)) {
-    return value as FileStatus;
-  }
+  const status = FILE_STATUS_VALUES.find((candidate) => candidate === value);
+  if (status) return status;
   if (value === "In Review") return "sent_to_client";
   if (value === "Approved") return "approved";
   if (value === "Delivered") return "final_delivered";
@@ -105,8 +96,6 @@ export type LegacyTeamRole = (typeof LEGACY_TEAM_ROLE_VALUES)[number];
 export type StoredTeamRole = TeamRole | LegacyTeamRole;
 export type SettingsTeamRole = StoredTeamRole | "";
 
-export const MEMBER_STATUS_VALUES = ["invited", "active"] as const;
-
 export const CLIENT_PORTAL_STAGE_VALUES = [
   "Planning",
   "In Progress",
@@ -118,31 +107,17 @@ export type ClientPortalStage = (typeof CLIENT_PORTAL_STAGE_VALUES)[number];
 export const DELIVERABLE_STATUS_VALUES = APPROVAL_STATUS_VALUES;
 export type DeliverableStatus = (typeof DELIVERABLE_STATUS_VALUES)[number];
 
-export const LEGACY_DELIVERABLE_STATUS_VALUES = [
-  "Pending",
-  "In Progress",
-  "Ready",
-  "Delivered",
-] as const;
-export type LegacyDeliverableStatus =
-  (typeof LEGACY_DELIVERABLE_STATUS_VALUES)[number];
-
 export function normalizeDeliverableStatus(value: unknown): DeliverableStatus {
   if (typeof value !== "string") return "draft";
-  if ((DELIVERABLE_STATUS_VALUES as readonly string[]).includes(value)) {
-    return value as DeliverableStatus;
-  }
+  const status = DELIVERABLE_STATUS_VALUES.find(
+    (candidate) => candidate === value
+  );
+  if (status) return status;
   if (value === "In Progress") return "draft";
   if (value === "Ready") return "approved";
   if (value === "Delivered") return "final_delivered";
   return "draft";
 }
-
-export const REVISION_STATUS_VALUES = [
-  "Submitted",
-  "In Review",
-  "Resolved",
-] as const;
 
 export const NOTIFICATION_KIND_VALUES = [
   "mention",

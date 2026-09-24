@@ -60,14 +60,18 @@ export const defaultSettings: SettingsState = {
     Mentions: false,
     "Weekly summary": false,
   },
-  integrationConfigs: JSON.parse(JSON.stringify(defaultIntegrationConfigs)),
+  integrationConfigs: structuredClone(defaultIntegrationConfigs),
   integrationLinks: {},
   teamRole: "",
   teamMembers: [],
-  rolePermissions: JSON.parse(JSON.stringify(defaultRolePermissions)),
+  rolePermissions: structuredClone(defaultRolePermissions),
   theme: "Dark",
   accentColor: defaultAccent,
 };
+
+export function createDefaultSettings(): SettingsState {
+  return structuredClone(defaultSettings);
+}
 
 export const currencyOptions = ["USD", "EUR", "GBP", "INR", "AED", "SAR"];
 export const currencyLabels: Record<string, string> = {

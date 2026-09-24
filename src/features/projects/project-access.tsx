@@ -10,12 +10,10 @@ import { DEFAULT_PROFILE_ID } from "@/lib/profiles";
 import type { WorkItem } from "@/lib/types";
 import { resolveProjectPermissions } from "./project-permissions";
 
-export type ProjectTeamData = FunctionReturnType<
-  typeof api.team.getMyWorkspace
->;
-export type ProjectTeamWorkspace = NonNullable<ProjectTeamData>["workspace"];
-export type ProjectTeamMember = NonNullable<ProjectTeamData>["members"][number];
-export type ProjectSubscription = FunctionReturnType<
+type ProjectTeamData = FunctionReturnType<typeof api.team.getMyWorkspace>;
+type ProjectTeamWorkspace = NonNullable<ProjectTeamData>["workspace"];
+type ProjectTeamMember = NonNullable<ProjectTeamData>["members"][number];
+type ProjectSubscription = FunctionReturnType<
   typeof api.workspaceSubscriptions.getCurrent
 >;
 
@@ -25,11 +23,6 @@ export type ProjectAccess = {
   projects: WorkItem[];
   personalProjects: WorkItem[];
   teamProjects: WorkItem[];
-  isAuthEnabled: boolean;
-  isSignedIn: boolean;
-  isAuthLoaded: boolean;
-  isConvexAuthenticated: boolean;
-  isConvexAuthLoading: boolean;
   teamData: ProjectTeamData | undefined;
   activeTeamMembers: ProjectTeamMember[];
   teamDataLoading: boolean;
@@ -73,8 +66,7 @@ export function useProjectAccess(): ProjectAccess {
 }
 
 function useProjectAccessValue(sample: boolean): ProjectAccess {
-  const { items, settings, isAuthEnabled, isSignedIn, isAuthLoaded } =
-    useData();
+  const { items, isAuthEnabled, isSignedIn, isAuthLoaded } = useData();
   const {
     isAuthenticated: isConvexAuthenticated,
     isLoading: isConvexAuthLoading,
@@ -153,11 +145,6 @@ function useProjectAccessValue(sample: boolean): ProjectAccess {
     projects,
     personalProjects,
     teamProjects,
-    isAuthEnabled,
-    isSignedIn,
-    isAuthLoaded,
-    isConvexAuthenticated,
-    isConvexAuthLoading,
     teamData,
     activeTeamMembers,
     teamDataLoading,

@@ -19,21 +19,17 @@ export type MediaVersionSummary = {
 
 export type MediaVersionCommentsAdapter = {
   listForProject: (projectId: string) => Promise<MediaVersionComment[]>;
-  setResolved: (commentId: string, resolved: boolean) => Promise<MediaVersionComment>;
+  setResolved: (
+    commentId: string,
+    resolved: boolean
+  ) => Promise<MediaVersionComment>;
 };
 
 export function commentsForVersion(
   comments: readonly MediaVersionComment[],
-  mediaVersionId: string,
+  mediaVersionId: string
 ) {
   return comments
     .filter((comment) => comment.mediaVersionId === mediaVersionId)
     .sort((left, right) => right.createdAt.localeCompare(left.createdAt));
-}
-
-export function unresolvedCommentsForVersion(
-  comments: readonly MediaVersionComment[],
-  mediaVersionId: string,
-) {
-  return commentsForVersion(comments, mediaVersionId).filter((comment) => !comment.resolved);
 }

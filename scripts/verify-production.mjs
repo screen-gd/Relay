@@ -44,10 +44,7 @@ try {
   }
 
   const verifier = spawn(process.execPath, ["scripts/verify.mjs"], {
-    env: {
-      ...process.env,
-      RELAY_VERIFY_URL: baseUrl,
-    },
+    env: process.env,
     stdio: "inherit",
     windowsHide: true,
   });

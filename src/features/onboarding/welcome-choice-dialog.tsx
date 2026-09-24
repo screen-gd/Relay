@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { RelayBrand } from "@/app/relay-brand";
-import type { OnboardingVariant } from "@/lib/onboarding";
 import { Button as OwnedButton } from "@/components/ui/button";
 import {
   Dialog as OwnedDialog,
@@ -19,7 +18,6 @@ export function WelcomeChoiceDialog({
   onSignIn,
 }: {
   open: boolean;
-  variant: OnboardingVariant;
   onChooseLocal: () => void;
   onCreateAccount: () => void;
   onSignIn: () => void;

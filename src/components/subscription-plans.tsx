@@ -32,7 +32,7 @@ const capabilityUpgradeCopy = {
   clientHub: "Client Hub",
 } as const;
 
-export type PaidWorkspaceCapability = keyof typeof capabilityUpgradeCopy;
+type PaidWorkspaceCapability = keyof typeof capabilityUpgradeCopy;
 
 export function CapabilityUpgradePrompt({
   capability,
@@ -62,7 +62,6 @@ type BillingStatusContent = {
 };
 
 function getBillingStatus(
-  checkoutReturned: boolean,
   subscription: WorkspaceSubscriptionState
 ): BillingStatusContent | null {
   if (subscription.subscriptionStatus === "past_due") {
@@ -88,13 +87,6 @@ function getBillingStatus(
       variant: "secondary",
     };
   }
-  if (checkoutReturned && subscription.plan === "free") {
-    return {
-      title: "Checking for a confirmed subscription update",
-      body: "Paid access stays locked until Relay verifies Clerk.",
-      variant: "secondary",
-    };
-  }
   if (subscription.reconciliationState === "pending") {
     return {
       title: "Setting up Workspace billing",
@@ -106,13 +98,11 @@ function getBillingStatus(
 }
 
 function BillingStatus({
-  checkoutReturned,
   subscription,
 }: {
-  checkoutReturned: boolean;
   subscription: WorkspaceSubscriptionState;
 }) {
-  const status = getBillingStatus(checkoutReturned, subscription);
+  const status = getBillingStatus(subscription);
 
   if (!status) return null;
   return (
@@ -129,10 +119,8 @@ function BillingStatus({
 }
 
 export function SubscriptionPricingView({
-  checkoutReturned,
   subscription,
 }: {
-  checkoutReturned: boolean;
   subscription?: WorkspaceSubscriptionState | null;
 }) {
   return (
@@ -161,29 +149,9 @@ export function SubscriptionPricingView({
         </CardContent>
       </Card>
       {subscription && subscription.subscriptionStatus !== "free" ? (
-        <BillingStatus checkoutReturned={false} subscription={subscription} />
-      ) : null}
-      {checkoutReturned ? (
-        <p role="status" className="text-sm text-muted-foreground">
-          A checkout redirect does not confirm payment or unlock paid access.
-        </p>
+        <BillingStatus subscription={subscription} />
       ) : null}
     </div>
-  );
-}
-
-export function ClerkPricingPlans({
-  checkoutReturned = false,
-  subscription,
-}: {
-  checkoutReturned?: boolean;
-  subscription?: WorkspaceSubscriptionState | null;
-}) {
-  return (
-    <SubscriptionPricingView
-      checkoutReturned={checkoutReturned}
-      subscription={subscription}
-    />
   );
 }
 

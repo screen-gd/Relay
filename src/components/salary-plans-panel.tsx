@@ -1,8 +1,9 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { makeFunctionReference } from "convex/server";
 import { useConvexAuth, useMutation, useQuery } from "convex/react";
+import { api } from "../../convex/_generated/api";
+import type { Id } from "../../convex/_generated/dataModel";
 
 import { ContentSection } from "@/components/workspace-page";
 import { Badge } from "@/components/ui/badge";
@@ -29,7 +30,7 @@ import type { SettingsState, WorkItem } from "@/lib/types";
 import { trackOptionalEvent } from "@/lib/telemetry";
 
 type SalaryPlan = {
-  _id: string;
+  _id: Id<"salaryPlans">;
   clientId: string;
   requiredProjectCount: number;
   amount: number;
@@ -39,7 +40,7 @@ type SalaryPlan = {
 };
 
 type SalaryBatch = {
-  _id: string;
+  _id: Id<"projectSalaryBatches">;
   number: number;
   workType: string;
   requiredProjectCount: number;
@@ -58,66 +59,12 @@ type SalaryBatch = {
 };
 
 type PlanDraft = {
-  planId?: string;
+  planId?: Id<"salaryPlans">;
   clientId: string;
   requiredProjectCount: string;
   amount: string;
   startDate: string;
   notes: string;
-};
-
-type SalaryPlanInput = {
-  clientId: string;
-  requiredProjectCount: number;
-  amount: number;
-  startDate: string;
-  notes: string;
-};
-
-const salaryPlansApi = {
-  list: makeFunctionReference<
-    "query",
-    { includeArchived?: boolean },
-    SalaryPlan[]
-  >("salaryPlans:list"),
-  create: makeFunctionReference<"mutation", SalaryPlanInput, string>(
-    "salaryPlans:create"
-  ),
-  update: makeFunctionReference<
-    "mutation",
-    {
-      planId: string;
-      changes: {
-        clientId: string;
-        requiredProjectCount: number;
-        amount: number;
-        startDate: string;
-        notes: string;
-        archived?: boolean;
-      };
-    },
-    null
-  >("salaryPlans:update"),
-  setArchived: makeFunctionReference<
-    "mutation",
-    { planId: string; archived: boolean },
-    null
-  >("salaryPlans:setArchived"),
-  listBatches: makeFunctionReference<
-    "query",
-    Record<string, never>,
-    SalaryBatch[]
-  >("salaryPlans:listBatches"),
-  setReceived: makeFunctionReference<
-    "mutation",
-    { batchId: string; received: boolean; correctionNote?: string },
-    null
-  >("salaryPlans:setReceived"),
-  setCorrectionNote: makeFunctionReference<
-    "mutation",
-    { batchId: string; correctionNote: string },
-    null
-  >("salaryPlans:setCorrectionNote"),
 };
 
 const emptyDraft: PlanDraft = {
@@ -142,15 +89,15 @@ export function SalaryPlansPanel({
   const { isAuthenticated } = useConvexAuth();
   const enabled = isOwner && isAuthenticated;
   const plans = useQuery(
-    salaryPlansApi.list,
+    api.salaryPlans.list,
     enabled ? { includeArchived: true } : "skip"
   );
-  const batches = useQuery(salaryPlansApi.listBatches, enabled ? {} : "skip");
-  const createPlan = useMutation(salaryPlansApi.create);
-  const updatePlan = useMutation(salaryPlansApi.update);
-  const setArchived = useMutation(salaryPlansApi.setArchived);
-  const setReceived = useMutation(salaryPlansApi.setReceived);
-  const setCorrectionNote = useMutation(salaryPlansApi.setCorrectionNote);
+  const batches = useQuery(api.salaryPlans.listBatches, enabled ? {} : "skip");
+  const createPlan = useMutation(api.salaryPlans.create);
+  const updatePlan = useMutation(api.salaryPlans.update);
+  const setArchived = useMutation(api.salaryPlans.setArchived);
+  const setReceived = useMutation(api.salaryPlans.setReceived);
+  const setCorrectionNote = useMutation(api.salaryPlans.setCorrectionNote);
   const clients = useMemo(
     () => settings.clients.filter((client) => !client.archived),
     [settings.clients]

@@ -8,8 +8,9 @@ import {
   type FormEvent,
   type ReactNode,
 } from "react";
-import { makeFunctionReference } from "convex/server";
 import { useMutation, useQuery } from "convex/react";
+import { api } from "../../../convex/_generated/api";
+import type { Id } from "../../../convex/_generated/dataModel";
 import {
   ArrowUpRight,
   CalendarDays,
@@ -76,38 +77,6 @@ type PublicAccess =
   | { kind: "pin-required"; wrongPin: boolean }
   | { kind: "active"; portal: PublicPortal };
 
-const publicPortalRef = makeFunctionReference<
-  "query",
-  { token: string; pin?: string },
-  unknown
->("projectPortals:getByToken");
-const publicCommentsRef = makeFunctionReference<
-  "query",
-  { token: string; pin?: string },
-  unknown
->("mediaVersionComments:listForPortal");
-const publicFilesRef = makeFunctionReference<
-  "query",
-  { token: string; pin?: string },
-  unknown
->("projectFiles:listForPortal");
-const addPublicCommentRef = makeFunctionReference<
-  "mutation",
-  {
-    token: string;
-    pin?: string;
-    outputId: string;
-    mediaVersionId: string;
-    authorName: string;
-    body: string;
-  },
-  unknown
->("mediaVersionComments:addPublicComment");
-const reopenPublicCommentRef = makeFunctionReference<
-  "mutation",
-  { token: string; pin?: string; commentId: string },
-  unknown
->("mediaVersionComments:reopenPublicComment");
 const DISPLAY_NAME_KEY = "relay:client-portal-display-name:v1";
 const PUBLIC_STAGES = ["Planning", "In Progress", "Review", "Delivered"];
 const reviewLabels: Record<string, string> = {
@@ -195,6 +164,8 @@ export function readPublicPortalAccess(value: unknown): PublicAccess {
   const source = isRecord(value.portal) ? value.portal : value;
   const project = isRecord(source.project) ? source.project : source;
   const branding = isRecord(source.branding) ? source.branding : undefined;
+  const brandingName = text(branding?.name);
+  const brandingAccentColor = text(branding?.accentColor);
   const title = text(project.title) ?? text(project.name);
   const stage = normalizePublicStage(
     text(project.stage) ?? text(project.publicStage) ?? text(project.status)
@@ -216,11 +187,12 @@ export function readPublicPortalAccess(value: unknown): PublicAccess {
       ),
       outputs: readOutputs(project.outputs ?? source.outputs),
       branding:
-        text(branding?.name) &&
-        /^#[0-9a-fA-F]{6}$/.test(text(branding?.accentColor) ?? "")
+        brandingName &&
+        brandingAccentColor &&
+        /^#[0-9a-fA-F]{6}$/.test(brandingAccentColor)
           ? {
-              name: text(branding?.name)!,
-              accentColor: text(branding?.accentColor)!,
+              name: brandingName,
+              accentColor: brandingAccentColor,
             }
           : undefined,
     },
@@ -334,7 +306,7 @@ export function ClientPortalView({ token }: { token: string }) {
   const [pinError, setPinError] = useState("");
   const [pinBusy, setPinBusy] = useState(false);
   const publicResult = useQuery(
-    publicPortalRef,
+    api.projectPortals.getByToken,
     token ? { token, ...(pin ? { pin } : {}) } : "skip"
   );
 
@@ -364,15 +336,19 @@ export function ClientPortalView({ token }: { token: string }) {
     [publicResult]
   );
   const publicCommentsResult = useQuery(
-    publicCommentsRef,
+    api.mediaVersionComments.listForPortal,
     access.kind === "active" ? { token, ...(pin ? { pin } : {}) } : "skip"
   );
   const publicFilesResult = useQuery(
-    publicFilesRef,
+    api.projectFiles.listForPortal,
     access.kind === "active" ? { token, ...(pin ? { pin } : {}) } : "skip"
   );
-  const addPublicComment = useMutation(addPublicCommentRef);
-  const reopenPublicComment = useMutation(reopenPublicCommentRef);
+  const addPublicComment = useMutation(
+    api.mediaVersionComments.addPublicComment
+  );
+  const reopenPublicComment = useMutation(
+    api.mediaVersionComments.reopenPublicComment
+  );
   const [displayName, setDisplayName] = useState("");
   const [commentBusyOutputId, setCommentBusyOutputId] = useState("");
   const [busyCommentId, setBusyCommentId] = useState("");
@@ -451,7 +427,11 @@ export function ClientPortalView({ token }: { token: string }) {
   async function reopenComment(commentId: string) {
     setBusyCommentId(commentId);
     try {
-      await reopenPublicComment({ token, ...(pin ? { pin } : {}), commentId });
+      await reopenPublicComment({
+        token,
+        ...(pin ? { pin } : {}),
+        commentId: commentId as Id<"mediaVersionComments">,
+      });
     } finally {
       setBusyCommentId("");
     }

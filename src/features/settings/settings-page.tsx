@@ -44,13 +44,12 @@ import { cn } from "@/lib/utils";
 import { useSettingsController } from "./settings-controller";
 import {
   currencyLabels,
+  createDefaultSettings,
   currencyOptions,
-  defaultRolePermissions,
   defaultSalaryBatchAmount,
   defaultSalaryBatchSize,
   defaultSettings,
 } from "./settings-defaults";
-import { defaultIntegrationConfigs } from "@/features/integrations/integration-constants";
 import {
   nextProjectTagName,
   nextStageName,
@@ -306,26 +305,10 @@ export function SettingsDesignPage({
 
   function resetSettings() {
     setSettings({
-      ...defaultSettings,
+      ...createDefaultSettings(),
       customClients: settings.customClients,
       clients: settings.clients,
-      customProjectTemplates: defaultSettings.customProjectTemplates.map(
-        (template) => ({
-          ...template,
-          workflowStages: template.workflowStages.map((stage) => ({
-            ...stage,
-          })),
-          deliverables: template.deliverables.map((item) => ({ ...item })),
-          checklistItems: [...template.checklistItems],
-        })
-      ),
-      projectTags: [...defaultSettings.projectTags],
-      projectStages: [...defaultSettings.projectStages],
-      notifications: { ...defaultSettings.notifications },
-      integrationConfigs: JSON.parse(JSON.stringify(defaultIntegrationConfigs)),
       integrationLinks: {},
-      teamMembers: defaultSettings.teamMembers.map((m) => ({ ...m })),
-      rolePermissions: JSON.parse(JSON.stringify(defaultRolePermissions)),
     });
     notify("Settings reset to defaults.", "warning");
   }
@@ -390,9 +373,10 @@ export function SettingsDesignPage({
         <PageToolbar className="lg:hidden" data-family-toolbar="settings">
           <OwnedSelect
             value={activeSection}
-            onValueChange={(value) =>
-              setActiveSection(value as typeof activeSection)
-            }
+            onValueChange={(value) => {
+              const section = settingsNavigation.find(({ id }) => id === value);
+              if (section) setActiveSection(section.id);
+            }}
           >
             <OwnedSelectTrigger
               aria-label="Choose settings section"

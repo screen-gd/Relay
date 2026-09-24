@@ -1,29 +1,11 @@
 /// <reference types="vite/client" />
 
-import { makeFunctionReference } from "convex/server";
 import { convexTest } from "convex-test";
 import { expect, test } from "vitest";
+import { api } from "./_generated/api";
 import schema from "./schema";
 
 const modules = import.meta.glob("./**/*.ts");
-const portalApi = {
-  publish: makeFunctionReference<"mutation", {
-    projectId: string;
-    config: {
-      publicNotes: string;
-      showStartDate: boolean;
-      showDueDate: boolean;
-      selectedOutputIds: string[];
-      expiresAt: string | null;
-    };
-  }, { portalId: string; token: string }>("projectPortals:publish"),
-  getForProject: makeFunctionReference<"query", { projectId: string }, { portal: { hasPin: boolean }; preview: unknown } | null>("projectPortals:getForProject"),
-  updateSettings: makeFunctionReference<"mutation", { portalId: string; changes: { selectedOutputIds?: string[]; publicNotes?: string; showStartDate?: boolean; showDueDate?: boolean; expiresAt?: string | null } }, null>("projectPortals:updateSettings"),
-  setStatus: makeFunctionReference<"mutation", { portalId: string; status: "draft" | "open" | "closed" }, null>("projectPortals:setStatus"),
-  setPin: makeFunctionReference<"mutation", { portalId: string; pin: string | null }, null>("projectPortals:setPin"),
-  regenerateToken: makeFunctionReference<"mutation", { portalId: string }, { token: string }>("projectPortals:regenerateToken"),
-  getByToken: makeFunctionReference<"query", { token: string; pin?: string }, unknown>("projectPortals:getByToken"),
-};
 
 async function seedProject(t: ReturnType<typeof convexTest>) {
   await t.run(async (ctx) => {
@@ -81,7 +63,11 @@ async function seedProject(t: ReturnType<typeof convexTest>) {
       outputId: output,
       id: "main-v1",
       versionNumber: 1,
-      source: { kind: "youtube", url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ", videoId: "dQw4w9WgXcQ" },
+      source: {
+        kind: "youtube",
+        url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+        videoId: "dQw4w9WgXcQ",
+      },
       title: "Client cut",
       notes: "Internal mix note",
       createdByUserId: "owner",
@@ -96,56 +82,138 @@ test("publishes a PIN-gated portal with an allowlisted current-version projectio
   const t = convexTest(schema, modules);
   await seedProject(t);
   const owner = t.withIdentity({ tokenIdentifier: "owner" });
-  const created = await owner.mutation(portalApi.publish, {
+  const created = await owner.mutation(api.projectPortals.publish, {
     projectId: "project-portal",
-    config: { publicNotes: "Client-facing note", showStartDate: false, showDueDate: true, selectedOutputIds: ["main-output"], expiresAt: null },
+    config: {
+      publicNotes: "Client-facing note",
+      showStartDate: false,
+      showDueDate: true,
+      selectedOutputIds: ["main-output"],
+      expiresAt: null,
+    },
   });
   expect(created.token).toHaveLength(64);
-  await owner.mutation(portalApi.setPin, { portalId: created.portalId, pin: "1234" });
-  await owner.mutation(portalApi.setStatus, { portalId: created.portalId, status: "open" });
+  await owner.mutation(api.projectPortals.setPin, {
+    portalId: created.portalId,
+    pin: "1234",
+  });
+  await owner.mutation(api.projectPortals.setStatus, {
+    portalId: created.portalId,
+    status: "open",
+  });
 
-  expect(await t.query(portalApi.getByToken, { token: created.token })).toEqual({ access: "pin_required" });
-  expect(await t.query(portalApi.getByToken, { token: created.token, pin: "bad-pin" })).toEqual({ access: "invalid_pin" });
-  const publicView = await t.query(portalApi.getByToken, { token: created.token, pin: "1234" });
+  expect(
+    await t.query(api.projectPortals.getByToken, { token: created.token })
+  ).toEqual({ access: "pin_required" });
+  expect(
+    await t.query(api.projectPortals.getByToken, {
+      token: created.token,
+      pin: "bad-pin",
+    })
+  ).toEqual({ access: "invalid_pin" });
+  const publicView = await t.query(api.projectPortals.getByToken, {
+    token: created.token,
+    pin: "1234",
+  });
   expect(publicView).toMatchObject({
     access: "active",
-    project: { title: "Private Project", stage: "Review", progress: 75, publicNotes: "Client-facing note", startDate: null, dueDate: "2026-08-30" },
-    outputs: [{ id: "main-output", title: "Main Film", currentVersion: { id: "main-v1", title: "Client cut" } }],
+    project: {
+      title: "Private Project",
+      stage: "Review",
+      progress: 75,
+      publicNotes: "Client-facing note",
+      startDate: null,
+      dueDate: "2026-08-30",
+    },
+    outputs: [
+      {
+        id: "main-output",
+        title: "Main Film",
+        currentVersion: { id: "main-v1", title: "Client cut" },
+      },
+    ],
   });
-  expect(publicView).not.toHaveProperty("project.notes", "Internal notes must stay private.");
+  expect(publicView).not.toHaveProperty(
+    "project.notes",
+    "Internal notes must stay private."
+  );
   expect(JSON.stringify(publicView)).not.toContain("Internal mix note");
   expect(JSON.stringify(publicView)).not.toContain("Internal Cut");
   expect(JSON.stringify(publicView)).not.toContain(created.token);
-  expect(await owner.query(portalApi.getForProject, { projectId: "project-portal" })).toMatchObject({
+  expect(
+    await owner.query(api.projectPortals.getForProject, {
+      projectId: "project-portal",
+    })
+  ).toMatchObject({
     portal: { hasPin: true },
   });
-  expect(await owner.query(portalApi.getForProject, { projectId: "project-portal" })).not.toHaveProperty("portal.token");
+  expect(
+    await owner.query(api.projectPortals.getForProject, {
+      projectId: "project-portal",
+    })
+  ).not.toHaveProperty("portal.token");
 });
 
 test("returns clear closed, expired, invalid-token states and invalidates regenerated tokens", async () => {
   const t = convexTest(schema, modules);
   await seedProject(t);
   const owner = t.withIdentity({ tokenIdentifier: "owner" });
-  const created = await owner.mutation(portalApi.publish, {
+  const created = await owner.mutation(api.projectPortals.publish, {
     projectId: "project-portal",
-    config: { publicNotes: "", showStartDate: true, showDueDate: true, selectedOutputIds: [], expiresAt: null },
+    config: {
+      publicNotes: "",
+      showStartDate: true,
+      showDueDate: true,
+      selectedOutputIds: [],
+      expiresAt: null,
+    },
   });
-  await owner.mutation(portalApi.setStatus, { portalId: created.portalId, status: "open" });
-  await owner.mutation(portalApi.setStatus, { portalId: created.portalId, status: "closed" });
-  expect(await t.query(portalApi.getByToken, { token: created.token })).toEqual({ access: "closed" });
-  await owner.mutation(portalApi.setStatus, { portalId: created.portalId, status: "open" });
-  await owner.mutation(portalApi.updateSettings, { portalId: created.portalId, changes: { expiresAt: "2020-01-01T00:00:00.000Z" } });
-  expect(await t.query(portalApi.getByToken, { token: created.token })).toEqual({ access: "expired" });
-  const regenerated = await owner.mutation(portalApi.regenerateToken, { portalId: created.portalId });
-  expect(await t.query(portalApi.getByToken, { token: created.token })).toEqual({ access: "invalid_token" });
+  await owner.mutation(api.projectPortals.setStatus, {
+    portalId: created.portalId,
+    status: "open",
+  });
+  await owner.mutation(api.projectPortals.setStatus, {
+    portalId: created.portalId,
+    status: "closed",
+  });
+  expect(
+    await t.query(api.projectPortals.getByToken, { token: created.token })
+  ).toEqual({ access: "closed" });
+  await owner.mutation(api.projectPortals.setStatus, {
+    portalId: created.portalId,
+    status: "open",
+  });
+  await owner.mutation(api.projectPortals.updateSettings, {
+    portalId: created.portalId,
+    changes: { expiresAt: "2020-01-01T00:00:00.000Z" },
+  });
+  expect(
+    await t.query(api.projectPortals.getByToken, { token: created.token })
+  ).toEqual({ access: "expired" });
+  const regenerated = await owner.mutation(api.projectPortals.regenerateToken, {
+    portalId: created.portalId,
+  });
+  expect(
+    await t.query(api.projectPortals.getByToken, { token: created.token })
+  ).toEqual({ access: "invalid_token" });
   expect(regenerated.token).not.toBe(created.token);
 });
 
 test("requires project edit access for portal management", async () => {
   const t = convexTest(schema, modules);
   await seedProject(t);
-  await expect(t.withIdentity({ tokenIdentifier: "stranger" }).mutation(portalApi.publish, {
-    projectId: "project-portal",
-    config: { publicNotes: "", showStartDate: false, showDueDate: false, selectedOutputIds: [], expiresAt: null },
-  })).rejects.toThrow("Project access required");
+  await expect(
+    t
+      .withIdentity({ tokenIdentifier: "stranger" })
+      .mutation(api.projectPortals.publish, {
+        projectId: "project-portal",
+        config: {
+          publicNotes: "",
+          showStartDate: false,
+          showDueDate: false,
+          selectedOutputIds: [],
+          expiresAt: null,
+        },
+      })
+  ).rejects.toThrow("Project access required");
 });

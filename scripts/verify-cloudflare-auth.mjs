@@ -1,10 +1,6 @@
 import { chromium } from "@playwright/test";
 
-const baseUrl = (
-  process.env.RELAY_VERIFY_URL ?? process.env.FRAME_DESK_VERIFY_URL
-)?.replace(/\/$/, "");
-const accessPassword =
-  process.env.RELAY_ACCESS_PASSWORD ?? process.env.FRAME_DESK_ACCESS_PASSWORD;
+const baseUrl = process.env.RELAY_VERIFY_URL?.replace(/\/$/, "");
 
 if (!baseUrl) {
   console.error(
@@ -18,23 +14,6 @@ const browser = await chromium.launch({ headless: true });
 try {
   const page = await browser.newPage();
   await page.goto(baseUrl, { waitUntil: "domcontentloaded" });
-
-  if (new URL(page.url()).pathname === "/access") {
-    if (!accessPassword)
-      throw new Error(
-        "Set RELAY_ACCESS_PASSWORD to verify a deployment with the access wall enabled."
-      );
-    const accessResponse = await page.request.post(`${baseUrl}/api/access`, {
-      data: { password: accessPassword },
-      headers: { "Sec-Fetch-Site": "same-origin" },
-    });
-    if (!accessResponse.ok()) {
-      throw new Error(
-        `Access wall verification returned ${accessResponse.status()}.`
-      );
-    }
-    await page.goto(baseUrl, { waitUntil: "domcontentloaded" });
-  }
 
   const signIn = page.getByRole("button", { name: "Sign in", exact: true });
   await signIn.waitFor({ state: "visible" });

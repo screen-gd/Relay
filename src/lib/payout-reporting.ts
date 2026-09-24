@@ -1,7 +1,14 @@
 import { normalizeStoredProjectStatus } from "./domain-values";
 import type { SalaryBatch, WorkItem } from "./types";
 
-export type PayoutPeriod = "month" | "quarter" | "year" | "all" | "custom";
+export const PAYOUT_PERIODS = [
+  "month",
+  "quarter",
+  "year",
+  "custom",
+  "all",
+] as const;
+export type PayoutPeriod = (typeof PAYOUT_PERIODS)[number];
 
 export type PayoutDateRange = {
   start: string;
@@ -117,7 +124,7 @@ function dateKey(value: string | undefined) {
 export function payoutPeriodRange(
   period: PayoutPeriod,
   now = new Date(),
-  customRange?: PayoutDateRange,
+  customRange?: PayoutDateRange
 ): PayoutDateRange {
   if (period === "all") return { start: "", end: "" };
   if (period === "custom") {
@@ -129,16 +136,18 @@ export function payoutPeriodRange(
 
   const year = now.getFullYear();
   const month = now.getMonth();
-  const start = period === "year"
-    ? new Date(year, 0, 1)
-    : period === "quarter"
-      ? new Date(year, Math.floor(month / 3) * 3, 1)
-      : new Date(year, month, 1);
-  const end = period === "year"
-    ? new Date(year, 11, 31)
-    : period === "quarter"
-      ? new Date(year, Math.floor(month / 3) * 3 + 3, 0)
-      : new Date(year, month + 1, 0);
+  const start =
+    period === "year"
+      ? new Date(year, 0, 1)
+      : period === "quarter"
+        ? new Date(year, Math.floor(month / 3) * 3, 1)
+        : new Date(year, month, 1);
+  const end =
+    period === "year"
+      ? new Date(year, 11, 31)
+      : period === "quarter"
+        ? new Date(year, Math.floor(month / 3) * 3 + 3, 0)
+        : new Date(year, month + 1, 0);
   return { start: isoDate(start), end: isoDate(end) };
 }
 
@@ -153,7 +162,10 @@ function safeAmount(value: number | undefined, fallback = 0) {
 }
 
 function isSalaryProject(project: WorkItem, salaryKey: string) {
-  return Boolean(project.salaryPlanId?.trim()) || project.workType.trim().toLowerCase() === salaryKey;
+  return (
+    Boolean(project.salaryPlanId?.trim()) ||
+    project.workType.trim().toLowerCase() === salaryKey
+  );
 }
 
 export function buildPayoutReport({
@@ -169,21 +181,29 @@ export function buildPayoutReport({
   now,
 }: BuildPayoutReportOptions): PayoutReport {
   const range = payoutPeriodRange(period, now, customRange);
-  const editorNames = new Map(editors.map((editor) => [editor.userId, editor.name]));
-  const personalEditorId = currentUserId?.trim() || (editors.length === 1 ? editors[0].userId : "personal");
+  const editorNames = new Map(
+    editors.map((editor) => [editor.userId, editor.name])
+  );
+  const personalEditorId =
+    currentUserId?.trim() ||
+    (editors.length === 1 ? editors[0].userId : "personal");
   const personalEditorName = profileName.trim() || "You";
   const salaryKey = salaryWorkType.trim().toLowerCase();
   const projectById = new Map(projects.map((project) => [project.id, project]));
 
   const deliveredProjects = projects
-    .filter((project) => normalizeStoredProjectStatus(project.status) === "Delivered")
+    .filter(
+      (project) => normalizeStoredProjectStatus(project.status) === "Delivered"
+    )
     .map((project): PayoutProjectRow | undefined => {
       const date = dateKey(project.completedAt) || dateKey(project.dueDate);
       if (!isInRange(date, range.start, range.end)) return undefined;
-      const editorId = project.assigneeUserIds?.[0] || project.ownerUserId || personalEditorId;
-      const editorName = editorId === personalEditorId
-        ? personalEditorName
-        : editorNames.get(editorId) || "Unassigned";
+      const editorId =
+        project.assigneeUserIds?.[0] || project.ownerUserId || personalEditorId;
+      const editorName =
+        editorId === personalEditorId
+          ? personalEditorName
+          : editorNames.get(editorId) || "Unassigned";
       const isSalaryEdit = isSalaryProject(project, salaryKey);
       return {
         id: project.id,
@@ -200,7 +220,9 @@ export function buildPayoutReport({
       };
     })
     .filter((project): project is PayoutProjectRow => project !== undefined)
-    .sort((a, b) => b.date.localeCompare(a.date) || a.title.localeCompare(b.title));
+    .sort(
+      (a, b) => b.date.localeCompare(a.date) || a.title.localeCompare(b.title)
+    );
 
   const batches = salaryBatches
     .map((batch): PayoutBatchRow | undefined => {
@@ -210,7 +232,10 @@ export function buildPayoutReport({
         ?.map((projectId) => projectById.get(projectId))
         .find((project): project is WorkItem => project !== undefined);
       const clientId = batch.clientId || linkedProject?.clientId;
-      const clientName = batch.clientName?.trim() || linkedProject?.client?.trim() || "Unassigned client";
+      const clientName =
+        batch.clientName?.trim() ||
+        linkedProject?.client?.trim() ||
+        "Unassigned client";
       return {
         id: batch.id,
         number: batch.number,
@@ -250,7 +275,8 @@ export function buildPayoutReport({
     row.manualEarnings += project.amount;
   }
   for (const batch of batches) {
-    ensureEditor(personalEditorId, personalEditorName).batchEarnings += batch.amount;
+    ensureEditor(personalEditorId, personalEditorName).batchEarnings +=
+      batch.amount;
   }
   for (const row of editorRows.values()) {
     row.totalEarnings = row.manualEarnings + row.batchEarnings;
@@ -292,15 +318,29 @@ export function buildPayoutReport({
 
   const paidBatches = batches.filter((batch) => batch.paid);
   const unpaidBatches = batches.filter((batch) => !batch.paid);
-  const normalProjects = deliveredProjects.filter((project) => !project.isSalaryEdit);
-  const manualEarnings = normalProjects.reduce((total, project) => total + project.amount, 0);
+  const normalProjects = deliveredProjects.filter(
+    (project) => !project.isSalaryEdit
+  );
+  const manualEarnings = normalProjects.reduce(
+    (total, project) => total + project.amount,
+    0
+  );
   const paidManualEarnings = normalProjects
     .filter((project) => project.paid)
     .reduce((total, project) => total + project.amount, 0);
   const unpaidManualEarnings = manualEarnings - paidManualEarnings;
-  const batchEarnings = batches.reduce((total, batch) => total + batch.amount, 0);
-  const paidBatchEarnings = paidBatches.reduce((total, batch) => total + batch.amount, 0);
-  const unpaidBatchEarnings = unpaidBatches.reduce((total, batch) => total + batch.amount, 0);
+  const batchEarnings = batches.reduce(
+    (total, batch) => total + batch.amount,
+    0
+  );
+  const paidBatchEarnings = paidBatches.reduce(
+    (total, batch) => total + batch.amount,
+    0
+  );
+  const unpaidBatchEarnings = unpaidBatches.reduce(
+    (total, batch) => total + batch.amount,
+    0
+  );
   const earned = manualEarnings + batchEarnings;
   const collected = paidManualEarnings + paidBatchEarnings;
   const outstanding = unpaidManualEarnings + unpaidBatchEarnings;
@@ -312,8 +352,13 @@ export function buildPayoutReport({
     periodEnd: range.end,
     deliveredProjects,
     batches,
-    editors: [...editorRows.values()].sort((a, b) => b.totalEarnings - a.totalEarnings || a.name.localeCompare(b.name)),
-    clients: [...clients.values()].sort((a, b) => b.earned - a.earned || a.name.localeCompare(b.name)),
+    editors: [...editorRows.values()].sort(
+      (a, b) =>
+        b.totalEarnings - a.totalEarnings || a.name.localeCompare(b.name)
+    ),
+    clients: [...clients.values()].sort(
+      (a, b) => b.earned - a.earned || a.name.localeCompare(b.name)
+    ),
     completedBatchCount: batches.length,
     paidBatchCount: paidBatches.length,
     unpaidBatchCount: unpaidBatches.length,
@@ -333,12 +378,20 @@ export function buildPayoutReport({
 
 function csvCell(value: string | number) {
   const text = String(value);
-  return /[",\r\n]/.test(text) ? `"${text.replaceAll("\"", "\"\"")}"` : text;
+  return /[",\r\n]/.test(text) ? `"${text.replaceAll('"', '""')}"` : text;
 }
 
 export function payoutReportToCsv(report: PayoutReport, currencyCode: string) {
   const rows: Array<Array<string | number>> = [
-    ["Record type", "Date", "Reference", "Editor", "Work type / status", "Amount", "Currency"],
+    [
+      "Record type",
+      "Date",
+      "Reference",
+      "Editor",
+      "Work type / status",
+      "Amount",
+      "Currency",
+    ],
     ...report.deliveredProjects.map((project): Array<string | number> => [
       "Delivered project",
       project.date,

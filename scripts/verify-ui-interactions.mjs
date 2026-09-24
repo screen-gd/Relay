@@ -12,9 +12,7 @@ loadEnvConfig(process.cwd());
 
 const startupTimeoutMs = 30_000;
 const configuredBaseUrl = process.env.RELAY_UI_URL;
-const captureFamilies =
-  (process.env.RELAY_CAPTURE_FAMILIES || process.env.RELAY_CAPTURE_FAMILIES) ===
-  "1";
+const captureFamilies = process.env.RELAY_CAPTURE_FAMILIES === "1";
 const workspaceRoutes = [
   ["/", "Good to see you, Jordan.", "data-index"],
   ["/projects", "Projects", "data-index"],

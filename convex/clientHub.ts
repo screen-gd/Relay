@@ -65,11 +65,12 @@ export const getOwnerSettings = query({
         accentColor: "#f59e0b",
       };
     const workspace = await ctx.db.get(workspaceId);
-    const publication = args.projectId
+    const projectId = args.projectId;
+    const publication = projectId
       ? await ctx.db
           .query("clientHubProjects")
           .withIndex("by_workspaceId_and_projectId", (q) =>
-            q.eq("workspaceId", workspaceId).eq("projectId", args.projectId!)
+            q.eq("workspaceId", workspaceId).eq("projectId", projectId)
           )
           .unique()
       : null;

@@ -4,7 +4,6 @@ import { useConvexAuth, useMutation, useQuery } from "convex/react";
 import { useOptionalAuth } from "@/lib/optional-auth";
 import type { WorkItem } from "@/lib/types";
 import { api } from "../../../convex/_generated/api";
-import { transferOwnership, updateMemberPermissions } from "./team-api";
 
 export function useTeamController({
   projects,
@@ -31,8 +30,10 @@ export function useTeamController({
   const joinWorkspace = useMutation(api.team.joinWorkspace);
   const inviteMember = useMutation(api.team.inviteMember);
   const updateMemberRole = useMutation(api.team.updateMemberRole);
-  const updateMemberPermissionsMutation = useMutation(updateMemberPermissions);
-  const transferOwnershipMutation = useMutation(transferOwnership);
+  const updateMemberPermissionsMutation = useMutation(
+    api.team.updateMemberPermissions
+  );
+  const transferOwnershipMutation = useMutation(api.team.transferOwnership);
   const normalizeLegacyRoles = useMutation(api.team.normalizeLegacyRoles);
   const removeMember = useMutation(api.team.removeMember);
   const leaveWorkspace = useMutation(api.team.leaveWorkspace);

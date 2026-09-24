@@ -3,6 +3,7 @@ import {
   addMediaVersion,
   createProjectOutput,
   normalizeMediaUrl,
+  parseProjectOutputSnapshot,
   unresolvedOldVersionComments,
 } from "./project-output-domain";
 
@@ -23,7 +24,9 @@ describe("Project Output domain", () => {
         embedUrl: "https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ",
       },
     });
-    expect(normalizeMediaUrl("https://player.vimeo.com/video/123456789")).toEqual({
+    expect(
+      normalizeMediaUrl("https://player.vimeo.com/video/123456789")
+    ).toEqual({
       ok: true,
       value: {
         provider: "vimeo",
@@ -36,8 +39,14 @@ describe("Project Output domain", () => {
       ok: true,
       value: { provider: "external", url: "http://example.com/review?id=4" },
     });
-    expect(normalizeMediaUrl('<iframe src="https://youtube.com/embed/dQw4w9WgXcQ"></iframe>').ok).toBe(false);
-    expect(normalizeMediaUrl("https://www.youtube.com/watch?v=bad").ok).toBe(false);
+    expect(
+      normalizeMediaUrl(
+        '<iframe src="https://youtube.com/embed/dQw4w9WgXcQ"></iframe>'
+      ).ok
+    ).toBe(false);
+    expect(normalizeMediaUrl("https://www.youtube.com/watch?v=bad").ok).toBe(
+      false
+    );
   });
 
   it("makes each added version current while retaining earlier history", () => {
@@ -51,7 +60,12 @@ describe("Project Output domain", () => {
 
     const second = addMediaVersion(first.output, [first.version], {
       id: "version-2",
-      source: { provider: "youtube", videoId: "dQw4w9WgXcQ", url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ", embedUrl: "https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ" },
+      source: {
+        provider: "youtube",
+        videoId: "dQw4w9WgXcQ",
+        url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+        embedUrl: "https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ",
+      },
       createdAt: "2026-08-24T10:02:00.000Z",
     });
     expect("error" in second).toBe(false);
@@ -63,10 +77,81 @@ describe("Project Output domain", () => {
   it("keeps unresolved comments on old versions visible to internal users", () => {
     const current = { ...output, currentVersionId: "version-2" };
     const comments = [
-      { id: "comment-old", mediaVersionId: "version-1", body: "Fix the title card.", resolved: false, createdAt: "2026-08-24T10:01:00.000Z" },
-      { id: "comment-old-resolved", mediaVersionId: "version-1", body: "Looks good.", resolved: true, createdAt: "2026-08-24T10:01:00.000Z" },
-      { id: "comment-current", mediaVersionId: "version-2", body: "Check the mix.", resolved: false, createdAt: "2026-08-24T10:02:00.000Z" },
+      {
+        id: "comment-old",
+        mediaVersionId: "version-1",
+        body: "Fix the title card.",
+        resolved: false,
+        createdAt: "2026-08-24T10:01:00.000Z",
+      },
+      {
+        id: "comment-old-resolved",
+        mediaVersionId: "version-1",
+        body: "Looks good.",
+        resolved: true,
+        createdAt: "2026-08-24T10:01:00.000Z",
+      },
+      {
+        id: "comment-current",
+        mediaVersionId: "version-2",
+        body: "Check the mix.",
+        resolved: false,
+        createdAt: "2026-08-24T10:02:00.000Z",
+      },
     ];
-    expect(unresolvedOldVersionComments(current, [], comments).map((comment) => comment.id)).toEqual(["comment-old"]);
+    expect(
+      unresolvedOldVersionComments(current, [], comments).map(
+        (comment) => comment.id
+      )
+    ).toEqual(["comment-old"]);
+  });
+
+  it("keeps unresolved comments on old versions visible to internal users", () => {
+    const current = { ...output, currentVersionId: "version-2" };
+    const comments = [
+      {
+        id: "comment-old",
+        mediaVersionId: "version-1",
+        body: "Fix the title card.",
+        resolved: false,
+        createdAt: "2026-08-24T10:01:00.000Z",
+      },
+      {
+        id: "comment-old-resolved",
+        mediaVersionId: "version-1",
+        body: "Looks good.",
+        resolved: true,
+        createdAt: "2026-08-24T10:01:00.000Z",
+      },
+      {
+        id: "comment-current",
+        mediaVersionId: "version-2",
+        body: "Check the mix.",
+        resolved: false,
+        createdAt: "2026-08-24T10:02:00.000Z",
+      },
+    ];
+    expect(
+      unresolvedOldVersionComments(current, [], comments).map(
+        (comment) => comment.id
+      )
+    ).toEqual(["comment-old"]);
+  });
+
+  it("validates persisted snapshots instead of trusting array contents", () => {
+    expect(
+      parseProjectOutputSnapshot({
+        outputs: [output],
+        versions: [],
+        comments: [],
+      })
+    ).toEqual({ outputs: [output], versions: [], comments: [] });
+    expect(
+      parseProjectOutputSnapshot({
+        outputs: [null],
+        versions: [],
+        comments: [],
+      })
+    ).toBeNull();
   });
 });

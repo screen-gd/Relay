@@ -30,7 +30,12 @@ export function trackOnboardingEvent(
   event: OnboardingEvent,
   properties: {
     variant: OnboardingVariant;
-    entrySource?: string;
+    entrySource?:
+      | "first_run_dialog"
+      | "workspace_root"
+      | "start_workspace"
+      | "exit_sample"
+      | "sample_dashboard";
     mode?: "local" | "account";
     elapsedMs?: number;
   }
@@ -39,5 +44,9 @@ export function trackOnboardingEvent(
     milestone: event,
     variant: properties.variant,
     ...(properties.mode ? { mode: properties.mode } : {}),
+    ...(properties.entrySource ? { entrySource: properties.entrySource } : {}),
+    ...(properties.elapsedMs === undefined
+      ? {}
+      : { elapsedMs: properties.elapsedMs }),
   });
 }

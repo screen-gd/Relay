@@ -330,7 +330,7 @@ export function WorkspaceShell({
         return;
       }
 
-      const target = event.target as HTMLElement | null;
+      const target = event.target instanceof HTMLElement ? event.target : null;
       const isEditing =
         target?.isContentEditable ||
         target?.tagName === "INPUT" ||
