@@ -1,14 +1,10 @@
 import { convexTest } from "convex-test";
-import { makeFunctionReference } from "convex/server";
+import type { FunctionArgs } from "convex/server";
 import { expect, test } from "vitest";
 import { api } from "./_generated/api";
 import schema from "./schema";
 
 const modules = import.meta.glob("./**/*.ts");
-const projectsApi = {
-  setPayment: makeFunctionReference<"mutation", { projectId: string; paid: boolean }, null>("projects:setPayment"),
-  update: makeFunctionReference<"mutation", { projectId: string; changes: { paid: boolean } }, null>("projects:update"),
-};
 
 function project(id: string, overrides: Record<string, unknown> = {}) {
   return {
@@ -42,18 +38,48 @@ test("payment is owner-authorized, durable, and activity-backed", async () => {
   await t.run((ctx) => ctx.db.insert("projects", project("client-project")));
   const owner = t.withIdentity({ tokenIdentifier: "owner", name: "Owner" });
 
-  await owner.mutation(projectsApi.setPayment, { projectId: "client-project", paid: true });
-  expect(await t.run((ctx) => ctx.db.query("projects").withIndex("by_projectId", (q) => q.eq("id", "client-project")).unique()))
-    .toMatchObject({ paid: true, paidDate: expect.any(String) });
-  expect(await t.run((ctx) => ctx.db.query("projectActivity").collect())).toMatchObject([
-    { projectId: "client-project", kind: "project_updated", message: "client-project was marked paid." },
+  await owner.mutation(api.projects.setPayment, {
+    projectId: "client-project",
+    paid: true,
+  });
+  expect(
+    await t.run((ctx) =>
+      ctx.db
+        .query("projects")
+        .withIndex("by_projectId", (q) => q.eq("id", "client-project"))
+        .unique()
+    )
+  ).toMatchObject({ paid: true, paidDate: expect.any(String) });
+  expect(
+    await t.run((ctx) => ctx.db.query("projectActivity").collect())
+  ).toMatchObject([
+    {
+      projectId: "client-project",
+      kind: "project_updated",
+      message: "client-project was marked paid.",
+    },
   ]);
 
-  await owner.mutation(projectsApi.setPayment, { projectId: "client-project", paid: false });
-  expect(await t.run((ctx) => ctx.db.query("projects").withIndex("by_projectId", (q) => q.eq("id", "client-project")).unique()))
-    .toMatchObject({ paid: false });
-  expect(await t.run((ctx) => ctx.db.query("projects").withIndex("by_projectId", (q) => q.eq("id", "client-project")).unique()))
-    .not.toHaveProperty("paidDate");
+  await owner.mutation(api.projects.setPayment, {
+    projectId: "client-project",
+    paid: false,
+  });
+  expect(
+    await t.run((ctx) =>
+      ctx.db
+        .query("projects")
+        .withIndex("by_projectId", (q) => q.eq("id", "client-project"))
+        .unique()
+    )
+  ).toMatchObject({ paid: false });
+  expect(
+    await t.run((ctx) =>
+      ctx.db
+        .query("projects")
+        .withIndex("by_projectId", (q) => q.eq("id", "client-project"))
+        .unique()
+    )
+  ).not.toHaveProperty("paidDate");
 });
 
 test("payment rejects generic update, Salary work, and unauthorized team members", async () => {
@@ -86,33 +112,57 @@ test("payment rejects generic update, Salary work, and unauthorized team members
       createdAt: "2026-08-01",
     });
     await ctx.db.insert("projects", project("team-project", { teamId: id }));
-    await ctx.db.insert("projects", project("salary-project", { workType: "Job / Salary" }));
+    await ctx.db.insert(
+      "projects",
+      project("salary-project", { workType: "Job / Salary" })
+    );
     return id;
   });
 
-  await expect(t.withIdentity({ tokenIdentifier: "owner" }).mutation(projectsApi.update, {
-    projectId: "salary-project",
-    changes: { paid: true },
-  })).rejects.toThrow();
-  await expect(t.withIdentity({ tokenIdentifier: "reviewer" }).mutation(projectsApi.setPayment, {
-    projectId: "team-project",
-    paid: true,
-  })).rejects.toThrow("Permission denied");
-  await t.withIdentity({ tokenIdentifier: "editor" }).mutation(projectsApi.setPayment, {
-    projectId: "team-project",
-    paid: true,
-  });
-  await expect(t.withIdentity({ tokenIdentifier: "owner" }).mutation(projectsApi.setPayment, {
-    projectId: "salary-project",
-    paid: true,
-  })).rejects.toThrow("Salary Projects");
+  await expect(
+    t.withIdentity({ tokenIdentifier: "owner" }).mutation(api.projects.update, {
+      projectId: "salary-project",
+      changes: {
+        paid: true,
+      } as unknown as FunctionArgs<typeof api.projects.update>["changes"],
+    })
+  ).rejects.toThrow();
+  await expect(
+    t
+      .withIdentity({ tokenIdentifier: "reviewer" })
+      .mutation(api.projects.setPayment, {
+        projectId: "team-project",
+        paid: true,
+      })
+  ).rejects.toThrow("Permission denied");
+  await t
+    .withIdentity({ tokenIdentifier: "editor" })
+    .mutation(api.projects.setPayment, {
+      projectId: "team-project",
+      paid: true,
+    });
+  await expect(
+    t
+      .withIdentity({ tokenIdentifier: "owner" })
+      .mutation(api.projects.setPayment, {
+        projectId: "salary-project",
+        paid: true,
+      })
+  ).rejects.toThrow("Salary Projects");
   expect(teamId).toBeTruthy();
 });
 
 test("new team role defaults grant finance to Owners and Editors only", async () => {
   const t = convexTest(schema, modules);
   const owner = t.withIdentity({ tokenIdentifier: "owner", name: "Owner" });
-  const teamId = await owner.mutation(api.team.createWorkspace, { name: "Team" });
-  const member = await t.run((ctx) => ctx.db.query("teamMembers").withIndex("by_teamId", (q) => q.eq("teamId", teamId)).unique());
+  const teamId = await owner.mutation(api.team.createWorkspace, {
+    name: "Team",
+  });
+  const member = await t.run((ctx) =>
+    ctx.db
+      .query("teamMembers")
+      .withIndex("by_teamId", (q) => q.eq("teamId", teamId))
+      .unique()
+  );
   expect(member?.permissions.manageFinance).toBe(true);
 });

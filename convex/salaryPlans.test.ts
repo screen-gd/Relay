@@ -1,78 +1,12 @@
 /// <reference types="vite/client" />
 
 import { convexTest } from "convex-test";
-import { makeFunctionReference } from "convex/server";
 import { expect, test } from "vitest";
 import { api } from "./_generated/api";
+import type { Id } from "./_generated/dataModel";
 import schema from "./schema";
 
 const modules = import.meta.glob("./**/*.ts");
-const salaryPlansApi = {
-  create: makeFunctionReference<
-    "mutation",
-    {
-      clientId: string;
-      requiredProjectCount: number;
-      amount: number;
-      startDate: string;
-      notes: string;
-    },
-    string
-  >("salaryPlans:create"),
-  list: makeFunctionReference<
-    "query",
-    { includeArchived?: boolean },
-    Array<{ archived: boolean }>
-  >("salaryPlans:list"),
-  update: makeFunctionReference<
-    "mutation",
-    {
-      planId: string;
-      changes: {
-        clientId: string;
-        requiredProjectCount: number;
-        amount: number;
-        startDate: string;
-        notes: string;
-        archived?: boolean;
-      };
-    },
-    null
-  >("salaryPlans:update"),
-  setArchived: makeFunctionReference<
-    "mutation",
-    { planId: string; archived: boolean },
-    null
-  >("salaryPlans:setArchived"),
-  setReceived: makeFunctionReference<
-    "mutation",
-    { batchId: string; received: boolean; correctionNote?: string },
-    null
-  >("salaryPlans:setReceived"),
-};
-
-const projectsApi = {
-  create: makeFunctionReference<
-    "mutation",
-    { project: Record<string, unknown> },
-    string
-  >("projects:create"),
-  transitionStage: makeFunctionReference<
-    "mutation",
-    { projectId: string; stageId: string },
-    { kind: string; progress?: number; batchCreated?: boolean }
-  >("projects:transitionStage"),
-  previewStage: makeFunctionReference<
-    "query",
-    { projectId: string; stageId: string },
-    {
-      kind: string;
-      progress?: number;
-      requiredProjectCount?: number;
-      amount?: number;
-    }
-  >("projects:previewStage"),
-};
 
 function settings() {
   return {
@@ -115,7 +49,7 @@ function settings() {
   };
 }
 
-function project(id: string, salaryPlanId: string) {
+function project(id: string, salaryPlanId: Id<"salaryPlans">) {
   return {
     id,
     assigneeUserIds: [],
@@ -176,17 +110,21 @@ test("Salary Plan delivery snapshots terms and survives later edits", async () =
   await addWorkspace(t, "creator");
   const owner = t.withIdentity({ tokenIdentifier: "owner", name: "Owner" });
   await owner.mutation(api.settings.upsert, settings());
-  const planId = await owner.mutation(salaryPlansApi.create, {
+  const planId = await owner.mutation(api.salaryPlans.create, {
     clientId: "client-a",
     requiredProjectCount: 2,
     amount: 1200,
     startDate: "2026-08-01",
     notes: "Monthly contract",
   });
-  await owner.mutation(projectsApi.create, { project: project("one", planId) });
-  await owner.mutation(projectsApi.create, { project: project("two", planId) });
+  await owner.mutation(api.projects.create, {
+    project: project("one", planId),
+  });
+  await owner.mutation(api.projects.create, {
+    project: project("two", planId),
+  });
   expect(
-    await owner.query(projectsApi.previewStage, {
+    await owner.query(api.projects.previewStage, {
       projectId: "one",
       stageId: "done",
     })
@@ -196,11 +134,11 @@ test("Salary Plan delivery snapshots terms and survives later edits", async () =
     requiredProjectCount: 2,
     amount: 1200,
   });
-  await owner.mutation(projectsApi.transitionStage, {
+  await owner.mutation(api.projects.transitionStage, {
     projectId: "one",
     stageId: "done",
   });
-  const result = await owner.mutation(projectsApi.transitionStage, {
+  const result = await owner.mutation(api.projects.transitionStage, {
     projectId: "two",
     stageId: "done",
   });
@@ -222,7 +160,7 @@ test("Salary Plan delivery snapshots terms and survives later edits", async () =
     paid: false,
     received: false,
   });
-  await owner.mutation(salaryPlansApi.update, {
+  await owner.mutation(api.salaryPlans.update, {
     planId,
     changes: {
       clientId: "client-a",
@@ -242,7 +180,7 @@ test("Salary Plan delivery snapshots terms and survives later edits", async () =
     planNotes: "Monthly contract",
   });
 
-  await owner.mutation(salaryPlansApi.setReceived, {
+  await owner.mutation(api.salaryPlans.setReceived, {
     batchId: before._id,
     received: true,
     correctionNote: "Paid by bank transfer",
@@ -261,7 +199,7 @@ test("Salary Plans are owner-only and archive without deleting history", async (
   await addWorkspace(t, "creator");
   const owner = t.withIdentity({ tokenIdentifier: "owner" });
   await owner.mutation(api.settings.upsert, settings());
-  const planId = await owner.mutation(salaryPlansApi.create, {
+  const planId = await owner.mutation(api.salaryPlans.create, {
     clientId: "client-a",
     requiredProjectCount: 1,
     amount: 500,
@@ -269,12 +207,14 @@ test("Salary Plans are owner-only and archive without deleting history", async (
     notes: "",
   });
   await expect(
-    t.withIdentity({ tokenIdentifier: "editor" }).query(salaryPlansApi.list, {})
+    t
+      .withIdentity({ tokenIdentifier: "editor" })
+      .query(api.salaryPlans.list, {})
   ).resolves.toEqual([]);
-  await owner.mutation(salaryPlansApi.setArchived, { planId, archived: true });
-  expect(await owner.query(salaryPlansApi.list, {})).toEqual([]);
+  await owner.mutation(api.salaryPlans.setArchived, { planId, archived: true });
+  expect(await owner.query(api.salaryPlans.list, {})).toEqual([]);
   expect(
-    await owner.query(salaryPlansApi.list, { includeArchived: true })
+    await owner.query(api.salaryPlans.list, { includeArchived: true })
   ).toMatchObject([{ _id: planId, archived: true }]);
 });
 
@@ -285,7 +225,7 @@ test("Free Workspaces can create Salary Plans", async () => {
   await owner.mutation(api.settings.upsert, settings());
 
   await expect(
-    owner.mutation(salaryPlansApi.create, {
+    owner.mutation(api.salaryPlans.create, {
       clientId: "client-a",
       requiredProjectCount: 1,
       amount: 500,

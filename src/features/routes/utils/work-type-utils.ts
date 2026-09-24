@@ -1,4 +1,4 @@
-import { DEFAULT_PROFILE_ID, getProfile } from "@/lib/profiles";
+import { defaultProfile } from "@/lib/profiles";
 import type { SettingsState, WorkItem } from "@/lib/types";
 import {
   defaultProjectTags,
@@ -6,7 +6,7 @@ import {
   defaultSalaryBatchSize,
 } from "@/features/settings/settings-defaults";
 
-const profile = getProfile(DEFAULT_PROFILE_ID);
+const profile = defaultProfile;
 
 export function defaultProjectNotes(settings: SettingsState) {
   const stages = settings.projectStages

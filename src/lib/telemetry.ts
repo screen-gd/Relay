@@ -13,6 +13,13 @@ export type AnalyticsEventProperties = {
     milestone: ActivationMilestone;
     variant?: "control" | "v2";
     mode?: "local" | "account";
+    entrySource?:
+      | "first_run_dialog"
+      | "workspace_root"
+      | "start_workspace"
+      | "exit_sample"
+      | "sample_dashboard";
+    elapsedMs?: number;
   };
   weekly_return: { mode: "local" | "account" };
   project_delivered: { mode: "local" | "account" };

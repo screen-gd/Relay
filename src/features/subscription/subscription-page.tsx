@@ -1,13 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import {
   ContentSection,
   PageContent,
   PageHeader,
   WorkspacePage,
 } from "@/components/workspace-page";
-import { ClerkPricingPlans } from "@/components/subscription-plans";
+import { SubscriptionPricingView } from "@/components/subscription-plans";
 import { Badge as OwnedBadge } from "@/components/ui/badge";
 import { Button as OwnedButton } from "@/components/ui/button";
 import { LoaderCircle } from "lucide-react";
@@ -24,14 +23,6 @@ export function SubscriptionPage() {
     isConvexAuthLoading,
     subscription,
   } = useSubscriptionController();
-  const [checkoutReturned, setCheckoutReturned] = useState(false);
-
-  useEffect(() => {
-    setCheckoutReturned(
-      new URLSearchParams(window.location.search).get("checkout") === "return"
-    );
-  }, []);
-
   return (
     <WorkspacePage
       family="administration"
@@ -67,10 +58,7 @@ export function SubscriptionPage() {
               />
             </div>
           ) : isSignedIn ? (
-            <ClerkPricingPlans
-              checkoutReturned={checkoutReturned}
-              subscription={subscription}
-            />
+            <SubscriptionPricingView subscription={subscription} />
           ) : (
             <div className="grid max-w-[620px] gap-4 p-5 md:p-6">
               <h2 className="text-xl font-semibold text-foreground">

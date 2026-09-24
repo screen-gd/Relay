@@ -12,7 +12,7 @@ import {
   MessageSquare,
 } from "lucide-react";
 import { useState } from "react";
-import SiteButton from "./SiteButton";
+import SpecularButton from "./react-bits/SpecularButton";
 import WorkflowDemo from "./WorkflowDemo";
 import ClientReviewDemo from "./ClientReviewDemo";
 import DeliveryDemo from "./DeliveryDemo";
@@ -425,9 +425,9 @@ export default function ProductStory() {
               {plan.note ? (
                 <small className="plan-note">{plan.note}</small>
               ) : null}
-              <SiteButton href="/waitlist">
+              <SpecularButton href="/waitlist">
                 {plan.cta} <ArrowRight size={15} />
-              </SiteButton>
+              </SpecularButton>
             </article>
           ))}
         </div>
@@ -451,9 +451,9 @@ export default function ProductStory() {
               Manage projects, review uploaded videos with clients, and track
               delivery in Relay.
             </p>
-            <SiteButton href="/waitlist">
+            <SpecularButton href="/waitlist">
               Join the waitlist <ArrowRight size={17} />
-            </SiteButton>
+            </SpecularButton>
             <nav className="footer-socials" aria-label="Social links">
               <a
                 href="https://www.instagram.com/zns.studios/"

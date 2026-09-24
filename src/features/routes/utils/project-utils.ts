@@ -19,7 +19,7 @@ export function validateProject(
   workTypeOptions: string[]
 ) {
   if (!item.title.trim()) return "Project name is required.";
-  if (!statusOptions.includes(item.status as ProjectStatus))
+  if (!statusOptions.some((status) => status === item.status))
     return "Choose a valid project status.";
   if (
     !workTypeOptions.some(

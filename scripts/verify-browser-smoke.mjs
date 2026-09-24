@@ -65,7 +65,7 @@ const routes = [
   {
     path: "/sample-studio",
     label: "sample-studio",
-    expectedText: ["Good to see you"],
+    expectedText: ["Dashboard"],
   },
   {
     path: "/profile",

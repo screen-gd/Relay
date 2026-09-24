@@ -5,13 +5,7 @@ import { useData } from "@/lib/data-context";
 import { useProjectAccess } from "@/features/projects/project-access";
 
 export function TeamApplication() {
-  const { settings, setSettings } = useData();
+  const { settings } = useData();
   const { projects } = useProjectAccess();
-  return (
-    <TeamDesignPage
-      projects={projects}
-      settings={settings}
-      setSettings={setSettings}
-    />
-  );
+  return <TeamDesignPage projects={projects} settings={settings} />;
 }

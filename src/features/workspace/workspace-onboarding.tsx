@@ -105,7 +105,6 @@ export function WorkspaceOnboarding({ sample }: { sample: boolean }) {
     <>
       <WelcomeChoiceDialog
         open={authChoiceOpen && !clerkIsSignedIn && !isSignedIn}
-        variant={variant}
         onChooseLocal={chooseLocalMode}
         onCreateAccount={() => launchAccountFlow("sign-up")}
         onSignIn={() => launchAccountFlow("sign-in")}

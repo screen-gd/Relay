@@ -17,8 +17,22 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 }
 
 export function createWorkspaceBackup(data: WorkspaceBackupData) {
-  const { integrationConfigs: _configs, integrationLinks: _links, ...safeSettings } = data.settings;
-  return JSON.stringify({ version: 1, exportedAt: new Date().toISOString(), ...data, projectGroups: data.projectGroups ?? [], settings: safeSettings }, null, 2);
+  const {
+    integrationConfigs: _configs,
+    integrationLinks: _links,
+    ...safeSettings
+  } = data.settings;
+  return JSON.stringify(
+    {
+      version: 1,
+      exportedAt: new Date().toISOString(),
+      ...data,
+      projectGroups: data.projectGroups ?? [],
+      settings: safeSettings,
+    },
+    null,
+    2
+  );
 }
 
 export function parseWorkspaceBackup(source: string): WorkspaceBackup {
@@ -28,9 +42,28 @@ export function parseWorkspaceBackup(source: string): WorkspaceBackup {
   } catch {
     throw new Error("The backup is not valid JSON.");
   }
-  if (!isRecord(value) || value.version !== 1) throw new Error("Unsupported Relay backup version.");
-  if (!Array.isArray(value.projects) || !Array.isArray(value.clients) || !Array.isArray(value.resources) || !Array.isArray(value.salaryBatches) || !isRecord(value.settings)) {
+  if (!isRecord(value) || value.version !== 1)
+    throw new Error("Unsupported Relay backup version.");
+  if (
+    !Array.isArray(value.projects) ||
+    !Array.isArray(value.clients) ||
+    !Array.isArray(value.resources) ||
+    !Array.isArray(value.salaryBatches) ||
+    !isRecord(value.settings) ||
+    typeof value.exportedAt !== "string"
+  ) {
     throw new Error("The Relay backup is incomplete.");
   }
-  return { ...value, projectGroups: Array.isArray(value.projectGroups) ? value.projectGroups : [] } as WorkspaceBackup;
+  return {
+    version: 1,
+    exportedAt: value.exportedAt,
+    projects: value.projects,
+    clients: value.clients,
+    projectGroups: Array.isArray(value.projectGroups)
+      ? value.projectGroups
+      : [],
+    resources: value.resources,
+    salaryBatches: value.salaryBatches,
+    settings: value.settings,
+  };
 }

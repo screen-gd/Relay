@@ -31,32 +31,6 @@ export type WorkflowStage = {
   purpose: WorkflowStagePurpose;
 };
 
-export type ProfileConfig = {
-  id: string;
-  name: string;
-  headline: string;
-  summary: string;
-  workflow: string;
-  titleLabel: string;
-  unitLabel: string;
-  itemLabel: string;
-  statusLabel: string;
-  workTypeLabel: string;
-  startLabel: string;
-  dueLabel: string;
-  earningsLabel: string;
-  notesLabel: string;
-  notesPlaceholder: string;
-  activeLabel: string;
-  upcomingLabel: string;
-  timelineTitle: string;
-  conflictTitle: string;
-  statusOptions: string[];
-  typeOptions: WorkTypeConfig[];
-  salaryBatch?: boolean;
-  moneyLabel?: string;
-};
-
 export type WorkItem = {
   id: string;
   teamId?: string;

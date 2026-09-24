@@ -11,8 +11,8 @@ import React, {
 } from "react";
 import { useAuth, useUser } from "@clerk/nextjs";
 import { useConvex, useConvexAuth, useMutation, useQuery } from "convex/react";
-import { makeFunctionReference } from "convex/server";
 import { api } from "../../convex/_generated/api";
+import type { Id } from "../../convex/_generated/dataModel";
 import { useWorkspaceProjectData } from "./use-workspace-project-data";
 import { useOptionalAuth } from "@/lib/optional-auth";
 import type {
@@ -46,13 +46,28 @@ import {
   moveProjectToStage,
   resolveProjectWorkflowStage,
 } from "@/features/projects/project-domain";
+import {
+  createDefaultSettings,
+  defaultRolePermissions,
+  defaultSettings,
+} from "@/features/settings/settings-defaults";
+import {
+  emptyIntegrationConfig,
+  integrationNames,
+} from "@/features/integrations/integration-constants";
+import {
+  isSalaryWorkType,
+  normalizedSalaryBatchAmount,
+  normalizedSalaryBatchSize,
+} from "@/features/routes/utils/work-type-utils";
+import { isDoneStatus } from "@/features/routes/utils/status-utils";
+import { iso, todayDate } from "@/features/routes/utils/date-utils";
+import { DEFAULT_PROFILE_ID } from "@/lib/profiles";
 import type {
   ProjectWorkflowPort,
   ProjectStageTransitionResult,
 } from "@/features/projects/project-workflow-port";
-import {
-  DEFAULT_WORKFLOW_STAGES,
-} from "./workflow-templates";
+import { DEFAULT_WORKFLOW_STAGES } from "./workflow-templates";
 import {
   sampleStudioProjects,
   sampleStudioResources,
@@ -69,8 +84,6 @@ import {
   LEGACY_TEAM_ROLE_VALUES,
   TEAM_ROLE_VALUES,
   normalizeStoredProjectStatus,
-  type FileCategory,
-  type FileStatus,
   type SettingsTeamRole,
   type StoredTeamRole,
 } from "./domain-values";
@@ -81,76 +94,11 @@ const SETTINGS_STORAGE_KEY = "video-editing-work-tracker:settings:v1";
 const RESOURCES_STORAGE_KEY = "video-editing-work-tracker:resources:v1";
 const PROJECT_GROUPS_STORAGE_KEY = "relay:project-groups:v1";
 
-const projectsApi = {
-  list: makeFunctionReference<"query", Record<string, never>, unknown[]>(
-    "projects:list"
-  ),
-  listSalaryBatches: makeFunctionReference<
-    "query",
-    Record<string, never>,
-    unknown[]
-  >("projects:listSalaryBatches"),
-  listSalaryPlans: makeFunctionReference<
-    "query",
-    { includeArchived?: boolean },
-    unknown[]
-  >("salaryPlans:list"),
-  create: makeFunctionReference<
-    "mutation",
-    { project: ReturnType<typeof cloudProjectInput> },
-    string
-  >("projects:create"),
-  update: makeFunctionReference<
-    "mutation",
-    { projectId: string; changes: ReturnType<typeof cloudProjectChanges> },
-    null
-  >("projects:update"),
-  setPayment: makeFunctionReference<
-    "mutation",
-    { projectId: string; paid: boolean },
-    null
-  >("projects:setPayment"),
-  setArchived: makeFunctionReference<
-    "mutation",
-    { projectId: string; archived: boolean },
-    null
-  >("projects:setArchived"),
-  remove: makeFunctionReference<"mutation", { projectId: string }, null>(
-    "projects:remove"
-  ),
-  setSalaryBatchPaid: makeFunctionReference<
-    "mutation",
-    { batchId: string; paid: boolean },
-    null
-  >("projects:setSalaryBatchPaid"),
-  importSalaryBatches: makeFunctionReference<
-    "mutation",
-    { batches: ReturnType<typeof projectSalaryBatchInput>[] },
-    null
-  >("projects:importSalaryBatches"),
-  previewStage: makeFunctionReference<
-    "query",
-    { projectId: string; stageId: string },
-    ProjectStageTransitionResult
-  >("projects:previewStage"),
-  transitionStage: makeFunctionReference<
-    "mutation",
-    { projectId: string; stageId: string },
-    ProjectStageTransitionResult
-  >("projects:transitionStage"),
-};
-const defaultProjectTags = ["Job / Salary", "Freelance", "Personal Channel"];
-const defaultSalaryWorkType = "Job / Salary";
-const defaultSalaryBatchSize = 20;
-const defaultSalaryBatchAmount = 10000;
-
-type ToastState = { message: string; tone: "success" | "info" | "warning" };
-type ClerkGetToken = ReturnType<typeof useAuth>["getToken"];
-
 const teamRoleOptions: StoredTeamRole[] = [
   ...TEAM_ROLE_VALUES,
   ...LEGACY_TEAM_ROLE_VALUES,
 ];
+const settingsTeamRoleOptions: SettingsTeamRole[] = ["", ...teamRoleOptions];
 const LEGACY_DEMO_SETTINGS = {
   studioName: "Relay",
   profileName: "Jordan Lee",
@@ -161,81 +109,8 @@ const LEGACY_DEMO_SETTINGS = {
   profileLocation: "Los Angeles, CA",
 };
 
-const permissionKeys = [
-  "Create and edit projects",
-  "Upload media and assets",
-  "Manage project stages",
-  "Invite team members",
-  "Manage app settings",
-];
-
-const defaultRolePermissions: Record<string, Record<string, boolean>> = {
-  Owner: Object.fromEntries(permissionKeys.map((k) => [k, true])),
-  Editor: Object.fromEntries(
-    permissionKeys.map((k) => [
-      k,
-      ["Create and edit projects", "Upload media and assets"].includes(k),
-    ])
-  ),
-  Reviewer: Object.fromEntries(permissionKeys.map((k) => [k, false])),
-};
-
-const emptyIntegrationConfig: IntegrationConfig = {
-  connected: false,
-  account: "",
-  folder: "",
-  channel: "",
-  workspace: "",
-  webhookUrl: "",
-  connectedAt: "",
-  lastSyncAt: "",
-};
-
-const integrationNames = ["Google Drive", "Dropbox", "Slack", "Frame.io"];
-
-const defaultIntegrationConfigs: Record<string, IntegrationConfig> =
-  Object.fromEntries(
-    integrationNames.map((name) => [name, { ...emptyIntegrationConfig }])
-  );
-
-const defaultSettings: SettingsState = {
-  studioName: "",
-  profileName: "",
-  profileUsername: "",
-  profileTitle: "",
-  profileBio: "",
-  profileLocation: "",
-  profileImageUrl: "",
-  publicActiveProjects: 0,
-  publicDeliveredEdits: 0,
-  publicTurnaroundDays: 3,
-  timeZone: "UTC",
-  dateFormat: "Month Day, Year",
-  weekStart: "Mon",
-  currencyCode: "USD",
-  customClients: [],
-  clients: [],
-  customProjectTemplates: [],
-  projectTags: [...defaultProjectTags],
-  salaryWorkType: defaultSalaryWorkType,
-  salaryBatchSize: defaultSalaryBatchSize,
-  salaryBatchAmount: defaultSalaryBatchAmount,
-  projectStages: ["Planned", "In Progress", "Client Review", "Delivered"],
-  notifications: {
-    "Project updates": false,
-    "Feedback received": false,
-    "Upcoming deadlines": false,
-    Mentions: false,
-    "Weekly summary": false,
-  },
-  integrationConfigs: { ...defaultIntegrationConfigs },
-  integrationLinks: {},
-  teamRole: "",
-  teamMembers: [],
-  rolePermissions: JSON.parse(JSON.stringify(defaultRolePermissions)),
-  theme: "Dark",
-  accentColor: "#14B8A6",
-};
+type ToastState = { message: string; tone: "success" | "info" | "warning" };
+type ClerkGetToken = ReturnType<typeof useAuth>["getToken"];
 
 function isLegacyDemoSettings(value: unknown) {
   if (!isPlainRecord(value)) return false;
@@ -249,10 +124,10 @@ function isLegacyDemoSettings(value: unknown) {
   );
 }
 
-function readJson<T>(key: string, fallback: T): T {
+function readJson(key: string, fallback: unknown): unknown {
   try {
     const raw = window.localStorage.getItem(key);
-    return raw ? (JSON.parse(raw) as T) : fallback;
+    return raw ? JSON.parse(raw) : fallback;
   } catch {
     return fallback;
   }
@@ -281,28 +156,7 @@ function removeKey(key: string) {
 }
 
 function freshDefaultSettings(): SettingsState {
-  return {
-    ...defaultSettings,
-    projectTags: [...defaultSettings.projectTags],
-    customClients: [...defaultSettings.customClients],
-    clients: defaultSettings.clients.map((client) => ({ ...client })),
-    customProjectTemplates: defaultSettings.customProjectTemplates.map(
-      (template) => ({
-        ...template,
-        workflowStages: [...template.workflowStages],
-        deliverables: template.deliverables.map((item) => ({ ...item })),
-        checklistItems: [...template.checklistItems],
-      })
-    ),
-    projectStages: [...defaultSettings.projectStages],
-    notifications: { ...defaultSettings.notifications },
-    integrationConfigs: JSON.parse(JSON.stringify(defaultIntegrationConfigs)),
-    integrationLinks: normalizeIntegrationLinks(
-      defaultSettings.integrationLinks
-    ),
-    teamMembers: defaultSettings.teamMembers.map((m: TeamMember) => ({ ...m })),
-    rolePermissions: JSON.parse(JSON.stringify(defaultRolePermissions)),
-  };
+  return createDefaultSettings();
 }
 
 function isPlainRecord(value: unknown): value is Record<string, unknown> {
@@ -320,10 +174,13 @@ function stringSetting(value: unknown, fallback: string) {
   return typeof value === "string" && value.trim() ? value : fallback;
 }
 
-function optionSetting(value: unknown, options: string[], fallback: string) {
-  return typeof value === "string" && options.includes(value)
-    ? value
-    : fallback;
+function optionSetting<Value extends string>(
+  value: unknown,
+  options: readonly Value[],
+  fallback: Value
+): Value {
+  if (typeof value !== "string") return fallback;
+  return options.find((option) => option === value) ?? fallback;
 }
 
 function colorSetting(value: unknown, fallback: string) {
@@ -379,19 +236,17 @@ function parseWorkflowStages(value: unknown): WorkflowStage[] {
     const label =
       typeof candidate.label === "string" ? candidate.label.trim() : "";
     const purpose = candidate.purpose;
-    if (
-      !id ||
-      !label ||
-      typeof purpose !== "string" ||
-      !(WORKFLOW_STAGE_PURPOSE_VALUES as readonly string[]).includes(purpose)
-    ) {
+    const normalizedPurpose = WORKFLOW_STAGE_PURPOSE_VALUES.find(
+      (value) => value === purpose
+    );
+    if (!id || !label || !normalizedPurpose) {
       return [];
     }
     return [
       {
         id: id.slice(0, 80),
         label: label.slice(0, 80),
-        purpose: purpose as WorkflowStage["purpose"],
+        purpose: normalizedPurpose,
       },
     ];
   });
@@ -405,6 +260,7 @@ function normalizeStoredItem(value: unknown): WorkItem | null {
       ? value.title.trim()
       : "";
   if (!id || !title) return null;
+  const profileId = stringSetting(value.profileId, DEFAULT_PROFILE_ID);
   return {
     id,
     teamId:
@@ -420,7 +276,7 @@ function normalizeStoredItem(value: unknown): WorkItem | null {
           typeof id === "string" && id.trim() ? [id] : []
         )
       : [],
-    profileId: stringSetting(value.profileId, "video-editing"),
+    profileId: profileId === "video-editing" ? DEFAULT_PROFILE_ID : profileId,
     createdAt:
       typeof value.createdAt === "string" ? value.createdAt : undefined,
     title,
@@ -474,16 +330,16 @@ function normalizeStoredItem(value: unknown): WorkItem | null {
                 !deliverable.title.trim()
               )
                 return [];
-              const category = FILE_CATEGORY_VALUES.includes(
-                deliverable.category as FileCategory
-              )
-                ? (deliverable.category as FileCategory)
-                : "Deliverable";
-              const initialStatus = FILE_STATUS_VALUES.includes(
-                deliverable.initialStatus as FileStatus
-              )
-                ? (deliverable.initialStatus as FileStatus)
-                : "draft";
+              const category = optionSetting(
+                deliverable.category,
+                FILE_CATEGORY_VALUES,
+                "Deliverable"
+              );
+              const initialStatus = optionSetting(
+                deliverable.initialStatus,
+                FILE_STATUS_VALUES,
+                "draft"
+              );
               return [
                 { title: deliverable.title.trim(), category, initialStatus },
               ];
@@ -620,16 +476,16 @@ function normalizeCustomProjectTemplates(
                 !deliverable.title.trim()
               )
                 return [];
-              const category = FILE_CATEGORY_VALUES.includes(
-                deliverable.category as FileCategory
-              )
-                ? (deliverable.category as FileCategory)
-                : "Deliverable";
-              const initialStatus = FILE_STATUS_VALUES.includes(
-                deliverable.initialStatus as FileStatus
-              )
-                ? (deliverable.initialStatus as FileStatus)
-                : "draft";
+              const category = optionSetting(
+                deliverable.category,
+                FILE_CATEGORY_VALUES,
+                "Deliverable"
+              );
+              const initialStatus = optionSetting(
+                deliverable.initialStatus,
+                FILE_STATUS_VALUES,
+                "draft"
+              );
               return [
                 {
                   title: deliverable.title.trim().slice(0, 120),
@@ -704,28 +560,22 @@ function normalizeIntegrationConfigs(
 function normalizeRolePermissions(
   value: unknown
 ): Record<string, Record<string, boolean>> {
-  const result: Record<string, Record<string, boolean>> = JSON.parse(
-    JSON.stringify(defaultRolePermissions)
-  );
+  const result = structuredClone(defaultRolePermissions);
+  if (!isPlainRecord(value)) return result;
 
-  if (isPlainRecord(value)) {
-    for (const role of teamRoleOptions) {
-      const storedRolePermissions = value[role];
-      if (isPlainRecord(storedRolePermissions)) {
-        const rolePerms: Record<string, boolean> = {};
-        for (const perm of permissionKeys) {
-          const storedPermission = storedRolePermissions[perm];
-          rolePerms[perm] =
-            typeof storedPermission === "boolean"
-              ? storedPermission
-              : (defaultRolePermissions[role]?.[perm] ?? false);
-        }
-        result[role] = rolePerms;
-      }
+  for (const [role, defaults] of Object.entries(defaultRolePermissions)) {
+    const storedRolePermissions = value[role];
+    if (!isPlainRecord(storedRolePermissions)) continue;
+    const rolePerms: Record<string, boolean> = {};
+    for (const permission of Object.keys(defaults)) {
+      const storedPermission = storedRolePermissions[permission];
+      rolePerms[permission] =
+        typeof storedPermission === "boolean"
+          ? storedPermission
+          : (defaults[permission] ?? false);
     }
-    return result;
+    result[role] = rolePerms;
   }
-
   return result;
 }
 
@@ -742,7 +592,8 @@ function mergeSettings(stored: unknown): SettingsState {
       (tag) => tag.toLowerCase() === storedSalaryWorkType.toLowerCase()
     ) ??
     projectTags.find(
-      (tag) => tag.toLowerCase() === defaultSalaryWorkType.toLowerCase()
+      (tag) =>
+        tag.toLowerCase() === defaultSettings.salaryWorkType.toLowerCase()
     ) ??
     projectTags[0];
   return {
@@ -822,9 +673,9 @@ function mergeSettings(stored: unknown): SettingsState {
     ),
     teamRole: optionSetting(
       r.teamRole,
-      teamRoleOptions,
+      settingsTeamRoleOptions,
       defaultSettings.teamRole
-    ) as SettingsTeamRole,
+    ),
     theme: optionSetting(
       r.theme,
       ["Light", "Dark", "System"],
@@ -847,11 +698,7 @@ function mergeSettings(stored: unknown): SettingsState {
                   ? m.id
                   : `member-${m.name.trim().toLowerCase().replace(/\s+/g, "-")}`,
               name: m.name.trim(),
-              role: optionSetting(
-                m.role,
-                teamRoleOptions,
-                "Editor"
-              ) as StoredTeamRole,
+              role: optionSetting(m.role, teamRoleOptions, "Editor"),
               email: typeof m.email === "string" ? m.email.trim() : "",
             },
           ];
@@ -869,7 +716,7 @@ function mergeSettings(stored: unknown): SettingsState {
 
 function readInitialSettings(): SettingsState {
   if (typeof window === "undefined") return freshDefaultSettings();
-  const stored = readJson<Partial<SettingsState>>(SETTINGS_STORAGE_KEY, {});
+  const stored = readJson(SETTINGS_STORAGE_KEY, {});
   if (isLegacyDemoSettings(stored)) {
     removeKey(SETTINGS_STORAGE_KEY);
     return freshDefaultSettings();
@@ -879,7 +726,7 @@ function readInitialSettings(): SettingsState {
 
 function readInitialItems(): WorkItem[] {
   if (typeof window === "undefined") return [];
-  const stored = readJson<unknown>(STORAGE_KEY, []);
+  const stored = readJson(STORAGE_KEY, []);
   const storedItems = Array.isArray(stored) ? stored : [];
   return normalizeWorkItems(storedItems);
 }
@@ -1053,7 +900,7 @@ function readInitialProjectGroups(
 ): ProjectGroup[] {
   if (typeof window === "undefined") return [];
   return normalizeProjectGroups(
-    readJson<unknown>(PROJECT_GROUPS_STORAGE_KEY, []),
+    readJson(PROJECT_GROUPS_STORAGE_KEY, []),
     clients
   );
 }
@@ -1120,24 +967,7 @@ function mergeResourceLinks(...groups: ResourceLink[][]): ResourceLink[] {
 
 function readInitialResources(): ResourceLink[] {
   if (typeof window === "undefined") return [];
-  return normalizeResourceLinks(readJson<unknown>(RESOURCES_STORAGE_KEY, []));
-}
-
-function isSalaryWorkType(value: string, settings: SettingsState) {
-  return (
-    value.trim().toLowerCase() === settings.salaryWorkType.trim().toLowerCase()
-  );
-}
-
-function normalizedSalaryBatchSize(value: unknown) {
-  return positiveIntegerSetting(value, defaultSalaryBatchSize);
-}
-
-function normalizedSalaryBatchAmount(value: unknown) {
-  const amount = typeof value === "number" ? value : Number(value);
-  return Number.isFinite(amount)
-    ? Math.max(0, amount)
-    : defaultSalaryBatchAmount;
+  return normalizeResourceLinks(readJson(RESOURCES_STORAGE_KEY, []));
 }
 
 function localDeliveryEffect(
@@ -1185,33 +1015,6 @@ function localDeliveryEffect(
   };
 }
 
-function todayDate() {
-  const d = new Date();
-  d.setHours(0, 0, 0, 0);
-  return d;
-}
-
-function iso(d: Date) {
-  const y = d.getFullYear();
-  const m = String(d.getMonth() + 1).padStart(2, "0");
-  const day = String(d.getDate()).padStart(2, "0");
-  return `${y}-${m}-${day}`;
-}
-
-function isDoneStatus(status: string) {
-  return [
-    "delivered",
-    "done",
-    "paid",
-    "published",
-    "closed",
-    "archived",
-    "shipped",
-    "completed",
-    "released",
-  ].some((w) => status.toLowerCase().includes(w));
-}
-
 function readObjectString(value: unknown, key: string) {
   if (!value || typeof value !== "object") return "";
   const candidate = hasProperty(value, key) ? value[key] : undefined;
@@ -1242,9 +1045,9 @@ function deriveAuthProfile(user: ReturnType<typeof useUser>["user"]) {
     return { profileName: "", profileUsername: "", profileImageUrl: "" };
   }
 
-  const externalAccountsRaw = (
-    user as unknown as { externalAccounts?: unknown[] }
-  ).externalAccounts;
+  const externalAccountsRaw = hasProperty(user, "externalAccounts")
+    ? user.externalAccounts
+    : undefined;
   const externalAccounts = Array.isArray(externalAccountsRaw)
     ? externalAccountsRaw
     : [];
@@ -1501,9 +1304,8 @@ function LocalDataProvider({
     setProjectGroupsState(readInitialProjectGroups(nextSettings.clients));
     setResourceLinksState(readInitialResources());
     setSalaryBatches(
-      normalizeSalaryState(
-        readJson<unknown>(SALARY_STORAGE_KEY, { batches: [] })
-      ).batches
+      normalizeSalaryState(readJson(SALARY_STORAGE_KEY, { batches: [] }))
+        .batches
     );
   }, []);
 
@@ -1847,14 +1649,14 @@ function CloudDataProvider({ children }: { children: React.ReactNode }) {
   const convexProjectGroups = useQuery(api.projectGroups.list, {});
   const convexSettings = useQuery(api.settings.get, {});
 
-  const convexSalaryPlans = useQuery(projectsApi.listSalaryPlans, {});
+  const convexSalaryPlans = useQuery(api.salaryPlans.list, {});
   const convexResources = useQuery(api.resourceLinks.list, {});
-  const createProject = useMutation(projectsApi.create);
-  const updateProject = useMutation(projectsApi.update);
-  const setProjectPayment = useMutation(projectsApi.setPayment);
-  const setProjectArchived = useMutation(projectsApi.setArchived);
+  const createProject = useMutation(api.projects.create);
+  const updateProject = useMutation(api.projects.update);
+  const setProjectPayment = useMutation(api.projects.setPayment);
+  const setProjectArchived = useMutation(api.projects.setArchived);
   const upsertProjectGroup = useMutation(api.projectGroups.upsert);
-  const deleteProject = useMutation(projectsApi.remove);
+  const deleteProject = useMutation(api.projects.remove);
   const upsertSettings = useMutation(api.settings.upsert);
   const patchSettings = useMutation(api.settings.patch);
   const [settingsSaveState, setSettingsSaveState] =
@@ -1885,11 +1687,13 @@ function CloudDataProvider({ children }: { children: React.ReactNode }) {
     }
   }, [patchSettings]);
 
-  const setProjectSalaryBatchPaid = useMutation(projectsApi.setSalaryBatchPaid);
-  const importProjectSalaryBatches = useMutation(
-    projectsApi.importSalaryBatches
+  const setProjectSalaryBatchPaid = useMutation(
+    api.projects.setSalaryBatchPaid
   );
-  const transitionCloudProjectStage = useMutation(projectsApi.transitionStage);
+  const importProjectSalaryBatches = useMutation(
+    api.projects.importSalaryBatches
+  );
+  const transitionCloudProjectStage = useMutation(api.projects.transitionStage);
   const replaceAllResources = useMutation(api.resourceLinks.replaceAll);
 
   useEffect(() => {
@@ -1917,7 +1721,7 @@ function CloudDataProvider({ children }: { children: React.ReactNode }) {
     setResourceLinksState(readInitialResources());
 
     const salState = normalizeSalaryState(
-      readJson<unknown>(SALARY_STORAGE_KEY, { batches: [] })
+      readJson(SALARY_STORAGE_KEY, { batches: [] })
     );
     setSalaryBatches(salState.batches);
     setReady(true);
@@ -1936,9 +1740,8 @@ function CloudDataProvider({ children }: { children: React.ReactNode }) {
       setProjectGroupsState(readInitialProjectGroups(nextSettings.clients));
       setResourceLinksState(readInitialResources());
       setSalaryBatches(
-        normalizeSalaryState(
-          readJson<unknown>(SALARY_STORAGE_KEY, { batches: [] })
-        ).batches
+        normalizeSalaryState(readJson(SALARY_STORAGE_KEY, { batches: [] }))
+          .batches
       );
       setSalaryPlans([]);
       let cancelled = false;
@@ -1980,16 +1783,13 @@ function CloudDataProvider({ children }: { children: React.ReactNode }) {
 
     async function initializeCloudData() {
       const localItems = readInitialItems();
-      const localSettings = readJson<Partial<SettingsState>>(
-        SETTINGS_STORAGE_KEY,
-        {}
-      );
+      const localSettings = readJson(SETTINGS_STORAGE_KEY, {});
       const localBatches = normalizeSalaryState(
-        readJson<unknown>(SALARY_STORAGE_KEY, { batches: [] })
+        readJson(SALARY_STORAGE_KEY, { batches: [] })
       );
       const localResources = readInitialResources();
       const mergedLocalSettings =
-        Object.keys(localSettings).length > 0
+        isPlainRecord(localSettings) && Object.keys(localSettings).length > 0
           ? mergeSettings(localSettings)
           : readInitialSettings();
       const localProjectGroups = readInitialProjectGroups(
@@ -2038,7 +1838,8 @@ function CloudDataProvider({ children }: { children: React.ReactNode }) {
               createProject({
                 project: cloudProjectInput(
                   project,
-                  mergedLocalSettings.clients
+                  mergedLocalSettings.clients,
+                  loadedSalaryPlans
                 ),
               })
             )
@@ -2257,7 +2058,11 @@ function CloudDataProvider({ children }: { children: React.ReactNode }) {
           const writes = [
             ...newItems.map((project) =>
               createProject({
-                project: cloudProjectInput(project, settings.clients),
+                project: cloudProjectInput(
+                  project,
+                  settings.clients,
+                  salaryPlans
+                ),
               })
             ),
             ...changedItems.flatMap((project) => {
@@ -2326,6 +2131,7 @@ function CloudDataProvider({ children }: { children: React.ReactNode }) {
       isSignedIn,
       setProjectArchived,
       setProjectPayment,
+      salaryPlans,
       settings.clients,
       updateProject,
     ]
@@ -2480,7 +2286,7 @@ function CloudDataProvider({ children }: { children: React.ReactNode }) {
   );
   const previewProjectStage = useCallback(
     (input: { projectId: string; stageId: string }) =>
-      convex.query(projectsApi.previewStage, input),
+      convex.query(api.projects.previewStage, input),
     [convex]
   );
 
@@ -2565,7 +2371,11 @@ function CloudDataProvider({ children }: { children: React.ReactNode }) {
         await Promise.all(
           nextItems.map((project) =>
             createProject({
-              project: cloudProjectInput(project, nextSettings.clients),
+              project: cloudProjectInput(
+                project,
+                nextSettings.clients,
+                salaryPlans
+              ),
             })
           )
         );
@@ -2603,6 +2413,7 @@ function CloudDataProvider({ children }: { children: React.ReactNode }) {
       replaceAllResources,
       resourceLinks.length,
       salaryBatches.length,
+      salaryPlans,
       settings.clients.length,
       upsertProjectGroup,
       upsertSettings,
@@ -2677,7 +2488,8 @@ export function useData(): DataContextValue {
 
 function cloudProjectInput(
   item: WorkItem,
-  clients: readonly import("./types").Client[]
+  clients: readonly import("./types").Client[],
+  salaryPlans: readonly SalaryPlan[]
 ) {
   const clientId =
     item.clientId ?? clients.find((client) => client.name === item.client)?.id;
@@ -2686,6 +2498,13 @@ function cloudProjectInput(
   const workflowStages = item.workflowStages?.length
     ? item.workflowStages
     : DEFAULT_WORKFLOW_STAGES.map((stage) => ({ ...stage }));
+  const salaryPlanId =
+    item.salaryPlanId &&
+    salaryPlans.some(
+      (plan) => plan.id === item.salaryPlanId && plan.clientId === clientId
+    )
+      ? (item.salaryPlanId as Id<"salaryPlans">)
+      : undefined;
   return {
     id: item.id,
     teamId: item.teamId,
@@ -2693,7 +2512,7 @@ function cloudProjectInput(
     profileId: item.profileId,
     title: item.title,
     clientId,
-    salaryPlanId: item.salaryPlanId,
+    salaryPlanId,
     projectGroupId: item.projectGroupId,
     workflowStages,
     workType: item.workType,

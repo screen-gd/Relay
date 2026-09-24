@@ -7,6 +7,7 @@ import {
   setAnalyticsConsent,
   setTelemetryTransport,
   trackOptionalEvent,
+  type TelemetryEnvelope,
 } from "./telemetry";
 
 describe("telemetry boundary", () => {
@@ -22,7 +23,9 @@ describe("telemetry boundary", () => {
 
   it("does not send optional events until consent is granted", () => {
     const events: unknown[] = [];
-    setTelemetryTransport((payload) => { events.push(payload); });
+    setTelemetryTransport((payload) => {
+      events.push(payload);
+    });
 
     trackOptionalEvent("weekly_return", { mode: "local" });
     expect(events).toHaveLength(0);
@@ -49,19 +52,33 @@ describe("telemetry boundary", () => {
       safe: "local",
     });
 
-    expect(JSON.stringify(result)).not.toMatch(/Acme Client|Project Apollo|change the ending|client-cut|example\.test|secret-token|1250/);
+    expect(JSON.stringify(result)).not.toMatch(
+      /Acme Client|Project Apollo|change the ending|client-cut|example\.test|secret-token|1250/
+    );
     expect(result).toMatchObject({ safe: "local" });
   });
 
   it("keeps essential error reporting independent from analytics consent", () => {
-    const events: Array<Record<string, unknown>> = [];
-    setTelemetryTransport((payload) => { events.push(payload as unknown as Record<string, unknown>); });
+    const events: TelemetryEnvelope[] = [];
+    setTelemetryTransport((payload) => {
+      events.push(payload);
+    });
 
     setAnalyticsConsent("denied");
-    reportEssentialError(new Error("Project Apollo comment at https://example.test/token costs $1250"));
+    reportEssentialError(
+      new Error(
+        "Project Apollo comment at https://example.test/token costs $1250"
+      )
+    );
 
     expect(events).toHaveLength(1);
-    expect(events[0]).toMatchObject({ channel: "errors", event: "app_error", properties: { errorType: "Error" } });
-    expect(JSON.stringify(events[0])).not.toMatch(/Project Apollo|example\.test|1250|comment/);
+    expect(events[0]).toMatchObject({
+      channel: "errors",
+      event: "app_error",
+      properties: { errorType: "Error" },
+    });
+    expect(JSON.stringify(events[0])).not.toMatch(
+      /Project Apollo|example\.test|1250|comment/
+    );
   });
 });

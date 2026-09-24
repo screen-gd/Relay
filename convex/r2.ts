@@ -12,6 +12,7 @@ import { v } from "convex/values";
 import { internal } from "./_generated/api";
 import { action, internalAction } from "./_generated/server";
 import type { Id } from "./_generated/dataModel";
+import { fileCategoryValidator, fileStatusValidator } from "./domainValidators";
 
 type UploadSessionResult = {
   sessionId: Id<"r2UploadSessions">;
@@ -107,20 +108,10 @@ export const completeUpload = action({
     reservationId: v.id("workspaceStorageReservations"),
     projectId: v.string(),
     projectFileId: v.optional(v.id("projectFiles")),
-    category: v.union(
-      v.literal("Deliverable"),
-      v.literal("Reference"),
-      v.literal("Asset")
-    ),
+    category: fileCategoryValidator,
     title: v.string(),
     description: v.string(),
-    status: v.union(
-      v.literal("draft"),
-      v.literal("sent_to_client"),
-      v.literal("changes_requested"),
-      v.literal("approved"),
-      v.literal("final_delivered")
-    ),
+    status: fileStatusValidator,
     clientVisible: v.boolean(),
     downloadable: v.boolean(),
     fileName: v.string(),

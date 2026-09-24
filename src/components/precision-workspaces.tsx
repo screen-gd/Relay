@@ -40,6 +40,7 @@ import {
 import {
   buildPayoutReport,
   payoutReportToCsv,
+  PAYOUT_PERIODS,
   type PayoutPeriod,
 } from "@/lib/payout-reporting";
 import {
@@ -161,6 +162,7 @@ type ClientRecord = Client & {
 };
 
 const revealTransition = { duration: 0.22, ease: [0.22, 1, 0.36, 1] } as const;
+const payoutPeriods = ["month", "quarter", "year", "custom", "all"] as const;
 
 export function PrecisionClients({
   projects,
@@ -237,11 +239,8 @@ export function PrecisionClients({
       knownIds.add(id);
       knownNames.add(normalizedName);
     }
-    const map = new Map(
-      records.map((client) => [
-        client.id,
-        { client, projects: [] as WorkItem[] },
-      ])
+    const map = new Map<string, { client: Client; projects: WorkItem[] }>(
+      records.map((client) => [client.id, { client, projects: [] }])
     );
     for (const project of projects) {
       const name = project.client?.trim();
@@ -1441,7 +1440,12 @@ export function PrecisionReports({
           <div className="flex flex-wrap items-center justify-end gap-2">
             <Select
               value={period}
-              onValueChange={(value) => setPeriod(value as PayoutPeriod)}
+              onValueChange={(value) => {
+                const nextPeriod = payoutPeriods.find(
+                  (candidate) => candidate === value
+                );
+                if (nextPeriod) setPeriod(nextPeriod);
+              }}
             >
               <SelectTrigger
                 className="h-8 w-[138px] text-xs"

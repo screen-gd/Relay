@@ -5,12 +5,12 @@ export type SettingsSaveState = "local" | "saving" | "saved" | "error";
 export function settingsPatch(previous: SettingsState, next: SettingsState) {
   const {
     clients: oldClients,
-    customClients: oldNames,
+    customClients: _oldCustomClients,
     ...oldPreferences
   } = omitLegacySettings(previous);
   const {
     clients,
-    customClients: names,
+    customClients: _newCustomClients,
     ...preferences
   } = omitLegacySettings(next);
   const changes = Object.fromEntries(
@@ -36,9 +36,7 @@ export function settingsPatch(previous: SettingsState, next: SettingsState) {
   };
 }
 
-const legacySettingKeys = [
-  "density",
-] as const;
+const legacySettingKeys = ["density"] as const;
 
 export function omitLegacySettings<T extends object>(settings: T) {
   return Object.fromEntries(

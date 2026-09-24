@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
-import SiteButton from "./SiteButton";
+import SpecularButton from "./react-bits/SpecularButton";
 
 type FormState =
   | { kind: "idle" }
@@ -136,13 +136,13 @@ export default function WaitlistForm() {
         <input name="website" type="text" tabIndex={-1} autoComplete="off" />
       </label>
 
-      <SiteButton
+      <SpecularButton
         className="waitlist-submit"
         type="submit"
         disabled={state.kind === "submitting"}
       >
         {state.kind === "submitting" ? "Sending request" : "Join the waitlist"}
-      </SiteButton>
+      </SpecularButton>
 
       <p className="waitlist-disclosure">
         Early access is still changing. Storage, plan limits, and some features

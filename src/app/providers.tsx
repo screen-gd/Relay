@@ -6,7 +6,6 @@ import { ConvexProviderWithClerk } from "convex/react-clerk";
 import { ConvexProviderWithAuth, ConvexReactClient } from "convex/react";
 import { DataProvider } from "@/lib/data-context";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { Toaster } from "sonner";
 import { ClerkAuthBridge } from "@/lib/optional-auth";
 import { FirstLoginPlanDialog } from "@/components/subscription-plans";
 
@@ -77,20 +76,7 @@ export function Providers({
       mode={hasCloudConfig ? "cloud" : "local"}
       authEnabled={hasCloudConfig}
     >
-      <TooltipProvider delayDuration={250}>
-        {children}
-        <Toaster
-          className="relay-sonner"
-          position="bottom-right"
-          toastOptions={{
-            style: {
-              background: "var(--app-panel)",
-              border: "1px solid var(--app-border)",
-              color: "var(--app-ink)",
-            },
-          }}
-        />
-      </TooltipProvider>
+      <TooltipProvider delayDuration={250}>{children}</TooltipProvider>
     </DataProvider>
   );
 
@@ -109,16 +95,10 @@ export function Providers({
       localization={clerkLocalization}
     >
       <ClerkAuthBridge>
-        {hasConvexConfig ? (
-          <ConvexProviderWithClerk client={convex} useAuth={useAuth}>
-            {app}
-            <FirstLoginPlanDialog />
-          </ConvexProviderWithClerk>
-        ) : (
-          <ConvexProviderWithAuth client={convex} useAuth={useLocalConvexAuth}>
-            {app}
-          </ConvexProviderWithAuth>
-        )}
+        <ConvexProviderWithClerk client={convex} useAuth={useAuth}>
+          {app}
+          <FirstLoginPlanDialog />
+        </ConvexProviderWithClerk>
       </ClerkAuthBridge>
     </ClerkProvider>
   );

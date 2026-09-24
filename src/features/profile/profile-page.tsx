@@ -862,7 +862,10 @@ function ProfileEditSelect<T extends string>({
   return (
     <OwnedSelect
       value={value}
-      onValueChange={(nextValue) => onChange(nextValue as T)}
+      onValueChange={(nextValue) => {
+        const option = options.find((candidate) => candidate === nextValue);
+        if (option) onChange(option);
+      }}
     >
       <FieldLayout label={label}>
         <OwnedSelectTrigger className="w-full">

@@ -41,9 +41,16 @@ import {
   PROJECT_STATUS_VALUES,
   type ProjectStatus,
 } from "@/lib/domain-values";
-import { DEFAULT_PROFILE_ID, getProfile } from "@/lib/profiles";
-import type { SettingsState, WorkItem, WorkTypeConfig } from "@/lib/types";
+import type { SettingsState, WorkItem } from "@/lib/types";
 import { workflowStagesFromLabels } from "@/lib/workflow-templates";
+import { iso, todayDate } from "@/features/routes/utils/date-utils";
+import { normalizeChecklistCompleted } from "@/features/routes/utils/project-utils";
+import {
+  canonicalClientName,
+  canonicalWorkType,
+  findExistingClientName,
+  getTypeConfig,
+} from "@/features/routes/utils/work-type-utils";
 import {
   CalendarDays,
   Check,
@@ -56,43 +63,6 @@ import type { WorkspaceMemberOption } from "./project-view";
 import { ProjectSelect } from "@/features/projects/project-select";
 
 const statusOptions: ProjectStatus[] = [...PROJECT_STATUS_VALUES];
-const profile = getProfile(DEFAULT_PROFILE_ID);
-
-function isSalaryWorkType(value: string, settings: SettingsState) {
-  return (
-    value.trim().toLowerCase() === settings.salaryWorkType.trim().toLowerCase()
-  );
-}
-
-function getTypeConfig(label: string, settings: SettingsState): WorkTypeConfig {
-  if (isSalaryWorkType(label, settings))
-    return { label, earningsMode: "batch" };
-  return (
-    profile.typeOptions.find(
-      (type) => type.label.toLowerCase() === label.toLowerCase()
-    ) ?? { label, earningsMode: "manual" }
-  );
-}
-
-function canonicalWorkType(value: string, options: string[]) {
-  const trimmed = value.trim();
-  return (
-    options.find((option) => option.toLowerCase() === trimmed.toLowerCase()) ??
-    trimmed
-  );
-}
-
-function findExistingClientName(value: string, options: string[]) {
-  const key = value.trim().toLowerCase();
-  return key
-    ? (options.find((option) => option.toLowerCase() === key) ?? "")
-    : "";
-}
-
-function canonicalClientName(value: string, options: string[]) {
-  const trimmed = value.trim();
-  return findExistingClientName(trimmed, options) || trimmed;
-}
 
 function clientSuggestionText(value: string, options: string[]) {
   const existing = findExistingClientName(value, options);
@@ -101,32 +71,6 @@ function clientSuggestionText(value: string, options: string[]) {
   return options.length
     ? "Select an existing client or type a new client name."
     : "Typing a client name creates it when the project is saved.";
-}
-
-function checklistItemKey(item: string, index: number) {
-  return `${index}:${item.trim()}`.slice(0, 160);
-}
-
-function normalizeChecklistCompleted(
-  items: string[] = [],
-  completed: Record<string, boolean> = {}
-) {
-  const allowed = new Set(items.map(checklistItemKey));
-  return Object.fromEntries(
-    Object.entries(completed).filter(
-      ([key, value]) => allowed.has(key) && value
-    )
-  );
-}
-
-function todayDate() {
-  const date = new Date();
-  date.setHours(0, 0, 0, 0);
-  return date;
-}
-
-function iso(date: Date) {
-  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
 }
 
 function isIsoDate(value: string) {

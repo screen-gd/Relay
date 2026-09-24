@@ -221,10 +221,6 @@ export function calendarFeedIcs(
   ].join("\r\n");
 }
 
-function recordSearchText(record: SearchRecord) {
-  return normalized(`${record.title} ${record.detail} ${record.keywords}`);
-}
-
 /** Build the allowed active-record search index. Archived records stay opt-in. */
 export function buildWorkspaceSearchIndex(
   input: WorkspaceDiscoveryInput,
@@ -318,18 +314,6 @@ export function buildWorkspaceSearchIndex(
     }
   );
   return records;
-}
-
-export function filterWorkspaceSearch(
-  records: readonly SearchRecord[],
-  query: string,
-  limit = 30
-) {
-  const needle = normalized(query);
-  if (!needle) return records.slice(0, limit);
-  return records
-    .filter((record) => recordSearchText(record).includes(needle))
-    .slice(0, limit);
 }
 
 export function filterWorkspaceFiles(

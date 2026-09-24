@@ -176,6 +176,11 @@ async function findActiveMembership(
   return membership;
 }
 
+async function workspaceById(ctx: QueryCtx | MutationCtx, teamId: string) {
+  const workspaceId = ctx.db.normalizeId("teamWorkspaces", teamId);
+  return workspaceId ? ctx.db.get(workspaceId) : null;
+}
+
 async function requirePermission(
   ctx: MutationCtx,
   teamId: string,
@@ -403,9 +408,7 @@ export const getMyWorkspace = query({
       .first();
     if (!currentMember) return null;
 
-    const workspace = await ctx.db.get(
-      currentMember.teamId as Doc<"teamWorkspaces">["_id"]
-    );
+    const workspace = await workspaceById(ctx, currentMember.teamId);
     if (!workspace) return null;
 
     const members = await ctx.db
@@ -532,9 +535,7 @@ export const updateWorkspaceProjectPolicy = mutation({
       .first();
     if (!membership || membership.role !== "Owner")
       throw new Error("Only a Workspace Owner can change Project visibility");
-    const workspace = await ctx.db.get(
-      membership.teamId as Doc<"teamWorkspaces">["_id"]
-    );
+    const workspace = await workspaceById(ctx, membership.teamId);
     if (!workspace) throw new Error("Workspace not found");
     await ctx.db.patch(workspace._id, {
       allowAllTeamProjects: args.allowAllTeamProjects,
@@ -561,9 +562,7 @@ export const updateWorkspaceSettings = mutation({
     );
     if (membership.role !== "Owner")
       throw new Error("Only the Workspace Owner can change workspace settings");
-    const workspace = await ctx.db.get(
-      args.teamId as Doc<"teamWorkspaces">["_id"]
-    );
+    const workspace = await workspaceById(ctx, membership.teamId);
     if (!workspace) throw new Error("Workspace not found");
     await ctx.db.patch(workspace._id, normalizeWorkspaceSettings(args));
   },
@@ -805,9 +804,7 @@ export const transferOwnership = mutation({
     ) {
       throw new Error("Choose a different team member");
     }
-    const workspace = await ctx.db.get(
-      args.teamId as Doc<"teamWorkspaces">["_id"]
-    );
+    const workspace = await workspaceById(ctx, args.teamId);
     if (!workspace) throw new Error("Workspace not found");
     const now = new Date().toISOString();
     const subscription = await ctx.db
@@ -945,9 +942,7 @@ export const leaveWorkspace = mutation({
     );
     if (member.role === "Owner")
       throw new Error("Team owners must transfer ownership before leaving");
-    const workspace = await ctx.db.get(
-      args.teamId as Doc<"teamWorkspaces">["_id"]
-    );
+    const workspace = await workspaceById(ctx, member.teamId);
     if (!workspace) throw new Error("Team workspace not found");
 
     const reassignedProjectCount = await cleanupRemovedMemberProjects(ctx, {

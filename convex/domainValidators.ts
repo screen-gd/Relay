@@ -55,13 +55,15 @@ export const workflowStageValidator = v.object({
   purpose: workflowStagePurposeValidator,
 });
 
-export const projectOutputReviewStateValidator = v.union(
+const approvalStatusValidator = v.union(
   v.literal("draft"),
   v.literal("sent_to_client"),
   v.literal("changes_requested"),
   v.literal("approved"),
   v.literal("final_delivered")
 );
+
+export const projectOutputReviewStateValidator = approvalStatusValidator;
 
 export const projectPortalStatusValidator = v.union(
   v.literal("draft"),
@@ -85,13 +87,7 @@ export const fileCategoryValidator = v.union(
   v.literal("Asset")
 );
 
-export const fileStatusValidator = v.union(
-  v.literal("draft"),
-  v.literal("sent_to_client"),
-  v.literal("changes_requested"),
-  v.literal("approved"),
-  v.literal("final_delivered")
-);
+export const fileStatusValidator = approvalStatusValidator;
 
 export const storedFileStatusValidator = v.union(
   fileStatusValidator,
@@ -143,13 +139,7 @@ export const clientPortalStageValidator = v.union(
   v.literal("Delivered")
 );
 
-export const deliverableStatusValidator = v.union(
-  v.literal("draft"),
-  v.literal("sent_to_client"),
-  v.literal("changes_requested"),
-  v.literal("approved"),
-  v.literal("final_delivered")
-);
+export const deliverableStatusValidator = approvalStatusValidator;
 
 export const revisionStatusValidator = v.union(
   v.literal("Submitted"),

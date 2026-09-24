@@ -1,4 +1,5 @@
-import type { FileCategory } from "@/lib/domain-values";
+import { z } from "zod";
+import { FILE_CATEGORY_VALUES, type FileCategory } from "@/lib/domain-values";
 
 export const PROJECT_OUTPUT_REVIEW_STATES = [
   "draft",
@@ -7,51 +8,79 @@ export const PROJECT_OUTPUT_REVIEW_STATES = [
   "approved",
   "final_delivered",
 ] as const;
-export type ProjectOutputReviewState =
-  (typeof PROJECT_OUTPUT_REVIEW_STATES)[number];
 
-export type MediaSource =
-  | { provider: "youtube"; url: string; videoId: string; embedUrl: string }
-  | { provider: "vimeo"; url: string; videoId: string; embedUrl: string }
-  | { provider: "external"; url: string };
+const fileCategorySchema = z.enum(FILE_CATEGORY_VALUES);
+const projectOutputReviewStateSchema = z.enum(PROJECT_OUTPUT_REVIEW_STATES);
 
-export type ProjectOutput = {
-  id: string;
-  projectId: string;
-  title: string;
-  category: FileCategory;
-  reviewState: ProjectOutputReviewState;
-  archived: boolean;
-  dueDate?: string;
-  currentVersionId?: string;
-  createdAt: string;
-  updatedAt: string;
-  unresolvedOldVersionCommentCount?: number;
-};
+const mediaSourceSchema = z.discriminatedUnion("provider", [
+  z.object({
+    provider: z.literal("youtube"),
+    url: z.string(),
+    videoId: z.string(),
+    embedUrl: z.string(),
+  }),
+  z.object({
+    provider: z.literal("vimeo"),
+    url: z.string(),
+    videoId: z.string(),
+    embedUrl: z.string(),
+  }),
+  z.object({ provider: z.literal("external"), url: z.string() }),
+]);
 
-export type MediaVersion = {
-  id: string;
-  projectOutputId: string;
-  versionNumber: number;
-  source: MediaSource;
-  label: string;
-  notes: string;
-  createdAt: string;
-};
+const projectOutputSchema = z.object({
+  id: z.string(),
+  projectId: z.string(),
+  title: z.string(),
+  category: fileCategorySchema,
+  reviewState: projectOutputReviewStateSchema,
+  archived: z.boolean(),
+  dueDate: z.string().optional(),
+  currentVersionId: z.string().optional(),
+  createdAt: z.string(),
+  updatedAt: z.string(),
+  unresolvedOldVersionCommentCount: z.number().optional(),
+});
 
-export type MediaVersionComment = {
-  id: string;
-  mediaVersionId: string;
-  body: string;
-  resolved: boolean;
-  createdAt: string;
-};
+const mediaVersionSchema = z.object({
+  id: z.string(),
+  projectOutputId: z.string(),
+  versionNumber: z.number(),
+  source: mediaSourceSchema,
+  label: z.string(),
+  notes: z.string(),
+  createdAt: z.string(),
+});
 
-export type ProjectOutputSnapshot = {
-  outputs: ProjectOutput[];
-  versions: MediaVersion[];
-  comments: MediaVersionComment[];
-};
+const mediaVersionCommentSchema = z.object({
+  id: z.string(),
+  mediaVersionId: z.string(),
+  body: z.string(),
+  resolved: z.boolean(),
+  createdAt: z.string(),
+});
+
+export const projectOutputSnapshotSchema = z.object({
+  outputs: z.array(projectOutputSchema),
+  versions: z.array(mediaVersionSchema),
+  comments: z.array(mediaVersionCommentSchema),
+});
+
+export type ProjectOutputReviewState = z.infer<
+  typeof projectOutputReviewStateSchema
+>;
+export type MediaSource = z.infer<typeof mediaSourceSchema>;
+export type ProjectOutput = z.infer<typeof projectOutputSchema>;
+export type MediaVersion = z.infer<typeof mediaVersionSchema>;
+export type MediaVersionComment = z.infer<typeof mediaVersionCommentSchema>;
+export type ProjectOutputSnapshot = z.infer<typeof projectOutputSnapshotSchema>;
+
+export function parseProjectOutputSnapshot(
+  value: unknown
+): ProjectOutputSnapshot | null {
+  const result = projectOutputSnapshotSchema.safeParse(value);
+  return result.success ? result.data : null;
+}
 
 export type MediaUrlResult =
   { ok: true; value: MediaSource } | { ok: false; error: string };

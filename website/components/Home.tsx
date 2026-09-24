@@ -9,7 +9,7 @@ import { MotionConfig, useReducedMotion } from "motion/react";
 import { useEffect, useRef, useState } from "react";
 import InteractiveDashboard from "./InteractiveDashboard";
 import ProductStory from "./ProductStory";
-import SiteButton from "./SiteButton";
+import SpecularButton from "./react-bits/SpecularButton";
 import GradualBlur from "./react-bits/GradualBlur";
 
 const MagicRings = dynamic(() => import("./react-bits/MagicRings"), {
@@ -155,9 +155,9 @@ export default function Home() {
             <nav className="site-nav" aria-label="Main navigation">
               <a href="#product">Product</a>
               <a href="#pricing">Pricing</a>
-              <SiteButton className="nav-action" href="/waitlist">
+              <SpecularButton className="nav-action" href="/waitlist">
                 Join the waitlist
-              </SiteButton>
+              </SpecularButton>
             </nav>
           </header>
         </div>

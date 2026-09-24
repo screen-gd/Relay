@@ -32,7 +32,7 @@ import {
   useProjectGroups,
   useProjectWorkflow,
 } from "@/lib/data-context";
-import { DEFAULT_PROFILE_ID, getProfile } from "@/lib/profiles";
+import { defaultProfile } from "@/lib/profiles";
 import type { WorkItem } from "@/lib/types";
 import {
   PROJECT_TEMPLATES,
@@ -87,7 +87,7 @@ type ProjectActionsProviderProps = {
   sample?: boolean;
 };
 
-const profile = getProfile(DEFAULT_PROFILE_ID);
+const profile = defaultProfile;
 
 function emptyProjectForm(): WorkItem {
   return {

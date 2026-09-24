@@ -2,10 +2,11 @@
 
 import { useCallback, useMemo, useState } from "react";
 import { useConvexAuth, useMutation, useQuery } from "convex/react";
-import { makeFunctionReference } from "convex/server";
+import { api } from "../../../../convex/_generated/api";
+import type { Id } from "../../../../convex/_generated/dataModel";
 
 type EditorPortal = {
-  id: string;
+  id: Id<"projectPortals">;
   projectId: string;
   status: "draft" | "open" | "closed";
   expiresAt: string | null;
@@ -17,8 +18,6 @@ type EditorPortal = {
 };
 
 type EditorPortalWithSessionToken = EditorPortal & { token?: string };
-
-type EditorPortalResult = { portal: EditorPortal; preview: unknown };
 
 export type ProjectPortalDraft = {
   publicNotes: string;
@@ -46,57 +45,6 @@ function writeSessionToken(projectId: string, token: string) {
     );
 }
 
-const portalApi = {
-  getForProject: makeFunctionReference<
-    "query",
-    { projectId: string },
-    EditorPortalResult | null
-  >("projectPortals:getForProject"),
-  publish: makeFunctionReference<
-    "mutation",
-    {
-      projectId: string;
-      config: {
-        publicNotes: string;
-        showStartDate: boolean;
-        showDueDate: boolean;
-        selectedOutputIds: string[];
-        expiresAt: string | null;
-      };
-    },
-    { portalId: string; token: string }
-  >("projectPortals:publish"),
-  updateSettings: makeFunctionReference<
-    "mutation",
-    {
-      portalId: string;
-      changes: {
-        publicNotes: string;
-        showStartDate: boolean;
-        showDueDate: boolean;
-        selectedOutputIds: string[];
-        expiresAt: string | null;
-      };
-    },
-    null
-  >("projectPortals:updateSettings"),
-  setStatus: makeFunctionReference<
-    "mutation",
-    { portalId: string; status: "open" | "closed" },
-    null
-  >("projectPortals:setStatus"),
-  setPin: makeFunctionReference<
-    "mutation",
-    { portalId: string; pin: string | null },
-    null
-  >("projectPortals:setPin"),
-  regenerateToken: makeFunctionReference<
-    "mutation",
-    { portalId: string },
-    { token: string }
-  >("projectPortals:regenerateToken"),
-};
-
 function localDateTime(value: string | null | undefined) {
   if (!value) return "";
   const date = new Date(value);
@@ -123,14 +71,14 @@ export function useProjectPortal(projectId: string, enabled: boolean) {
   const { isAuthenticated, isLoading: authLoading } = useConvexAuth();
   const available = enabled && isAuthenticated;
   const result = useQuery(
-    portalApi.getForProject,
+    api.projectPortals.getForProject,
     available ? { projectId } : "skip"
   );
-  const publish = useMutation(portalApi.publish);
-  const updateSettings = useMutation(portalApi.updateSettings);
-  const setStatus = useMutation(portalApi.setStatus);
-  const setPin = useMutation(portalApi.setPin);
-  const regenerateToken = useMutation(portalApi.regenerateToken);
+  const publish = useMutation(api.projectPortals.publish);
+  const updateSettings = useMutation(api.projectPortals.updateSettings);
+  const setStatus = useMutation(api.projectPortals.setStatus);
+  const setPin = useMutation(api.projectPortals.setPin);
+  const regenerateToken = useMutation(api.projectPortals.regenerateToken);
   const [error, setError] = useState("");
   const [sessionToken, setSessionToken] = useState(() =>
     readSessionToken(projectId)
@@ -181,7 +129,7 @@ export function useProjectPortal(projectId: string, enabled: boolean) {
   );
 
   const changeOpen = useCallback(
-    async (portalId: string, open: boolean) => {
+    async (portalId: Id<"projectPortals">, open: boolean) => {
       setError("");
       try {
         await setStatus({ portalId, status: open ? "open" : "closed" });
@@ -198,7 +146,7 @@ export function useProjectPortal(projectId: string, enabled: boolean) {
   );
 
   const regenerate = useCallback(
-    async (portalId: string) => {
+    async (portalId: Id<"projectPortals">) => {
       setError("");
       try {
         const regenerated = await regenerateToken({ portalId });

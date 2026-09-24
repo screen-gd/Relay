@@ -6,19 +6,6 @@ import type {
   WorkflowStagePurpose,
 } from "./types";
 
-export const PROJECT_TEMPLATE_IDS = [
-  "youtube-video",
-  "instagram-reel",
-  "corporate-event-video",
-  "product-ad",
-  "wedding-film",
-  "theme-park-social-campaign",
-  "podcast-edit",
-  "client-retainer-package",
-] as const;
-
-export type ProjectTemplateId = (typeof PROJECT_TEMPLATE_IDS)[number];
-
 export type ProjectTemplateDeliverable = {
   title: string;
   category: FileCategory;

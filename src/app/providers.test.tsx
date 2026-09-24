@@ -28,7 +28,6 @@ vi.mock("@clerk/nextjs", () => ({
   useUser: () => ({ isLoaded: true, isSignedIn: false, user: null }),
 }));
 
-
 vi.mock("convex/react", () => ({
   ConvexProviderWithAuth: ({ children }: { children: React.ReactNode }) => (
     <div data-provider="convex-local-auth">{children}</div>
@@ -54,20 +53,22 @@ vi.mock("@/lib/data-context", () => ({
     children: React.ReactNode;
     mode: string;
   }) => (
-    <div data-auth-enabled={String(authEnabled)} data-data-mode={mode}>{children}</div>
+    <div data-auth-enabled={String(authEnabled)} data-data-mode={mode}>
+      {children}
+    </div>
   ),
 }));
 
 vi.mock("@/lib/optional-auth", () => ({
-  ClerkAuthBridge: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+  ClerkAuthBridge: ({ children }: { children: React.ReactNode }) => (
+    <>{children}</>
+  ),
 }));
 
 vi.mock("@/components/ui/tooltip", () => ({
-  TooltipProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
-}));
-
-vi.mock("sonner", () => ({
-  Toaster: () => null,
+  TooltipProvider: ({ children }: { children: React.ReactNode }) => (
+    <>{children}</>
+  ),
 }));
 
 describe("Providers runtime configuration", () => {
@@ -78,7 +79,7 @@ describe("Providers runtime configuration", () => {
         clerkPublishableKey="pk_test_runtime_config"
       >
         <main>Relay</main>
-      </Providers>,
+      </Providers>
     );
 
     expect(html).toContain('data-provider="clerk"');
@@ -92,7 +93,7 @@ describe("Providers runtime configuration", () => {
     const html = renderToStaticMarkup(
       <Providers clerkPublishableKey="pk_test_runtime_config">
         <main>Relay</main>
-      </Providers>,
+      </Providers>
     );
 
     expect(html).not.toContain('data-provider="clerk"');

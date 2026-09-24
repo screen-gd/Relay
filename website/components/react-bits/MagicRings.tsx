@@ -253,8 +253,9 @@ export default function MagicRings({
     let elapsed = 0;
     let lastT = 0;
     const animate = (t: number) => {
+      const p = propsRef.current;
+      if (!p) return;
       frameId = requestAnimationFrame(animate);
-      const p = propsRef.current!;
 
       const dt = lastT === 0 ? 0 : Math.min(t - lastT, 100);
       lastT = t;

@@ -695,10 +695,6 @@ button:not(:disabled):active,
   .app-toast-position {
     bottom: calc(80px + env(safe-area-inset-bottom));
   }
-
-  [data-sonner-toaster].relay-sonner {
-    bottom: calc(80px + env(safe-area-inset-bottom)) !important;
-  }
 }
 
 @media (max-width: 767px) and (pointer: coarse) {
