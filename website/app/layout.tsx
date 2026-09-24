@@ -73,6 +73,17 @@ export const viewport: Viewport = {
   themeColor: "#000000",
 };
 
+const structuredData = {
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  name: "Relay",
+  url: siteUrl,
+  description: siteDescription,
+  applicationCategory: "BusinessApplication",
+  operatingSystem: "Web",
+  image: new URL("/brand/relay/social-preview.png", siteUrl).href,
+};
+
 export default function RootLayout({
   children,
 }: {
@@ -80,6 +91,14 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
+      <head>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify(structuredData).replace(/</g, "\\u003c"),
+          }}
+        />
+      </head>
       <body
         className={`${geist.variable} ${geistMono.variable} ${display.variable}`}
       >
