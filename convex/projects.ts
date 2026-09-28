@@ -16,6 +16,7 @@ import {
   workflowStageValidator,
 } from "./domainValidators";
 import { requireWorkspaceCapability } from "./workspaceSubscriptions";
+import { dueDateAfterDelivery } from "../src/lib/domain-values";
 
 const createProjectValidator = v.object({
   id: v.string(),
@@ -919,8 +920,28 @@ export const previewStage = query({
   },
 });
 
+/**
+ * The client's local delivery day, trusted only when it is within a day of the
+ * server's UTC date (time zones span about +/-14h). Otherwise use the UTC day.
+ */
+function deliveryDay(now: string, clientDay: string | undefined) {
+  const serverDay = now.slice(0, 10);
+  if (!clientDay || !/^\d{4}-\d{2}-\d{2}$/.test(clientDay)) return serverDay;
+  const offsetDays =
+    Math.abs(
+      Date.parse(`${clientDay}T00:00:00Z`) -
+        Date.parse(`${serverDay}T00:00:00Z`)
+    ) / 86_400_000;
+  return offsetDays <= 1 ? clientDay : serverDay;
+}
+
 export const transitionStage = mutation({
-  args: { projectId: v.string(), stageId: v.string() },
+  args: {
+    projectId: v.string(),
+    stageId: v.string(),
+    /** The user's local calendar day (YYYY-MM-DD), used for early deliveries. */
+    deliveredOn: v.optional(v.string()),
+  },
   handler: async (ctx, args) => {
     const { identity, project } = await requireProjectAccess(
       ctx,
@@ -938,10 +959,20 @@ export const transitionStage = mutation({
           ? (project.completedAt ?? now)
           : now
         : undefined;
+    const newlyDelivered =
+      status === "Delivered" && project.status !== "Delivered";
     await ctx.db.patch(project._id, {
       workflowStageId: stage.id,
       status,
       completedAt,
+      ...(newlyDelivered
+        ? {
+            dueDate: dueDateAfterDelivery(
+              project.dueDate,
+              deliveryDay(now, args.deliveredOn)
+            ),
+          }
+        : {}),
       updatedAt: now,
     });
 

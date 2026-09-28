@@ -489,17 +489,17 @@ test("shows the compact dashboard overview and links to all projects", async ({
     Math.abs((searchBox?.y ?? 0) - (filterBox?.y ?? 0))
   ).toBeLessThanOrEqual(5);
 
-  const pulse = page.getByRole("region", { name: "Operational pulse" });
-  await expect(pulse).toContainText("In motion");
-  await expect(pulse).toContainText("Collected");
+  const pulse = page.getByRole("region", { name: "Overview" });
+  await expect(pulse).toContainText("Active");
+  await expect(pulse).toContainText("Paid");
   await expect(pulse).toContainText("Salary batch");
   await expect(pulse.getByTestId("salary-batch-progress")).toContainText(
     /5\s*\/\s*5 edits/
   );
-  const markPayment = pulse.getByRole("button", { name: /Mark payment/ });
+  const markPayment = pulse.getByRole("button", { name: /paid/i });
   await expect(markPayment).toBeEnabled();
 
-  const ledger = page.getByRole("region", { name: "Project ledger" });
+  const ledger = page.getByRole("region", { name: "Projects" });
   await expect(ledger.getByTestId("project-row")).toHaveCount(2);
   const viewAll = ledger.getByRole("link", { name: "View all projects" });
   await expect(viewAll).toHaveAttribute("href", "/projects");

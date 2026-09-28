@@ -10,6 +10,7 @@ import {
   deriveProjectGroupSummary,
   getProjectStageMenuChoices,
   groupProjectsByStage,
+  dueDateAfterDelivery,
   moveProjectToStage,
   normalizeProjectGroup,
   normalizeProjectGroups,
@@ -324,6 +325,7 @@ describe("Project delivery", () => {
     expect(delivered).toEqual({
       status: "Delivered",
       completedAt: "2026-08-24T12:00:00.000Z",
+      dueDate: "2026-08-24",
     });
     expect(
       projectStatusUpdate(
@@ -331,7 +333,11 @@ describe("Project delivery", () => {
         "Revision",
         "2026-08-25T12:00:00.000Z"
       )
-    ).toEqual({ status: "Revision", completedAt: undefined });
+    ).toEqual({
+      status: "Revision",
+      completedAt: undefined,
+      dueDate: "2026-08-24",
+    });
     expect(
       moveProjectToStage(
         { ...source, ...delivered },
@@ -351,7 +357,17 @@ describe("Project delivery", () => {
         "Delivered",
         "2026-08-25T12:00:00.000Z"
       )
-    ).toEqual({ status: "Delivered", completedAt: "2026-08-24T12:00:00.000Z" });
+    ).toEqual({
+      status: "Delivered",
+      completedAt: "2026-08-24T12:00:00.000Z",
+      dueDate: "2026-08-31",
+    });
+  });
+
+  it("pulls the due date back to an early delivery and keeps it for a late one", () => {
+    expect(dueDateAfterDelivery("2026-09-10", "2026-09-07")).toBe("2026-09-07");
+    expect(dueDateAfterDelivery("2026-09-10", "2026-09-12")).toBe("2026-09-10");
+    expect(dueDateAfterDelivery("", "2026-09-07")).toBe("");
   });
 });
 

@@ -187,3 +187,13 @@ export const PORTAL_EVENT_KIND_VALUES = [
   "revision_completed",
 ] as const;
 export type PortalEventKind = (typeof PORTAL_EVENT_KIND_VALUES)[number];
+
+/**
+ * Due date after a delivery on `deliveredOn` (YYYY-MM-DD). Early deliveries
+ * pull the due date back to the delivery day so the timeline and due-date
+ * sorting reflect when the work actually finished. Late deliveries keep their
+ * original due date so they still read as late.
+ */
+export function dueDateAfterDelivery(dueDate: string, deliveredOn: string) {
+  return dueDate && deliveredOn < dueDate ? deliveredOn : dueDate;
+}

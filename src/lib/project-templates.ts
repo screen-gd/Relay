@@ -56,7 +56,7 @@ export const PROJECT_TEMPLATES: ProjectTemplate[] = [
     id: "youtube-video",
     name: "YouTube Video",
     description:
-      "Long-form creator edit with review, packaging, and publishing handoff.",
+      "Long-form creator edit with review, packaging, and publishing.",
     projectType: "Long-form video",
     workType: "channel",
     durationDays: 10,

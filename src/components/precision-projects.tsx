@@ -244,7 +244,7 @@ function projectNextAction(project: WorkItem) {
   if (project.status === "Revision")
     return "Apply the requested revisions and send the updated cut.";
   if (project.status === "In Progress")
-    return "Complete the current production pass before the next handoff.";
+    return "Finish this stage before sending it to the client.";
   return "Confirm the brief, owner, and first production milestone.";
 }
 
@@ -789,7 +789,12 @@ export function PrecisionProjects(props: PrecisionProjectsProps) {
                     </TabsList>
                   </Tabs>
                   <ProjectDropdown
-                    value={`${tableState.sort}:${tableState.direction}`}
+                    value={
+                      // "Due first" has one urgency order; old dir=desc links land on it.
+                      tableState.sort === "due"
+                        ? "due:asc"
+                        : `${tableState.sort}:${tableState.direction}`
+                    }
                     onChange={(value) => {
                       const [sort, direction] = value.split(":");
                       const parsed = parseProjectTableSearch(
@@ -802,10 +807,10 @@ export function PrecisionProjects(props: PrecisionProjectsProps) {
                       }));
                     }}
                     ariaLabel="Sort projects"
-                    className="w-[140px]"
+                    className="w-[176px]"
                     options={[
                       { value: "due:asc", label: "Due first" },
-                      { value: "due:desc", label: "Due last" },
+                      { value: "delivered:desc", label: "Recently delivered" },
                       { value: "name:asc", label: "Name A-Z" },
                       { value: "stage:asc", label: "Stage" },
                       { value: "payment:asc", label: "Payment" },
@@ -1443,7 +1448,7 @@ function ProjectInspector({
                 label="Value"
                 value={
                   project.workType === settings.salaryWorkType
-                    ? "Batch tracked"
+                    ? "Paid per batch"
                     : money(project.earnings, settings.currencyCode)
                 }
               />

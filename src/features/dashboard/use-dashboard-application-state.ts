@@ -8,11 +8,11 @@ import {
   normalizedSalaryBatchAmount,
   normalizedSalaryBatchSize,
 } from "@/features/routes/utils/work-type-utils";
+import { createdTime, daysBetween } from "@/features/routes/utils/date-utils";
 import {
-  createdTime,
-  dateTime,
-  daysBetween,
-} from "@/features/routes/utils/date-utils";
+  compareProjectUrgency,
+  localDateKey,
+} from "@/features/projects/project-domain";
 import { isDoneStatus } from "@/features/routes/utils/status-utils";
 import { safeMoneyValue } from "@/features/routes/utils/number-utils";
 import { buildPayoutReport } from "@/lib/payout-reporting";
@@ -121,13 +121,10 @@ export function useDashboardApplicationState({
       );
     });
 
+    const today = localDateKey(new Date().toISOString());
     return [...searched].sort((a, b) => {
       if (sortKey === "createdAt_asc") return createdTime(a) - createdTime(b);
-      if (sortKey === "dueDate_asc")
-        return (
-          dateTime(a.dueDate || "9999-12-31") -
-          dateTime(b.dueDate || "9999-12-31")
-        );
+      if (sortKey === "dueDate_asc") return compareProjectUrgency(a, b, today);
       if (sortKey === "earnings_desc")
         return safeMoneyValue(b.earnings) - safeMoneyValue(a.earnings);
       if (sortKey === "earnings_asc")

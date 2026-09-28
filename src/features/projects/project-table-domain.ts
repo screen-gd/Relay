@@ -4,6 +4,12 @@ import type {
   StoredTeamRole,
 } from "../../lib/domain-values";
 
+import {
+  compareProjectUrgency,
+  isProjectFinished,
+  localDateKey,
+} from "./project-domain";
+
 export {
   getProjectStageMenuChoices,
   groupProjectsByStage,
@@ -12,7 +18,8 @@ export {
 } from "./project-domain";
 
 export type ProjectTableView = "table" | "board";
-export type ProjectTableSort = "name" | "due" | "stage" | "payment" | "salary";
+export type ProjectTableSort =
+  "name" | "due" | "delivered" | "stage" | "payment" | "salary";
 export type ProjectTableDirection = "asc" | "desc";
 export type ProjectTablePayment = "all" | "paid" | "unpaid" | "not-billable";
 export type ProjectTableSalary = "all" | "salary" | "client";
@@ -97,6 +104,7 @@ function parseView(value: string | null): ProjectTableView {
 
 function parseSort(value: string | null): ProjectTableSort {
   return value === "name" ||
+    value === "delivered" ||
     value === "stage" ||
     value === "payment" ||
     value === "salary"
@@ -232,17 +240,41 @@ function compareText(left: string, right: string) {
   return left.localeCompare(right) || 0;
 }
 
+/**
+ * "Recently delivered": finished work newest first, then active work in
+ * urgency order.
+ */
+function compareRecentlyDelivered(
+  left: WorkItem,
+  right: WorkItem,
+  today: string
+) {
+  const finishedFirst =
+    Number(isProjectFinished(right)) - Number(isProjectFinished(left));
+  return finishedFirst || compareProjectUrgency(left, right, today);
+}
+
+type ProjectSortContext = ProjectTableRules & {
+  clients: readonly Client[];
+  /** Local YYYY-MM-DD day used for due windows; defaults to today. */
+  today?: string;
+};
+
 function compareProjects(
   left: WorkItem,
   right: WorkItem,
   state: ProjectTableState,
-  context: ProjectTableRules & { clients: readonly Client[] }
+  context: ProjectSortContext
 ) {
-  if (state.sort === "due") {
-    const finished = (project: WorkItem) =>
-      project.status === "Delivered" || project.status === "Cancelled";
-    const completionOrder = Number(finished(left)) - Number(finished(right));
-    if (completionOrder) return completionOrder;
+  if (state.sort === "due" || state.sort === "delivered") {
+    const today = context.today ?? localDateKey(new Date().toISOString());
+    return (
+      (state.sort === "due"
+        ? compareProjectUrgency(left, right, today)
+        : compareRecentlyDelivered(left, right, today)) ||
+      compareText(left.title, right.title) ||
+      compareText(left.id, right.id)
+    );
   }
   let result = 0;
   if (state.sort === "name") result = compareText(left.title, right.title);
@@ -257,10 +289,6 @@ function compareProjects(
     result =
       Number(context.isSalaryProject(left)) -
       Number(context.isSalaryProject(right));
-  else
-    result = (left.dueDate || "9999-12-31").localeCompare(
-      right.dueDate || "9999-12-31"
-    );
   if (state.direction === "desc") result = -result;
   return (
     result ||
@@ -272,7 +300,7 @@ function compareProjects(
 export function sortProjectTableProjects(
   projects: readonly WorkItem[],
   state: ProjectTableState,
-  context: ProjectTableRules & { clients: readonly Client[] }
+  context: ProjectSortContext
 ) {
   return [...projects].sort((left, right) =>
     compareProjects(left, right, state, context)

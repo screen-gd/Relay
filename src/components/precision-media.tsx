@@ -147,7 +147,7 @@ export function PrecisionMedia({
         >
           <PageHeader
             title="Media"
-            description="Browse project packages, working exports, and completed handoff archives."
+            description="Browse project files, work-in-progress exports, and final deliveries."
           />
 
           <PageContent mode="fill">

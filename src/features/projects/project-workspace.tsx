@@ -144,7 +144,7 @@ export function ProjectWorkspace({
     isDoneStatus(project.status) &&
     safeMoneyValue(project.earnings) > 0;
   const amount = isSalaryWorkType(project.workType, settings)
-    ? "Batch tracked"
+    ? "Paid per batch"
     : money(project.earnings, settings.currencyCode);
   const assignedMembers = teamMembers.filter((member) =>
     (project.assigneeUserIds ?? []).includes(member.userId)
@@ -160,9 +160,9 @@ export function ProjectWorkspace({
   const paymentLabel = isClientBillable
     ? project.paid
       ? "Paid"
-      : "Outstanding"
+      : "Unpaid"
     : isSalaryWorkType(project.workType, settings)
-      ? "Batch tracked"
+      ? "Paid per batch"
       : "Not billable";
   const configuredLinks = integrationServices
     .map((service) => ({
@@ -255,10 +255,7 @@ export function ProjectWorkspace({
                         value={formatDate(project.dueDate, settings.dateFormat)}
                       />
                       <MetricItem label="Value" value={amount} />
-                      <MetricItem
-                        label="Payment"
-                        value={paymentLabel}
-                      />
+                      <MetricItem label="Payment" value={paymentLabel} />
                     </MetricStrip>
                     <ContentSection
                       title="Workflow"
@@ -322,8 +319,8 @@ export function ProjectWorkspace({
                       <p className="text-sm text-muted-foreground">
                         {isClientBillable
                           ? project.paid
-                            ? `Collected${project.paidDate ? ` ${formatShortDateTime(project.paidDate)}` : ""}.`
-                            : "Delivered and outstanding."
+                            ? `Paid${project.paidDate ? ` ${formatShortDateTime(project.paidDate)}` : ""}.`
+                            : "Delivered, not paid yet."
                           : "Payment tracking starts after delivery for client-priced work."}
                       </p>
                     </ContentSection>

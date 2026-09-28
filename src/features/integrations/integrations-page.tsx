@@ -198,7 +198,7 @@ export function IntegrationsDesignPage({
       <PageHeader
         eyebrow="Workspace / Integrations"
         title="Integrations"
-        description="Manage local service records and save external links for your workspace and individual projects."
+        description="Save links to the tools and services you use, for the workspace or a single project."
       />
       <PageContent className="space-y-5">
         <PageToolbar
@@ -241,7 +241,7 @@ export function IntegrationsDesignPage({
         />
         <ContentSection
           title="Connected Services"
-          description="Save the account and workspace details your studio uses. These are local records and do not grant API access."
+          description="Note the accounts your studio uses. Relay only stores these details and doesn't connect to them."
           actions={
             <OwnedBadge variant={connectedCount ? "default" : "secondary"}>
               <Plug aria-hidden="true" />
@@ -333,7 +333,7 @@ export function IntegrationsDesignPage({
 
         <ContentSection
           title="Cloudflare R2 Storage"
-          description="Upcoming. Large-file storage through Cloudflare R2 is being prepared for a future release. Project uploads currently use Relay's Convex Storage."
+          description="Coming later: storage for large files. Uploads currently use Relay's standard storage."
           metadata={
             <Cloud
               aria-hidden="true"

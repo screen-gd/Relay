@@ -187,7 +187,7 @@ export function ResourcesDesignPage({
       <PageHeader
         eyebrow="Workspace / Resources"
         title="Resources"
-        description="Store asset folders, reference links, review pages, and handoff resources."
+        description="Save asset folders, references, review pages, and delivery links."
         actions={
           <OwnedButton
             type="button"
@@ -375,7 +375,7 @@ export function ResourcesDesignPage({
                 description={
                   resources.length
                     ? "Try a different search or category filter."
-                    : "Add asset folders, reference docs, cloud links, review URLs, or handoff resources."
+                    : "Add asset folders, reference docs, cloud links, review pages, or delivery links."
                 }
               />
             )}

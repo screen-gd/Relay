@@ -318,7 +318,7 @@ async function assertApprovedFamilyDesigns(page) {
     .getByRole("heading", { level: 2, name: "Workspace profile" })
     .waitFor();
   await page
-    .getByRole("heading", { level: 2, name: "Production defaults" })
+    .getByRole("heading", { level: 2, name: "Project defaults" })
     .waitFor();
   await settingsNavigation.getByRole("button", { name: "Workflow" }).click();
   await page
@@ -460,12 +460,8 @@ async function assertDashboardAndProjectInspectorRefinements(page) {
 
   const dashboardLayout = await page.evaluate(() => {
     const main = document.getElementById("main-content");
-    const metricStrip = document.querySelector(
-      '[aria-label="Operational pulse"]'
-    );
-    const ledger = document.querySelector(
-      'section[aria-label="Project ledger"]'
-    );
+    const metricStrip = document.querySelector('[aria-label="Overview"]');
+    const ledger = document.querySelector('section[aria-label="Projects"]');
     const inspectorHeading = Array.from(document.querySelectorAll("h2")).find(
       (heading) => heading.textContent?.trim() === "Interaction test edit 1"
     );

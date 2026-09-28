@@ -344,7 +344,7 @@ export function SettingsDesignPage({
     <WorkspacePage family="administration" mode="fill">
       <PageHeader
         title="Settings"
-        description="Manage workspace identity, production defaults, and team-wide behavior."
+        description="Your workspace details, project defaults, and preferences."
         actions={
           <div className="flex flex-wrap justify-end gap-2">
             <span className="inline-flex h-9 items-center gap-2 rounded-md px-3 text-xs font-medium text-[var(--app-muted)]">
@@ -461,7 +461,7 @@ export function SettingsDesignPage({
                     <SettingsPanel
                       id="workspace-profile"
                       title="Workspace profile"
-                      subtitle="Shown across project pages, team spaces, and client handoffs."
+                      subtitle="Shown on your projects, team pages, and client pages."
                     >
                       <div className="grid gap-3 sm:grid-cols-2">
                         <FieldLayout label="Workspace name">
@@ -647,8 +647,8 @@ export function SettingsDesignPage({
                     </SettingsPanel>
                     <SettingsPanel
                       id="project-rules"
-                      title="Production defaults"
-                      subtitle="Legacy local fallback for project tags and salary batch defaults. Authenticated owners should use Salary Plans below."
+                      title="Project defaults"
+                      subtitle="Project tags and salary batch settings for Local mode. Signed-in owners set salary terms under Reports > Salary plans."
                     >
                       <div className="grid gap-3">
                         {settings.projectTags.map((tag, index) => (
@@ -712,7 +712,7 @@ export function SettingsDesignPage({
                               })
                             }
                           />
-                          <FieldLayout label="Legacy videos per batch">
+                          <FieldLayout label="Videos per batch">
                             <OwnedInput
                               type="number"
                               value={normalizedSalaryBatchSize(
@@ -725,7 +725,7 @@ export function SettingsDesignPage({
                               }
                             />
                           </FieldLayout>
-                          <FieldLayout label="Legacy salary per batch">
+                          <FieldLayout label="Salary per batch">
                             <OwnedInput
                               type="number"
                               value={normalizedSalaryBatchAmount(
@@ -830,7 +830,7 @@ export function SettingsDesignPage({
                   <SettingsPanel
                     id="notifications"
                     title="Notifications"
-                    subtitle="Choose when project and team events should surface."
+                    subtitle="Choose which project and team updates notify you."
                   >
                     {Object.keys(defaultSettings.notifications).map((item) => (
                       <div

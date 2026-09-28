@@ -27,7 +27,7 @@ export const integrationServices = [
     id: "oneDrive",
     name: "OneDrive",
     shortName: "OneDrive",
-    description: "Microsoft cloud folders and client handoff links.",
+    description: "Microsoft cloud folders and client delivery links.",
     color: "var(--brand-one-drive)",
     icon: "O",
   },

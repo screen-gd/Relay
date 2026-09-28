@@ -478,7 +478,7 @@ export function NewProjectDialog({
                   {(field) => (
                     <FieldLayout
                       label="Salary Plan"
-                      description="The Plan fixes the Client and keeps Project earnings at zero."
+                      description="The salary plan sets the client. Pay is counted per batch, not per project."
                       className="animate-in fade-in slide-in-from-top-2 duration-300"
                     >
                       <ContextMenuSelect

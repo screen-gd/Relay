@@ -342,7 +342,7 @@ export function SalaryPlansPanel({
         )}
         {hasLegacyBatches ? (
           <p className="border-t border-border px-4 py-3 text-xs text-muted-foreground">
-            Older salary batches stay in the salary batch ledger. New plans do
+            Older salary batches stay in the Salary Batches list. New plans do
             not change them.
           </p>
         ) : null}

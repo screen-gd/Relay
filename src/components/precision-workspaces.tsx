@@ -354,7 +354,7 @@ export function PrecisionClients({
     <WorkspacePage family="master-detail" mode="fill">
       <PageHeader
         title="Clients"
-        description="Projects, delivery history, and account context in one focused directory."
+        description="Each client's projects and delivery history."
         actions={
           <div className="flex gap-2">
             <Button
@@ -561,11 +561,11 @@ export function PrecisionClients({
                         value={money(selected.earned, settings.currencyCode)}
                       />
                       <ClientMetric
-                        label="Collected"
+                        label="Paid"
                         value={money(selected.collected, settings.currencyCode)}
                       />
                       <ClientMetric
-                        label="Outstanding"
+                        label="Unpaid"
                         value={money(
                           selected.outstanding,
                           settings.currencyCode
@@ -904,12 +904,12 @@ export function PrecisionFeedback({
       <PageHeader
         eyebrow="Client review"
         title="Feedback"
-        description="Track review notes, revisions, and approval state without losing production context."
+        description="Review notes, revisions, and approvals for each project."
       />
       <PageContent>
         <MetricStrip columns={3}>
           <MetricItem
-            label="Awaiting review"
+            label="Waiting for review"
             value={queue.length}
             icon={<MessageSquareText className="size-4" />}
           />
@@ -1438,7 +1438,7 @@ export function PrecisionReports({
     <WorkspacePage family="data-index">
       <PageHeader
         title="Reports"
-        description="Earnings, delivery throughput, work mix, and salary batch payout state."
+        description="Earnings, deliveries, work mix, and salary batch payments."
         actions={
           <div className="flex flex-wrap items-center justify-end gap-2">
             <Select
@@ -1522,7 +1522,7 @@ export function PrecisionReports({
             icon={<CircleDollarSign className="size-4" />}
           />
           <MetricItem
-            label="Collected"
+            label="Paid"
             value={
               canManageFinance
                 ? money(report.collected, settings.currencyCode)
@@ -1532,13 +1532,13 @@ export function PrecisionReports({
             icon={<CircleDollarSign className="size-4" />}
           />
           <MetricItem
-            label="Outstanding"
+            label="Unpaid"
             value={
               canManageFinance
                 ? money(report.outstanding, settings.currencyCode)
                 : "Restricted"
             }
-            supporting="Delivered and unpaid"
+            supporting="Delivered, not paid yet"
             icon={<Clock3 className="size-4" />}
           />
           <MetricItem
@@ -1779,30 +1779,36 @@ export function PrecisionReports({
         />
 
         <ContentSection
-          title="Period summary"
-          description="Completed work, linked outputs, turnaround, and delayed active stages."
+          title="This period"
+          description="Delivered work, finished outputs, delivery time, and overdue projects."
         >
           <dl className="grid grid-cols-2 gap-x-6 gap-y-4 sm:grid-cols-4">
             <PeriodMetric
               label="Completed projects"
               value={String(report.deliveredProjects.length)}
             />
-            <PeriodMetric label="Linked outputs" value={String(outputCount)} />
             <PeriodMetric
-              label="Avg turnaround"
+              label="Outputs delivered"
+              value={String(outputCount)}
+            />
+            <PeriodMetric
+              label="Avg. days to deliver"
               value={
                 turnaroundProjects.length
                   ? `${averageTurnaround} days`
                   : "No data"
               }
             />
-            <PeriodMetric label="Stage delays" value={String(delayedStages)} />
+            <PeriodMetric
+              label="Overdue projects"
+              value={String(delayedStages)}
+            />
           </dl>
         </ContentSection>
 
         <ContentSection
           title="Client totals"
-          description="Delivered value split by payment state."
+          description="Delivered value per client, paid and unpaid."
           bodyMode="flush"
         >
           <div className="divide-y divide-[var(--app-border)] border-t border-[var(--app-border)]">
@@ -1815,8 +1821,8 @@ export function PrecisionReports({
               >
                 <span>Client</span>
                 <span className="text-right">Projects</span>
-                <span className="text-right">Collected</span>
-                <span className="text-right">Outstanding</span>
+                <span className="text-right">Paid</span>
+                <span className="text-right">Unpaid</span>
               </div>
             ) : null}
             {report.clients.map((client) => (
@@ -1850,8 +1856,8 @@ export function PrecisionReports({
 
         {salaryPlans}
         <ContentSection
-          title="Salary Batch Ledger"
-          description="Completed edit batches and payout status."
+          title="Salary Batches"
+          description="Completed batches and whether they are paid."
           metadata={
             <span className="text-[11px] text-muted-foreground">
               {report.batches.length} batches
@@ -1932,7 +1938,7 @@ export function PrecisionReports({
 
         <ContentSection
           title="Invoice drafts"
-          description="Local CSV drafts for delivered client projects. Payment collection still requires a trusted payment provider."
+          description="CSV invoice drafts for delivered client projects. Relay doesn't collect payments."
           bodyMode="flush"
           actions={
             <Button

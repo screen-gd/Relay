@@ -112,7 +112,7 @@ export function OnboardingStepperDialog({
     },
     profile: {
       title: "Set up your workspace",
-      description: "Shown on projects and client handoffs. All optional.",
+      description: "Shown on your projects and client pages. All optional.",
     },
     analytics: {
       title: "Product analytics",

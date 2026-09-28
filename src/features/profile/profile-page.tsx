@@ -109,7 +109,7 @@ export function OrganizationProfilePage({
       <PageHeader
         eyebrow="Workspace / Organization"
         title="Organization Profile"
-        description="Studio-level view for team ownership, delivery context, and active work."
+        description="Your team, its projects, and active work."
       />
       <PageContent className="space-y-5">
         <MetricStrip columns={4} aria-label="Organization metrics">
@@ -714,7 +714,7 @@ export function ProfileEditPage({
 
               <ContentSection
                 title="Public Profile Stats"
-                description="These are portfolio-facing numbers. They do not need to match your private tracker totals."
+                description="Shown on your public profile. They don't have to match your private totals."
                 className="shadow-none"
               >
                 <div className="grid gap-3 sm:grid-cols-3">

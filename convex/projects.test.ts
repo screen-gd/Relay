@@ -1,7 +1,7 @@
 /// <reference types="vite/client" />
 
 import { convexTest } from "convex-test";
-import { expect, test } from "vitest";
+import { expect, test, vi } from "vitest";
 import { api } from "./_generated/api";
 import schema from "./schema";
 
@@ -326,4 +326,38 @@ test("team members need the matching Project permission", async () => {
         project: project("denied", { teamId }),
       })
   ).rejects.toThrow("Permission denied");
+});
+
+test("early delivery pulls the due date back to the delivery day", async () => {
+  vi.useFakeTimers({ toFake: ["Date"] });
+  vi.setSystemTime(new Date("2026-08-20T10:00:00.000Z"));
+  try {
+    const t = convexTest(schema, modules);
+    const owner = t.withIdentity({ tokenIdentifier: "owner", name: "Owner" });
+    await owner.mutation(api.settings.upsert, settings());
+    await owner.mutation(api.projects.create, { project: project("early") });
+    await owner.mutation(api.projects.create, { project: project("spoofed") });
+
+    await owner.mutation(api.projects.transitionStage, {
+      projectId: "early",
+      stageId: "done",
+      deliveredOn: "2026-08-21",
+    });
+    // A client day far from the server date falls back to the UTC day.
+    await owner.mutation(api.projects.transitionStage, {
+      projectId: "spoofed",
+      stageId: "done",
+      deliveredOn: "2026-01-01",
+    });
+
+    const projects = await owner.query(api.projects.list, {});
+    expect(projects.find(({ id }) => id === "early")?.dueDate).toBe(
+      "2026-08-21"
+    );
+    expect(projects.find(({ id }) => id === "spoofed")?.dueDate).toBe(
+      "2026-08-20"
+    );
+  } finally {
+    vi.useRealTimers();
+  }
 });

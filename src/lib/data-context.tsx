@@ -43,6 +43,7 @@ import {
 import { normalizeProjectGroups } from "@/features/projects/project-domain";
 import {
   getWorkflowStageStatus,
+  localDateKey,
   moveProjectToStage,
   resolveProjectWorkflowStage,
 } from "@/features/projects/project-domain";
@@ -2281,7 +2282,10 @@ function CloudDataProvider({ children }: { children: React.ReactNode }) {
 
   const transitionProjectStage = useCallback(
     (input: { projectId: string; stageId: string }) =>
-      transitionCloudProjectStage(input),
+      transitionCloudProjectStage({
+        ...input,
+        deliveredOn: localDateKey(new Date().toISOString()),
+      }),
     [transitionCloudProjectStage]
   );
   const previewProjectStage = useCallback(

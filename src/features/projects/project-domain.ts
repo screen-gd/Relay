@@ -6,7 +6,10 @@ import type {
   WorkItem,
   WorkflowStage,
 } from "@/lib/types";
-import type { StoredProjectStatus } from "@/lib/domain-values";
+import {
+  dueDateAfterDelivery,
+  type StoredProjectStatus,
+} from "@/lib/domain-values";
 import { DEFAULT_WORKFLOW_STAGES } from "@/lib/workflow-templates";
 import { z } from "zod";
 
@@ -221,19 +224,34 @@ export function validateNewProjectInput(
   };
 }
 
+/** The calendar day (YYYY-MM-DD) of an ISO timestamp in the local time zone. */
+export function localDateKey(isoTimestamp: string) {
+  const date = new Date(isoTimestamp);
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${date.getFullYear()}-${month}-${day}`;
+}
+
+export { dueDateAfterDelivery };
+
 export function projectStatusUpdate(
   project: WorkItem,
   status: StoredProjectStatus,
   changedAt: string
-): Pick<WorkItem, "status" | "completedAt"> {
+): Pick<WorkItem, "status" | "completedAt" | "dueDate"> {
+  const newlyDelivered =
+    status === "Delivered" && project.status !== "Delivered";
   return {
     status,
     completedAt:
       status === "Delivered"
-        ? project.status === "Delivered"
-          ? (project.completedAt ?? changedAt)
-          : changedAt
+        ? newlyDelivered
+          ? changedAt
+          : (project.completedAt ?? changedAt)
         : undefined,
+    dueDate: newlyDelivered
+      ? dueDateAfterDelivery(project.dueDate, localDateKey(changedAt))
+      : project.dueDate,
   };
 }
 
@@ -456,4 +474,70 @@ export function moveProjectToStage(
     workflowStageId: workflowStage,
     ...projectStatusUpdate(project, status, changedAt),
   };
+}
+
+/** Delivered and cancelled work no longer competes for attention. */
+export function isProjectFinished(project: Pick<WorkItem, "status">) {
+  return project.status === "Delivered" || project.status === "Cancelled";
+}
+
+/** The project sits with the client, so the editor cannot act on it yet. */
+export function isWaitingOnClient(
+  project: Pick<WorkItem, "workflowStageId" | "workflowStages" | "status">
+) {
+  return (
+    project.status === "Client Review" ||
+    getProjectWorkflowStage(project).purpose === "client_review"
+  );
+}
+
+const DUE_SOON_DAYS = 7;
+
+function daysUntil(dueDate: string, today: string) {
+  return Math.round(
+    (Date.parse(`${dueDate}T00:00:00Z`) - Date.parse(`${today}T00:00:00Z`)) /
+      86_400_000
+  );
+}
+
+/**
+ * Urgency order used by "Due first" on Projects and "Due soon" on the
+ * dashboard. `today` is the local YYYY-MM-DD day.
+ *
+ * 1. Active work before finished work.
+ * 2. Active work by due window: overdue, due within 7 days, later, no date.
+ * 3. Inside a window, work the editor can act on before work waiting on the
+ *    client.
+ * 4. Overdue work shows the most recently missed deadline first; other
+ *    windows show the soonest due date first.
+ * 5. Finished work shows the most recent delivery first.
+ */
+export function compareProjectUrgency(
+  left: WorkItem,
+  right: WorkItem,
+  today: string
+) {
+  const finishedOrder =
+    Number(isProjectFinished(left)) - Number(isProjectFinished(right));
+  if (finishedOrder) return finishedOrder;
+  if (isProjectFinished(left)) {
+    const finishedOn = (project: WorkItem) =>
+      project.completedAt || project.dueDate || "";
+    return finishedOn(right).localeCompare(finishedOn(left));
+  }
+
+  const window = (project: WorkItem) => {
+    if (!project.dueDate) return 3;
+    const days = daysUntil(project.dueDate, today);
+    return days < 0 ? 0 : days <= DUE_SOON_DAYS ? 1 : 2;
+  };
+  const windowOrder = window(left) - window(right);
+  if (windowOrder) return windowOrder;
+
+  const waitingOrder =
+    Number(isWaitingOnClient(left)) - Number(isWaitingOnClient(right));
+  if (waitingOrder) return waitingOrder;
+
+  const dueOrder = left.dueDate.localeCompare(right.dueDate);
+  return window(left) === 0 ? -dueOrder : dueOrder;
 }

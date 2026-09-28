@@ -171,8 +171,8 @@ const dueOptions = [
 
 const billingOptions = [
   { value: "ALL", label: "All Payments" },
-  { value: "Paid", label: "Collected" },
-  { value: "Unpaid", label: "Needs action" },
+  { value: "Paid", label: "Paid" },
+  { value: "Unpaid", label: "Unpaid" },
 ] as const satisfies ReadonlyArray<{
   value: "ALL" | "Paid" | "Unpaid";
   label: string;
@@ -741,7 +741,7 @@ export function PrecisionDashboard(props: DashboardProps) {
               <Input
                 value={props.query}
                 onChange={(event) => props.setQuery(event.target.value)}
-                placeholder="Search the project ledger"
+                placeholder="Search projects"
                 aria-label="Search dashboard projects"
                 className="h-9 rounded-lg border-[var(--app-border)] bg-[var(--app-panel)] pl-9 text-xs shadow-none focus-visible:border-[var(--app-accent)]"
               />
@@ -858,12 +858,12 @@ export function PrecisionDashboard(props: DashboardProps) {
             <div className="min-w-0">
               <MetricStrip
                 columns={showSalaryBatch ? 5 : 4}
-                aria-label="Operational pulse"
+                aria-label="Overview"
                 className="gap-2 bg-transparent"
               >
                 <div className="rounded-xl border border-[var(--app-border)] bg-[var(--app-panel)] px-4 py-3">
                   <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-[var(--app-muted)]">
-                    In motion
+                    Active
                   </p>
                   <div className="mt-1 flex items-baseline gap-2">
                     <p className="text-xl font-semibold tracking-[-0.04em] tabular-nums text-[var(--app-highlight)]">
@@ -876,20 +876,20 @@ export function PrecisionDashboard(props: DashboardProps) {
                 </div>
                 <div className="rounded-xl border border-[var(--app-border)] bg-[var(--app-panel)] px-4 py-3">
                   <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-[var(--app-muted)]">
-                    Due within 7 days
+                    Due this week
                   </p>
                   <div className="mt-1 flex items-baseline gap-2">
                     <p className="text-xl font-semibold tracking-[-0.04em] tabular-nums text-[var(--app-ink)]">
                       <AnimatedNumber value={dueThisWeek.length} />
                     </p>
                     <span className="text-[10px] text-[var(--app-muted)]">
-                      upcoming handoffs
+                      to deliver
                     </span>
                   </div>
                 </div>
                 <div className="rounded-xl border border-[var(--app-border)] bg-[var(--app-panel)] px-4 py-3">
                   <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-[var(--app-muted)]">
-                    Waiting reviews
+                    In review
                   </p>
                   <div className="mt-1 flex items-baseline gap-2">
                     <p
@@ -903,13 +903,13 @@ export function PrecisionDashboard(props: DashboardProps) {
                       <AnimatedNumber value={waitingReviews.length} />
                     </p>
                     <span className="text-[10px] text-[var(--app-muted)]">
-                      awaiting client action
+                      reviews and revisions
                     </span>
                   </div>
                 </div>
                 <div className="rounded-xl border border-[var(--app-border)] bg-[var(--app-panel)] px-4 py-3">
                   <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-[var(--app-muted)]">
-                    Collected
+                    Paid
                   </p>
                   <div className="mt-1 flex items-baseline gap-2">
                     <p className="truncate text-xl font-semibold tracking-[-0.04em] tabular-nums text-[var(--app-ink)]">
@@ -925,7 +925,7 @@ export function PrecisionDashboard(props: DashboardProps) {
                         props.stats.outstanding,
                         props.settings.currencyCode
                       )}{" "}
-                      due
+                      unpaid
                     </span>
                   </div>
                 </div>
@@ -959,15 +959,15 @@ export function PrecisionDashboard(props: DashboardProps) {
                         disabled={!pendingSalaryBatch}
                         aria-label={
                           pendingSalaryBatch
-                            ? `Mark payment for salary batch ${pendingSalaryBatch.number}`
-                            : "Mark payment"
+                            ? `Mark salary batch ${pendingSalaryBatch.number} paid`
+                            : "Mark paid"
                         }
                         onClick={() => {
                           if (pendingSalaryBatch)
                             props.onMarkSalaryPayment(pendingSalaryBatch.id);
                         }}
                       >
-                        Mark payment
+                        Mark paid
                       </Button>
                     </div>
                     <div className="mt-1.5 h-1 overflow-hidden rounded-sm bg-[var(--app-progress-track)]">
@@ -1082,7 +1082,7 @@ export function PrecisionDashboard(props: DashboardProps) {
               primary={
                 <div className="h-full min-w-0">
                   <WorkspaceSection
-                    title="Project ledger"
+                    title="Projects"
                     count={
                       ledgerProjects.length > LEDGER_PREVIEW_ROWS
                         ? `${LEDGER_PREVIEW_ROWS} of ${ledgerProjects.length}`
@@ -1189,7 +1189,7 @@ export function PrecisionDashboard(props: DashboardProps) {
                           <div className="hidden sm:block">
                             <Table
                               className="w-full min-w-[700px] border-collapse"
-                              aria-label="Project ledger"
+                              aria-label="Projects"
                             >
                               <TableCaption className="sr-only">
                                 Recent projects with type, due date, status,
@@ -1817,7 +1817,7 @@ function ProjectInspector({
               </p>
               <p className="mt-1 text-lg font-semibold tracking-[-0.02em] tabular-nums">
                 {project.workType === settings.salaryWorkType
-                  ? "Batch tracked"
+                  ? "Paid per batch"
                   : formatMoney(project.earnings, settings.currencyCode)}
               </p>
             </div>

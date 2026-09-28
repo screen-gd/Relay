@@ -71,7 +71,7 @@ export function TeamChatPage() {
     <WorkspacePage family="conversation" mode="fill">
       <PageHeader
         title="Team Chat"
-        description="Quick handoffs, production updates, and Manage Team access for your current workspace."
+        description="Chat with your team about projects and updates."
       />
       <PageContent mode="fill" className="min-h-0">
         <FillViewport
@@ -320,8 +320,7 @@ export function TeamChatPage() {
                     />
                     <h3 className="mt-4 font-semibold">No messages yet</h3>
                     <p className="mt-2 text-sm text-muted-foreground">
-                      Start with a handoff, blocker, review update, or delivery
-                      note.
+                      Share an update, a blocker, or a delivery note.
                     </p>
                   </li>
                 )}
