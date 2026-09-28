@@ -1,6 +1,6 @@
 import { chromium } from "@playwright/test";
 
-const baseUrl = process.env.RELAY_UI_URL || "http://localhost:3000";
+const baseUrl = process.env.RELAY_UI_URL || "http://localhost:3100";
 
 const browser = await chromium.launch({ headless: true });
 for (const theme of ["Light", "Dark"]) {

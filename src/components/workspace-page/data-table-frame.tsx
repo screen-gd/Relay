@@ -26,7 +26,7 @@ export function DataTableFrame({
       className={cn(
         "flex min-w-0 flex-col overflow-hidden rounded-[6px] bg-card text-card-foreground",
         bounded && "min-h-0",
-        className,
+        className
       )}
       {...props}
     >
@@ -36,9 +36,13 @@ export function DataTableFrame({
         aria-label={bodyLabel}
         tabIndex={bounded && bodyLabel ? 0 : undefined}
         className={cn(
-          "min-w-0 overscroll-contain overflow-x-auto focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset",
-          bounded && "min-h-0 flex-1 overflow-y-auto",
-          bodyClassName,
+          "min-w-0 overflow-x-auto focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset",
+          // Unbounded frames must never become a vertical scroller: sub-pixel
+          // overflow would latch wheel input and stop the page from scrolling.
+          bounded
+            ? "min-h-0 flex-1 overflow-y-auto overscroll-contain"
+            : "overflow-y-hidden",
+          bodyClassName
         )}
       >
         {children}

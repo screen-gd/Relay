@@ -399,24 +399,19 @@ export function SettingsDesignPage({
           bodyClassName="min-h-0 overflow-auto lg:overflow-hidden"
         >
           <MasterDetail
-            className="h-full min-h-0 gap-4 overflow-hidden rounded-xl border border-[var(--app-border)] bg-[var(--app-panel)] p-2 sm:p-3 lg:gap-5 lg:p-4"
+            className="h-full min-h-0 gap-0 overflow-hidden rounded-xl border border-[var(--app-border)] bg-[var(--app-panel)] lg:gap-0"
             master={
               <nav
                 aria-label="Settings sections"
                 data-slot="settings-navigation"
                 data-navigation-kind="icon-index"
-                className="hidden h-full min-h-0 overflow-hidden rounded-lg border border-[var(--app-border)] bg-[var(--app-soft-panel)] text-card-foreground lg:flex lg:flex-col"
+                className="hidden h-full min-h-0 overflow-hidden border-r border-[var(--app-border)] text-card-foreground lg:flex lg:flex-col"
               >
-                <div className="border-b border-border px-4 py-3">
-                  <p className="text-[10px] font-bold uppercase tracking-[0.08em] text-[var(--app-accent)]">
-                    Settings index
-                  </p>
-                </div>
-                <div className="grid flex-1 content-start gap-1 overflow-y-auto p-2 overscroll-contain">
+                <div className="grid flex-1 content-start gap-0.5 overflow-y-auto p-3">
                   {settingsNavigation.map(({ id, label, icon: Icon }) => (
                     <Fragment key={id}>
                       {id === "workspace" || id === "notifications" ? (
-                        <p className="px-3 pt-3 pb-1 text-xs font-semibold">
+                        <p className="px-3 pt-4 pb-1.5 text-[11px] font-medium text-muted-foreground first:pt-1">
                           {id === "workspace"
                             ? "Workspace defaults"
                             : "Personal preferences"}
@@ -429,10 +424,10 @@ export function SettingsDesignPage({
                         aria-current={activeSection === id ? "page" : undefined}
                         onClick={() => setActiveSection(id)}
                         className={cn(
-                          "min-h-11 w-full justify-start gap-3 rounded-[6px] px-3 text-left text-xs font-medium",
+                          "h-9 w-full justify-start gap-3 rounded-md px-3 text-left text-[13px] font-medium",
                           activeSection === id
-                            ? "bg-[var(--app-active)] text-[var(--app-highlight)]"
-                            : "text-muted-foreground hover:bg-accent hover:text-primary"
+                            ? "bg-[var(--app-active)] text-foreground"
+                            : "text-muted-foreground hover:text-foreground"
                         )}
                       >
                         <Icon className="size-4 shrink-0" aria-hidden="true" />
@@ -441,10 +436,10 @@ export function SettingsDesignPage({
                     </Fragment>
                   ))}
                 </div>
-                <div className="border-t border-border p-4">
+                <div className="border-t border-border p-3">
                   <OwnedButton
                     variant="ghost"
-                    className="text-destructive"
+                    className="h-9 w-full justify-start px-3 text-[13px] text-destructive"
                     onClick={resetSettings}
                   >
                     Reset preferences
@@ -456,7 +451,7 @@ export function SettingsDesignPage({
               <section
                 aria-label={`${settingsNavigation.find((item) => item.id === activeSection)?.label} settings`}
                 className={cn(
-                  "grid h-full min-h-0 min-w-0 content-start overflow-y-auto overscroll-contain rounded-lg border border-[var(--app-border)] bg-[var(--app-soft-panel)] p-3 sm:p-4 lg:pr-3 [&_[data-slot=content-section]]:border-0 [&_[data-slot=content-section]]:shadow-none",
+                  "grid h-full min-h-0 min-w-0 content-start overflow-y-auto p-3 sm:p-5 [&_[data-slot=content-section]]:border-0 [&_[data-slot=content-section]]:shadow-none",
                   "gap-3"
                 )}
                 tabIndex={0}

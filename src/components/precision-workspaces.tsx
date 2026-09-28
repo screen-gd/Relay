@@ -16,7 +16,7 @@ import {
   X,
 } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import {
@@ -1199,6 +1199,7 @@ export function PrecisionReports({
   currentUserId,
   canManageFinance,
   onUpdateBatchPayment,
+  salaryPlans,
 }: {
   projects: WorkItem[];
   salaryBatches: SalaryBatch[];
@@ -1207,6 +1208,8 @@ export function PrecisionReports({
   currentUserId?: string;
   canManageFinance: boolean;
   onUpdateBatchPayment: (batchId: string, paid: boolean) => void;
+  /** Owner-only salary plan panel, rendered above the batch ledger. */
+  salaryPlans?: ReactNode;
 }) {
   const [trendRange, setTrendRange] = useState<3 | 6 | "all">(6);
   const [period, setPeriod] = useState<PayoutPeriod>("all");
@@ -1546,61 +1549,6 @@ export function PrecisionReports({
           />
         </MetricStrip>
 
-        <ContentSection
-          title="Period summary"
-          description="Completed work, linked outputs, turnaround, and delayed active stages."
-        >
-          <dl className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-            <ClientMetric
-              label="Completed projects"
-              value={String(report.deliveredProjects.length)}
-            />
-            <ClientMetric label="Linked outputs" value={String(outputCount)} />
-            <ClientMetric
-              label="Avg turnaround"
-              value={
-                turnaroundProjects.length
-                  ? `${averageTurnaround} days`
-                  : "No data"
-              }
-            />
-            <ClientMetric label="Stage delays" value={String(delayedStages)} />
-          </dl>
-        </ContentSection>
-
-        <ContentSection
-          title="Client totals"
-          description="Delivered value split by payment state."
-          bodyMode="flush"
-        >
-          <div className="divide-y divide-[var(--app-border)] border-t border-[var(--app-border)]">
-            {report.clients.map((client) => (
-              <div
-                key={client.id}
-                className="grid grid-cols-[minmax(0,1fr)_repeat(3,auto)] gap-4 px-4 py-3 text-xs"
-              >
-                <span className="truncate font-semibold">{client.name}</span>
-                <span>{client.deliveredProjects} projects</span>
-                <span>
-                  {canManageFinance
-                    ? money(client.collected, settings.currencyCode)
-                    : "Restricted"}
-                </span>
-                <span>
-                  {canManageFinance
-                    ? money(client.outstanding, settings.currencyCode)
-                    : "Restricted"}
-                </span>
-              </div>
-            ))}
-            {!report.clients.length ? (
-              <div className="grid min-h-24 place-items-center text-xs text-[var(--app-muted)]">
-                No client totals for this period.
-              </div>
-            ) : null}
-          </div>
-        </ContentSection>
-
         <SplitPane
           primary={
             <motion.section
@@ -1831,70 +1779,76 @@ export function PrecisionReports({
         />
 
         <ContentSection
-          title="Invoice drafts"
-          description="Local CSV drafts for delivered client projects. Payment collection still requires a trusted payment provider."
-          bodyMode="flush"
-          actions={
-            <Button
-              variant="outline"
-              size="sm"
-              className="h-8"
-              onClick={exportInvoiceDrafts}
-              disabled={!invoiceDrafts.length}
-            >
-              <Download /> Export invoices
-            </Button>
-          }
+          title="Period summary"
+          description="Completed work, linked outputs, turnaround, and delayed active stages."
         >
-          <div className="overflow-x-auto border-t border-[var(--app-border)]">
-            <Table className="w-full min-w-[760px] border-collapse">
-              <TableHeader>
-                <TableRow className="bg-[var(--app-soft-panel)] text-left text-[10px] font-semibold uppercase text-[var(--app-subtle)]">
-                  <TableHead className="h-8 px-4">Draft</TableHead>
-                  <TableHead className="px-4">Client</TableHead>
-                  <TableHead className="px-4">Projects</TableHead>
-                  <TableHead className="px-4">Due</TableHead>
-                  <TableHead className="px-4 text-right">Total</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody className="divide-y divide-[var(--app-border)]">
-                {invoiceDrafts.map((draft) => (
-                  <TableRow
-                    key={draft.id}
-                    className="h-12 text-xs transition-colors hover:bg-[var(--app-hover)]"
-                  >
-                    <TableCell className="px-4 font-semibold">
-                      {draft.invoiceNumber}
-                    </TableCell>
-                    <TableCell className="px-4 text-[var(--app-muted)]">
-                      {draft.client}
-                    </TableCell>
-                    <TableCell className="px-4">
-                      {draft.lineItems.length}
-                    </TableCell>
-                    <TableCell className="px-4 text-[var(--app-muted)]">
-                      {formatDate(draft.dueDate)}
-                    </TableCell>
-                    <TableCell className="px-4 text-right font-semibold">
-                      {money(draft.total, settings.currencyCode)}
-                    </TableCell>
-                  </TableRow>
-                ))}
-                {!invoiceDrafts.length ? (
-                  <TableRow>
-                    <TableCell
-                      colSpan={5}
-                      className="h-28 text-center text-xs text-[var(--app-muted)]"
-                    >
-                      Delivered freelance projects with client names and
-                      positive earnings will appear here.
-                    </TableCell>
-                  </TableRow>
-                ) : null}
-              </TableBody>
-            </Table>
+          <dl className="grid grid-cols-2 gap-x-6 gap-y-4 sm:grid-cols-4">
+            <PeriodMetric
+              label="Completed projects"
+              value={String(report.deliveredProjects.length)}
+            />
+            <PeriodMetric label="Linked outputs" value={String(outputCount)} />
+            <PeriodMetric
+              label="Avg turnaround"
+              value={
+                turnaroundProjects.length
+                  ? `${averageTurnaround} days`
+                  : "No data"
+              }
+            />
+            <PeriodMetric label="Stage delays" value={String(delayedStages)} />
+          </dl>
+        </ContentSection>
+
+        <ContentSection
+          title="Client totals"
+          description="Delivered value split by payment state."
+          bodyMode="flush"
+        >
+          <div className="divide-y divide-[var(--app-border)] border-t border-[var(--app-border)]">
+            {report.clients.length ? (
+              <div
+                className={cn(
+                  clientTotalsGrid,
+                  "h-8 items-center bg-[var(--app-soft-panel)] text-[11px] font-medium text-[var(--app-muted)]"
+                )}
+              >
+                <span>Client</span>
+                <span className="text-right">Projects</span>
+                <span className="text-right">Collected</span>
+                <span className="text-right">Outstanding</span>
+              </div>
+            ) : null}
+            {report.clients.map((client) => (
+              <div
+                key={client.id}
+                className={cn(clientTotalsGrid, "py-3 text-xs")}
+              >
+                <span className="truncate font-semibold">{client.name}</span>
+                <span className="text-right tabular-nums">
+                  {client.deliveredProjects}
+                </span>
+                <span className="text-right font-mono tabular-nums">
+                  {canManageFinance
+                    ? money(client.collected, settings.currencyCode)
+                    : "Restricted"}
+                </span>
+                <span className="text-right font-mono tabular-nums">
+                  {canManageFinance
+                    ? money(client.outstanding, settings.currencyCode)
+                    : "Restricted"}
+                </span>
+              </div>
+            ))}
+            {!report.clients.length ? (
+              <div className="grid min-h-24 place-items-center text-xs text-[var(--app-muted)]">
+                No client totals for this period.
+              </div>
+            ) : null}
           </div>
         </ContentSection>
+
+        {salaryPlans}
         <ContentSection
           title="Salary Batch Ledger"
           description="Completed edit batches and payout status."
@@ -1976,6 +1930,71 @@ export function PrecisionReports({
           </div>
         </ContentSection>
 
+        <ContentSection
+          title="Invoice drafts"
+          description="Local CSV drafts for delivered client projects. Payment collection still requires a trusted payment provider."
+          bodyMode="flush"
+          actions={
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-8"
+              onClick={exportInvoiceDrafts}
+              disabled={!invoiceDrafts.length}
+            >
+              <Download /> Export invoices
+            </Button>
+          }
+        >
+          <div className="overflow-x-auto border-t border-[var(--app-border)]">
+            <Table className="w-full min-w-[760px] border-collapse">
+              <TableHeader>
+                <TableRow className="bg-[var(--app-soft-panel)] text-left text-[10px] font-semibold uppercase text-[var(--app-subtle)]">
+                  <TableHead className="h-8 px-4">Draft</TableHead>
+                  <TableHead className="px-4">Client</TableHead>
+                  <TableHead className="px-4">Projects</TableHead>
+                  <TableHead className="px-4">Due</TableHead>
+                  <TableHead className="px-4 text-right">Total</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody className="divide-y divide-[var(--app-border)]">
+                {invoiceDrafts.map((draft) => (
+                  <TableRow
+                    key={draft.id}
+                    className="h-12 text-xs transition-colors hover:bg-[var(--app-hover)]"
+                  >
+                    <TableCell className="px-4 font-semibold">
+                      {draft.invoiceNumber}
+                    </TableCell>
+                    <TableCell className="px-4 text-[var(--app-muted)]">
+                      {draft.client}
+                    </TableCell>
+                    <TableCell className="px-4">
+                      {draft.lineItems.length}
+                    </TableCell>
+                    <TableCell className="px-4 text-[var(--app-muted)]">
+                      {formatDate(draft.dueDate)}
+                    </TableCell>
+                    <TableCell className="px-4 text-right font-semibold">
+                      {money(draft.total, settings.currencyCode)}
+                    </TableCell>
+                  </TableRow>
+                ))}
+                {!invoiceDrafts.length ? (
+                  <TableRow>
+                    <TableCell
+                      colSpan={5}
+                      className="h-28 text-center text-xs text-[var(--app-muted)]"
+                    >
+                      Delivered freelance projects with client names and
+                      positive earnings will appear here.
+                    </TableCell>
+                  </TableRow>
+                ) : null}
+              </TableBody>
+            </Table>
+          </div>
+        </ContentSection>
         <SplitPane
           ratio="balanced"
           primary={
@@ -2067,6 +2086,10 @@ export function PrecisionReports({
   );
 }
 
+/** Columns shared by the Client totals header and rows. */
+const clientTotalsGrid =
+  "grid grid-cols-[minmax(0,1fr)_5rem_8rem_8rem] gap-4 px-4";
+
 function ClientMetric({ label, value }: { label: string; value: string }) {
   return (
     <div className="rounded-lg border border-[var(--app-border)] bg-[var(--app-soft-panel)] px-3 py-2.5">
@@ -2074,6 +2097,16 @@ function ClientMetric({ label, value }: { label: string; value: string }) {
         {label}
       </p>
       <p className="mt-1 text-sm font-semibold">{value}</p>
+    </div>
+  );
+}
+
+/** Unframed label/value pair for the Reports period summary `<dl>`. */
+function PeriodMetric({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="min-w-0">
+      <dt className="text-xs text-[var(--app-muted)]">{label}</dt>
+      <dd className="mt-1 text-lg font-semibold tabular-nums">{value}</dd>
     </div>
   );
 }

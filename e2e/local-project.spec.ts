@@ -185,29 +185,47 @@ test("chooses a workspace mode on first entry and remembers Local Mode", async (
 }) => {
   await openApp(page, "/");
 
-  const disclaimer = page.getByRole("dialog", { name: "A quick note" });
-  await expect(disclaimer).toBeVisible();
-  await disclaimer.getByRole("button", { name: "Continue to Relay" }).click();
-  await expect(disclaimer).toBeHidden();
+  const onboarding = page.getByTestId("onboarding-dialog");
+  await expect(
+    page.getByRole("dialog", { name: "A quick note" })
+  ).toBeVisible();
+  await onboarding.getByRole("button", { name: "Continue to Relay" }).click();
 
-  const welcome = page.getByRole("dialog", { name: "Choose how to use Relay" });
   await expect(
-    welcome.getByRole("button", { name: "Use Local Mode" })
+    page.getByRole("dialog", { name: "Choose how to use Relay" })
   ).toBeVisible();
   await expect(
-    welcome.getByRole("button", { name: "Create account" })
+    onboarding.getByRole("radio", { name: /Local mode/ })
+  ).toBeChecked();
+  await expect(
+    onboarding.getByRole("radio", { name: /Account/ })
   ).toBeVisible();
   await expect(
-    welcome.getByRole("link", { name: "Open Sample Workspace" })
+    onboarding.getByRole("link", { name: "Open sample workspace" })
   ).toHaveAttribute("href", "/sample-studio");
   await expect(
-    welcome.getByText(/clearing site data can remove your work/i)
+    onboarding.getByText(/clearing site data can remove your work/i)
   ).toBeVisible();
+  await onboarding
+    .getByRole("button", { name: "Continue", exact: true })
+    .click();
 
-  await welcome.getByRole("button", { name: "Use Local Mode" }).click();
-  await expect(welcome).toBeHidden();
+  await expect(
+    page.getByRole("dialog", { name: "Set up your workspace" })
+  ).toBeVisible();
+  await onboarding.getByLabel("Your name").fill("E2E Editor");
+  await onboarding
+    .getByRole("button", { name: "Continue", exact: true })
+    .click();
+
+  const finish = onboarding.getByRole("button", { name: "Start using Relay" });
+  await expect(finish).toBeDisabled();
+  await onboarding.getByRole("radio", { name: /No thanks/ }).click();
+  await finish.click();
+  await expect(onboarding).toBeHidden();
+
   await page.reload();
-  await expect(welcome).toBeHidden();
+  await expect(page.getByTestId("onboarding-dialog")).toBeHidden();
 });
 
 test("creates and persists a project in local mode", async ({ page }) => {

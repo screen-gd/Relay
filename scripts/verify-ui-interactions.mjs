@@ -575,7 +575,7 @@ try {
         throw new Error(
           "Fresh onboarding unexpectedly created project storage."
         );
-      await page.getByRole("link", { name: "Open Sample Workspace" }).click();
+      await page.getByRole("link", { name: "Open sample workspace" }).click();
       await page.waitForURL(/\/sample-studio$/);
       await page
         .getByRole("complementary", { name: "Sample studio mode" })
@@ -600,8 +600,20 @@ try {
       await page
         .getByRole("heading", { name: "Choose how to use Relay" })
         .waitFor();
-      await page.getByRole("button", { name: "Use Local Mode" }).click();
-      await page.getByRole("button", { name: "No thanks" }).click();
+      const onboarding = page.getByTestId("onboarding-dialog");
+      await onboarding
+        .getByRole("button", { name: "Continue", exact: true })
+        .click();
+      await onboarding
+        .getByRole("heading", { name: "Set up your workspace" })
+        .waitFor();
+      await onboarding
+        .getByRole("button", { name: "Continue", exact: true })
+        .click();
+      await onboarding.getByRole("radio", { name: /No thanks/ }).click();
+      await onboarding
+        .getByRole("button", { name: "Start using Relay" })
+        .click();
       await page
         .getByRole("heading", {
           name: "Turn one active edit into a clear production plan",
@@ -635,7 +647,7 @@ try {
         .getByRole("heading", { name: "Choose how to use Relay" })
         .waitFor();
       await page
-        .getByRole("link", { name: "Open Sample Workspace" })
+        .getByRole("link", { name: "Open sample workspace" })
         .click({ force: true });
       await page
         .getByRole("complementary", { name: "Sample studio mode" })

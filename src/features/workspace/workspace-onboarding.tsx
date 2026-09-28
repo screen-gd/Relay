@@ -13,44 +13,56 @@ import {
   setAnalyticsConsent,
   trackOptionalEvent,
 } from "@/lib/telemetry";
-import { Button as OwnedButton } from "@/components/ui/button";
 import {
-  Dialog as OwnedDialog,
-  DialogContent as OwnedDialogContent,
-  DialogDescription as OwnedDialogDescription,
-  DialogHeader as OwnedDialogHeader,
-  DialogTitle as OwnedDialogTitle,
-} from "@/components/ui/dialog";
-import { RelayBrand } from "@/app/relay-brand";
-import { AnalyticsConsentDialog } from "@/features/onboarding/analytics-consent-dialog";
-import { WelcomeChoiceDialog } from "@/features/onboarding/welcome-choice-dialog";
+  OnboardingStepperDialog,
+  type OnboardingResult,
+} from "@/features/onboarding/onboarding-stepper-dialog";
 
 const AUTH_MODE_STORAGE_KEY = "cutlab-studio:auth-mode:v1";
 const DEVELOPMENT_DISCLAIMER_STORAGE_KEY = "relay:development-disclaimer:v1";
 
+/** What the first-run dialog needs to show, read once from storage on mount. */
+type OnboardingSnapshot = {
+  showWelcome: boolean;
+  askAnalytics: boolean;
+};
+
+/**
+ * Mounted by the workspace runtime. Decides whether first-run setup is needed
+ * and applies the result: workspace mode, profile defaults, analytics consent.
+ */
 export function WorkspaceOnboarding({ sample }: { sample: boolean }) {
-  const { isAuthEnabled, isSignedIn, isAuthLoaded, setToast } = useData();
+  const {
+    isAuthEnabled,
+    isSignedIn,
+    isAuthLoaded,
+    settings,
+    setSettings,
+    setToast,
+  } = useData();
   const {
     isLoaded: clerkAuthLoaded,
     isSignedIn: clerkIsSignedIn,
     openSignIn,
     openSignUp,
   } = useOptionalAuth();
-  const [developmentDisclaimerOpen, setDevelopmentDisclaimerOpen] =
-    useState(true);
-  const [authChoiceOpen, setAuthChoiceOpen] = useState(false);
-  const [analyticsConsentOpen, setAnalyticsConsentOpen] = useState(false);
+  const [snapshot, setSnapshot] = useState<OnboardingSnapshot | null>(null);
+  const [needsModeChoice, setNeedsModeChoice] = useState(false);
+  const [dismissed, setDismissed] = useState(false);
   const [variant, setVariant] = useState<OnboardingVariant>("v2");
   const startedAt = useRef(Date.now());
+  const signedIn = clerkIsSignedIn || isSignedIn;
+  // Wait for auth so the step list is final before the dialog opens.
+  const authResolved = signedIn || (clerkAuthLoaded && isAuthLoaded);
 
   useEffect(() => {
     if (sample) return;
-    if (
-      window.localStorage.getItem(DEVELOPMENT_DISCLAIMER_STORAGE_KEY) ===
-      "acknowledged"
-    ) {
-      setDevelopmentDisclaimerOpen(false);
-    }
+    setSnapshot({
+      showWelcome:
+        window.localStorage.getItem(DEVELOPMENT_DISCLAIMER_STORAGE_KEY) !==
+        "acknowledged",
+      askAnalytics: getAnalyticsConsent() === "unknown",
+    });
   }, [sample]);
 
   useEffect(() => {
@@ -66,25 +78,25 @@ export function WorkspaceOnboarding({ sample }: { sample: boolean }) {
 
   useEffect(() => {
     if (sample) return;
-    if (clerkIsSignedIn || isSignedIn) {
+    if (signedIn) {
       window.localStorage.setItem(AUTH_MODE_STORAGE_KEY, "account");
-      setAuthChoiceOpen(false);
+      setNeedsModeChoice(false);
       return;
     }
     if (!clerkAuthLoaded || !isAuthLoaded) {
-      setAuthChoiceOpen(false);
+      setNeedsModeChoice(false);
       return;
     }
-    setAuthChoiceOpen(!window.localStorage.getItem(AUTH_MODE_STORAGE_KEY));
-  }, [clerkAuthLoaded, clerkIsSignedIn, isAuthLoaded, isSignedIn, sample]);
+    setNeedsModeChoice(!window.localStorage.getItem(AUTH_MODE_STORAGE_KEY));
+  }, [clerkAuthLoaded, isAuthLoaded, sample, signedIn]);
 
   useEffect(() => {
-    if (!authChoiceOpen) return;
+    if (!needsModeChoice || dismissed) return;
     trackOnboardingEvent("onboarding_dialog_viewed", {
       variant,
       entrySource: "workspace_root",
     });
-  }, [authChoiceOpen, variant]);
+  }, [dismissed, needsModeChoice, variant]);
 
   useEffect(() => {
     trackOptionalEvent("weekly_return", {
@@ -92,10 +104,26 @@ export function WorkspaceOnboarding({ sample }: { sample: boolean }) {
     });
   }, [isSignedIn]);
 
-  function chooseLocalMode() {
+  function acknowledgeWelcome() {
+    window.localStorage.setItem(
+      DEVELOPMENT_DISCLAIMER_STORAGE_KEY,
+      "acknowledged"
+    );
+  }
+
+  function completeLocalSetup({ profile, analytics }: OnboardingResult) {
+    setDismissed(true);
+    // A note-only flow (already signed in or mode already chosen) ends here.
+    if (!needsModeChoice || signedIn) return;
     window.localStorage.setItem(AUTH_MODE_STORAGE_KEY, "local");
-    setAuthChoiceOpen(false);
-    if (getAnalyticsConsent() === "unknown") setAnalyticsConsentOpen(true);
+    setSettings((current) => ({
+      ...current,
+      profileName: profile.profileName.trim() || current.profileName,
+      studioName: profile.studioName.trim() || current.studioName,
+      profileTitle: profile.profileTitle.trim() || current.profileTitle,
+      currencyCode: profile.currencyCode,
+    }));
+    if (analytics) setAnalyticsConsent(analytics);
     trackOnboardingEvent("workspace_mode_selected", {
       variant,
       mode: "local",
@@ -104,16 +132,8 @@ export function WorkspaceOnboarding({ sample }: { sample: boolean }) {
     setToast({ message: "Using local mode on this device.", tone: "info" });
   }
 
-  function acknowledgeDevelopmentDisclaimer() {
-    window.localStorage.setItem(
-      DEVELOPMENT_DISCLAIMER_STORAGE_KEY,
-      "acknowledged"
-    );
-    setDevelopmentDisclaimerOpen(false);
-  }
-
   function launchAccountFlow(mode: "sign-up" | "sign-in") {
-    setAuthChoiceOpen(false);
+    setDismissed(true);
     if (!isAuthEnabled) {
       setToast({
         message:
@@ -131,80 +151,30 @@ export function WorkspaceOnboarding({ sample }: { sample: boolean }) {
     else openSignIn();
   }
 
-  return (
-    <>
-      <DevelopmentDisclaimerDialog
-        open={!sample && developmentDisclaimerOpen}
-        onAcknowledge={acknowledgeDevelopmentDisclaimer}
-      />
-      <WelcomeChoiceDialog
-        open={
-          !developmentDisclaimerOpen &&
-          authChoiceOpen &&
-          !clerkIsSignedIn &&
-          !isSignedIn
-        }
-        onChooseLocal={chooseLocalMode}
-        onCreateAccount={() => launchAccountFlow("sign-up")}
-        onSignIn={() => launchAccountFlow("sign-in")}
-      />
-      <AnalyticsConsentDialog
-        open={analyticsConsentOpen}
-        onChoose={(consent) => {
-          setAnalyticsConsent(consent);
-          setAnalyticsConsentOpen(false);
-        }}
-      />
-    </>
-  );
-}
+  const showSetup = needsModeChoice && !signedIn;
+  const open =
+    !sample &&
+    snapshot !== null &&
+    authResolved &&
+    !dismissed &&
+    (snapshot.showWelcome || showSetup);
 
-function DevelopmentDisclaimerDialog({
-  open,
-  onAcknowledge,
-}: {
-  open: boolean;
-  onAcknowledge: () => void;
-}) {
   return (
-    <OwnedDialog open={open} onOpenChange={() => {}}>
-      <OwnedDialogContent
-        showCloseButton={false}
-        data-testid="development-disclaimer-dialog"
-        className="border-[var(--app-border)] bg-[var(--app-panel)] p-5 text-[var(--app-ink)] sm:max-w-md sm:p-6"
-        onEscapeKeyDown={(event) => event.preventDefault()}
-        onPointerDownOutside={(event) => event.preventDefault()}
-      >
-        <RelayBrand compact />
-        <OwnedDialogHeader>
-          <OwnedDialogTitle className="text-2xl leading-tight">
-            A quick note
-          </OwnedDialogTitle>
-          <OwnedDialogDescription className="text-left leading-relaxed">
-            Relay is currently under active development. If you find a bug or
-            glitch, please contact us on X at{" "}
-            <a
-              className="font-medium text-[var(--app-accent)] underline underline-offset-4"
-              href="https://x.com/connect_relay"
-              target="_blank"
-              rel="noreferrer"
-            >
-              @connect_relay
-            </a>{" "}
-            or email us at{" "}
-            <a
-              className="font-medium text-[var(--app-accent)] underline underline-offset-4"
-              href="mailto:connect.relay@protonmail.com"
-            >
-              connect.relay@protonmail.com
-            </a>
-            . Thanks for reading.
-          </OwnedDialogDescription>
-        </OwnedDialogHeader>
-        <OwnedButton type="button" onClick={onAcknowledge} className="w-full">
-          Continue to Relay
-        </OwnedButton>
-      </OwnedDialogContent>
-    </OwnedDialog>
+    <OnboardingStepperDialog
+      open={open}
+      showWelcome={snapshot?.showWelcome ?? false}
+      showSetup={showSetup}
+      askAnalytics={snapshot?.askAnalytics ?? false}
+      initialProfile={{
+        profileName: settings.profileName,
+        studioName: settings.studioName,
+        profileTitle: settings.profileTitle,
+        currencyCode: settings.currencyCode,
+      }}
+      onWelcomeSeen={acknowledgeWelcome}
+      onChooseAccount={() => launchAccountFlow("sign-up")}
+      onSignIn={() => launchAccountFlow("sign-in")}
+      onCompleteLocal={completeLocalSetup}
+    />
   );
 }

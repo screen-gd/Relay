@@ -76,7 +76,7 @@ Describe the checks you ran in the pull request. Include clear reproduction and 
 
 ## End-to-end tests
 
-The Playwright suite uses Chromium and starts Next.js on `http://localhost:3000`,
+The Playwright suite uses Chromium and starts Next.js on `http://localhost:3100`,
 or reuses an existing local server on that address.
 
 Install the browser once:

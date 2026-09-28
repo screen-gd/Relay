@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   ContentSection,
+  FillViewport,
   MetricItem,
   MetricStrip,
   PageContent,
@@ -16,7 +17,7 @@ describe("workspace page primitives", () => {
     const markup = renderToStaticMarkup(
       <WorkspacePage family="library">
         <PageHeader title="Projects" />
-      </WorkspacePage>,
+      </WorkspacePage>
     );
 
     expect(markup).toContain("<h1");
@@ -33,7 +34,10 @@ describe("workspace page primitives", () => {
           description="Delivery and earnings."
           actions={<button type="button">Export</button>}
         />
-        <PageToolbar primary={<input aria-label="Search" />} secondary={<button type="button">Filter</button>} />
+        <PageToolbar
+          primary={<input aria-label="Search" />}
+          secondary={<button type="button">Filter</button>}
+        />
         <MetricStrip columns={2}>
           <MetricItem label="Delivered" value="12" />
           <MetricItem label="Earned" value="$400" />
@@ -41,7 +45,7 @@ describe("workspace page primitives", () => {
         <ContentSection title="Ledger" bodyMode="flush">
           <p>Rows</p>
         </ContentSection>
-      </WorkspacePage>,
+      </WorkspacePage>
     );
 
     expect(markup).toContain("page-header-actions");
@@ -55,7 +59,7 @@ describe("workspace page primitives", () => {
       <WorkspacePage family="conversation" mode="fill">
         <PageHeader title="Team chat" />
         <PageContent mode="fill">Messages</PageContent>
-      </WorkspacePage>,
+      </WorkspacePage>
     );
 
     expect(markup).toContain('data-family="conversation"');
@@ -64,4 +68,11 @@ describe("workspace page primitives", () => {
     expect(markup).toContain('data-mode="fill"');
   });
 
+  it("keeps a header-less fill body on the flexible row", () => {
+    const markup = renderToStaticMarkup(
+      <FillViewport bodyLabel="Settings">Body</FillViewport>
+    );
+
+    expect(markup).toMatch(/data-slot="fill-viewport-body"[^>]*row-start-2/);
+  });
 });

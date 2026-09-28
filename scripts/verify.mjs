@@ -7,7 +7,7 @@ const required = [
   ["src/components/workspace-shell.tsx", "Quick Search"],
   ["src/components/workspace-shell.tsx", "Quick create"],
   [
-    "src/features/onboarding/welcome-choice-dialog.tsx",
+    "src/features/onboarding/onboarding-stepper-dialog.tsx",
     "Choose how to use Relay",
   ],
   ["src/features/settings/settings-page.tsx", "Export backup"],

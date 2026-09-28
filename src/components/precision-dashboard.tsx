@@ -251,6 +251,9 @@ const surface =
 
 const MotionCard = motion.create(Card);
 
+/** The dashboard ledger previews a fixed number of rows; Projects shows the rest. */
+const LEDGER_PREVIEW_ROWS = 5;
+
 function AnimatedNumber({
   value,
   format = (number) => Math.round(number).toLocaleString("en"),
@@ -695,7 +698,7 @@ export function PrecisionDashboard(props: DashboardProps) {
     if (event.key !== "ArrowDown" && event.key !== "ArrowUp") return;
 
     event.preventDefault();
-    const rows = table.getRowModel().rows.slice(0, 5);
+    const rows = table.getRowModel().rows.slice(0, LEDGER_PREVIEW_ROWS);
     const nextIndex = Math.min(
       rows.length - 1,
       Math.max(0, rowIndex + (event.key === "ArrowDown" ? 1 : -1))
@@ -1074,13 +1077,17 @@ export function PrecisionDashboard(props: DashboardProps) {
             }}
           >
             <SplitPane
-              ratio="inspector"
+              ratio="inspector-xl"
               className="items-stretch"
               primary={
                 <div className="h-full min-w-0">
                   <WorkspaceSection
                     title="Project ledger"
-                    count={ledgerProjects.length}
+                    count={
+                      ledgerProjects.length > LEDGER_PREVIEW_ROWS
+                        ? `${LEDGER_PREVIEW_ROWS} of ${ledgerProjects.length}`
+                        : ledgerProjects.length
+                    }
                     icon={FolderKanban}
                     className="h-full rounded-xl"
                     action={
@@ -1088,6 +1095,7 @@ export function PrecisionDashboard(props: DashboardProps) {
                         <Button
                           variant="ghost"
                           size="sm"
+                          className="h-8 px-2 text-xs text-[var(--app-muted)] hover:text-[var(--app-ink)]"
                           onClick={() => setShowCompleted((value) => !value)}
                           aria-pressed={showCompleted}
                         >
@@ -1099,7 +1107,7 @@ export function PrecisionDashboard(props: DashboardProps) {
                           asChild
                           variant="ghost"
                           size="sm"
-                          className="h-8 px-2 text-[11px] text-[var(--app-muted)] hover:text-[var(--app-ink)]"
+                          className="h-8 px-2 text-xs text-[var(--app-muted)] hover:text-[var(--app-ink)]"
                         >
                           <Link href="/projects">
                             View all projects
@@ -1112,16 +1120,13 @@ export function PrecisionDashboard(props: DashboardProps) {
                       </div>
                     }
                   >
-                    <DataTableFrame
-                      bounded={false}
-                      bodyClassName="overflow-x-auto"
-                    >
+                    <DataTableFrame bounded={false}>
                       {ledgerProjects.length ? (
                         <>
                           <div className="divide-y divide-[var(--app-border)] sm:hidden">
                             {table
                               .getRowModel()
-                              .rows.slice(0, 5)
+                              .rows.slice(0, LEDGER_PREVIEW_ROWS)
                               .map((row, rowIndex) => {
                                 const project = row.original;
                                 const progress = getProjectProgress(project);
@@ -1181,7 +1186,7 @@ export function PrecisionDashboard(props: DashboardProps) {
                                 );
                               })}
                           </div>
-                          <div className="hidden overflow-x-auto sm:block">
+                          <div className="hidden sm:block">
                             <Table
                               className="w-full min-w-[700px] border-collapse"
                               aria-label="Project ledger"
@@ -1249,7 +1254,7 @@ export function PrecisionDashboard(props: DashboardProps) {
                               >
                                 {table
                                   .getRowModel()
-                                  .rows.slice(0, 5)
+                                  .rows.slice(0, LEDGER_PREVIEW_ROWS)
                                   .map((row, rowIndex) => (
                                     <motion.tr
                                       key={row.id}
@@ -1329,7 +1334,7 @@ export function PrecisionDashboard(props: DashboardProps) {
                         </>
                       ) : (
                         <motion.div
-                          className="grid min-h-52 place-items-center px-6 text-center"
+                          className="grid min-h-52 place-items-center px-6 py-8 text-center"
                           initial={reduceMotion ? false : { opacity: 0, y: 8 }}
                           animate={{ opacity: 1, y: 0 }}
                           transition={{
@@ -1382,7 +1387,9 @@ export function PrecisionDashboard(props: DashboardProps) {
                 </div>
               }
               secondary={
-                <div className="h-full min-w-0">
+                // The inspector is positioned inside this box so the ledger,
+                // not the inspector, sets the row height.
+                <div className="relative h-full min-w-0">
                   <ProjectInspector
                     project={selected}
                     settings={props.settings}
@@ -1408,7 +1415,7 @@ export function PrecisionDashboard(props: DashboardProps) {
           >
             <WorkspaceSection
               title="Activity"
-              count={activity.length}
+              count={Math.min(activity.length, 4)}
               icon={Clock3}
               action={
                 <Tabs
@@ -1544,7 +1551,7 @@ function WorkspaceSection({
   children,
 }: {
   title: string;
-  count?: number;
+  count?: number | string;
   icon: typeof FolderKanban;
   action?: React.ReactNode;
   className?: string;
@@ -1563,7 +1570,7 @@ function WorkspaceSection({
             className="size-3.5 text-[var(--app-muted)]"
             strokeWidth={1.75}
           />
-          {typeof count === "number" ? (
+          {count !== undefined ? (
             <span className="rounded-md bg-[var(--app-soft-panel)] px-2 py-0.5 font-mono text-[10px] tabular-nums text-[var(--app-muted)]">
               {count}
             </span>
@@ -1655,10 +1662,9 @@ function ProjectInspector({
       <MotionCard
         className={cn(
           surface,
-          "min-h-[420px]",
           mobile
-            ? "grid place-items-center rounded-none border-0 shadow-none"
-            : "hidden xl:grid xl:place-items-center"
+            ? "grid min-h-[420px] place-items-center rounded-none border-0 shadow-none"
+            : "absolute inset-0 grid place-items-center"
         )}
         initial={reduceMotion ? false : { opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -1691,7 +1697,7 @@ function ProjectInspector({
           "bg-[var(--app-panel)] shadow-none",
           mobile
             ? "min-h-dvh overflow-y-auto rounded-none border-0"
-            : "hidden h-full overflow-hidden rounded-[10px] xl:block"
+            : "absolute inset-0 overflow-y-auto rounded-xl"
         )}
         initial={reduceMotion ? false : { opacity: 0.65, scale: 0.99 }}
         animate={{ opacity: 1, scale: 1 }}

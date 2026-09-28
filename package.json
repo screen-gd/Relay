@@ -8,7 +8,7 @@
   },
   "scripts": {
     "dev": "convex dev --start \"pnpm dev:next\"",
-    "dev:next": "next dev",
+    "dev:next": "next dev --port 3100",
     "convex:dev": "convex dev",
     "build": "next build",
     "preview": "opennextjs-cloudflare build && opennextjs-cloudflare preview",
@@ -17,7 +17,7 @@
     "cf-typegen": "wrangler types --env-interface CloudflareEnv cloudflare-env.d.ts",
     "check": "pnpm check:mui-allowlist && pnpm lint && pnpm --dir website lint && pnpm build && pnpm audit --prod",
     "check:full": "pnpm check && pnpm test:unit && pnpm test:convex && pnpm test:stripe-csp && pnpm verify:browser && pnpm verify:prod",
-    "start": "next start",
+    "start": "next start --port 3100",
     "lint": "tsc --noEmit",
     "test:unit": "vitest run --config vitest.unit.config.mts",
     "test:convex": "vitest run --config vitest.config.mts",

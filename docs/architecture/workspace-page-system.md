@@ -285,6 +285,7 @@ type SplitPaneProps = {
 CSS variants:
 
 - `inspector`: `minmax(0, 1fr) 320px`
+- `inspector-xl`: the same columns from `xl` up; below `xl` the secondary pane is removed (used when the inspector moves into a `Sheet` on smaller screens, as on the Dashboard)
 - `balanced`: `minmax(0, 1fr) minmax(320px, 0.72fr)`
 - `supporting`: `minmax(0, 1.6fr) minmax(300px, 0.8fr)`
 
@@ -331,7 +332,7 @@ type FillViewportProps = {
 };
 ```
 
-This is a CSS Grid with `auto minmax(0, 1fr) auto`. It must not read `window.innerHeight`, measure DOM nodes, or calculate pixel heights in TypeScript.
+This is a CSS Grid with `auto minmax(0, 1fr) auto`. Header, body, and footer are pinned to rows 1, 2, and 3, so the body keeps the flexible row when the header or footer is omitted. It must not read `window.innerHeight`, measure DOM nodes, or calculate pixel heights in TypeScript.
 
 ## Geometry contract
 
