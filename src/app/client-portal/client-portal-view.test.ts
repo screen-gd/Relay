@@ -1,37 +1,161 @@
 import { describe, expect, it } from "vitest";
-import { readPublicPortalAccess } from "./client-portal-view";
+import { createElement } from "react";
+import { renderToStaticMarkup } from "react-dom/server";
+import { PublicOutputRow, readPublicPortalAccess } from "./client-portal-view";
 
 describe("public Client Portal boundary", () => {
   it("renders only the allowlisted current-version contract and clear access states", () => {
-    expect(readPublicPortalAccess({ access: "invalid_token" })).toEqual({ kind: "invalid" });
-    expect(readPublicPortalAccess({ access: "closed" })).toEqual({ kind: "closed" });
-    expect(readPublicPortalAccess({ access: "expired" })).toEqual({ kind: "expired" });
-    expect(readPublicPortalAccess({ access: "invalid_pin" })).toEqual({ kind: "pin-required", wrongPin: true });
+    expect(readPublicPortalAccess({ access: "invalid_token" })).toEqual({
+      kind: "invalid",
+    });
+    expect(readPublicPortalAccess({ access: "closed" })).toEqual({
+      kind: "closed",
+    });
+    expect(readPublicPortalAccess({ access: "expired" })).toEqual({
+      kind: "expired",
+    });
+    expect(readPublicPortalAccess({ access: "invalid_pin" })).toEqual({
+      kind: "pin-required",
+      wrongPin: true,
+    });
 
-    expect(readPublicPortalAccess({
-      access: "active",
-      project: { title: "Launch film", stage: "Review", progress: 75, publicNotes: "Ready for review", notes: "private", earnings: 9000 },
-      outputs: [{
-        id: "main",
-        title: "Main film",
-        reviewState: "sent_to_client",
-        currentVersion: { id: "v2", title: "Review cut", source: { kind: "youtube", url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ" }, notes: "private" },
-        versions: [{ id: "v1" }],
-      }],
-    })).toEqual({
+    expect(
+      readPublicPortalAccess({
+        access: "active",
+        project: {
+          title: "Launch film",
+          stage: "Review",
+          progress: 75,
+          publicNotes: "Ready for review",
+          notes: "private",
+          earnings: 9000,
+        },
+        outputs: [
+          {
+            id: "main",
+            title: "Main film",
+            reviewState: "sent_to_client",
+            currentVersion: {
+              id: "v2",
+              title: "Review cut",
+              source: {
+                kind: "youtube",
+                url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+              },
+              notes: "private",
+            },
+            versions: [{ id: "v1" }],
+          },
+        ],
+      })
+    ).toEqual({
       kind: "active",
       portal: {
         title: "Launch film",
         notes: "Ready for review",
         stage: "Review",
         progress: 75,
-        outputs: [{
-          id: "main",
-          title: "Main film",
-          reviewState: "sent_to_client",
-          currentVersion: { id: "v2", label: "Review cut", source: { provider: "YouTube", url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ" } },
-        }],
+        outputs: [
+          {
+            id: "main",
+            title: "Main film",
+            reviewState: "sent_to_client",
+            currentVersion: {
+              id: "v2",
+              label: "Review cut",
+              source: {
+                provider: "YouTube",
+                url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+              },
+            },
+          },
+        ],
       },
     });
+  });
+});
+
+function renderOutput(source: Record<string, string>) {
+  const access = readPublicPortalAccess({
+    access: "active",
+    project: { title: "Launch film" },
+    outputs: [
+      {
+        id: "main",
+        title: "Main film",
+        currentVersion: { id: "v2", title: "Review cut", source },
+        versions: [
+          { id: "v1", source: { url: "https://vimeo.com/987654321" } },
+        ],
+      },
+    ],
+  });
+  if (access.kind !== "active") throw new Error("Expected an active portal");
+  return renderToStaticMarkup(
+    createElement(PublicOutputRow, {
+      output: access.portal.outputs[0],
+      comments: [],
+      commentsLoading: false,
+      displayName: "",
+      onDisplayNameChange: () => {},
+      onClearDisplayName: () => {},
+      onAddComment: async () => {},
+      onReopenComment: async () => {},
+      busy: false,
+      busyCommentId: "",
+    })
+  );
+}
+
+describe("client hub video playback", () => {
+  it.each([
+    [
+      "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+      "https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ",
+    ],
+    [
+      "https://youtu.be/dQw4w9WgXcQ",
+      "https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ",
+    ],
+    [
+      "https://www.youtube.com/shorts/dQw4w9WgXcQ",
+      "https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ",
+    ],
+    ["https://vimeo.com/123456789", "https://player.vimeo.com/video/123456789"],
+    [
+      "https://player.vimeo.com/video/123456789",
+      "https://player.vimeo.com/video/123456789",
+    ],
+  ])("embeds the current version from %s", (url, embedUrl) => {
+    const html = renderOutput({ url });
+    expect(html).toContain(`<iframe`);
+    expect(html).toContain(`src="${embedUrl}"`);
+    expect(html).toContain('title="Main film — Review cut"');
+    expect(html).toContain('allowFullScreen=""');
+    expect(html).toContain('referrerPolicy="strict-origin-when-cross-origin"');
+    expect(html).toContain("Open current version");
+    expect(html).not.toContain("987654321");
+  });
+
+  it.each([
+    "https://example.com/review",
+    "https://www.youtube.com/watch?v=invalid",
+    "https://youtube.com.evil.example/watch?v=dQw4w9WgXcQ",
+    "https://user:password@www.youtube.com/watch?v=dQw4w9WgXcQ",
+  ])("keeps unsupported or invalid videos as links: %s", (url) => {
+    const html = renderOutput({
+      kind: "youtube",
+      url,
+      embedUrl: "https://evil.example/player",
+    });
+    expect(html).not.toContain("<iframe");
+    expect(html).toContain("Open current version");
+  });
+
+  it("does not render a player for an output with no shared version", () => {
+    const html = renderOutput({ url: "javascript:alert(1)" });
+    expect(html).not.toContain("<iframe");
+    expect(html).not.toContain("Open current version");
+    expect(html).toContain("No version shared yet");
   });
 });

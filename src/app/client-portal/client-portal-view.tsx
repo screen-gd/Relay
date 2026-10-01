@@ -26,6 +26,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { PublicMediaVersionComments } from "@/components/media-version-comments";
+import { normalizeMediaUrl } from "@/features/project-outputs/project-output-domain";
 import type { MediaVersionComment } from "@/features/media-version-comments/media-version-comments";
 import { parseMediaVersionComments } from "@/features/media-version-comments/media-version-comments-data";
 import { trackOptionalEvent } from "@/lib/telemetry";
@@ -886,7 +887,7 @@ function PublicFilesSection({
   );
 }
 
-function PublicOutputRow({
+export function PublicOutputRow({
   output,
   comments,
   commentsLoading,
@@ -917,6 +918,13 @@ function PublicOutputRow({
     ? (reviewLabels[output.reviewState] ?? output.reviewState)
     : undefined;
   const currentVersion = output.currentVersion;
+  const media = currentVersion
+    ? normalizeMediaUrl(currentVersion.source.url)
+    : undefined;
+  const embedUrl =
+    media?.ok && media.value.provider !== "external"
+      ? media.value.embedUrl
+      : undefined;
   return (
     <article className="grid gap-4 py-5 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
       <div className="min-w-0">
@@ -948,6 +956,19 @@ function PublicOutputRow({
           No version shared yet
         </span>
       )}
+      {embedUrl && currentVersion ? (
+        <div className="aspect-video overflow-hidden rounded-lg bg-black sm:col-span-2">
+          <iframe
+            key={embedUrl}
+            src={embedUrl}
+            title={`${output.title} — ${currentVersion.label}`}
+            className="h-full w-full border-0"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
+            allowFullScreen
+            referrerPolicy="strict-origin-when-cross-origin"
+          />
+        </div>
+      ) : null}
       {currentVersion ? (
         <div className="sm:col-span-2">
           <PublicMediaVersionComments
