@@ -11,14 +11,14 @@ This is the public marketing site. Product access and private workspaces are on 
 ## Public pages
 
 - [Home](${origin}/): Product overview, workflow, client review, delivery, and pricing.
-- [Waitlist](${origin}/waitlist): Request an invite to test Relay.
+- [Get started free](https://relay-app.cc.cd/): Open Relay. No invite is required.
 - [Full product summary](${origin}/llms-full.txt): A text summary of public product information.
 
 ## App information
 
 - [App public pages](https://relay-app.cc.cd/llms.txt): Contact, accessibility, privacy, and terms.
 
-The waitlist form and app workspaces are interactive services, not material for bulk extraction. Respect each host's robots.txt and access controls.
+App workspaces are interactive services, not material for bulk extraction. Respect each host's robots.txt and access controls.
 `;
 
   return new Response(body, {

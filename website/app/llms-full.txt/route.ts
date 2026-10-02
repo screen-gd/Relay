@@ -11,22 +11,22 @@ Relay helps freelance video editors and small post-production teams manage video
 - Track a project through editing, client review, revisions, approval, and delivery.
 - Keep outputs and their versions with the project. Editors can share a project-scoped client portal for review.
 - The Free plan includes client comments on embedded videos and linked video versions.
-- Track delivery and payment status. Free includes payment tracking and embedded video comments. YouTube and Vimeo support playback timestamps; Drive and Dropbox support manual timestamps. Planned paid upgrades include hosted uploads and review, custom templates, advanced reports, and team roles. Paid prices and currency are not finalized.
+- Track delivery and payment status. Free includes payment tracking and embedded video comments. YouTube and Vimeo support playback timestamps; Drive and Dropbox support manual timestamps. Planned paid upgrades include hosted uploads and review, custom templates, advanced reports, and team roles. Paid prices are not finalized. Workspace accounting supports multiple currencies.
 
 ## Access and availability
 
-Relay has a waitlist for early testers. The marketing site describes Free, Creator, and Team plans. Creator and Team are marked as coming later on the pricing section. For current prices, limits, and availability, read ${origin}/#pricing rather than treating this summary as a price list.
+Relay is open to everyone on the Free plan; no invite is required. The marketing site describes Free, Creator, and Team plans. Creator and Team are marked as coming later on the pricing section. For current prices, limits, and availability, read ${origin}/#pricing rather than treating this summary as a price list.
 
 ## Official public links
 
 - Product overview and pricing: ${origin}/
-- Waitlist: ${origin}/waitlist
+- Get started free: https://relay-app.cc.cd/
 - Contact: https://relay-app.cc.cd/contact
 - Accessibility: https://relay-app.cc.cd/accessibility
 - Privacy policy: https://relay-app.cc.cd/privacy
 - Terms of service: https://relay-app.cc.cd/terms
 
-Private workspaces, client portals, and the waitlist API are outside this public summary. Follow each host's robots.txt. This file describes the product; it does not grant access to private content or set permissions for AI training.
+Private workspaces and client portals are outside this public summary. Follow each host's robots.txt. This file describes the product; it does not grant access to private content or set permissions for AI training.
 `;
 
   return new Response(body, {

@@ -45,7 +45,7 @@ export function CapabilityUpgradePrompt({
       <div>
         <p className="text-sm font-medium">Creator unlocks {name}.</p>
         <p className="mt-1 text-xs text-muted-foreground">
-          Paid plans are coming later. Early access includes the Free plan.
+          Paid plans are coming later. Start with the Free plan.
         </p>
       </div>
       <Button asChild size="sm" variant="outline">
@@ -126,7 +126,7 @@ export function SubscriptionPricingView({
   return (
     <div className="min-h-[calc(100dvh-15rem)] p-4 md:p-6">
       <div className="mb-4 flex items-center gap-2">
-        <span className="text-sm text-muted-foreground">Early access</span>
+        <span className="text-sm text-muted-foreground">Free plan</span>
         <Badge variant="outline">Free only</Badge>
       </div>
       <Card className="mb-4">
@@ -141,8 +141,7 @@ export function SubscriptionPricingView({
             capabilities remain unavailable on Free.
           </p>
           <p role="status" className="text-sm text-muted-foreground">
-            Paid plans are coming later. Purchases are unavailable for the
-            early-access period.
+            Paid plans are coming later and are not available to purchase yet.
           </p>
         </CardContent>
       </Card>
@@ -206,7 +205,7 @@ export function FirstLoginPlanDialog() {
           <DialogTitle>Welcome to Relay</DialogTitle>
           <DialogDescription>
             Your Workspace starts on Free. Paid plans are coming later; no
-            payment is required for the Free early access.
+            payment is required for the Free plan.
           </DialogDescription>
         </DialogHeader>
         {error ? (

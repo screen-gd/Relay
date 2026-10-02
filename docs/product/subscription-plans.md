@@ -1,17 +1,17 @@
 # Relay subscription plans
 
-Status: Free early access via waitlist; future payments use Razorpay
+Status: Free plan open to everyone; future payments use Razorpay
 
-Only Free is available during early access. Creator, Team, extra Editor
+The Free plan is open to everyone without an invite. Creator, Team, extra Editor
 Seats, and Storage Add-ons are future offers, not available for purchase. Free-only
 does not unlock paid capabilities for everyone: the existing Free limits apply.
 A Workspace owns one Subscription Plan. Clerk remains the authentication provider;
 Razorpay is the selected future payment provider. Convex remains the authority for
 Workspace entitlements. Clients and Client Contacts do not consume internal seats.
 
-Checkout stays disabled for launch. Do not connect Stripe or activate Clerk
+Paid checkout stays disabled. Do not connect Stripe or activate Clerk
 Billing. Razorpay integration and migration of the existing Clerk-specific billing
-code are separate post-launch work. Paid prices, currencies, billing periods,
+code are separate post-launch work. Workspace accounting supports multiple currencies. Paid prices, billing periods,
 trials, cancellations, and refund terms await ticket 02 approval. No former
 Clerk or Stripe commercial terms carry forward. The implementation checklist lives in
 `.scratch/subscription-plans/`.

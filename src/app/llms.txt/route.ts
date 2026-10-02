@@ -17,7 +17,7 @@ The workspace, account pages, client hub, and token-based client portals may con
 
 ## Product information
 
-- [Marketing site](https://web.relay-app.cc.cd/): Product overview and waitlist.
+- [Marketing site](https://web.relay-app.cc.cd/): Product overview and Free-plan access.
 - [Full product summary](https://web.relay-app.cc.cd/llms-full.txt): Text summary for readers and agents.
 
 Follow ${siteUrl}/robots.txt and each page's access controls. This file does not grant access to private content or set permissions for AI training.

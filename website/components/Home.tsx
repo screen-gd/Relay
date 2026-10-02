@@ -155,8 +155,11 @@ export default function Home() {
             <nav className="site-nav" aria-label="Main navigation">
               <a href="#product">Product</a>
               <a href="#pricing">Pricing</a>
-              <SpecularButton className="nav-action" href="/waitlist">
-                Join the waitlist
+              <SpecularButton
+                className="nav-action"
+                href="https://relay-app.cc.cd/"
+              >
+                Get started free
               </SpecularButton>
             </nav>
           </header>
@@ -204,8 +207,7 @@ export default function Home() {
                 </p>
                 <p className="hero-access-note">
                   Built for freelance editors working with creators and brands.
-                  Early access via waitlist; selected testers receive an email
-                  invite.
+                  Start with Free. No invite required.
                 </p>
               </div>
             </div>

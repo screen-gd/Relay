@@ -33,7 +33,7 @@ const plans = [
       "Payment tracking",
     ],
     note: "YouTube and Vimeo playback timestamps; manual timestamps for Drive and Dropbox.",
-    cta: "Join the waitlist",
+    cta: "Get started free",
   },
   {
     name: "Creator",
@@ -50,8 +50,8 @@ const plans = [
       "Advanced reports",
       "Client hub and custom portal branding",
     ],
-    note: "Coming later. Creator is unavailable for purchase during early access.",
-    cta: "Join the waitlist",
+    note: "Coming later. Creator is not available for purchase yet.",
+    cta: "Get started free",
   },
   {
     name: "Team",
@@ -68,8 +68,8 @@ const plans = [
       "Team payouts and workload reports",
       "Free viewer access",
     ],
-    note: "Coming later. Team and extra editor seats are unavailable for purchase during early access.",
-    cta: "Join the waitlist",
+    note: "Coming later. Team and extra editor seats are not available for purchase yet.",
+    cta: "Get started free",
   },
 ] as const;
 
@@ -419,14 +419,13 @@ export default function ProductStory() {
         aria-label="Pricing"
       >
         <div className="story-heading">
-          <SectionTitle>Free during early access.</SectionTitle>
+          <SectionTitle>Start with Free.</SectionTitle>
           <p>
-            Request early access through the waitlist. Selected testers receive
-            an email invite to the Free plan, including client review on
-            embedded videos. Creator adds uploads and review; Creator and Team
-            are planned and unavailable to purchase. Paid prices and currency
-            are not finalized. Embedded videos stay with their host and do not
-            use Relay storage.
+            Start with the Free plan, including client review on embedded videos
+            and payment tracking. No invite is required. Creator adds uploads
+            and review; Creator and Team are planned and unavailable to
+            purchase. Paid prices are not finalized. Embedded videos stay with
+            their host and do not use Relay storage.
           </p>
         </div>
         <div className="pricing-grid">
@@ -463,7 +462,7 @@ export default function ProductStory() {
               {plan.note ? (
                 <small className="plan-note">{plan.note}</small>
               ) : null}
-              <SpecularButton href="/waitlist">
+              <SpecularButton href="https://relay-app.cc.cd/">
                 {plan.cta} <ArrowRight size={15} />
               </SpecularButton>
             </article>
@@ -489,8 +488,8 @@ export default function ProductStory() {
               Manage projects, review embedded videos with clients, and track
               delivery in Relay.
             </p>
-            <SpecularButton href="/waitlist">
-              Join the waitlist <ArrowRight size={17} />
+            <SpecularButton href="https://relay-app.cc.cd/">
+              Get started free <ArrowRight size={17} />
             </SpecularButton>
             <nav className="footer-socials" aria-label="Social links">
               <a
