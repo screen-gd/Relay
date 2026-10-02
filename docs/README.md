@@ -8,7 +8,7 @@ Use these documents as the current project record:
 - [Architecture](architecture/) — implemented system boundaries.
 - [Brand assets](brand/ASSET-GUIDE.md) — approved source files and generated exports.
 - [Security](security/SECURITY.md) — current security model.
-- [Direct support email](operations/contact-email.md) — sending configuration and verification.
+- [Support email](operations/contact-email.md) — mailto contact and inbox routing.
 - [Dependency audit](dependency-audit.md) — resolved findings, patched versions, and verification.
 - [Testing and suite cleanup](testing.md) — useful coverage, removed checks, and remaining gaps.
 - [Subscription plans](product/subscription-plans.md) — proposed commercial model.

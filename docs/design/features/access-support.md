@@ -6,11 +6,11 @@ Help people enter the right surface and find policy or support information.
 
 ## Anatomy
 
-Access-code form, client portal instructions, contact form, accessibility statement, privacy/terms pages, not-found and error recovery, and support actions.
+Access-code form, client portal instructions, support email link, accessibility statement, privacy/terms pages, not-found and error recovery, and support actions.
 
 ## Behavior
 
-Preserve access-code entry, token instructions, contact submission, legal aliases/redirects, and recovery links. Keep internal, client, public, and support scopes distinct.
+Preserve access-code entry, token instructions, mailto contact link, legal aliases/redirects, and recovery links. Keep internal, client, public, and support scopes distinct.
 
 ## States
 
@@ -30,6 +30,6 @@ Use semantic main/section landmarks, one h1, associated labels/errors, focus on 
 
 ## Acceptance checks
 
-Valid/invalid access, contact success/error, legal aliases, recovery links, mobile zoom, keyboard, and screen-reader checks pass.
+Valid/invalid access, contact mailto link, legal aliases, recovery links, mobile zoom, keyboard, and screen-reader checks pass.
 
 Related: [accessibility](../system/accessibility.md).

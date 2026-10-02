@@ -409,7 +409,7 @@ The main repository also includes:
 
 - Early access password page and return-to-route handling.
 - Sign-in and sign-up through Clerk when cloud configuration is present.
-- Contact page and contact form.
+- Contact page with a clickable support email address.
 - Accessibility statement.
 - Privacy policy and policy alias route.
 - Terms of service.
