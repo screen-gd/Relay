@@ -2,7 +2,7 @@
 
 Snapshot: October 2, 2026. Command: `pnpm audit --prod --json` from the workspace root (includes the app and marketing workspace).
 
-The audit reports **18 findings: 2 critical, 6 high, 7 moderate and 3 low**. These are installed-package findings, including repeated advisories for different installed versions; they are not 18 independent defects in Relay’s code.
+Before remediation, the audit reported **18 findings: 2 critical, 6 high, 7 moderate and 3 low**. These are installed-package findings, including repeated advisories for different installed versions; they are not 18 independent defects in Relay’s code.
 
 | Package         | Installed versions           |                      Findings | Patch target              | Where used                                                               |
 | --------------- | ---------------------------- | ----------------------------: | ------------------------- | ------------------------------------------------------------------------ |
@@ -10,13 +10,17 @@ The audit reports **18 findings: 2 critical, 6 high, 7 moderate and 3 low**. The
 | Undici          | 7.29.0                       | 10: 2 high, 5 moderate, 3 low | 7.29.1 or later           | OpenNext → Wrangler → Miniflare (Cloudflare build/local-preview tooling) |
 | brace-expansion | 2.1.4; 5.0.9                 |         6: 4 high, 2 moderate | 2.1.7 and 5.0.12 or later | OpenNext → glob/minimatch (build tooling)                                |
 
+## Current status
+
+The security follow-up resolves all 18 findings. Both `pnpm audit --prod --json` and `pnpm audit --json` report **zero vulnerabilities**. Both workspaces now resolve Next.js **16.3.6**. Scoped workspace overrides replace Undici 7.x versions below 7.29.1 with **7.29.1**, brace-expansion 2.x versions below 2.1.7 with **2.1.7**, and brace-expansion 5.x versions below 5.0.12 with **5.0.12**. The overrides preserve each affected major-version line, and the refreshed lockfile is committed.
+
 ## Exposure and remediation
 
 - **Next.js:** the advisory concerns remote code execution in `next/og`’s `ImageResponse`. A source search found no `ImageResponse`, `next/og`, or dynamic Open Graph image route in Relay’s app or marketing code. The metadata uses a static social-preview image. This reduces the known exposure to that particular feature; it does not replace updating both framework versions.
 - **Undici:** the findings cover denial of service, TLS certificate-validation bypass, cross-user cookie disclosure, response splitting, and unsafe caching. Exploitation depends on the affected WebSocket, retry, cache or connection-pool feature being used. Relay has no direct Undici imports; the installed vulnerable version comes through Miniflare. Update the Cloudflare tooling chain or use a narrowly scoped patched-version override if the parent packages have not updated.
 - **brace-expansion:** crafted brace/glob expressions can consume excessive CPU or exhaust the stack. These versions enter through OpenNext build tools; no direct application import was found. Update the parent glob/minimatch dependencies or preserve each major-version line with narrowly scoped overrides.
 
-No vulnerable version was changed as part of the launch-copy update. A remediation change should refresh the lockfile, rerun the production audit, app/marketing builds, and Cloudflare adapter/preview validation.
+The launch-copy PR only documented the findings; the subsequent security PR patches them. The full check passes: typechecks, app build, 69 unit tests, 118 backend tests, 2 CSP tests, production browser smoke checks and the production audit. Both app and marketing OpenNext Cloudflare builds and local Wrangler previews also pass. The marketing preview verifies rendering, the Free-plan link, the legacy redirect and a dynamic public summary; the app preview verifies public pages, its public summary and static JavaScript. A frozen-lockfile install passes.
 
 ## Advisory references
 

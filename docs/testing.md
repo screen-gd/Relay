@@ -108,3 +108,11 @@ comment, general comments, manual Drive/Dropbox timestamps, invalid input, and
 API-load failure. This verifies the integration contract, not live playback with
 third-party providers. The app and marketing builds pass. The full check still
 fails only at its final dependency audit (18 existing vulnerabilities).
+
+## Dependency security follow-up
+
+The subsequent security patch resolves the 18 reported dependency findings.
+`pnpm check:full` now passes, including its final production dependency audit.
+The audit including development dependencies also reports zero vulnerabilities.
+Both app and marketing OpenNext Cloudflare builds pass with the patched packages.
+See [the dependency audit](dependency-audit.md) for versions and advisory links.
