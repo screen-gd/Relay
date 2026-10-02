@@ -37,11 +37,10 @@ export default function PrivacyPolicyRoute() {
                 workspace records associated with your authenticated user ID.
               </p>
               <p>
-                If you use the contact form, we receive your name, email address
-                and message to respond to your inquiry. Resend processes these
-                details to deliver your message to Relay’s support inbox.
-                Cloudflare Turnstile processes technical information to help
-                prevent abuse of the form.
+                If you email support, we receive your email address and the
+                information you include in your message to respond to your
+                inquiry. The contact link opens your email app, where you choose
+                what to send.
               </p>
               <p>
                 We may also receive basic technical data from hosting, security,
