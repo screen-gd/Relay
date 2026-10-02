@@ -10,8 +10,8 @@ Relay helps freelance video editors and small post-production teams manage video
 
 - Track a project through editing, client review, revisions, approval, and delivery.
 - Keep outputs and their versions with the project. Editors can share a project-scoped client portal for review.
-- Clients can view shared work and leave comments where the plan and media type support it.
-- Track delivery and payment status. Higher-tier features shown on the site include custom templates, salary plans, reports, and team roles.
+- The Free plan includes client comments on embedded videos and linked video versions.
+- Track delivery and payment status. Free includes payment tracking and embedded video comments. YouTube and Vimeo support playback timestamps; Drive and Dropbox support manual timestamps. Planned paid upgrades include hosted uploads and review, custom templates, advanced reports, and team roles. Paid prices and currency are not finalized.
 
 ## Access and availability
 

@@ -100,6 +100,9 @@ function publicComment(
     mediaVersionId,
     authorName: comment.authorName,
     body: comment.body,
+    ...(comment.timestampSeconds === undefined
+      ? {}
+      : { timestampSeconds: comment.timestampSeconds }),
     resolved: comment.resolved,
     createdAt: comment.createdAt,
     resolvedAt: comment.resolvedAt ?? null,
@@ -166,6 +169,7 @@ export const addPublicComment = mutation({
     mediaVersionId: v.string(),
     authorName: v.string(),
     body: v.string(),
+    timestampSeconds: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
     const result = await getPublicPortalAccess(ctx, args.token, args.pin);
@@ -174,6 +178,15 @@ export const addPublicComment = mutation({
     const body = args.body.trim().slice(0, MAX_COMMENT_BODY);
     if (!authorName) throw new Error("Display name is required");
     if (!body) throw new Error("Comment cannot be empty");
+    if (
+      args.timestampSeconds !== undefined &&
+      (!Number.isSafeInteger(args.timestampSeconds) ||
+        args.timestampSeconds < 0 ||
+        args.timestampSeconds > 604_800)
+    )
+      throw new Error(
+        "Timestamp must be a whole number of seconds between 0 and 604800"
+      );
     const shared = await sharedVersion(
       ctx,
       result.portal,
@@ -191,6 +204,9 @@ export const addPublicComment = mutation({
       mediaVersionId: shared.version._id,
       authorName,
       body,
+      ...(args.timestampSeconds === undefined
+        ? {}
+        : { timestampSeconds: args.timestampSeconds }),
       resolved: false,
       createdAt: new Date().toISOString(),
     });

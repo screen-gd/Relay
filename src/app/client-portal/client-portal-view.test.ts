@@ -108,23 +108,6 @@ function renderOutput(source: Record<string, string>) {
 }
 
 describe("client hub video playback", () => {
-  it.each([
-    [
-      "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
-      "https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ",
-    ],
-    ["https://vimeo.com/123456789", "https://player.vimeo.com/video/123456789"],
-  ])("embeds the current version from %s", (url, embedUrl) => {
-    const html = renderOutput({ url });
-    expect(html).toContain(`<iframe`);
-    expect(html).toContain(`src="${embedUrl}"`);
-    expect(html).toContain('title="Main film — Review cut"');
-    expect(html).toContain('allowFullScreen=""');
-    expect(html).toContain('referrerPolicy="strict-origin-when-cross-origin"');
-    expect(html).toContain("Open current version");
-    expect(html).not.toContain("987654321");
-  });
-
   it("keeps an ordinary link and ignores supplied player metadata", () => {
     const html = renderOutput({
       kind: "youtube",

@@ -1,8 +1,8 @@
 # Relay subscription plans
 
-Status: Free-only launch on September 18, 2026; future payments use Razorpay
+Status: Free early access via waitlist; future payments use Razorpay
 
-Only Free is available for the September 18 launch. Creator, Team, extra Editor
+Only Free is available during early access. Creator, Team, extra Editor
 Seats, and Storage Add-ons are future offers, not available for purchase. Free-only
 does not unlock paid capabilities for everyone: the existing Free limits apply.
 A Workspace owns one Subscription Plan. Clerk remains the authentication provider;
@@ -38,8 +38,8 @@ Included:
 - Basic workflow tracking
 - Basic Reviews and delivery
 - Standard project-specific Client Portals
-- External Video Embeds
-- Owner-managed Salary Plans and Salary Batches
+- Embedded video review and comments
+- Payment tracking, owner-managed payment plans and payment batches
 
 Limits:
 
@@ -47,11 +47,11 @@ Limits:
 - No Relay storage quota
 - No internal Team Members
 
-External Video Embeds let users reference video hosted on Vimeo, YouTube, Frame.io, or another external service without using Relay storage.
+YouTube and Vimeo embed directly in shared portals and support playback timestamps through their player APIs. Drive, Dropbox and other links support general comments and manual timestamps; clients open those videos with their host. Embedded and linked videos do not use Relay storage.
 
 ## Creator (post-launch)
 
-Creator is for one freelance editor managing stored project media and client relationships.
+Creator is the planned upgrade for uploading your own files and reviewing them.
 
 Includes everything in Free, plus:
 

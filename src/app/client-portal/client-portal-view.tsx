@@ -1,6 +1,11 @@
 "use client";
 
 import {
+  ReviewVideoPlayer,
+  type ReviewPlayer,
+} from "@/components/review-video-player";
+
+import {
   useEffect,
   useMemo,
   useRef,
@@ -33,7 +38,10 @@ import { trackOptionalEvent } from "@/lib/telemetry";
 import { cn } from "@/lib/utils";
 import { RelayBrand } from "@/app/relay-brand";
 
-type PublicSource = { provider: "YouTube" | "Vimeo" | "Link"; url: string };
+type PublicSource = {
+  provider: "YouTube" | "Vimeo" | "Drive" | "Dropbox" | "Link";
+  url: string;
+};
 type PublicVersion = {
   id: string;
   label: string;
@@ -235,13 +243,22 @@ function readVersion(
   const source = isRecord(value.source) ? value.source : value;
   const url = safeUrl(source.url);
   if (!url) return undefined;
-  const providerValue = text(source.provider) ?? text(source.kind);
+  const media = normalizeMediaUrl(url);
+  const host = new URL(url).hostname.toLowerCase();
   const provider =
-    providerValue?.toLowerCase() === "youtube"
+    media.ok && media.value.provider === "youtube"
       ? "YouTube"
-      : providerValue?.toLowerCase() === "vimeo"
+      : media.ok && media.value.provider === "vimeo"
         ? "Vimeo"
-        : "Link";
+        : ["drive.google.com", "docs.google.com"].includes(host)
+          ? "Drive"
+          : [
+                "dropbox.com",
+                "www.dropbox.com",
+                "dl.dropboxusercontent.com",
+              ].includes(host)
+            ? "Dropbox"
+            : "Link";
   return {
     id: text(value.id) ?? fallbackId,
     label: text(value.label) ?? text(value.title) ?? "Current version",
@@ -407,7 +424,8 @@ export function ClientPortalView({ token }: { token: string }) {
   async function addComment(
     outputId: string,
     mediaVersionId: string,
-    body: string
+    body: string,
+    timestampSeconds?: number
   ) {
     setCommentBusyOutputId(outputId);
     try {
@@ -418,6 +436,7 @@ export function ClientPortalView({ token }: { token: string }) {
         mediaVersionId,
         authorName: displayName.trim(),
         body,
+        ...(timestampSeconds !== undefined ? { timestampSeconds } : {}),
       });
       trackOptionalEvent("comment_added", { surface: "portal" });
     } finally {
@@ -612,7 +631,8 @@ function ActivePortal({
   onAddComment: (
     outputId: string,
     mediaVersionId: string,
-    body: string
+    body: string,
+    timestampSeconds?: number
   ) => Promise<void>;
   onReopenComment: (commentId: string) => Promise<void>;
   busyOutputId: string;
@@ -908,12 +928,14 @@ export function PublicOutputRow({
   onAddComment: (
     outputId: string,
     mediaVersionId: string,
-    body: string
+    body: string,
+    timestampSeconds?: number
   ) => Promise<void>;
   onReopenComment: (commentId: string) => Promise<void>;
   busy: boolean;
   busyCommentId: string;
 }) {
+  const [player, setPlayer] = useState<ReviewPlayer>();
   const state = output.reviewState
     ? (reviewLabels[output.reviewState] ?? output.reviewState)
     : undefined;
@@ -957,28 +979,25 @@ export function PublicOutputRow({
         </span>
       )}
       {embedUrl && currentVersion ? (
-        <div className="aspect-video overflow-hidden rounded-lg bg-black sm:col-span-2">
-          <iframe
-            key={embedUrl}
-            src={embedUrl}
-            title={`${output.title} — ${currentVersion.label}`}
-            className="h-full w-full border-0"
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
-            allowFullScreen
-            referrerPolicy="strict-origin-when-cross-origin"
-          />
-        </div>
+        <ReviewVideoPlayer
+          url={embedUrl}
+          title={`${output.title} — ${currentVersion.label}`}
+          onReady={setPlayer}
+        />
       ) : null}
       {currentVersion ? (
         <div className="sm:col-span-2">
           <PublicMediaVersionComments
+            key={currentVersion.id}
+            player={player}
+            supportsPlayerTimestamps={!!embedUrl}
             versionId={currentVersion.id}
             comments={comments}
             displayName={displayName}
             onDisplayNameChange={onDisplayNameChange}
             onClearDisplayName={onClearDisplayName}
-            onSubmit={(body) =>
-              onAddComment(output.id, currentVersion.id, body)
+            onSubmit={(body, timestampSeconds) =>
+              onAddComment(output.id, currentVersion.id, body, timestampSeconds)
             }
             onReopen={onReopenComment}
             busyCommentId={busyCommentId}

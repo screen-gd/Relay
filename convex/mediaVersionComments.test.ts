@@ -94,6 +94,7 @@ test("public comments require active portal access and attach to the current ver
     mediaVersionId: "current-v1",
     authorName: " Client reviewer ",
     body: " Please lift the music under the title. ",
+    timestampSeconds: 0,
   });
   expect(comment.id).toBeTruthy();
   expect(
@@ -104,6 +105,7 @@ test("public comments require active portal access and attach to the current ver
       {
         authorName: "Client reviewer",
         body: "Please lift the music under the title.",
+        timestampSeconds: 0,
         resolved: false,
       },
     ],
@@ -117,6 +119,7 @@ test("public comments require active portal access and attach to the current ver
       outputId: "main-output",
       mediaVersionId: "current-v1",
       body: "Please lift the music under the title.",
+      timestampSeconds: 0,
     },
   ]);
   await expect(
@@ -247,4 +250,48 @@ test("PIN, closure, expiry, and invalid tokens block public comments without del
       })
     ).access
   ).toBe("invalid_token");
+});
+
+test("manual timestamps work for linked videos and invalid timestamps are rejected", async () => {
+  const t = convexTest(schema, modules);
+  await seed(t);
+  const { token } = await publishOpen(t);
+  const args = {
+    token,
+    outputId: "main-output",
+    mediaVersionId: "current-v1",
+    authorName: "Client",
+    body: "Change this cut",
+  };
+  for (const url of [
+    "https://drive.google.com/file/d/review/view",
+    "https://www.dropbox.com/s/review/video.mp4",
+  ]) {
+    await t.run(async (ctx) => {
+      const version = await ctx.db.query("projectMediaVersions").first();
+      await ctx.db.patch(version!._id, { source: { kind: "link", url } });
+    });
+    await t.mutation(api.mediaVersionComments.addPublicComment, {
+      ...args,
+      timestampSeconds: 65,
+    });
+    await t.mutation(api.mediaVersionComments.addPublicComment, args);
+  }
+  const result = await t.query(api.mediaVersionComments.listForPortal, {
+    token,
+  });
+  expect(
+    result.comments?.filter((comment) => comment.timestampSeconds === 65)
+  ).toHaveLength(2);
+  expect(
+    result.comments?.filter((comment) => comment.timestampSeconds === undefined)
+  ).toHaveLength(2);
+  for (const timestampSeconds of [-1, 1.5, 604801]) {
+    await expect(
+      t.mutation(api.mediaVersionComments.addPublicComment, {
+        ...args,
+        timestampSeconds,
+      })
+    ).rejects.toThrow("Timestamp must");
+  }
 });

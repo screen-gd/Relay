@@ -837,7 +837,7 @@ function projectSalaryBatchInput(batch: SalaryBatch) {
     !batch.requiredProjectCount ||
     !batch.workType
   )
-    throw new Error("Salary Batch snapshot is incomplete");
+    throw new Error("Payment batch snapshot is incomplete");
   return {
     id: batch.id,
     number: batch.number,
@@ -883,7 +883,7 @@ function recoverLegacySalaryBatches(
       .map((project) => project.id);
     if (projectIds.length !== requiredProjectCount) {
       throw new Error(
-        `Salary Batch ${batch.number} cannot be linked to enough delivered Projects.`
+        `Payment batch ${batch.number} cannot be linked to enough delivered Projects.`
       );
     }
     offset += requiredProjectCount;

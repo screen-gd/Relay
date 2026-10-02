@@ -90,3 +90,21 @@ Video rendering tests verify the player URL and markup, not real YouTube/Vimeo
 playback or each video's embed permissions. Backend tests mock external billing
 calls, and browser smoke checks do not verify signed-in workflows. The important
 remaining gaps are live client playback and the configured authenticated journey.
+
+## Embedded review follow-up
+
+The subsequent embedded-review change brings the totals to **69 unit tests and
+118 Convex tests**. Two server-rendered iframe checks were removed because the
+player APIs now mount and own their iframes in the browser. One unit test checks
+manual timestamp parsing (including zero, hours, fractions and invalid input).
+One backend integration test checks persisted manual/general comments for Drive
+and Dropbox and rejects invalid timestamp values; existing access tests also
+verify timestamp zero reaches both client and editor queries. The existing CSP
+test now covers the official player API script origins.
+
+An interactive Playwright verification exercised the real React components with
+mocked YouTube/Vimeo API scripts: capture playback time, submit, seek to a
+comment, general comments, manual Drive/Dropbox timestamps, invalid input, and
+API-load failure. This verifies the integration contract, not live playback with
+third-party providers. The app and marketing builds pass. The full check still
+fails only at its final dependency audit (18 existing vulnerabilities).

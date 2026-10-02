@@ -29,6 +29,12 @@ function readComment(value: unknown): MediaVersionComment | undefined {
     mediaVersionId,
     authorName: text(value.authorName) || "Team member",
     body: text(value.body),
+    ...(typeof value.timestampSeconds === "number" &&
+    Number.isSafeInteger(value.timestampSeconds) &&
+    value.timestampSeconds >= 0 &&
+    value.timestampSeconds <= 604_800
+      ? { timestampSeconds: value.timestampSeconds }
+      : {}),
     resolved: value.resolved === true,
     createdAt: text(value.createdAt),
     ...(resolvedAt === undefined ? {} : { resolvedAt }),

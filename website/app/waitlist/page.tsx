@@ -6,7 +6,7 @@ import WaitlistForm from "../../components/WaitlistForm";
 
 export const metadata: Metadata = {
   title: "Join the waitlist | Relay",
-  description: "Request an invite to test Relay before launch.",
+  description: "Request an early-access invite to Relay.",
   alternates: { canonical: "/waitlist" },
   openGraph: {
     ...siteOpenGraph,
@@ -33,7 +33,7 @@ export default function WaitlistPage() {
 
       <section className="waitlist-layout" aria-labelledby="waitlist-title">
         <div className="waitlist-intro">
-          <h1 id="waitlist-title">Test Relay before launch.</h1>
+          <h1 id="waitlist-title">Request early access to Relay.</h1>
           <p>
             Join the waitlist to try project tracking, client reviews, and
             delivery. Selected testers receive an email invite.

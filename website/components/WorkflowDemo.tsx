@@ -22,7 +22,7 @@ const stages = [
     label: "Upload",
     title: "Keep the project files together.",
     description:
-      "Upload the brief, images, and video versions to the project. Third-party video embeds do not use upload storage.",
+      "Link video versions for free. Uploading your own files and reviewing them is a planned Creator upgrade; third-party embeds do not use Relay storage.",
     rows: [
       ["Brand brief.pdf", "240 KB"],
       ["Poster.jpg", "1.2 MB"],
@@ -34,7 +34,7 @@ const stages = [
     label: "Review",
     title: "Get feedback on the right moment.",
     description:
-      "Share a password-protected link. Clients can leave timestamped comments on uploaded videos without creating an account.",
+      "Share a password-protected link. Clients can leave timestamped comments on YouTube and Vimeo embeds without creating an account. Linked videos support manual timestamps.",
     rows: [
       ["Version", "Summer-launch-v4.mp4"],
       ["00:07 · Maya", "Hold this shot a little longer."],

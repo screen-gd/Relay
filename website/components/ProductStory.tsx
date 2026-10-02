@@ -29,34 +29,35 @@ const plans = [
       "Unlimited projects and clients",
       "Project tracking and delivery",
       "Client portals",
-      "External video embeds",
+      "Embedded video review and comments",
+      "Payment tracking",
     ],
-    note: "Comments are not available on embedded videos.",
+    note: "YouTube and Vimeo playback timestamps; manual timestamps for Drive and Dropbox.",
     cta: "Join the waitlist",
   },
   {
     name: "Creator",
-    price: "$9",
-    billing: "/ month",
-    annual: "$90 / year",
-    trial: "7-day free trial",
-    description: "For freelance editors running their business in Relay.",
+    price: "Planned",
+    billing: "",
+    annual: null,
+    trial: null,
+    description: "Upload your own files + review.",
     features: [
       "Everything in Free",
       "5 GB of upload storage",
-      "Comments on uploaded videos",
+      "Review your uploaded files",
       "Custom workflow templates",
-      "Salary plans and advanced reports",
+      "Advanced reports",
       "Client hub and custom portal branding",
     ],
-    note: "Coming later. Creator is not available for purchase at launch.",
+    note: "Coming later. Creator is unavailable for purchase during early access.",
     cta: "Join the waitlist",
   },
   {
     name: "Team",
-    price: "$24",
-    billing: "/ month",
-    annual: "$240 / year",
+    price: "Planned",
+    billing: "",
+    annual: null,
     trial: null,
     description: "For small editing teams managing shared work.",
     features: [
@@ -67,7 +68,7 @@ const plans = [
       "Team payouts and workload reports",
       "Free viewer access",
     ],
-    note: "Coming later. Team and extra editor seats are not available for purchase at launch.",
+    note: "Coming later. Team and extra editor seats are unavailable for purchase during early access.",
     cta: "Join the waitlist",
   },
 ] as const;
@@ -214,6 +215,43 @@ export default function ProductStory() {
       <WorkflowDemo />
       <ClientReviewDemo />
       <DeliveryDemo />
+      <section
+        className="story-section"
+        id="payments"
+        aria-label="Payment tracking"
+      >
+        <div className="story-heading">
+          <SectionTitle>Know what you’re owed.</SectionTitle>
+          <p>
+            Built for freelance editors working with creators and brands. Track
+            project earnings, payment status and completed payment batches
+            alongside your delivery work.
+          </p>
+        </div>
+        <div className="pricing-grid">
+          <article className="price-plan">
+            <h3>Track each project</h3>
+            <p>
+              Record the fee and mark payments received so you can see what is
+              still outstanding.
+            </p>
+          </article>
+          <article className="price-plan">
+            <h3>Manage recurring work</h3>
+            <p>
+              Set payment plans for a client’s project batches and track
+              progress toward the next payout.
+            </p>
+          </article>
+          <article className="price-plan">
+            <h3>Review your earnings</h3>
+            <p>
+              See earned, collected and outstanding amounts in your workspace’s
+              selected currency.
+            </p>
+          </article>
+        </div>
+      </section>
 
       <section
         className="story-section proof-story"
@@ -381,14 +419,14 @@ export default function ProductStory() {
         aria-label="Pricing"
       >
         <div className="story-heading">
-          <SectionTitle>Launching with Free.</SectionTitle>
+          <SectionTitle>Free during early access.</SectionTitle>
           <p>
-            The September 18 launch is Free only. Paid plans, prices, and trial
-            terms below are planned for later, not available to purchase. Free
-            does not include hosted uploads or internal Team members. Storage
-            covers uploaded images, files, and videos on future paid plans.
-            Embedded videos stay with the third-party host and do not count
-            toward your storage limit.
+            Request early access through the waitlist. Selected testers receive
+            an email invite to the Free plan, including client review on
+            embedded videos. Creator adds uploads and review; Creator and Team
+            are planned and unavailable to purchase. Paid prices and currency
+            are not finalized. Embedded videos stay with their host and do not
+            use Relay storage.
           </p>
         </div>
         <div className="pricing-grid">
@@ -448,7 +486,7 @@ export default function ProductStory() {
           </div>
           <div className="footer-action">
             <p>
-              Manage projects, review uploaded videos with clients, and track
+              Manage projects, review embedded videos with clients, and track
               delivery in Relay.
             </p>
             <SpecularButton href="/waitlist">

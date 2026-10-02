@@ -115,7 +115,7 @@ export default function TermsRoute() {
           title: "No Professional Advice",
           body: (
             <p>
-              Relay may show earnings, salary batch progress, delivery status,
+              Relay may show earnings, payment batch progress, delivery status,
               and reports, but those outputs are for workflow tracking only. The
               service does not provide legal, tax, accounting, payroll,
               employment, or financial advice.

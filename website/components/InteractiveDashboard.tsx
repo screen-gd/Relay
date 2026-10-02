@@ -419,7 +419,7 @@ export default function InteractiveDashboard() {
               <small>{currency.format(outstanding)} due</small>
             </div>
             <div>
-              <span>Salary batch</span>
+              <span>Payment batch</span>
               <b>{deliveredProjects}</b>
               <small>/ {projects.length} edits</small>
               <strong className="demo-batch-percent">
@@ -429,7 +429,7 @@ export default function InteractiveDashboard() {
                 className="demo-payment-button"
                 type="button"
                 onClick={() =>
-                  setNotice("Sample salary batch marked for payment")
+                  setNotice("Sample payment batch marked for payment")
                 }
               >
                 Mark payment

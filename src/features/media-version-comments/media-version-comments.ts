@@ -4,6 +4,7 @@ export type MediaVersionComment = {
   mediaVersionId: string;
   authorName: string;
   body: string;
+  timestampSeconds?: number;
   resolved: boolean;
   createdAt: string;
   resolvedAt?: string | null;

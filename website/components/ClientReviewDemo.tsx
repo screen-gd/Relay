@@ -153,7 +153,8 @@ export default function ClientReviewDemo() {
         <h2 className="story-title">Client reviews without accounts.</h2>
         <p>
           Clients open a password-protected shared link, with no account needed.
-          They can comment on uploaded videos, but not embedded videos.
+          Review YouTube and Vimeo embeds with playback timestamps. Drive and
+          Dropbox links support general comments and manual timestamps.
         </p>
       </div>
 

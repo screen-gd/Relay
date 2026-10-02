@@ -477,16 +477,16 @@ export function NewProjectDialog({
                 <form.Field name="salaryPlanId">
                   {(field) => (
                     <FieldLayout
-                      label="Salary Plan"
-                      description="The salary plan sets the client. Pay is counted per batch, not per project."
+                      label="Payment plan"
+                      description="The payment plan sets the client. Pay is counted per batch, not per project."
                       className="animate-in fade-in slide-in-from-top-2 duration-300"
                     >
                       <ContextMenuSelect
                         value={field.state.value || "none"}
-                        placeholder="Choose a Salary Plan"
+                        placeholder="Choose a Payment plan"
                         contentClassName="min-w-[22rem]"
                         options={[
-                          { value: "none", label: "Choose a Salary Plan" },
+                          { value: "none", label: "Choose a Payment plan" },
                           ...activeSalaryPlans.map((plan) => {
                             const client = activeClients.find(
                               (candidate) => candidate.id === plan.clientId

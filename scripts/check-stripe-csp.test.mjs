@@ -27,5 +27,11 @@ test("client hubs allow supported video players without allowing arbitrary frame
   assert.ok(frameSources.includes("https://player.vimeo.com"));
   assert.ok(!frameSources.includes("*"));
   assert.ok(!frameSources.includes("https:"));
+  const scriptSources = csp
+    .split("; ")
+    .find((directive) => directive.startsWith("script-src "))
+    .split(" ");
+  assert.ok(scriptSources.includes("https://www.youtube.com"));
+  assert.ok(scriptSources.includes("https://player.vimeo.com"));
   assert.ok(csp.includes("frame-ancestors 'none'"));
 });

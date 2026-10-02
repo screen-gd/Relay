@@ -328,7 +328,7 @@ export function SettingsDesignPage({
     try {
       const counts = await importBackup(await file.text());
       notify(
-        `Imported ${counts.projects} projects, ${counts.clients} clients, ${counts.projectGroups} Project Groups, ${counts.resources} resources, and ${counts.salaryBatches} salary batches.`
+        `Imported ${counts.projects} projects, ${counts.clients} clients, ${counts.projectGroups} Project Groups, ${counts.resources} resources, and ${counts.salaryBatches} payment batches.`
       );
     } catch (error) {
       notify(
@@ -648,7 +648,7 @@ export function SettingsDesignPage({
                     <SettingsPanel
                       id="project-rules"
                       title="Project defaults"
-                      subtitle="Project tags and salary batch settings for Local mode. Signed-in owners set salary terms under Reports > Salary plans."
+                      subtitle="Project tags and payment batch settings for Local mode. Signed-in owners set salary terms under Reports > Payments."
                     >
                       <div className="grid gap-3">
                         {settings.projectTags.map((tag, index) => (
@@ -747,7 +747,7 @@ export function SettingsDesignPage({
                           )}
                           " count toward{" "}
                           {normalizedSalaryBatchSize(settings.salaryBatchSize)}{" "}
-                          videos per salary batch worth{" "}
+                          videos per payment batch worth{" "}
                           {money(
                             normalizedSalaryBatchAmount(
                               settings.salaryBatchAmount
