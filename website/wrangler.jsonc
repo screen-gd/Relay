@@ -7,6 +7,7 @@
   "keep_vars": true,
   "workers_dev": true,
   "vars": {
+    "NEXT_PUBLIC_MARKETING_SITE_URL": "https://web.relay-app.cc.cd",
     "NEXT_PUBLIC_CONVEX_URL": "https://spotted-pheasant-146.convex.cloud",
   },
   "assets": {

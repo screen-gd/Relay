@@ -10,7 +10,8 @@
     "deploy": "opennextjs-cloudflare build && opennextjs-cloudflare deploy",
     "upload": "opennextjs-cloudflare build && opennextjs-cloudflare upload",
     "start": "next start",
-    "lint": "tsc --noEmit"
+    "lint": "tsc --noEmit",
+    "test:visibility": "node --test ../scripts/check-marketing-origin.test.mjs"
   },
   "dependencies": {
     "@gsap/react": "^2.1.2",

@@ -1,7 +1,10 @@
 import type { Metadata } from "next";
 
-export const siteUrl =
-  process.env.NEXT_PUBLIC_SITE_URL ?? "https://web.relay-app.cc.cd";
+// Keep marketing discovery URLs separate from the app's NEXT_PUBLIC_SITE_URL.
+export const siteUrl = new URL(
+  process.env.NEXT_PUBLIC_MARKETING_SITE_URL?.trim() ||
+    "https://web.relay-app.cc.cd"
+).origin;
 
 export const siteTitle = "Relay | Production workspace for video editors";
 export const siteDescription =

@@ -9,6 +9,7 @@ Use these documents as the current project record:
 - [Brand assets](brand/ASSET-GUIDE.md) — approved source files and generated exports.
 - [Security](security/SECURITY.md) — current security model.
 - [Support email](operations/contact-email.md) — mailto contact and inbox routing.
+- [Visibility and promotion](visibility.md): discovery fixes, search setup, and marketing drafts.
 - [Dependency audit](dependency-audit.md) — resolved findings, patched versions, and verification.
 - [Testing and suite cleanup](testing.md) — useful coverage, removed checks, and remaining gaps.
 - [Subscription plans](product/subscription-plans.md) — proposed commercial model.
