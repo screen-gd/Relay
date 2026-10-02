@@ -7,6 +7,8 @@
   "keep_vars": true,
   "workers_dev": true,
   "vars": {
+    "CONTACT_FROM_EMAIL": "support@contact.relay-app.cc.cd",
+    "CONTACT_TURNSTILE_SITE_KEY": "0x4AAAAAAFL39pBKcU-eAzaT",
     "NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY": "pk_live_Y2xlcmsucmVsYXktYXBwLmNjLmNkJA",
     "NEXT_PUBLIC_BILLING_PURCHASES_ENABLED": "false",
     "NEXT_PUBLIC_CONVEX_URL": "https://spotted-pheasant-146.convex.cloud",
