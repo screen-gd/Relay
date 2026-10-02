@@ -13,7 +13,7 @@ export default function PrivacyPolicyRoute() {
   return (
     <LegalPage
       title="Privacy Policy"
-      updatedAt="June 1, 2026"
+      updatedAt="October 2, 2026"
       intro="This Privacy Policy explains how Relay handles information when you use the website and app. Relay is designed to be local-first, with optional account-backed sync when Clerk and Convex are enabled."
       sections={[
         {
@@ -35,6 +35,13 @@ export default function PrivacyPolicyRoute() {
                 address, username, profile image, session data, and connected
                 account details. If cloud sync is enabled, Convex stores synced
                 workspace records associated with your authenticated user ID.
+              </p>
+              <p>
+                If you use the contact form, we receive your name, email address
+                and message to respond to your inquiry. Resend processes these
+                details to deliver your message to Relay’s support inbox.
+                Cloudflare Turnstile processes technical information to help
+                prevent abuse of the form.
               </p>
               <p>
                 We may also receive basic technical data from hosting, security,

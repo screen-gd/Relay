@@ -1,7 +1,10 @@
 import type { Metadata } from "next";
+import { contactEmailConfig } from "@/lib/contact-email";
 import { ContactForm } from "@/components/contact-form";
 import { siteUrl } from "@/lib/site";
 import { LegalPage } from "../legal-page";
+
+export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "Contact | Relay",
@@ -13,6 +16,7 @@ export const metadata: Metadata = {
 };
 
 export default function ContactRoute() {
+  const config = contactEmailConfig();
   const contactSchema = {
     "@context": "https://schema.org",
     "@type": "ContactPage",
@@ -36,7 +40,7 @@ export default function ContactRoute() {
       />
       <LegalPage
         title="Contact Relay"
-        updatedAt="July 22, 2026"
+        updatedAt="October 2, 2026"
         intro="Get help with the product, your account, privacy requests, or a business inquiry. We review the messages & try to reply under 24 hours."
         sections={[
           {
@@ -53,7 +57,7 @@ export default function ContactRoute() {
           },
           {
             title: "Send A Message",
-            body: <ContactForm />,
+            body: <ContactForm enabled={!!config} siteKey={config?.siteKey} />,
           },
           {
             title: "Response Expectations",

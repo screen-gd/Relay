@@ -116,3 +116,12 @@ The subsequent security patch resolves the 18 reported dependency findings.
 The audit including development dependencies also reports zero vulnerabilities.
 Both app and marketing OpenNext Cloudflare builds pass with the patched packages.
 See [the dependency audit](dependency-audit.md) for versions and advisory links.
+
+## Direct support email follow-up
+
+The contact-email feature adds five service tests, bringing the unit suite to
+74 tests. They cover actual request validation, security-proof verification,
+fixed-recipient provider requests, failure handling and honeypots. No wording or
+CSS snapshot tests were added. A mobile browser verification with mocked
+Turnstile and contact responses covers retained drafts, pending state, retries
+and success; live email delivery still requires host configuration.
