@@ -12,6 +12,12 @@ import {
   type MediaVersionSummary,
 } from "@/features/media-version-comments/media-version-comments";
 
+import {
+  formatReviewTimestamp,
+  parseReviewTimestamp,
+} from "@/features/media-version-comments/review-timestamps";
+import type { ReviewPlayer } from "@/components/review-video-player";
+
 function commentDate(value: string) {
   const date = new Date(value);
   return Number.isFinite(date.getTime())
@@ -27,10 +33,12 @@ function CommentRow({
   comment,
   action,
   busy,
+  onSeek,
 }: {
   comment: MediaVersionComment;
   action?: () => Promise<void>;
   busy?: boolean;
+  onSeek?: (seconds: number) => void;
 }) {
   return (
     <article className="border border-border p-3">
@@ -54,6 +62,23 @@ function CommentRow({
           </time>
         </div>
       </div>
+      {comment.timestampSeconds !== undefined ? (
+        onSeek ? (
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="mt-3"
+            onClick={() => onSeek(comment.timestampSeconds!)}
+          >
+            Jump to {formatReviewTimestamp(comment.timestampSeconds)}
+          </Button>
+        ) : (
+          <p className="mt-3 text-sm">
+            At {formatReviewTimestamp(comment.timestampSeconds)}
+          </p>
+        )
+      ) : null}
       <p className="mt-3 whitespace-pre-wrap text-sm leading-6 text-muted-foreground">
         {comment.body}
       </p>
@@ -80,6 +105,8 @@ function CommentRow({
 
 export function PublicMediaVersionComments({
   versionId,
+  player,
+  supportsPlayerTimestamps = false,
   comments,
   displayName,
   onDisplayNameChange,
@@ -92,17 +119,21 @@ export function PublicMediaVersionComments({
   disabled = false,
 }: {
   versionId: string;
+  player?: ReviewPlayer;
+  supportsPlayerTimestamps?: boolean;
   comments: readonly MediaVersionComment[];
   displayName: string;
   onDisplayNameChange: (value: string) => void;
   onClearDisplayName: () => void;
-  onSubmit: (body: string) => Promise<void>;
+  onSubmit: (body: string, timestampSeconds?: number) => Promise<void>;
   onReopen: (commentId: string) => Promise<void>;
   busyCommentId?: string;
   busy?: boolean;
   loading?: boolean;
   disabled?: boolean;
 }) {
+  const [timestamp, setTimestamp] = useState("");
+  const [capturing, setCapturing] = useState(false);
   const [body, setBody] = useState("");
   const [error, setError] = useState("");
   const currentComments = commentsForVersion(comments, versionId);
@@ -119,7 +150,8 @@ export function PublicMediaVersionComments({
     }
     setError("");
     try {
-      await onSubmit(body.trim());
+      await onSubmit(body.trim(), parseReviewTimestamp(timestamp));
+      setTimestamp("");
       setBody("");
     } catch (caught) {
       setError(
@@ -159,6 +191,11 @@ export function PublicMediaVersionComments({
         Comments attach to this Media Version. Your display name is unverified
         and visible to the editor.
       </p>
+      <p className="mt-2 text-xs text-muted-foreground">
+        {supportsPlayerTimestamps
+          ? "YouTube and Vimeo support capturing the current playback time and jumping to comments once the player connects. You can also enter a timestamp manually."
+          : "Drive, Dropbox and other links support general comments and manual timestamps. Open the video in its source to follow a timestamp."}
+      </p>
       {loading ? (
         <p role="status" className="mt-3 text-sm text-muted-foreground">
           Loading comments...
@@ -169,6 +206,19 @@ export function PublicMediaVersionComments({
           currentComments.map((comment) => (
             <CommentRow
               key={comment.id}
+              onSeek={
+                player
+                  ? (seconds) => {
+                      void player
+                        .seekTo(seconds)
+                        .catch(() =>
+                          setError(
+                            "Could not seek in this player. Use the timestamp shown on the comment."
+                          )
+                        );
+                    }
+                  : undefined
+              }
               comment={comment}
               busy={busyCommentId === comment.id}
               action={
@@ -214,6 +264,47 @@ export function PublicMediaVersionComments({
             maxLength={120}
             autoComplete="name"
           />
+          <label
+            htmlFor={`comment-time-${versionId}`}
+            className="text-sm font-medium"
+          >
+            Timestamp (optional)
+          </label>
+          <div className="flex flex-wrap gap-2">
+            <Input
+              id={`comment-time-${versionId}`}
+              placeholder="m:ss or h:mm:ss"
+              value={timestamp}
+              onChange={(event) => setTimestamp(event.target.value)}
+              className="max-w-48"
+            />
+            {player ? (
+              <Button
+                type="button"
+                variant="outline"
+                disabled={capturing || busy}
+                onClick={() => {
+                  setCapturing(true);
+                  setError("");
+                  void player
+                    .getCurrentTime()
+                    .then((seconds) => {
+                      if (!Number.isFinite(seconds) || seconds < 0)
+                        throw new Error("Invalid playback time");
+                      setTimestamp(formatReviewTimestamp(seconds));
+                    })
+                    .catch(() =>
+                      setError(
+                        "Could not capture playback time. Enter a timestamp manually."
+                      )
+                    )
+                    .finally(() => setCapturing(false));
+                }}
+              >
+                {capturing ? "Capturing..." : "Use current time"}
+              </Button>
+            ) : null}
+          </div>
           <label
             htmlFor={`comment-body-${versionId}`}
             className="text-sm font-medium"

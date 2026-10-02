@@ -45,7 +45,7 @@ export function CapabilityUpgradePrompt({
       <div>
         <p className="text-sm font-medium">Creator unlocks {name}.</p>
         <p className="mt-1 text-xs text-muted-foreground">
-          Paid plans are coming later. Relay launches with Free only.
+          Paid plans are coming later. Start with the Free plan.
         </p>
       </div>
       <Button asChild size="sm" variant="outline">
@@ -126,9 +126,7 @@ export function SubscriptionPricingView({
   return (
     <div className="min-h-[calc(100dvh-15rem)] p-4 md:p-6">
       <div className="mb-4 flex items-center gap-2">
-        <span className="text-sm text-muted-foreground">
-          September 18 launch
-        </span>
+        <span className="text-sm text-muted-foreground">Free plan</span>
         <Badge variant="outline">Free only</Badge>
       </div>
       <Card className="mb-4">
@@ -136,15 +134,14 @@ export function SubscriptionPricingView({
           <h2 className="text-lg font-semibold">Start with Free</h2>
           <p>
             Unlimited Projects and Clients, basic workflow tracking, standard
-            Client Portals, and external video embeds.
+            Client Portals, and client review on embedded videos.
           </p>
           <p className="text-sm text-muted-foreground">
             Free supports one Workspace owner. Hosted uploads and paid
             capabilities remain unavailable on Free.
           </p>
           <p role="status" className="text-sm text-muted-foreground">
-            Paid plans are coming later. Purchases are unavailable for the
-            Free-only launch.
+            Paid plans are coming later and are not available to purchase yet.
           </p>
         </CardContent>
       </Card>
@@ -208,7 +205,7 @@ export function FirstLoginPlanDialog() {
           <DialogTitle>Welcome to Relay</DialogTitle>
           <DialogDescription>
             Your Workspace starts on Free. Paid plans are coming later; no
-            payment is required for the Free launch.
+            payment is required for the Free plan.
           </DialogDescription>
         </DialogHeader>
         {error ? (

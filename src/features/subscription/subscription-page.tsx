@@ -31,7 +31,7 @@ export function SubscriptionPage() {
       <PageHeader
         eyebrow="Workspace / Subscription"
         title="Plans and billing"
-        description="Relay launches with Free only. Paid plans are coming later."
+        description="Start with the Free plan. Paid plans are coming later."
         actions={
           <OwnedBadge variant={isSignedIn ? "default" : "secondary"}>
             {isSignedIn ? "Signed in" : "Local mode"}

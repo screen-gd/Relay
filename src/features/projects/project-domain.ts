@@ -200,13 +200,13 @@ export function validateNewProjectInput(
     : undefined;
   const hasSalaryPlanCatalog = Boolean(references.salaryPlans?.length);
   if (salaryPlanId && hasSalaryPlanCatalog && !salaryPlan)
-    errors.push("Active Salary Plan does not exist.");
+    errors.push("Active Payment plan does not exist.");
   if (salaryPlan && salaryPlan.clientId !== clientId)
-    errors.push("Salary Plan Client must match the selected Client.");
+    errors.push("Payment plan Client must match the selected Client.");
   if (hasSalaryPlanCatalog && financialType === "salary-plan" && !salaryPlanId)
-    errors.push("Salary Plan is required.");
+    errors.push("Payment plan is required.");
   if (financialType === "client" && salaryPlanId)
-    errors.push("Salary Plan is only valid for Salary Projects.");
+    errors.push("Payment plan is only valid for Salary Projects.");
 
   if (errors.length || !financialType) return { ok: false, errors };
 

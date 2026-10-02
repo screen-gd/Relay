@@ -155,8 +155,11 @@ export default function Home() {
             <nav className="site-nav" aria-label="Main navigation">
               <a href="#product">Product</a>
               <a href="#pricing">Pricing</a>
-              <SpecularButton className="nav-action" href="/waitlist">
-                Join the waitlist
+              <SpecularButton
+                className="nav-action"
+                href="https://relay-app.cc.cd/"
+              >
+                Get started free
               </SpecularButton>
             </nav>
           </header>
@@ -193,17 +196,18 @@ export default function Home() {
             <div className="hero-message">
               <div className="hero-heading">
                 <h1 id="hero-title">
-                  <span>Manage editing</span>
-                  <span>projects.</span>
+                  <span>Manage editing</span> <span>projects.</span>
                 </h1>
               </div>
               <div className="hero-support">
                 <p className="hero-copy">
                   Track projects and deadlines, collect client feedback on
-                  uploaded videos, and manage delivery in one workspace.
+                  embedded videos, and track delivery and payments in one
+                  workspace.
                 </p>
                 <p className="hero-access-note">
-                  Early access. Selected testers receive an email invite.
+                  Built for freelance editors working with creators and brands.
+                  Start with Free. No invite required.
                 </p>
               </div>
             </div>
@@ -213,6 +217,9 @@ export default function Home() {
                 <div className="product-frame">
                   <div className="dashboard-crop">
                     <InteractiveDashboard />
+                    <p className="hero-access-note">
+                      Sample workspace with fictional projects and clients.
+                    </p>
                   </div>
                 </div>
               </div>

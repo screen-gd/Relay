@@ -47,6 +47,17 @@ describe("Project Output domain", () => {
     expect(normalizeMediaUrl("https://www.youtube.com/watch?v=bad").ok).toBe(
       false
     );
+    expect(
+      normalizeMediaUrl("https://www.youtube.com/shorts/dQw4w9WgXcQ")
+    ).toEqual(normalizeMediaUrl("https://youtu.be/dQw4w9WgXcQ"));
+    expect(
+      normalizeMediaUrl("https://youtube.com.evil.example/watch?v=dQw4w9WgXcQ")
+    ).toMatchObject({ ok: true, value: { provider: "external" } });
+    expect(
+      normalizeMediaUrl(
+        "https://user:password@www.youtube.com/watch?v=dQw4w9WgXcQ"
+      ).ok
+    ).toBe(false);
   });
 
   it("makes each added version current while retaining earlier history", () => {
@@ -72,38 +83,6 @@ describe("Project Output domain", () => {
     if ("error" in second) return;
     expect(second.output.currentVersionId).toBe("version-2");
     expect(second.version.versionNumber).toBe(2);
-  });
-
-  it("keeps unresolved comments on old versions visible to internal users", () => {
-    const current = { ...output, currentVersionId: "version-2" };
-    const comments = [
-      {
-        id: "comment-old",
-        mediaVersionId: "version-1",
-        body: "Fix the title card.",
-        resolved: false,
-        createdAt: "2026-08-24T10:01:00.000Z",
-      },
-      {
-        id: "comment-old-resolved",
-        mediaVersionId: "version-1",
-        body: "Looks good.",
-        resolved: true,
-        createdAt: "2026-08-24T10:01:00.000Z",
-      },
-      {
-        id: "comment-current",
-        mediaVersionId: "version-2",
-        body: "Check the mix.",
-        resolved: false,
-        createdAt: "2026-08-24T10:02:00.000Z",
-      },
-    ];
-    expect(
-      unresolvedOldVersionComments(current, [], comments).map(
-        (comment) => comment.id
-      )
-    ).toEqual(["comment-old"]);
   });
 
   it("keeps unresolved comments on old versions visible to internal users", () => {

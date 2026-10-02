@@ -1438,7 +1438,7 @@ export function PrecisionReports({
     <WorkspacePage family="data-index">
       <PageHeader
         title="Reports"
-        description="Earnings, deliveries, work mix, and salary batch payments."
+        description="Earnings, deliveries, work mix, and payment batch payments."
         actions={
           <div className="flex flex-wrap items-center justify-end gap-2">
             <Select
@@ -1567,7 +1567,7 @@ export function PrecisionReports({
                     Delivery and earnings trend
                   </h2>
                   <p className="mt-0.5 text-[10px] text-[var(--app-muted)]">
-                    Delivered value and salary batches grouped by month.
+                    Delivered value and payment batches grouped by month.
                   </p>
                 </div>
                 <Tabs
@@ -1856,7 +1856,7 @@ export function PrecisionReports({
 
         {salaryPlans}
         <ContentSection
-          title="Salary Batches"
+          title="Payment batches"
           description="Completed batches and whether they are paid."
           metadata={
             <span className="text-[11px] text-muted-foreground">
@@ -1927,7 +1927,7 @@ export function PrecisionReports({
                       colSpan={6}
                       className="h-32 text-center text-xs text-[var(--app-muted)]"
                     >
-                      Completed salary batches will appear here automatically.
+                      Completed payment batches will appear here automatically.
                     </TableCell>
                   </TableRow>
                 ) : null}

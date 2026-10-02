@@ -1,17 +1,17 @@
 # Relay subscription plans
 
-Status: Free-only launch on September 18, 2026; future payments use Razorpay
+Status: Free plan open to everyone; future payments use Razorpay
 
-Only Free is available for the September 18 launch. Creator, Team, extra Editor
+The Free plan is open to everyone without an invite. Creator, Team, extra Editor
 Seats, and Storage Add-ons are future offers, not available for purchase. Free-only
 does not unlock paid capabilities for everyone: the existing Free limits apply.
 A Workspace owns one Subscription Plan. Clerk remains the authentication provider;
 Razorpay is the selected future payment provider. Convex remains the authority for
 Workspace entitlements. Clients and Client Contacts do not consume internal seats.
 
-Checkout stays disabled for launch. Do not connect Stripe or activate Clerk
+Paid checkout stays disabled. Do not connect Stripe or activate Clerk
 Billing. Razorpay integration and migration of the existing Clerk-specific billing
-code are separate post-launch work. Paid prices, currencies, billing periods,
+code are separate post-launch work. Workspace accounting supports multiple currencies. Paid prices, billing periods,
 trials, cancellations, and refund terms await ticket 02 approval. No former
 Clerk or Stripe commercial terms carry forward. The implementation checklist lives in
 `.scratch/subscription-plans/`.
@@ -38,8 +38,8 @@ Included:
 - Basic workflow tracking
 - Basic Reviews and delivery
 - Standard project-specific Client Portals
-- External Video Embeds
-- Owner-managed Salary Plans and Salary Batches
+- Embedded video review and comments
+- Payment tracking, owner-managed payment plans and payment batches
 
 Limits:
 
@@ -47,11 +47,11 @@ Limits:
 - No Relay storage quota
 - No internal Team Members
 
-External Video Embeds let users reference video hosted on Vimeo, YouTube, Frame.io, or another external service without using Relay storage.
+YouTube and Vimeo embed directly in shared portals and support playback timestamps through their player APIs. Drive, Dropbox and other links support general comments and manual timestamps; clients open those videos with their host. Embedded and linked videos do not use Relay storage.
 
 ## Creator (post-launch)
 
-Creator is for one freelance editor managing stored project media and client relationships.
+Creator is the planned upgrade for uploading your own files and reviewing them.
 
 Includes everything in Free, plus:
 

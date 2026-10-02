@@ -93,7 +93,7 @@ type SalaryPlansPanelProps = {
 };
 
 /**
- * Owner-only Salary Plan management on the Reports page: create and edit plan
+ * Owner-only Payment plan management on the Reports page: create and edit plan
  * terms, track progress toward the next batch, and mark batches received.
  */
 export function SalaryPlansPanel({
@@ -143,8 +143,8 @@ export function SalaryPlansPanel({
   if (!isAuthenticated) {
     return (
       <ContentSection
-        title="Salary plans"
-        description="Sign in to create salary plans. Local mode uses the salary batch settings."
+        title="Payments"
+        description="Sign in to create payment plans. Local mode uses the payment batch settings."
         bodyMode="flush"
       />
     );
@@ -186,7 +186,7 @@ export function SalaryPlansPanel({
       });
       setDraft(null);
     } catch (caught) {
-      setDraftError(errorMessage(caught, "Could not save the salary plan."));
+      setDraftError(errorMessage(caught, "Could not save the payment plan."));
     } finally {
       setBusy("");
     }
@@ -201,7 +201,7 @@ export function SalaryPlansPanel({
         action: plan.archived ? "restore" : "archive",
       });
     } catch (caught) {
-      setError(errorMessage(caught, "Could not update the salary plan."));
+      setError(errorMessage(caught, "Could not update the payment plan."));
     } finally {
       setBusy("");
     }
@@ -263,7 +263,7 @@ export function SalaryPlansPanel({
   return (
     <>
       <ContentSection
-        title="Salary plans"
+        title="Payments"
         description="Batch terms per client. Completed batches keep the terms they closed with."
         bodyMode="flush"
         actions={
@@ -301,7 +301,7 @@ export function SalaryPlansPanel({
         ) : null}
         {plans === undefined ? (
           <p className="border-t border-border px-4 py-8 text-center text-xs text-muted-foreground">
-            Loading salary plans...
+            Loading payment plans...
           </p>
         ) : visiblePlans.length ? (
           <div className="divide-y divide-border border-t border-border">
@@ -336,13 +336,13 @@ export function SalaryPlansPanel({
         ) : (
           <p className="border-t border-border px-4 py-8 text-center text-xs text-muted-foreground">
             {clients.length
-              ? "No salary plans yet."
-              : "Add a client before creating a salary plan."}
+              ? "No payment plans yet."
+              : "Add a client before creating a payment plan."}
           </p>
         )}
         {hasLegacyBatches ? (
           <p className="border-t border-border px-4 py-3 text-xs text-muted-foreground">
-            Older salary batches stay in the Salary Batches list. New plans do
+            Older payment batches stay in the Payment batches list. New plans do
             not change them.
           </p>
         ) : null}
@@ -404,7 +404,7 @@ function SalaryPlanRow({
 
   return (
     <section
-      aria-label={`${clientName} salary plan`}
+      aria-label={`${clientName} payment plan`}
       className={cn("grid gap-4 px-4 py-4", plan.archived && "opacity-70")}
     >
       <div className="flex flex-wrap items-start justify-between gap-3">
@@ -594,7 +594,7 @@ function PlanDialog({
           >
             <DialogHeader>
               <DialogTitle>
-                {draft.planId ? "Edit salary plan" : "New salary plan"}
+                {draft.planId ? "Edit payment plan" : "New payment plan"}
               </DialogTitle>
               <DialogDescription>
                 Changes apply to future batches only.

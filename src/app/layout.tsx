@@ -22,7 +22,7 @@ export const metadata: Metadata = {
     "project tracker",
     "local-first",
     "editing workflow",
-    "salary batch",
+    "payment batch",
   ],
   authors: [{ name: "Relay" }],
   creator: "Relay",

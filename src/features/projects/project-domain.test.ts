@@ -257,7 +257,7 @@ describe("new Project input", () => {
     });
   });
 
-  it("requires an active Salary Plan and keeps it tied to its Client", () => {
+  it("requires an active Payment plan and keeps it tied to its Client", () => {
     const references = {
       clients,
       projectGroups: groups,
@@ -274,7 +274,7 @@ describe("new Project input", () => {
         },
         references
       )
-    ).toMatchObject({ ok: false, errors: ["Salary Plan is required."] });
+    ).toMatchObject({ ok: false, errors: ["Payment plan is required."] });
     expect(
       validateNewProjectInput(
         {
@@ -288,7 +288,7 @@ describe("new Project input", () => {
       )
     ).toMatchObject({
       ok: false,
-      errors: ["Salary Plan Client must match the selected Client."],
+      errors: ["Payment plan Client must match the selected Client."],
     });
     expect(
       validateNewProjectInput(

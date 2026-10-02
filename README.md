@@ -113,7 +113,7 @@ Useful commands:
 pnpm lint          # TypeScript check
 pnpm check         # Lint, build, audit, UI allowlist
 pnpm test:e2e      # Playwright journeys
-pnpm verify        # Route and source-invariant checks
+pnpm verify        # Built-app route and responsive browser smoke checks
 ```
 
 ## Vercel Deployment

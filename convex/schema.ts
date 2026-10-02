@@ -163,6 +163,7 @@ export default defineSchema({
     mediaVersionId: v.id("projectMediaVersions"),
     authorName: v.string(),
     body: v.string(),
+    timestampSeconds: v.optional(v.number()),
     resolved: v.boolean(),
     createdAt: v.string(),
     resolvedAt: v.optional(v.string()),

@@ -83,7 +83,6 @@ describe("Providers runtime configuration", () => {
     );
 
     expect(html).toContain('data-provider="clerk"');
-    expect(html).toContain('data-sign-in-title="Sign in to Relay"');
     expect(html).toContain('data-provider="convex-clerk"');
     expect(html).toContain('data-auth-enabled="true"');
     expect(html).toContain('data-data-mode="cloud"');

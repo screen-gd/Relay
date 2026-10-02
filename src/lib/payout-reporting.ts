@@ -402,7 +402,7 @@ export function payoutReportToCsv(report: PayoutReport, currencyCode: string) {
       currencyCode,
     ]),
     ...report.batches.map((batch): Array<string | number> => [
-      "Salary batch",
+      "Payment batch",
       batch.date,
       `Batch ${batch.number}`,
       batch.editorName,

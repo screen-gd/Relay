@@ -228,7 +228,7 @@ export function ProjectDialog({
             }
             description={
               form.salaryPlanId
-                ? "This Salary Plan fixes the Client and tracks money only when a full batch completes."
+                ? "This Payment plan fixes the Client and tracks money only when a full batch completes."
                 : typeConfig.earningsMode === "batch"
                   ? `${settings.salaryWorkType} earnings are batch tracked in settings.`
                   : undefined
@@ -306,7 +306,7 @@ function ProjectClientCombobox({
         disabled={disabled}
         description={
           disabled
-            ? "Fixed by the selected Salary Plan."
+            ? "Fixed by the selected Payment plan."
             : clientSuggestionText(value, options)
         }
       >
@@ -490,7 +490,7 @@ function TemplateSetupEditor({
       <div className="mt-4 grid gap-4">
         <FieldLayout
           label="Project type"
-          description="A descriptive type for this workflow; the project tag above still controls reporting and salary batches."
+          description="A descriptive type for this workflow; the project tag above still controls reporting and payment batches."
         >
           <OwnedInput
             value={form.templateProjectType ?? ""}

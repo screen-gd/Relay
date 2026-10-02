@@ -1,6 +1,11 @@
 "use client";
 
 import {
+  ReviewVideoPlayer,
+  type ReviewPlayer,
+} from "@/components/review-video-player";
+
+import {
   useEffect,
   useMemo,
   useRef,
@@ -26,13 +31,17 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { PublicMediaVersionComments } from "@/components/media-version-comments";
+import { normalizeMediaUrl } from "@/features/project-outputs/project-output-domain";
 import type { MediaVersionComment } from "@/features/media-version-comments/media-version-comments";
 import { parseMediaVersionComments } from "@/features/media-version-comments/media-version-comments-data";
 import { trackOptionalEvent } from "@/lib/telemetry";
 import { cn } from "@/lib/utils";
 import { RelayBrand } from "@/app/relay-brand";
 
-type PublicSource = { provider: "YouTube" | "Vimeo" | "Link"; url: string };
+type PublicSource = {
+  provider: "YouTube" | "Vimeo" | "Drive" | "Dropbox" | "Link";
+  url: string;
+};
 type PublicVersion = {
   id: string;
   label: string;
@@ -234,13 +243,22 @@ function readVersion(
   const source = isRecord(value.source) ? value.source : value;
   const url = safeUrl(source.url);
   if (!url) return undefined;
-  const providerValue = text(source.provider) ?? text(source.kind);
+  const media = normalizeMediaUrl(url);
+  const host = new URL(url).hostname.toLowerCase();
   const provider =
-    providerValue?.toLowerCase() === "youtube"
+    media.ok && media.value.provider === "youtube"
       ? "YouTube"
-      : providerValue?.toLowerCase() === "vimeo"
+      : media.ok && media.value.provider === "vimeo"
         ? "Vimeo"
-        : "Link";
+        : ["drive.google.com", "docs.google.com"].includes(host)
+          ? "Drive"
+          : [
+                "dropbox.com",
+                "www.dropbox.com",
+                "dl.dropboxusercontent.com",
+              ].includes(host)
+            ? "Dropbox"
+            : "Link";
   return {
     id: text(value.id) ?? fallbackId,
     label: text(value.label) ?? text(value.title) ?? "Current version",
@@ -406,7 +424,8 @@ export function ClientPortalView({ token }: { token: string }) {
   async function addComment(
     outputId: string,
     mediaVersionId: string,
-    body: string
+    body: string,
+    timestampSeconds?: number
   ) {
     setCommentBusyOutputId(outputId);
     try {
@@ -417,6 +436,7 @@ export function ClientPortalView({ token }: { token: string }) {
         mediaVersionId,
         authorName: displayName.trim(),
         body,
+        ...(timestampSeconds !== undefined ? { timestampSeconds } : {}),
       });
       trackOptionalEvent("comment_added", { surface: "portal" });
     } finally {
@@ -611,7 +631,8 @@ function ActivePortal({
   onAddComment: (
     outputId: string,
     mediaVersionId: string,
-    body: string
+    body: string,
+    timestampSeconds?: number
   ) => Promise<void>;
   onReopenComment: (commentId: string) => Promise<void>;
   busyOutputId: string;
@@ -886,7 +907,7 @@ function PublicFilesSection({
   );
 }
 
-function PublicOutputRow({
+export function PublicOutputRow({
   output,
   comments,
   commentsLoading,
@@ -907,16 +928,25 @@ function PublicOutputRow({
   onAddComment: (
     outputId: string,
     mediaVersionId: string,
-    body: string
+    body: string,
+    timestampSeconds?: number
   ) => Promise<void>;
   onReopenComment: (commentId: string) => Promise<void>;
   busy: boolean;
   busyCommentId: string;
 }) {
+  const [player, setPlayer] = useState<ReviewPlayer>();
   const state = output.reviewState
     ? (reviewLabels[output.reviewState] ?? output.reviewState)
     : undefined;
   const currentVersion = output.currentVersion;
+  const media = currentVersion
+    ? normalizeMediaUrl(currentVersion.source.url)
+    : undefined;
+  const embedUrl =
+    media?.ok && media.value.provider !== "external"
+      ? media.value.embedUrl
+      : undefined;
   return (
     <article className="grid gap-4 py-5 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
       <div className="min-w-0">
@@ -948,16 +978,26 @@ function PublicOutputRow({
           No version shared yet
         </span>
       )}
+      {embedUrl && currentVersion ? (
+        <ReviewVideoPlayer
+          url={embedUrl}
+          title={`${output.title} — ${currentVersion.label}`}
+          onReady={setPlayer}
+        />
+      ) : null}
       {currentVersion ? (
         <div className="sm:col-span-2">
           <PublicMediaVersionComments
+            key={currentVersion.id}
+            player={player}
+            supportsPlayerTimestamps={!!embedUrl}
             versionId={currentVersion.id}
             comments={comments}
             displayName={displayName}
             onDisplayNameChange={onDisplayNameChange}
             onClearDisplayName={onClearDisplayName}
-            onSubmit={(body) =>
-              onAddComment(output.id, currentVersion.id, body)
+            onSubmit={(body, timestampSeconds) =>
+              onAddComment(output.id, currentVersion.id, body, timestampSeconds)
             }
             onReopen={onReopenComment}
             busyCommentId={busyCommentId}

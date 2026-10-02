@@ -1,5 +1,5 @@
 import { setupClerkTestingToken } from "@clerk/testing/playwright";
-import { expect, type Locator, type Page } from "@playwright/test";
+import { expect, type Page } from "@playwright/test";
 import { cloudE2EAvailable } from "./env";
 
 export async function openApp(page: Page, path: string) {
@@ -37,22 +37,15 @@ export async function createProject(
   title: string,
   client = "E2E Client"
 ) {
-  await page
-    .getByRole("button", { name: /New (?:Personal |Team )?Project/ })
-    .first()
-    .click();
-  await page.getByRole("button", { name: "Blank project" }).click();
+  await page.getByRole("button", { name: "Quick create project" }).click();
   const dialog = page.getByRole("dialog", { name: "New Project" });
   await dialog.getByLabel("Project name").fill(title);
-  await dialog.getByLabel("Client").click();
-  await page.getByPlaceholder("Search or type a client...").fill(client);
-  await page.keyboard.press("Escape");
-  await selectOption(dialog.getByLabel("Tag"), page, "Freelance");
-  await dialog.getByLabel("Earnings").fill("1250");
+  await dialog.getByRole("button", { name: "Create new Client" }).click();
+  await dialog.getByLabel("New Client name").fill(client);
+  await dialog.getByRole("button", { name: "Add Client", exact: true }).click();
   await dialog
-    .getByLabel("Notes")
-    .fill("Created by the Playwright core workflow.");
-  await dialog.getByRole("button", { name: "Save" }).click();
+    .getByRole("button", { name: "Create Project", exact: true })
+    .click();
   await expect(projectRow(page, title)).toBeVisible();
 }
 
@@ -63,20 +56,12 @@ export function projectRow(page: Page, title: string) {
 export async function openProject(page: Page, title: string) {
   await projectRow(page, title).click();
   await page
-    .getByRole("complementary")
-    .filter({ hasText: title })
+    .getByRole("region", { name: "Selected project details" })
     .getByRole("button", { name: "Open", exact: true })
     .click();
-  const detail = page.getByTestId("project-detail-dialog");
-  await expect(detail.getByText(title, { exact: true }).first()).toBeVisible();
+  const detail = page.locator("main#main-content");
+  await expect(
+    detail.getByRole("heading", { name: title, exact: true, level: 1 })
+  ).toBeVisible();
   return detail;
-}
-
-export async function selectOption(
-  select: Locator,
-  page: Page,
-  option: string
-) {
-  await select.click();
-  await page.getByRole("option", { name: option, exact: true }).click();
 }

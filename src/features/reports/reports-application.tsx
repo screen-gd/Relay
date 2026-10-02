@@ -53,10 +53,7 @@ export function ReportsApplication() {
 
   return (
     <WorkspacePage family="data-index">
-      <PageHeader
-        title="Reports"
-        description="Salary plans and batch payouts."
-      />
+      <PageHeader title="Reports" description="Payments and batch payouts." />
       <PageContent>
         {salaryPlans}
         <ContentSection

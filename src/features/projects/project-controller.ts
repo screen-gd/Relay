@@ -84,8 +84,8 @@ export function useProjectController(options: ProjectControllerOptions) {
         const effect =
           preview.kind === "salary"
             ? preview.batchCreated
-              ? `This completes a ${preview.requiredProjectCount}-Project Salary Batch worth ${formatMoney(preview.amount)}.`
-              : `This moves the current Salary Batch to ${preview.progress}/${preview.requiredProjectCount} Projects toward ${formatMoney(preview.amount)}.`
+              ? `This completes a ${preview.requiredProjectCount}-Project Payment batch worth ${formatMoney(preview.amount)}.`
+              : `This moves the current Payment batch to ${preview.progress}/${preview.requiredProjectCount} Projects toward ${formatMoney(preview.amount)}.`
             : preview.kind === "client" && preview.earned > 0
               ? `This records ${formatMoney(preview.earned)} as earned.`
               : "This records delivery for the team Project.";
@@ -113,9 +113,9 @@ export function useProjectController(options: ProjectControllerOptions) {
         onStatusChanged(updated, project.status);
         const resultMessage =
           result.kind === "salary" && result.batchCreated
-            ? `${project.title} delivered. Salary Batch completed.`
+            ? `${project.title} delivered. Payment batch completed.`
             : result.kind === "salary"
-              ? `${project.title} delivered. Salary Plan progress: ${result.progress}/${result.requiredProjectCount}.`
+              ? `${project.title} delivered. Payment plan progress: ${result.progress}/${result.requiredProjectCount}.`
               : `${project.title} moved from ${getProjectWorkflowStage(project).label} to ${stage?.label ?? requestedStage}.`;
         notify(resultMessage);
       } catch {
