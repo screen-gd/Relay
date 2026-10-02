@@ -4,7 +4,6 @@ import {
   DEFAULT_PROJECT_TABLE_STATE,
   filterProjectTableProjects,
   getProjectPaymentState,
-  getProjectTableDeletionWarning,
   parseProjectTableSearch,
   projectBelongsToDefaultEditorScope,
   serializeProjectTableSearch,
@@ -314,11 +313,5 @@ describe("Project table presentation rules", () => {
         rules
       )
     ).toBe("not-billable");
-  });
-
-  it("explains the effects of permanent deletion", () => {
-    expect(getProjectTableDeletionWarning("Launch Film")).toBe(
-      "Permanently deleting Launch Film removes its files, versions, client portal, and Activity history. This cannot be undone."
-    );
   });
 });

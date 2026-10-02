@@ -6,18 +6,27 @@ import {
 
 describe("workspace backup", () => {
   it("round-trips workspace records without connected-account details", () => {
+    const records = {
+      projects: [{ id: "project-1", title: "Launch film" }],
+      clients: [{ id: "client-1", name: "Studio" }],
+      resources: [{ id: "resource-1", url: "https://example.com/brief" }],
+      salaryBatches: [{ id: "batch-1", amount: 500 }],
+    };
     const backup = createWorkspaceBackup({
-      projects: [],
-      clients: [],
-      resources: [],
-      salaryBatches: [],
+      ...records,
       settings: {
+        theme: "Light",
         integrationConfigs: { Slack: { webhookUrl: "https://secret.example" } },
+        integrationLinks: { Slack: "secret@example.com" },
       },
     });
-    expect(backup).not.toContain("secret@example.com");
     expect(backup).not.toContain("secret.example");
-    expect(parseWorkspaceBackup(backup).version).toBe(1);
+    expect(backup).not.toContain("secret@example.com");
+    expect(parseWorkspaceBackup(backup)).toMatchObject({
+      ...records,
+      version: 1,
+      settings: { theme: "Light" },
+    });
   });
 
   it("rejects unsupported or incomplete files before import", () => {

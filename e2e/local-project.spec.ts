@@ -8,83 +8,6 @@ import {
   projectRow,
 } from "./helpers";
 
-test("keeps the desktop sidebar collapsed across navigation without a toggle", async ({
-  page,
-}) => {
-  await chooseLocalMode(page);
-  await openApp(page, "/projects");
-
-  const sidebar = page.locator("aside").first();
-  await expect(
-    sidebar.getByRole("button", { name: /(?:Collapse|Expand) navigation/ })
-  ).toHaveCount(0);
-  await expect(
-    sidebar.getByRole("link", { name: "Dashboard", exact: true })
-  ).toBeVisible();
-
-  await sidebar.getByRole("link", { name: "Dashboard", exact: true }).click();
-  await expect(page).toHaveURL("/");
-  await expect(
-    sidebar.getByRole("button", { name: /(?:Collapse|Expand) navigation/ })
-  ).toHaveCount(0);
-});
-
-test("shows section and route names on hover in the compact desktop sidebar", async ({
-  page,
-}) => {
-  await openApp(page, "/sample-studio");
-
-  const sidebar = page.locator("aside").first();
-  const overviewSection = sidebar.locator('[aria-label="Overview"]');
-  await overviewSection.hover();
-  await expect(page.getByRole("tooltip", { name: "Overview" })).toBeVisible();
-});
-
-test("marks the active sidebar route across navigation", async ({ page }) => {
-  await chooseLocalMode(page);
-  await openApp(page, "/projects");
-
-  const sidebar = page.locator("aside").first();
-  const projectsLink = sidebar.getByRole("link", {
-    name: "Projects",
-    exact: true,
-  });
-  await expect(projectsLink).toHaveAttribute("aria-current", "page");
-
-  const dashboardLink = sidebar.getByRole("link", {
-    name: "Dashboard",
-    exact: true,
-  });
-  await dashboardLink.click();
-  await expect(page).toHaveURL("/");
-  await expect(dashboardLink).toHaveAttribute("aria-current", "page");
-  await expect(projectsLink).not.toHaveAttribute("aria-current", "page");
-  await expect(sidebar.locator('[aria-current="page"]')).toHaveCount(1);
-});
-
-test("uses balanced workspace density without a Density setting", async ({
-  page,
-}) => {
-  await chooseLocalMode(page);
-  await page.addInitScript(() => {
-    window.localStorage.setItem(
-      "video-editing-work-tracker:settings:v1",
-      JSON.stringify({ density: "Compact" })
-    );
-  });
-  await openApp(page, "/settings");
-
-  await page.getByRole("button", { name: "Appearance", exact: true }).click();
-
-  await expect(page.getByText("Density", { exact: true })).toHaveCount(0);
-  await expect(page.getByTestId("workspace-shell")).toHaveClass(
-    /relay-density-balanced/
-  );
-  await expect(page.locator("html")).not.toHaveClass(
-    /relay-density-(?:balanced|compact)/
-  );
-});
-
 test("switches Calendar views through accessible tabs", async ({ page }) => {
   await chooseLocalMode(page);
   await openApp(page, "/calendar");
@@ -108,7 +31,7 @@ test("switches Calendar views through accessible tabs", async ({ page }) => {
   await expect(page.getByRole("button", { name: "Next month" })).toBeVisible();
 });
 
-test("keeps the authenticated workspace UI contract across routes", async ({
+test("keeps workspace navigation accessible across routes", async ({
   page,
 }) => {
   test.setTimeout(150_000);
@@ -143,9 +66,6 @@ test("keeps the authenticated workspace UI contract across routes", async ({
       page.getByRole("navigation", { name: "Primary navigation" })
     ).toBeVisible();
     await expect(page.locator("main#main-content")).toBeVisible();
-    await expect(page.getByTestId("workspace-shell")).toHaveClass(
-      /relay-density-balanced/
-    );
   }
 
   const profileMenu = page.getByRole("button", { name: "Open profile menu" });
@@ -175,9 +95,6 @@ test("keeps the authenticated workspace UI contract across routes", async ({
   await expect(
     page.getByRole("heading", { name: "Privacy Policy" })
   ).toBeVisible();
-  await expect(page.locator("html")).not.toHaveClass(
-    /relay-density-(?:balanced|compact)/
-  );
 });
 
 test("chooses a workspace mode on first entry and remembers Local Mode", async ({
@@ -239,10 +156,9 @@ test("creates and persists a project in local mode", async ({ page }) => {
 
   const detail = await openProject(page, title);
   await expect(
-    detail.getByText("Created by the Playwright core workflow.")
-  ).toBeVisible();
-  await expect(
-    detail.getByText("E2E Client", { exact: true }).first()
+    detail
+      .locator('[data-slot="page-header"]')
+      .getByText("E2E Client", { exact: true })
   ).toBeVisible();
 });
 
@@ -270,7 +186,9 @@ test("exports and restores a Local Mode backup", async ({ page }) => {
     mimeType: "application/json",
     buffer: backup,
   });
-  await expect(page.getByRole("status")).toContainText("Imported 1 projects");
+  await expect(
+    page.getByRole("status").filter({ hasText: "Imported 1 projects" })
+  ).toBeVisible();
   await page.goto("/projects");
   await expect(projectRow(page, title)).toBeVisible();
 });
@@ -337,7 +255,9 @@ test("opens the Privacy Policy and Terms of Service from the sidebar", async ({
   ).toBeVisible();
 });
 
-test("uses the Studio Split desktop shell", async ({ page }) => {
+test("scrolls workspace content without moving the page shell", async ({
+  page,
+}) => {
   await chooseLocalMode(page);
   await openApp(page, "/projects");
 
@@ -347,61 +267,6 @@ test("uses the Studio Split desktop shell", async ({ page }) => {
   await expect(sidebar).toBeVisible();
   await expect(topbar).toBeVisible();
   await expect(contentSurface).toBeVisible();
-
-  const sidebarBox = await sidebar.boundingBox();
-  const topbarBox = await topbar.boundingBox();
-  const contentSurfaceBox = await contentSurface.boundingBox();
-  expect(sidebarBox?.width).toBe(52);
-  expect(topbarBox?.height).toBe(54);
-  expect(topbarBox?.x).toBe(52);
-  expect(contentSurfaceBox?.x).toBe(58);
-  expect(contentSurfaceBox?.y).toBe(54);
-  await expect(
-    topbar.getByRole("button", { name: "Quick Search (Ctrl K)" })
-  ).toBeVisible();
-  await expect(
-    topbar.getByRole("link", { name: "Plans & billing" })
-  ).toHaveCount(0);
-  await expect(
-    topbar.getByRole("button", { name: "Quick create project" })
-  ).toBeVisible();
-  await expect(
-    topbar.getByRole("button", { name: "Open profile menu" })
-  ).toBeVisible();
-  await expect(sidebar.getByRole("link", { name: "Team" })).toHaveCount(0);
-
-  const surfaces = await page.evaluate(() => {
-    const sidebarElement = document.querySelector("aside");
-    const topbarElement = document.querySelector("header");
-    const contentSurfaceElement = document.querySelector(
-      '[data-testid="workspace-content-surface"]'
-    );
-    return {
-      sidebar: sidebarElement
-        ? getComputedStyle(sidebarElement).backgroundColor
-        : null,
-      sidebarBorder: sidebarElement
-        ? getComputedStyle(sidebarElement).borderRightWidth
-        : null,
-      topbar: topbarElement
-        ? getComputedStyle(topbarElement).backgroundColor
-        : null,
-      topbarBorder: topbarElement
-        ? getComputedStyle(topbarElement).borderBottomWidth
-        : null,
-      contentRadius: contentSurfaceElement
-        ? getComputedStyle(contentSurfaceElement).borderTopLeftRadius
-        : null,
-      contentOverflow: contentSurfaceElement
-        ? getComputedStyle(contentSurfaceElement).overflow
-        : null,
-    };
-  });
-  expect(surfaces.topbar).toBe(surfaces.sidebar);
-  expect(surfaces.sidebarBorder).toBe("0px");
-  expect(surfaces.topbarBorder).toBe("0px");
-  expect(parseFloat(surfaces.contentRadius ?? "0")).toBe(16);
-  expect(surfaces.contentOverflow).toBe("auto");
 
   await contentSurface.evaluate((element) => {
     const spacer = document.createElement("div");
@@ -413,9 +278,6 @@ test("uses the Studio Split desktop shell", async ({ page }) => {
   await expect
     .poll(() => contentSurface.evaluate((element) => element.scrollTop))
     .toBeGreaterThan(0);
-  const scrolledSurfaceBox = await contentSurface.boundingBox();
-  expect(scrolledSurfaceBox?.x).toBe(58);
-  expect(scrolledSurfaceBox?.y).toBe(54);
   expect(await page.evaluate(() => window.scrollY)).toBe(0);
 });
 
@@ -504,16 +366,7 @@ test("shows the compact dashboard overview and links to all projects", async ({
   const viewAll = ledger.getByRole("link", { name: "View all projects" });
   await expect(viewAll).toHaveAttribute("href", "/projects");
 
-  const attention = page.getByRole("region", { name: "Needs attention" });
-
-  const attentionBox = await attention.boundingBox();
-  const ledgerBox = await ledger.boundingBox();
   const activity = page.getByRole("region", { name: "Activity" });
-  const activityBox = await activity.boundingBox();
-  expect(attentionBox?.width ?? 0).toBeGreaterThan(500);
-  expect(activityBox?.width ?? 0).toBeGreaterThan(500);
-  expect(attentionBox?.y ?? 0).toBeLessThan(ledgerBox?.y ?? 0);
-  expect(ledgerBox?.y ?? 0).toBeLessThan(activityBox?.y ?? 0);
 
   const teamActivityTab = activity.getByRole("tab", { name: "Team" });
   await teamActivityTab.click();

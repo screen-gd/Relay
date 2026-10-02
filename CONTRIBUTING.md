@@ -56,6 +56,10 @@ Run the full suite when changing Convex functions or schema, authentication, pro
 pnpm check:full
 ```
 
+This includes production browser smoke checks. Playwright workflow journeys run
+separately with `pnpm exec playwright test`; they are not included in the current
+CI command. See [the testing guide](docs/testing.md) for coverage and limitations.
+
 Describe the checks you ran in the pull request. Include clear reproduction and verification steps for user-facing fixes.
 
 ## Code Style

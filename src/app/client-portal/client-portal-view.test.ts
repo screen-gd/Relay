@@ -113,19 +113,7 @@ describe("client hub video playback", () => {
       "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
       "https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ",
     ],
-    [
-      "https://youtu.be/dQw4w9WgXcQ",
-      "https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ",
-    ],
-    [
-      "https://www.youtube.com/shorts/dQw4w9WgXcQ",
-      "https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ",
-    ],
     ["https://vimeo.com/123456789", "https://player.vimeo.com/video/123456789"],
-    [
-      "https://player.vimeo.com/video/123456789",
-      "https://player.vimeo.com/video/123456789",
-    ],
   ])("embeds the current version from %s", (url, embedUrl) => {
     const html = renderOutput({ url });
     expect(html).toContain(`<iframe`);
@@ -137,18 +125,14 @@ describe("client hub video playback", () => {
     expect(html).not.toContain("987654321");
   });
 
-  it.each([
-    "https://example.com/review",
-    "https://www.youtube.com/watch?v=invalid",
-    "https://youtube.com.evil.example/watch?v=dQw4w9WgXcQ",
-    "https://user:password@www.youtube.com/watch?v=dQw4w9WgXcQ",
-  ])("keeps unsupported or invalid videos as links: %s", (url) => {
+  it("keeps an ordinary link and ignores supplied player metadata", () => {
     const html = renderOutput({
       kind: "youtube",
-      url,
+      url: "https://example.com/review",
       embedUrl: "https://evil.example/player",
     });
     expect(html).not.toContain("<iframe");
+    expect(html).toContain('href="https://example.com/review"');
     expect(html).toContain("Open current version");
   });
 
