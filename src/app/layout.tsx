@@ -1,3 +1,4 @@
+import { supportEmail } from "@/lib/support-contact";
 import type { Metadata, Viewport } from "next";
 import Script from "next/script";
 import { Analytics } from "@vercel/analytics/next";
@@ -70,7 +71,7 @@ const structuredData = {
     "@type": "Organization",
     name: "Relay",
     url: siteUrl,
-    email: "connect.relay@protonmail.com",
+    email: supportEmail,
   },
 };
 

@@ -2,26 +2,26 @@
 
 The `/contact` form submits to Relay’s same-origin `POST /api/contact` endpoint.
 The server verifies Cloudflare Turnstile and sends a plain-text email through
-Resend to `connect.relay@protonmail.com`. Visitors do not need an email app or
-Relay account. Their validated email address becomes the reply-to address; they
+Resend to `screen.dev@protonmail.com`. Visitors do not need an email app or
+Relay account. The public contact address is `support@contact.relay-app.cc.cd`, forwarded to the selected Proton inbox through Cloudflare Email Routing. Form messages go directly to that inbox, so they do not depend on forwarding.
+
+Their validated email address becomes the reply-to address; they
 cannot choose the recipient or sender.
 
 ## Enable sending
 
-1. Verify a domain you control in Resend. Use a sending address on that domain;
-   you cannot use a Proton address as the sender. The support inbox remains the
-   existing Proton address.
+1. Verify `contact.relay-app.cc.cd` in Resend using the [Cloudflare DNS setup](contact-email-dns.md). Use `support@contact.relay-app.cc.cd` as the sender and forward that public address to `screen.dev@protonmail.com` using Cloudflare Email Routing.
 2. Create a Resend API key with sending permission for that domain.
 3. Create a Cloudflare Turnstile widget and allow the app hostname. The form sets
    the widget action to `contact`; the server checks both hostname and action.
 4. Configure these **app runtime** settings on the host:
 
-| Setting                        | Value                                                         | Handling                                         |
-| ------------------------------ | ------------------------------------------------------------- | ------------------------------------------------ |
-| `RESEND_API_KEY`               | Resend sending key                                            | Server secret                                    |
-| `CONTACT_FROM_EMAIL`           | Plain verified sender address, e.g. `support@your-domain.com` | Server setting                                   |
-| `CONTACT_TURNSTILE_SITE_KEY`   | Turnstile widget site key                                     | Public widget key, passed to the form at runtime |
-| `CONTACT_TURNSTILE_SECRET_KEY` | Turnstile verification secret                                 | Server secret                                    |
+| Setting                        | Value                                                                | Handling                                         |
+| ------------------------------ | -------------------------------------------------------------------- | ------------------------------------------------ |
+| `RESEND_API_KEY`               | Resend sending key                                                   | Server secret                                    |
+| `CONTACT_FROM_EMAIL`           | `support@contact.relay-app.cc.cd` (included in Worker configuration) | Server setting                                   |
+| `CONTACT_TURNSTILE_SITE_KEY`   | Turnstile widget site key                                            | Public widget key, passed to the form at runtime |
+| `CONTACT_TURNSTILE_SECRET_KEY` | Turnstile verification secret                                        | Server secret                                    |
 
 For Cloudflare Workers, set the keys as secret bindings and the sender/site key
 as runtime variables in the dashboard (or through Wrangler). For Vercel, use

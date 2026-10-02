@@ -1,5 +1,7 @@
 "use client";
 
+import { supportEmail } from "@/lib/support-contact";
+
 import { useState, type ReactNode } from "react";
 import Link from "next/link";
 import { Check } from "lucide-react";
@@ -198,9 +200,9 @@ function WelcomeStep() {
       or email{" "}
       <a
         className="font-medium underline underline-offset-4"
-        href="mailto:connect.relay@protonmail.com"
+        href={`mailto:${supportEmail}`}
       >
-        connect.relay@protonmail.com
+        {supportEmail}
       </a>
       .
     </p>

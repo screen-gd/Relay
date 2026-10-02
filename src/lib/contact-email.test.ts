@@ -48,7 +48,7 @@ it("sends verified contact messages only to Relay, with reply-to and a stable id
   expect(url).toBe("https://api.resend.com/emails");
   expect(JSON.parse(options.body)).toEqual({
     from: "Relay Support <support@relay.example>",
-    to: ["connect.relay@protonmail.com"],
+    to: ["screen.dev@protonmail.com"],
     reply_to: "client@example.com",
     subject: "Relay inquiry from Client",
     text: "Name: Client\nEmail: client@example.com\n\nNeed help with reviews.",

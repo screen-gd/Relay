@@ -1,3 +1,4 @@
+import { supportEmail } from "@/lib/support-contact";
 import type { Metadata } from "next";
 import { contactEmailConfig } from "@/lib/contact-email";
 import { ContactForm } from "@/components/contact-form";
@@ -25,7 +26,7 @@ export default function ContactRoute() {
     mainEntity: {
       "@type": "Organization",
       name: "Relay",
-      email: "connect.relay@protonmail.com",
+      email: supportEmail,
       url: siteUrl,
     },
   };
@@ -48,10 +49,7 @@ export default function ContactRoute() {
             body: (
               <p>
                 Email us directly at{" "}
-                <a href="mailto:connect.relay@protonmail.com">
-                  connect.relay@protonmail.com
-                </a>
-                .
+                <a href={`mailto:${supportEmail}`}>{supportEmail}</a>.
               </p>
             ),
           },

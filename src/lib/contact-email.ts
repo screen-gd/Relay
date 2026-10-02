@@ -1,7 +1,7 @@
 import "server-only";
 import { z } from "zod";
 
-export const supportEmail = "connect.relay@protonmail.com";
+const supportInbox = "screen.dev@protonmail.com";
 const emailAddress = z.string().trim().max(254).email();
 const inputSchema = z
   .object({
@@ -128,7 +128,7 @@ export async function sendContactEmail(request: Request) {
       },
       body: JSON.stringify({
         from: `Relay Support <${config.fromEmail}>`,
-        to: [supportEmail],
+        to: [supportInbox],
         reply_to: email,
         subject: `Relay inquiry from ${name}`,
         text: `Name: ${name}\nEmail: ${email}\n\n${message}`,

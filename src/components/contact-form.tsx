@@ -1,5 +1,7 @@
 "use client";
 
+import { supportEmail } from "@/lib/support-contact";
+
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import Script from "next/script";
 
@@ -226,8 +228,8 @@ export function ContactForm({
           <p role="status" className="text-sm text-[var(--app-muted)]">
             The contact form is temporarily unavailable. You can email us
             directly at{" "}
-            <a className="underline" href="mailto:connect.relay@protonmail.com">
-              connect.relay@protonmail.com
+            <a className="underline" href={`mailto:${supportEmail}`}>
+              {supportEmail}
             </a>
             .
           </p>
