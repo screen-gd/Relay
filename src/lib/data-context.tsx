@@ -143,6 +143,51 @@ function writeJson(key: string, value: unknown) {
   }
 }
 
+/**
+ * Saves a restored workspace to browser storage, all keys or none. If any
+ * write fails it puts the previous values back and throws, so a restore never
+ * reports success or leaves a mix of old and restored data.
+ */
+function persistRestoredWorkspace(
+  entries: ReadonlyArray<readonly [key: string, value: unknown]>
+) {
+  const previous = entries.map(([key]) => {
+    try {
+      return [key, window.localStorage.getItem(key)] as const;
+    } catch {
+      return [key, null] as const;
+    }
+  });
+  if (entries.every(([key, value]) => writeJson(key, value))) return;
+  for (const [key, raw] of previous) {
+    try {
+      if (raw === null) window.localStorage.removeItem(key);
+      else window.localStorage.setItem(key, raw);
+    } catch {
+      // Storage is unavailable; nothing more can be restored.
+    }
+  }
+  throw new Error(
+    "The backup could not be saved in this browser. Free up browser storage and try again."
+  );
+}
+
+function restoredWorkspaceEntries(workspace: {
+  items: WorkItem[];
+  settings: SettingsState;
+  projectGroups: ProjectGroup[];
+  resources: ResourceLink[];
+  salaryBatches: SalaryBatch[];
+}) {
+  return [
+    [STORAGE_KEY, workspace.items],
+    [SETTINGS_STORAGE_KEY, omitLegacySettings(workspace.settings)],
+    [PROJECT_GROUPS_STORAGE_KEY, workspace.projectGroups],
+    [RESOURCES_STORAGE_KEY, workspace.resources],
+    [SALARY_STORAGE_KEY, { batches: workspace.salaryBatches }],
+  ] as const;
+}
+
 function isProjectAuthorizationError(error: unknown) {
   const message = error instanceof Error ? error.message : String(error ?? "");
   return /permission|team access|required|not authenticated/i.test(message);
@@ -1576,16 +1621,20 @@ function LocalDataProvider({
     const nextBatches = normalizeSalaryState({
       batches: backup.salaryBatches,
     }).batches;
+    persistRestoredWorkspace(
+      restoredWorkspaceEntries({
+        items: nextItems,
+        settings: nextSettings,
+        projectGroups: nextProjectGroups,
+        resources: nextResources,
+        salaryBatches: nextBatches,
+      })
+    );
     setItemsState(nextItems);
     setSettingsState(nextSettings);
     setProjectGroupsState(nextProjectGroups);
     setResourceLinksState(nextResources);
     setSalaryBatches(nextBatches);
-    writeJson(STORAGE_KEY, nextItems);
-    writeJson(SETTINGS_STORAGE_KEY, omitLegacySettings(nextSettings));
-    writeJson(PROJECT_GROUPS_STORAGE_KEY, nextProjectGroups);
-    writeJson(RESOURCES_STORAGE_KEY, nextResources);
-    writeJson(SALARY_STORAGE_KEY, { batches: nextBatches });
     return {
       projects: nextItems.length,
       clients: nextSettings.clients.length,
@@ -2449,13 +2498,18 @@ function CloudDataProvider({ children }: { children: React.ReactNode }) {
             : []),
           replaceAllResources({ resources: nextResources }),
         ]);
-      } else if (!isSignedIn) {
-        // Local Mode restore replaces the browser copy.
-        writeJson(STORAGE_KEY, nextItems);
-        writeJson(SETTINGS_STORAGE_KEY, omitLegacySettings(nextSettings));
-        writeJson(PROJECT_GROUPS_STORAGE_KEY, nextProjectGroups);
-        writeJson(RESOURCES_STORAGE_KEY, nextResources);
-        writeJson(SALARY_STORAGE_KEY, { batches: nextBatches });
+      } else {
+        // Signed out, or signed in while Convex auth is unavailable: the
+        // workspace runs from the browser copy, so the restore replaces it.
+        persistRestoredWorkspace(
+          restoredWorkspaceEntries({
+            items: nextItems,
+            settings: nextSettings,
+            projectGroups: nextProjectGroups,
+            resources: nextResources,
+            salaryBatches: nextBatches,
+          })
+        );
       }
       setItemsState(nextItems);
       setSettingsState(nextSettings);

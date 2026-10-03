@@ -1206,78 +1206,72 @@ export function PrecisionDashboard(props: DashboardProps) {
                                   .getRowModel()
                                   .rows.slice(0, LEDGER_PREVIEW_ROWS)
                                   .map((row, rowIndex) => (
-                                    <Button
+                                    <motion.tr
                                       key={row.id}
-                                      variant="ghost"
-                                      asChild
-                                      className="table-row h-[var(--workspace-row-height,58px)] w-full rounded-none px-0 py-0 font-normal whitespace-normal hover:bg-[var(--app-hover)] hover:text-[var(--app-ink)] dark:hover:bg-[var(--app-hover)] focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--app-accent)] active:translate-y-0 active:scale-100"
+                                      role="button"
+                                      tabIndex={0}
+                                      data-testid="project-row"
+                                      data-project-title={row.original.title}
+                                      data-project-id={row.original.id}
+                                      aria-selected={
+                                        selected?.id === row.original.id
+                                      }
+                                      aria-label={`Select ${row.original.title}. ${row.original.status}. Due ${formatDate(row.original.dueDate, { month: "short", day: "numeric" })}.`}
+                                      className={cn(
+                                        "h-[var(--workspace-row-height,58px)] cursor-pointer border-0 outline-none transition-colors hover:bg-[var(--app-hover)] focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--app-accent)]",
+                                        selected?.id === row.original.id &&
+                                          "bg-[var(--app-active)]"
+                                      )}
+                                      initial={
+                                        reduceMotion
+                                          ? false
+                                          : { opacity: 0, y: 8 }
+                                      }
+                                      animate={{ opacity: 1, y: 0 }}
+                                      transition={{
+                                        delay: reduceMotion
+                                          ? 0
+                                          : Math.min(rowIndex * 0.08, 0.4),
+                                        duration: reduceMotion ? 0 : 0.4,
+                                        ease: easing,
+                                      }}
+                                      onClick={() => {
+                                        setSelectedId(row.original.id);
+                                        if (
+                                          window.matchMedia(
+                                            "(max-width: 1279px)"
+                                          ).matches
+                                        ) {
+                                          setMobileInspectorOpen(true);
+                                        }
+                                      }}
+                                      onDoubleClick={() =>
+                                        props.onViewProject(row.original)
+                                      }
+                                      onKeyDown={(event) =>
+                                        handleRowKeyDown(
+                                          event,
+                                          row.original,
+                                          rowIndex
+                                        )
+                                      }
                                     >
-                                      <motion.tr
-                                        role="button"
-                                        tabIndex={0}
-                                        data-testid="project-row"
-                                        data-project-title={row.original.title}
-                                        data-project-id={row.original.id}
-                                        aria-selected={
-                                          selected?.id === row.original.id
-                                        }
-                                        aria-label={`Select ${row.original.title}. ${row.original.status}. Due ${formatDate(row.original.dueDate, { month: "short", day: "numeric" })}.`}
-                                        className={cn(
-                                          "h-[var(--workspace-row-height,58px)] cursor-pointer border-0 outline-none transition-colors hover:bg-[var(--app-hover)] focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--app-accent)]",
-                                          selected?.id === row.original.id &&
-                                            "bg-[var(--app-active)]"
-                                        )}
-                                        initial={
-                                          reduceMotion
-                                            ? false
-                                            : { opacity: 0, y: 8 }
-                                        }
-                                        animate={{ opacity: 1, y: 0 }}
-                                        transition={{
-                                          delay: reduceMotion
-                                            ? 0
-                                            : Math.min(rowIndex * 0.08, 0.4),
-                                          duration: reduceMotion ? 0 : 0.4,
-                                          ease: easing,
-                                        }}
-                                        onClick={() => {
-                                          setSelectedId(row.original.id);
-                                          if (
-                                            window.matchMedia(
-                                              "(max-width: 1279px)"
-                                            ).matches
-                                          ) {
-                                            setMobileInspectorOpen(true);
-                                          }
-                                        }}
-                                        onDoubleClick={() =>
-                                          props.onViewProject(row.original)
-                                        }
-                                        onKeyDown={(event) =>
-                                          handleRowKeyDown(
-                                            event,
-                                            row.original,
-                                            rowIndex
-                                          )
-                                        }
-                                      >
-                                        {row.getVisibleCells().map((cell) => (
-                                          <TableCell
-                                            key={cell.id}
-                                            className={cn(
-                                              "px-3 py-2 text-xs text-[var(--app-ink)]",
-                                              cell.column.id === "workType" &&
-                                                "hidden 2xl:table-cell"
-                                            )}
-                                          >
-                                            {flexRender(
-                                              cell.column.columnDef.cell,
-                                              cell.getContext()
-                                            )}
-                                          </TableCell>
-                                        ))}
-                                      </motion.tr>
-                                    </Button>
+                                      {row.getVisibleCells().map((cell) => (
+                                        <TableCell
+                                          key={cell.id}
+                                          className={cn(
+                                            "px-3 py-2 text-xs text-[var(--app-ink)]",
+                                            cell.column.id === "workType" &&
+                                              "hidden 2xl:table-cell"
+                                          )}
+                                        >
+                                          {flexRender(
+                                            cell.column.columnDef.cell,
+                                            cell.getContext()
+                                          )}
+                                        </TableCell>
+                                      ))}
+                                    </motion.tr>
                                   ))}
                               </motion.tbody>
                             </Table>

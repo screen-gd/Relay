@@ -1268,95 +1268,85 @@ export function PrecisionProjects(props: PrecisionProjectsProps) {
                               </TableHeader>
                               <TableBody className="divide-y divide-[var(--app-border)]">
                                 {table.getRowModel().rows.map((row) => (
-                                  <Button
+                                  <motion.tr
                                     key={row.id}
-                                    variant="ghost"
-                                    asChild
-                                    className="table-row h-[var(--workspace-row-height,70px)] w-full rounded-none px-0 py-0 font-normal whitespace-normal hover:bg-[var(--app-hover)] hover:text-[var(--app-ink)] dark:hover:bg-[var(--app-hover)] focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--app-accent)] active:translate-y-0 active:scale-100"
-                                  >
-                                    <motion.tr
-                                      role="button"
-                                      tabIndex={0}
-                                      data-testid="project-row"
-                                      data-project-title={row.original.title}
-                                      aria-selected={
-                                        selected?.id === row.original.id
-                                      }
-                                      aria-label={`Select ${row.original.title}. ${row.original.status}. Due ${formatDate(row.original.dueDate)}.`}
-                                      className={cn(
-                                        "h-[var(--workspace-row-height,70px)] cursor-pointer outline-none transition-colors hover:bg-[var(--app-hover)] focus-visible:bg-[var(--app-hover)] focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--app-accent)] active:bg-[var(--app-active)]",
-                                        selected?.id === row.original.id &&
-                                          "bg-[var(--app-active)]"
-                                      )}
-                                      animate={{ opacity: 1 }}
-                                      initial={
-                                        reduceMotion ? false : { opacity: 0 }
-                                      }
-                                      transition={contentTransition}
-                                      onClick={() => {
-                                        setSelectedId(row.original.id);
-                                      }}
-                                      onDoubleClick={() =>
-                                        props.onViewProject(row.original)
-                                      }
-                                      onKeyDown={(event) => {
-                                        if (
-                                          event.target !== event.currentTarget
-                                        )
-                                          return;
-                                        const rows = table.getRowModel().rows;
-                                        const index = rows.findIndex(
-                                          (candidate) => candidate.id === row.id
+                                    role="button"
+                                    tabIndex={0}
+                                    data-testid="project-row"
+                                    data-project-title={row.original.title}
+                                    aria-selected={
+                                      selected?.id === row.original.id
+                                    }
+                                    aria-label={`Select ${row.original.title}. ${row.original.status}. Due ${formatDate(row.original.dueDate)}.`}
+                                    className={cn(
+                                      "h-[var(--workspace-row-height,70px)] cursor-pointer outline-none transition-colors hover:bg-[var(--app-hover)] focus-visible:bg-[var(--app-hover)] focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--app-accent)] active:bg-[var(--app-active)]",
+                                      selected?.id === row.original.id &&
+                                        "bg-[var(--app-active)]"
+                                    )}
+                                    animate={{ opacity: 1 }}
+                                    initial={
+                                      reduceMotion ? false : { opacity: 0 }
+                                    }
+                                    transition={contentTransition}
+                                    onClick={() => {
+                                      setSelectedId(row.original.id);
+                                    }}
+                                    onDoubleClick={() =>
+                                      props.onViewProject(row.original)
+                                    }
+                                    onKeyDown={(event) => {
+                                      if (event.target !== event.currentTarget)
+                                        return;
+                                      const rows = table.getRowModel().rows;
+                                      const index = rows.findIndex(
+                                        (candidate) => candidate.id === row.id
+                                      );
+                                      const focusRow = (nextIndex: number) => {
+                                        const next = rows[nextIndex];
+                                        if (!next) return;
+                                        setSelectedId(next.original.id);
+                                        document
+                                          .querySelector<HTMLElement>(
+                                            `[data-testid="project-row"][data-project-id="${CSS.escape(next.original.id)}"]`
+                                          )
+                                          ?.focus();
+                                      };
+                                      if (event.key === "ArrowDown") {
+                                        event.preventDefault();
+                                        focusRow(
+                                          Math.min(rows.length - 1, index + 1)
                                         );
-                                        const focusRow = (
-                                          nextIndex: number
-                                        ) => {
-                                          const next = rows[nextIndex];
-                                          if (!next) return;
-                                          setSelectedId(next.original.id);
-                                          document
-                                            .querySelector<HTMLElement>(
-                                              `[data-testid="project-row"][data-project-id="${CSS.escape(next.original.id)}"]`
-                                            )
-                                            ?.focus();
-                                        };
-                                        if (event.key === "ArrowDown") {
-                                          event.preventDefault();
-                                          focusRow(
-                                            Math.min(rows.length - 1, index + 1)
-                                          );
-                                        } else if (event.key === "ArrowUp") {
-                                          event.preventDefault();
-                                          focusRow(Math.max(0, index - 1));
-                                        } else if (event.key === "Home") {
-                                          event.preventDefault();
-                                          focusRow(0);
-                                        } else if (event.key === "End") {
-                                          event.preventDefault();
-                                          focusRow(rows.length - 1);
-                                        } else if (event.key === "Enter") {
-                                          event.preventDefault();
-                                          props.onViewProject(row.original);
-                                        } else if (event.key === " ") {
-                                          event.preventDefault();
-                                          setSelectedId(row.original.id);
-                                        }
-                                      }}
-                                      data-project-id={row.original.id}
-                                    >
-                                      {row.getVisibleCells().map((cell) => (
-                                        <TableCell
-                                          key={cell.id}
-                                          className="px-3 py-2 text-xs"
-                                        >
-                                          {flexRender(
-                                            cell.column.columnDef.cell,
-                                            cell.getContext()
-                                          )}
-                                        </TableCell>
-                                      ))}
-                                    </motion.tr>
-                                  </Button>
+                                      } else if (event.key === "ArrowUp") {
+                                        event.preventDefault();
+                                        focusRow(Math.max(0, index - 1));
+                                      } else if (event.key === "Home") {
+                                        event.preventDefault();
+                                        focusRow(0);
+                                      } else if (event.key === "End") {
+                                        event.preventDefault();
+                                        focusRow(rows.length - 1);
+                                      } else if (event.key === "Enter") {
+                                        event.preventDefault();
+                                        props.onViewProject(row.original);
+                                      } else if (event.key === " ") {
+                                        event.preventDefault();
+                                        setSelectedId(row.original.id);
+                                      }
+                                    }}
+                                    data-project-id={row.original.id}
+                                  >
+                                    {row.getVisibleCells().map((cell) => (
+                                      <TableCell
+                                        key={cell.id}
+                                        className="px-3 py-2 text-xs"
+                                      >
+                                        {flexRender(
+                                          cell.column.columnDef.cell,
+                                          cell.getContext()
+                                        )}
+                                      </TableCell>
+                                    ))}
+                                  </motion.tr>
                                 ))}
                               </TableBody>
                             </Table>
