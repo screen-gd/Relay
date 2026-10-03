@@ -61,6 +61,7 @@ import {
 import { useState, type RefObject } from "react";
 import type { WorkspaceMemberOption } from "./project-view";
 import { ProjectSelect } from "@/features/projects/project-select";
+import { getProjectTableDeletionWarning } from "@/features/projects/project-table-domain";
 
 const statusOptions: ProjectStatus[] = [...PROJECT_STATUS_VALUES];
 
@@ -665,9 +666,7 @@ export function DeleteProjectDialog({
         <OwnedAlertDialogHeader>
           <OwnedAlertDialogTitle>Delete project?</OwnedAlertDialogTitle>
           <OwnedAlertDialogDescription>
-            {project
-              ? `"${project.title}" will be removed from your tracker.`
-              : "This project will be removed from your tracker."}
+            {getProjectTableDeletionWarning(project?.title ?? "this project")}
           </OwnedAlertDialogDescription>
         </OwnedAlertDialogHeader>
         <OwnedAlertDialogFooter>

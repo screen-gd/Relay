@@ -158,6 +158,12 @@ test("loads a direct nested project URL and returns with browser back", async ({
   await expect(page).toHaveURL(new RegExp(`/projects/${layoutProject.id}$`));
   await expect(
     page.getByRole("heading", { name: layoutProject.title, exact: true })
+  ).toHaveClass(/sr-only/);
+  await expect(
+    page.getByRole("navigation", {
+      name: `Current location: Projects / ${layoutProject.title}`,
+      exact: true,
+    })
   ).toBeVisible();
   await expect(
     primaryNavigation(page).getByRole("link", { name: "Projects", exact: true })

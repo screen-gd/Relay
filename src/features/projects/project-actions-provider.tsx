@@ -62,6 +62,7 @@ import {
   type OnboardingVariant,
 } from "@/lib/onboarding";
 import { trackOptionalEvent } from "@/lib/telemetry";
+import { useConfirm } from "@/components/confirm-dialog";
 
 export type ProjectActionScope = "personal" | "team";
 
@@ -124,6 +125,7 @@ function ProjectActionsRuntime({
   children,
   sample,
 }: ProjectActionsProviderProps) {
+  const confirm = useConfirm();
   const {
     items,
     settings,
@@ -336,7 +338,8 @@ function ProjectActionsRuntime({
     salaryWorkType: settings.salaryWorkType,
     currencyCode: settings.currencyCode,
     workflow,
-    confirmDelivery: (message) => window.confirm(message),
+    confirmDelivery: ({ title, description }) =>
+      confirm({ title, description, confirmLabel: "Mark delivered" }),
     notify,
     onStatusChanged: (project, previousStatus) => {
       const status = project.status;

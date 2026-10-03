@@ -1,10 +1,16 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
-import { Check, MessageCircle, RotateCcw } from "lucide-react";
+import { Check, ChevronRight, MessageCircle, RotateCcw } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import {
   commentsForVersion,
@@ -41,7 +47,7 @@ function CommentRow({
   onSeek?: (seconds: number) => void;
 }) {
   return (
-    <article className="border border-border p-3">
+    <article className="rounded-lg bg-[var(--surface-inset)] p-3">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="flex items-center gap-2 text-sm font-medium">
           <MessageCircle
@@ -51,7 +57,7 @@ function CommentRow({
           {comment.authorName}
         </div>
         <div className="flex items-center gap-2">
-          <Badge variant="outline">
+          <Badge variant="secondary" className="rounded-sm">
             {comment.resolved ? "Resolved" : "Open"}
           </Badge>
           <time
@@ -74,12 +80,12 @@ function CommentRow({
             Jump to {formatReviewTimestamp(comment.timestampSeconds)}
           </Button>
         ) : (
-          <p className="mt-3 text-sm">
+          <p className="mt-2 font-mono text-xs text-muted-foreground">
             At {formatReviewTimestamp(comment.timestampSeconds)}
           </p>
         )
       ) : null}
-      <p className="mt-3 whitespace-pre-wrap text-sm leading-6 text-muted-foreground">
+      <p className="mt-2 whitespace-pre-wrap text-sm leading-6">
         {comment.body}
       </p>
       {action ? (
@@ -87,7 +93,7 @@ function CommentRow({
           type="button"
           size="sm"
           variant="ghost"
-          className="mt-3"
+          className="mt-2 -ml-2.5"
           disabled={busy}
           onClick={() => void action()}
         >
@@ -174,10 +180,7 @@ export function PublicMediaVersionComments({
   }
 
   return (
-    <section
-      aria-labelledby={`comments-${versionId}`}
-      className="mt-5 border-t border-border pt-4"
-    >
+    <section aria-labelledby={`comments-${versionId}`} className="mt-6">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h4 id={`comments-${versionId}`} className="text-sm font-semibold">
           Comments
@@ -188,13 +191,9 @@ export function PublicMediaVersionComments({
         </span>
       </div>
       <p className="mt-1 text-xs text-muted-foreground">
-        Comments attach to this Media Version. Your display name is unverified
-        and visible to the editor.
-      </p>
-      <p className="mt-2 text-xs text-muted-foreground">
         {supportsPlayerTimestamps
-          ? "YouTube and Vimeo support capturing the current playback time and jumping to comments once the player connects. You can also enter a timestamp manually."
-          : "Drive, Dropbox and other links support general comments and manual timestamps. Open the video in its source to follow a timestamp."}
+          ? "Display names are unverified. YouTube and Vimeo support playback timestamps."
+          : "Display names are unverified. Enter timestamps manually for external links."}
       </p>
       {loading ? (
         <p role="status" className="mt-3 text-sm text-muted-foreground">
@@ -229,7 +228,7 @@ export function PublicMediaVersionComments({
             />
           ))
         ) : (
-          <p className="border border-dashed border-border p-4 text-sm text-muted-foreground">
+          <p className="rounded-lg bg-[var(--surface-inset)] p-3 text-sm text-muted-foreground">
             No comments on this version yet.
           </p>
         )}
@@ -237,15 +236,15 @@ export function PublicMediaVersionComments({
       {!disabled && !loading ? (
         <form
           onSubmit={(event) => void submit(event)}
-          className="mt-4 grid gap-3 border border-border bg-muted/20 p-3"
+          className="mt-4 grid gap-3 rounded-lg bg-[var(--surface-inset)] p-3"
         >
           <div className="flex flex-wrap items-center justify-between gap-2">
-            <label
+            <Label
               htmlFor={`comment-name-${versionId}`}
               className="text-sm font-medium"
             >
               Display name
-            </label>
+            </Label>
             {displayName ? (
               <Button
                 type="button"
@@ -264,12 +263,12 @@ export function PublicMediaVersionComments({
             maxLength={120}
             autoComplete="name"
           />
-          <label
+          <Label
             htmlFor={`comment-time-${versionId}`}
             className="text-sm font-medium"
           >
             Timestamp (optional)
-          </label>
+          </Label>
           <div className="flex flex-wrap gap-2">
             <Input
               id={`comment-time-${versionId}`}
@@ -305,12 +304,12 @@ export function PublicMediaVersionComments({
               </Button>
             ) : null}
           </div>
-          <label
+          <Label
             htmlFor={`comment-body-${versionId}`}
             className="text-sm font-medium"
           >
             Comment
-          </label>
+          </Label>
           <Textarea
             id={`comment-body-${versionId}`}
             value={body}
@@ -321,9 +320,6 @@ export function PublicMediaVersionComments({
             maxLength={2000}
             placeholder="Describe what needs attention"
           />
-          <p className="text-xs text-muted-foreground">
-            This name is not verified as your identity.
-          </p>
           {error ? (
             <p role="alert" className="text-xs text-destructive">
               {error}
@@ -358,10 +354,7 @@ export function MediaVersionComments({
   const [error, setError] = useState("");
   if (loading)
     return (
-      <section
-        aria-label="Media Version comments"
-        className="border-t border-border pt-4"
-      >
+      <section aria-label="Media Version comments">
         <p role="status" className="text-sm text-muted-foreground">
           Loading review history...
         </p>
@@ -388,7 +381,6 @@ export function MediaVersionComments({
     <section
       data-testid="media-version-review-history"
       aria-labelledby="internal-media-comments"
-      className="border-t border-border pt-4"
     >
       <div className="flex items-center justify-between gap-3">
         <h3 id="internal-media-comments" className="text-sm font-semibold">
@@ -398,28 +390,29 @@ export function MediaVersionComments({
           {comments.length} comments
         </span>
       </div>
-      <p className="mt-1 text-xs text-muted-foreground">
-        Older Media Versions remain internal so unresolved requests are not
-        lost.
-      </p>
       {error ? (
         <p role="alert" className="mt-3 text-xs text-destructive">
           {error}
         </p>
       ) : null}
-      <div className="mt-4 grid gap-4">
+      <div className="mt-3 grid gap-2">
         {versions.map((version) => {
           const versionComments = commentsForVersion(comments, version.id);
+          const openByDefault =
+            version.current ||
+            versionComments.some((comment) => !comment.resolved);
           return (
-            <details
-              key={version.id}
-              open={
-                version.current ||
-                versionComments.some((comment) => !comment.resolved)
-              }
-              className="border border-border"
+            // Keyed on the default so it re-opens when a comment is reopened.
+            <Collapsible
+              key={`${version.id}-${openByDefault}`}
+              defaultOpen={openByDefault}
             >
-              <summary className="cursor-pointer list-none p-3 text-sm">
+              <CollapsibleTrigger className="group -mx-3 flex w-[calc(100%+1.5rem)] items-center gap-1 rounded-md px-3 py-2 text-left text-sm outline-none focus-visible:ring-2 focus-visible:ring-[var(--app-accent)]">
+                <ChevronRight
+                  aria-hidden="true"
+                  className="size-3.5 shrink-0 text-muted-foreground transition-transform group-data-[state=open]:rotate-90"
+                />
+
                 <span className="font-medium">
                   v{version.versionNumber} · {version.label}
                 </span>
@@ -428,8 +421,8 @@ export function MediaVersionComments({
                   {versionComments.length}{" "}
                   {versionComments.length === 1 ? "comment" : "comments"}
                 </span>
-              </summary>
-              <div className="grid gap-2 border-t border-border p-3">
+              </CollapsibleTrigger>
+              <CollapsibleContent className="grid gap-2 pt-2">
                 {versionComments.length ? (
                   versionComments.map((comment) => (
                     <CommentRow
@@ -448,8 +441,8 @@ export function MediaVersionComments({
                     No comments on this version.
                   </p>
                 )}
-              </div>
-            </details>
+              </CollapsibleContent>
+            </Collapsible>
           );
         })}
       </div>

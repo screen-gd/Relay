@@ -34,6 +34,8 @@ import { motion } from "motion/react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
+  createContext,
+  useContext,
   useEffect,
   useMemo,
   useRef,
@@ -51,6 +53,12 @@ import { RelayBrand } from "@/app/relay-brand";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbList,
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb";
+import {
   Command,
   CommandEmpty,
   CommandGroup,
@@ -61,6 +69,7 @@ import {
   CommandShortcut,
 } from "@/components/ui/command";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
+import { Kbd } from "@/components/ui/kbd";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -81,6 +90,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { Separator } from "@/components/ui/separator";
 
 export type ShellPage =
   | "dashboard"
@@ -286,6 +296,22 @@ function routeIsActive(currentPage: ShellPage, item: RouteItem) {
   return false;
 }
 
+const BreadcrumbContext = createContext<(label: string | null) => void>(
+  () => {}
+);
+
+/**
+ * Shows `label` after the page name in the shell's top-bar breadcrumb while
+ * the calling page is mounted, e.g. a project's title on its detail page.
+ */
+export function useWorkspaceBreadcrumb(label: string) {
+  const setBreadcrumb = useContext(BreadcrumbContext);
+  useEffect(() => {
+    setBreadcrumb(label);
+    return () => setBreadcrumb(null);
+  }, [label, setBreadcrumb]);
+}
+
 export function WorkspaceShell({
   page,
   settings,
@@ -309,6 +335,7 @@ export function WorkspaceShell({
 }) {
   const [commandOpen, setCommandOpen] = useState(false);
   const [moreOpen, setMoreOpen] = useState(false);
+  const [breadcrumb, setBreadcrumb] = useState<string | null>(null);
   const goChordRef = useRef(false);
   const goChordTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const commandReturnFocusRef = useRef<HTMLElement | null>(null);
@@ -374,121 +401,147 @@ export function WorkspaceShell({
   );
 
   return (
-    <div
-      data-testid="workspace-shell"
-      className="relay-density-balanced min-h-dvh bg-[var(--app-canvas)] text-[var(--app-ink)] lg:h-dvh lg:overflow-hidden lg:bg-[var(--app-sidebar)]"
-    >
-      <DesktopSidebar
-        page={page}
-        starterNavigation={starterNavigation}
-        showTeamNavigation={showTeamNavigation}
-      />
+    <BreadcrumbContext.Provider value={setBreadcrumb}>
+      <div
+        data-testid="workspace-shell"
+        className="relay-density-balanced min-h-dvh bg-[var(--app-canvas)] text-[var(--app-ink)] lg:h-dvh lg:overflow-hidden lg:bg-[var(--app-sidebar)]"
+      >
+        <DesktopSidebar
+          page={page}
+          starterNavigation={starterNavigation}
+          showTeamNavigation={showTeamNavigation}
+        />
 
-      <div className="min-h-dvh lg:pl-[52px]">
-        <header className="fixed inset-x-0 top-0 z-30 flex h-[54px] items-center bg-[var(--app-sidebar)] px-2.5 lg:left-[52px] lg:justify-between lg:px-3">
-          <div className="flex h-full min-w-0 flex-1 items-center gap-2 lg:flex-none">
-            <RelayBrand compact className="lg:hidden" />
-            <p className="truncate text-sm font-semibold lg:hidden">{title}</p>
-            <p
-              className="hidden items-center gap-1.5 text-xs lg:flex"
-              aria-label={`Current location: ${title}`}
-            >
-              <span className="font-medium text-[var(--app-subtle)]">
-                Relay
-              </span>
-              <span aria-hidden="true" className="text-[var(--app-border)]">
-                /
-              </span>
-              <span className="font-medium text-[var(--app-ink)]">{title}</span>
-            </p>
-          </div>
-
-          <Button
-            variant="outline"
-            className="absolute left-1/2 top-1/2 hidden h-9 w-[220px] -translate-x-1/2 -translate-y-1/2 justify-start rounded-lg border-[var(--app-border)] !bg-[var(--app-control)] px-2.5 text-xs text-[var(--app-muted)] shadow-none hover:bg-[var(--app-hover)] active:-translate-y-1/2 active:scale-100 lg:flex"
-            onClick={openCommand}
-            aria-label="Quick Search (Ctrl K)"
-          >
-            <Search className="size-3.5 shrink-0" />
-            <span className="truncate">Quick Search</span>
-            <kbd className="ml-auto font-mono text-[9px] text-[var(--app-subtle)]">
-              Ctrl K
-            </kbd>
-          </Button>
-
-          <div className="ml-3 flex h-9 items-center gap-1.5 lg:ml-0">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="lg:hidden"
-              aria-label="Search pages and workspace actions (Ctrl K)"
-              onClick={openCommand}
-            >
-              <Search className="size-[18px]" />
-            </Button>
-            <div className="hidden h-9 items-center sm:flex">
-              <Button
-                aria-label="Quick create project"
-                className="h-9 bg-[var(--app-accent)] px-3 text-xs text-[var(--app-accent-foreground)] shadow-none hover:bg-[var(--app-highlight)]"
-                onClick={onNewProject}
-                disabled={!canCreateProject}
+        <div className="min-h-dvh lg:pl-[52px]">
+          <header className="fixed inset-x-0 top-0 z-30 flex h-[54px] items-center bg-[var(--app-sidebar)] px-2.5 lg:left-[52px] lg:justify-between lg:px-3">
+            <div className="flex h-full min-w-0 flex-1 items-center gap-2 lg:flex-none">
+              <RelayBrand compact className="lg:hidden" />
+              <p className="truncate text-sm font-semibold lg:hidden">
+                {breadcrumb ?? title}
+              </p>
+              <Breadcrumb
+                className="hidden min-w-0 lg:block"
+                aria-label={`Current location: ${breadcrumb ? `${title} / ${breadcrumb}` : title}`}
               >
-                <Plus className="size-3.5" />
-                Quick create
-              </Button>
+                <BreadcrumbList className="min-w-0 flex-nowrap gap-1.5 text-xs">
+                  <BreadcrumbItem>
+                    <span className="font-medium text-[var(--app-subtle)]">
+                      Relay
+                    </span>
+                  </BreadcrumbItem>
+                  <BreadcrumbSeparator className="text-[var(--app-strong-border)]">
+                    /
+                  </BreadcrumbSeparator>
+                  <BreadcrumbItem className="min-w-0">
+                    <span
+                      className={cn(
+                        "min-w-0 truncate font-medium",
+                        breadcrumb
+                          ? "text-[var(--app-subtle)]"
+                          : "text-[var(--app-ink)]"
+                      )}
+                    >
+                      {title}
+                    </span>
+                  </BreadcrumbItem>
+                  {breadcrumb ? (
+                    <>
+                      <BreadcrumbSeparator className="text-[var(--app-strong-border)]">
+                        /
+                      </BreadcrumbSeparator>
+                      <BreadcrumbItem className="min-w-0">
+                        <span className="max-w-[min(32vw,28rem)] truncate text-sm font-semibold text-[var(--app-ink)]">
+                          {breadcrumb}
+                        </span>
+                      </BreadcrumbItem>
+                    </>
+                  ) : null}
+                </BreadcrumbList>
+              </Breadcrumb>
             </div>
-            {notificationSlot ?? (
-              <motion.div
-                whileTap={reduceMotion ? undefined : { scale: 0.92 }}
-                transition={{ duration: 0.1 }}
+
+            <Button
+              variant="outline"
+              className="absolute left-1/2 top-1/2 hidden h-9 w-[220px] -translate-x-1/2 -translate-y-1/2 justify-start rounded-lg border-[var(--app-border)] !bg-[var(--app-control)] px-2.5 text-xs text-[var(--app-muted)] shadow-none hover:bg-[var(--app-hover)] active:-translate-y-1/2 active:scale-100 lg:flex"
+              onClick={openCommand}
+              aria-label="Quick Search (Ctrl K)"
+            >
+              <Search className="size-3.5 shrink-0" />
+              <span className="truncate">Quick Search</span>
+              <Kbd className="ml-auto h-auto min-w-0 rounded-none bg-transparent px-0 font-mono text-[9px] text-[var(--app-subtle)]">
+                Ctrl K
+              </Kbd>
+            </Button>
+
+            <div className="ml-3 flex h-9 items-center gap-1.5 lg:ml-0">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="lg:hidden"
+                aria-label="Search pages and workspace actions (Ctrl K)"
+                onClick={openCommand}
               >
+                <Search className="size-[18px]" />
+              </Button>
+              <div className="hidden h-9 items-center sm:flex">
+                <Button
+                  aria-label="Quick create project"
+                  className="h-9 bg-[var(--app-accent)] px-3 text-xs text-[var(--app-accent-foreground)] shadow-none hover:bg-[var(--app-highlight)]"
+                  onClick={onNewProject}
+                  disabled={!canCreateProject}
+                >
+                  <Plus className="size-3.5" />
+                  Quick create
+                </Button>
+              </div>
+              {notificationSlot ?? (
                 <Button variant="ghost" size="icon" aria-label="Notifications">
                   <Bell className="size-[18px]" />
                 </Button>
-              </motion.div>
-            )}
-            <ProfileMenu settings={settings} compact page={page} />
-          </div>
-        </header>
+              )}
+              <ProfileMenu settings={settings} compact page={page} />
+            </div>
+          </header>
 
-        <main
-          id="main-content"
-          data-testid="workspace-content-surface"
-          tabIndex={-1}
-          className="workspace-scrollbar-hidden h-[calc(100dvh_-_68px_-_env(safe-area-inset-bottom))] overflow-y-auto bg-[var(--app-canvas)] pt-12 outline-none lg:fixed lg:bottom-1.5 lg:right-1.5 lg:top-[54px] lg:left-[58px] lg:h-auto lg:min-h-0 lg:overscroll-contain lg:rounded-2xl lg:border lg:border-[var(--app-border)] lg:pt-0"
-        >
-          <div className="min-h-full lg:h-full">{children}</div>
-        </main>
+          <main
+            id="main-content"
+            data-testid="workspace-content-surface"
+            tabIndex={-1}
+            className="workspace-scrollbar-hidden h-[calc(100dvh_-_68px_-_env(safe-area-inset-bottom))] overflow-y-auto bg-[var(--app-canvas)] pt-12 outline-none lg:fixed lg:bottom-0 lg:right-0 lg:top-[54px] lg:left-[52px] lg:h-auto lg:min-h-0 lg:overscroll-contain lg:rounded-tl-2xl lg:border-l lg:border-t lg:border-[var(--app-border)] lg:pt-0"
+          >
+            <div className="min-h-full lg:h-full">{children}</div>
+          </main>
+        </div>
+
+        {(page === "dashboard" || page === "projects") && canCreateProject ? (
+          <Button
+            type="button"
+            aria-label="New Project"
+            className="fixed bottom-[calc(80px+env(safe-area-inset-bottom))] right-4 z-40 flex min-h-12 items-center gap-2 rounded-md bg-[var(--app-accent)] px-4 text-sm font-semibold text-[var(--app-accent-foreground)] shadow-[var(--app-shadow-2)] outline-none hover:bg-[var(--app-highlight)] focus-visible:ring-2 focus-visible:ring-[var(--app-accent)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--app-canvas)] sm:hidden"
+            onClick={onNewProject}
+          >
+            <Plus className="size-4" />
+            New project
+          </Button>
+        ) : null}
+
+        <MobileNavigation
+          page={page}
+          open={moreOpen}
+          onOpenChange={setMoreOpen}
+          starterNavigation={starterNavigation}
+          showTeamNavigation={showTeamNavigation}
+        />
+        <WorkspaceCommand
+          open={commandOpen}
+          onOpenChange={setCommandOpen}
+          onNewProject={onNewProject}
+          returnFocusRef={commandReturnFocusRef}
+          showTeamNavigation={showTeamNavigation}
+          searchRecords={searchRecords}
+        />
       </div>
-
-      {(page === "dashboard" || page === "projects") && canCreateProject ? (
-        <Button
-          type="button"
-          aria-label="New Project"
-          className="fixed bottom-[calc(80px+env(safe-area-inset-bottom))] right-4 z-40 flex min-h-12 items-center gap-2 rounded-md bg-[var(--app-accent)] px-4 text-sm font-semibold text-[var(--app-accent-foreground)] shadow-[var(--app-shadow-2)] outline-none hover:bg-[var(--app-highlight)] focus-visible:ring-2 focus-visible:ring-[var(--app-accent)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--app-canvas)] sm:hidden"
-          onClick={onNewProject}
-        >
-          <Plus className="size-4" />
-          New project
-        </Button>
-      ) : null}
-
-      <MobileNavigation
-        page={page}
-        open={moreOpen}
-        onOpenChange={setMoreOpen}
-        starterNavigation={starterNavigation}
-        showTeamNavigation={showTeamNavigation}
-      />
-      <WorkspaceCommand
-        open={commandOpen}
-        onOpenChange={setCommandOpen}
-        onNewProject={onNewProject}
-        returnFocusRef={commandReturnFocusRef}
-        showTeamNavigation={showTeamNavigation}
-        searchRecords={searchRecords}
-      />
-    </div>
+    </BreadcrumbContext.Provider>
   );
 }
 
@@ -607,10 +660,7 @@ function SidebarGroupLabel({
       className="relative mb-1.5 flex h-3.5 items-center justify-center overflow-hidden text-[9px] font-semibold uppercase leading-none tracking-[0.08em] text-[var(--app-subtle)]"
     >
       {groupIndex > 0 ? (
-        <span
-          aria-hidden="true"
-          className="pointer-events-none absolute h-px w-8 bg-[var(--app-border)]"
-        />
+        <Separator className="pointer-events-none absolute h-px w-8" />
       ) : null}
     </div>
   );
@@ -714,13 +764,14 @@ function ProfileMenu({
                   {handle}
                 </span>
               </span>
-              <motion.span
-                animate={{ rotate: open ? 180 : 0 }}
-                transition={{ duration: reduceMotion ? 0 : 0.16 }}
-                className="flex"
+              <span
+                className={cn(
+                  "flex transition-transform",
+                  open && "rotate-180"
+                )}
               >
                 <ChevronDown className="size-3.5 text-[var(--app-muted)]" />
-              </motion.span>
+              </span>
             </>
           ) : null}
         </Button>
@@ -997,19 +1048,12 @@ function MobileNavigation({
             )}
           >
             {active ? (
-              <motion.span
-                layoutId="mobile-active-route"
-                transition={reduceMotion ? { duration: 0 } : shellTransition}
-                className="absolute inset-x-3 top-0 h-0.5 rounded-full bg-[var(--app-accent)]"
-              />
+              <span className="absolute inset-x-3 top-0 h-0.5 rounded-full bg-[var(--app-accent)]" />
             ) : null}
-            <motion.span
-              whileTap={reduceMotion ? undefined : { scale: 0.88 }}
-              className="flex flex-col items-center justify-center gap-1"
-            >
+            <span className="flex flex-col items-center justify-center gap-1">
               <Icon className="size-[19px]" strokeWidth={active ? 2.2 : 1.8} />
               {item.label}
-            </motion.span>
+            </span>
           </Link>
         );
       })}
@@ -1064,12 +1108,9 @@ function MobileNavigation({
                     }
                     className="group flex items-center gap-3 rounded-md border border-[var(--app-border)] bg-[var(--app-panel)] p-3 text-sm font-medium outline-none transition-[background-color,border-color] hover:border-[var(--app-strong-border)] hover:bg-[var(--app-soft-panel)] focus-visible:ring-2 focus-visible:ring-[var(--app-accent)]"
                   >
-                    <motion.span
-                      whileTap={reduceMotion ? undefined : { scale: 0.9 }}
-                      className="flex"
-                    >
+                    <span className="flex">
                       <Icon className="size-[18px] text-[var(--app-muted)] transition-colors group-hover:text-[var(--app-ink)]" />
-                    </motion.span>
+                    </span>
                     {item.label}
                   </Link>
                 );

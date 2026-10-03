@@ -971,6 +971,91 @@ function readInitialResources(): ResourceLink[] {
   return normalizeResourceLinks(readJson(RESOURCES_STORAGE_KEY, []));
 }
 
+/** Delivery effect a stage move would have, computed from local state. */
+function previewLocalStageTransition(
+  items: WorkItem[],
+  salaryBatches: SalaryBatch[],
+  settings: SettingsState,
+  input: { projectId: string; stageId: string }
+): ProjectStageTransitionResult {
+  const project = items.find((item) => item.id === input.projectId);
+  if (!project) throw new Error("Project not found");
+  return getWorkflowStageStatus(project, input.stageId) === "Delivered"
+    ? localDeliveryEffect(project, items, salaryBatches, settings).result
+    : { kind: "none" };
+}
+
+/**
+ * Applies a stage move to local state, creating a Payment batch when a
+ * delivery completes one. Used by Local Mode and by signed-out cloud users.
+ */
+function applyLocalStageTransition(
+  items: WorkItem[],
+  salaryBatches: SalaryBatch[],
+  settings: SettingsState,
+  input: { projectId: string; stageId: string }
+): {
+  nextItems: WorkItem[];
+  nextBatches: SalaryBatch[];
+  result: ProjectStageTransitionResult;
+} {
+  const project = items.find((item) => item.id === input.projectId);
+  if (!project) throw new Error("Project not found");
+  const stageId = resolveProjectWorkflowStage(project, input.stageId);
+  const status = getWorkflowStageStatus(project, stageId);
+  const changedAt = new Date().toISOString();
+  const completedAt =
+    status === "Delivered"
+      ? project.status === "Delivered"
+        ? (project.completedAt ?? changedAt)
+        : changedAt
+      : undefined;
+  const nextItems = items.map((item) =>
+    item.id === input.projectId
+      ? moveProjectToStage(item, stageId, changedAt)
+      : item
+  );
+  let nextBatches = salaryBatches;
+  let result: ProjectStageTransitionResult = { kind: "none", completedAt };
+  if (status === "Delivered") {
+    const effect = localDeliveryEffect(
+      project,
+      nextItems,
+      salaryBatches,
+      settings
+    );
+    if (effect.result.kind === "client") {
+      result = { ...effect.result, completedAt };
+    } else {
+      if (effect.result.batchCreated) {
+        const number =
+          salaryBatches.reduce(
+            (highest, batch) => Math.max(highest, batch.number),
+            0
+          ) + 1;
+        nextBatches = [
+          ...salaryBatches,
+          {
+            id: `batch-${number}`,
+            number,
+            completedDate: changedAt.slice(0, 10),
+            archived: false,
+            archivedDate: "",
+            amount: effect.result.amount,
+            paid: false,
+            paidDate: "",
+            projectIds: effect.projectIds,
+            requiredProjectCount: effect.result.requiredProjectCount,
+            workType: project.workType,
+          },
+        ];
+      }
+      result = { ...effect.result, completedAt };
+    }
+  }
+  return { nextItems, nextBatches, result };
+}
+
 function localDeliveryEffect(
   project: WorkItem,
   items: WorkItem[],
@@ -1424,13 +1509,8 @@ function LocalDataProvider({
     async (input: {
       projectId: string;
       stageId: string;
-    }): Promise<ProjectStageTransitionResult> => {
-      const project = items.find((item) => item.id === input.projectId);
-      if (!project) throw new Error("Project not found");
-      return getWorkflowStageStatus(project, input.stageId) === "Delivered"
-        ? localDeliveryEffect(project, items, salaryBatches, settings).result
-        : { kind: "none" };
-    },
+    }): Promise<ProjectStageTransitionResult> =>
+      previewLocalStageTransition(items, salaryBatches, settings, input),
     [items, salaryBatches, settings]
   );
 
@@ -1439,60 +1519,12 @@ function LocalDataProvider({
       projectId: string;
       stageId: string;
     }): Promise<ProjectStageTransitionResult> => {
-      const project = items.find((item) => item.id === input.projectId);
-      if (!project) throw new Error("Project not found");
-      const stageId = resolveProjectWorkflowStage(project, input.stageId);
-      const status = getWorkflowStageStatus(project, stageId);
-      const changedAt = new Date().toISOString();
-      const completedAt =
-        status === "Delivered"
-          ? project.status === "Delivered"
-            ? (project.completedAt ?? changedAt)
-            : changedAt
-          : undefined;
-      const nextItems = items.map((item) =>
-        item.id === input.projectId
-          ? moveProjectToStage(item, stageId, changedAt)
-          : item
+      const { nextItems, nextBatches, result } = applyLocalStageTransition(
+        items,
+        salaryBatches,
+        settings,
+        input
       );
-      let nextBatches = salaryBatches;
-      let result: ProjectStageTransitionResult = { kind: "none", completedAt };
-      if (status === "Delivered") {
-        const effect = localDeliveryEffect(
-          project,
-          nextItems,
-          salaryBatches,
-          settings
-        );
-        if (effect.result.kind === "client") {
-          result = { ...effect.result, completedAt };
-        } else {
-          if (effect.result.batchCreated) {
-            const number =
-              salaryBatches.reduce(
-                (highest, batch) => Math.max(highest, batch.number),
-                0
-              ) + 1;
-            nextBatches = [
-              ...salaryBatches,
-              {
-                id: `batch-${number}`,
-                number,
-                completedDate: changedAt.slice(0, 10),
-                archived: false,
-                archivedDate: "",
-                amount: effect.result.amount,
-                paid: false,
-                paidDate: "",
-                projectIds: effect.projectIds,
-                requiredProjectCount: effect.result.requiredProjectCount,
-                workType: project.workType,
-              },
-            ];
-          }
-          result = { ...effect.result, completedAt };
-        }
-      }
       setItemsState(nextItems);
       setSalaryBatches(nextBatches);
       writeJson(STORAGE_KEY, nextItems);
@@ -2280,18 +2312,41 @@ function CloudDataProvider({ children }: { children: React.ReactNode }) {
     [convexAuthenticated, isSignedIn, setProjectSalaryBatchPaid]
   );
 
+  // Signed-out users are in Local Mode, so their stage moves stay offline.
   const transitionProjectStage = useCallback(
-    (input: { projectId: string; stageId: string }) =>
-      transitionCloudProjectStage({
-        ...input,
-        deliveredOn: localDateKey(new Date().toISOString()),
-      }),
-    [transitionCloudProjectStage]
+    async (input: {
+      projectId: string;
+      stageId: string;
+    }): Promise<ProjectStageTransitionResult> => {
+      if (isSignedIn)
+        return transitionCloudProjectStage({
+          ...input,
+          deliveredOn: localDateKey(new Date().toISOString()),
+        });
+      const { nextItems, nextBatches, result } = applyLocalStageTransition(
+        items,
+        salaryBatches,
+        settings,
+        input
+      );
+      setItemsState(nextItems);
+      setSalaryBatches(nextBatches);
+      writeJson(STORAGE_KEY, nextItems);
+      if (nextBatches !== salaryBatches)
+        writeJson(SALARY_STORAGE_KEY, { batches: nextBatches });
+      return result;
+    },
+    [isSignedIn, items, salaryBatches, settings, transitionCloudProjectStage]
   );
   const previewProjectStage = useCallback(
-    (input: { projectId: string; stageId: string }) =>
-      convex.query(api.projects.previewStage, input),
-    [convex]
+    async (input: {
+      projectId: string;
+      stageId: string;
+    }): Promise<ProjectStageTransitionResult> =>
+      isSignedIn
+        ? convex.query(api.projects.previewStage, input)
+        : previewLocalStageTransition(items, salaryBatches, settings, input),
+    [convex, isSignedIn, items, salaryBatches, settings]
   );
 
   const setProjectGroups = useCallback(
@@ -2344,11 +2399,12 @@ function CloudDataProvider({ children }: { children: React.ReactNode }) {
   const importBackup = useCallback(
     async (source: string) => {
       if (
-        items.length ||
-        settings.clients.length ||
-        projectGroups.length ||
-        resourceLinks.length ||
-        salaryBatches.length
+        isSignedIn &&
+        (items.length ||
+          settings.clients.length ||
+          projectGroups.length ||
+          resourceLinks.length ||
+          salaryBatches.length)
       )
         throw new Error("Cloud import requires an empty Workspace.");
       const backup = parseWorkspaceBackup(source);
@@ -2393,6 +2449,13 @@ function CloudDataProvider({ children }: { children: React.ReactNode }) {
             : []),
           replaceAllResources({ resources: nextResources }),
         ]);
+      } else if (!isSignedIn) {
+        // Local Mode restore replaces the browser copy.
+        writeJson(STORAGE_KEY, nextItems);
+        writeJson(SETTINGS_STORAGE_KEY, omitLegacySettings(nextSettings));
+        writeJson(PROJECT_GROUPS_STORAGE_KEY, nextProjectGroups);
+        writeJson(RESOURCES_STORAGE_KEY, nextResources);
+        writeJson(SALARY_STORAGE_KEY, { batches: nextBatches });
       }
       setItemsState(nextItems);
       setSettingsState(nextSettings);

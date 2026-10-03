@@ -2,14 +2,15 @@ import * as React from "react";
 
 import { cn } from "@/lib/utils";
 
+/** Shared panel surface. Reused by elements that cannot render a `Card` div. */
+export const cardSurfaceClassName =
+  "flex flex-col rounded-[var(--radius-panel)] border border-[var(--panel-edge)] bg-card text-card-foreground";
+
 function Card({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="card"
-      className={cn(
-        "flex flex-col rounded-[6px] border border-[var(--app-border)] bg-card text-card-foreground",
-        className
-      )}
+      className={cn(cardSurfaceClassName, className)}
       {...props}
     />
   );

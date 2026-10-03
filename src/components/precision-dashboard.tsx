@@ -10,13 +10,10 @@ import {
   ArrowUpDown,
   CalendarClock,
   Check,
-  CheckCircle2,
   ChevronDown,
-  Clock3,
   Edit3,
   FolderKanban,
   ListFilter,
-  MessageSquareText,
   MoreHorizontal,
   Search,
   Trash2,
@@ -37,12 +34,13 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import type { SalaryBatch, WorkItem, SettingsState } from "@/lib/types";
 import type { ProjectStatus } from "@/lib/domain-values";
 import { useHydratedReducedMotion } from "@/lib/motion";
-import { projectStatusTone } from "@/lib/project-status-style";
+import { projectStatusColor } from "@/lib/project-status-style";
 import { cn } from "@/lib/utils";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
+import { Empty, EmptyHeader, EmptyMedia } from "@/components/ui/empty";
 import { Input } from "@/components/ui/input";
+import { Progress } from "@/components/ui/progress";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -66,10 +64,14 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import {
+  ContentSection,
   DataTableFrame,
+  MetricItem,
   MetricStrip,
   PageContent,
   PageToolbar,
+  sectionListClassName,
+  sectionRowClassName,
   SplitPane,
   WorkspacePage,
 } from "@/components/workspace-page";
@@ -250,6 +252,8 @@ const surface =
   "rounded-xl border border-[var(--app-border)] bg-[var(--app-panel)] transition-colors duration-150";
 
 const MotionCard = motion.create(Card);
+const MotionButton = motion.create(Button);
+const MotionEmpty = motion.create(Empty);
 
 /** The dashboard ledger previews a fixed number of rows; Projects shows the rest. */
 const LEDGER_PREVIEW_ROWS = 5;
@@ -279,30 +283,6 @@ function AnimatedNumber({
   }, [reduceMotion, value]);
 
   return <>{format(displayValue)}</>;
-}
-
-function AnimatedProgress({
-  value,
-  className,
-}: {
-  value: number;
-  className?: string;
-}) {
-  const reduceMotion = useHydratedReducedMotion();
-
-  return (
-    <motion.div
-      className={cn(
-        "h-full origin-left rounded-sm bg-[var(--app-accent)]",
-        className
-      )}
-      initial={false}
-      animate={{ scaleX: value / 100 }}
-      transition={
-        reduceMotion ? { duration: 0 } : { duration: 0.55, ease: easing }
-      }
-    />
-  );
 }
 
 function parseDate(value: string) {
@@ -380,18 +360,15 @@ function relativeActivityTime(value: string) {
   return `${Math.round(hours / 24)}d ago`;
 }
 
-/** Muted pastel status chips — scarce color, uppercase meta. */
+/** Keep status visible without turning every row into a collection of pills. */
 function StatusBadge({ status }: { status: WorkItem["status"] }) {
   return (
-    <Badge
-      variant="outline"
-      className={cn(
-        "h-5 rounded-full border px-2 text-[10px] font-medium uppercase tracking-[0.05em]",
-        projectStatusTone(status)
-      )}
+    <span
+      className="text-[11px] font-medium"
+      style={{ color: projectStatusColor(status) }}
     >
       {status}
-    </Badge>
+    </span>
   );
 }
 
@@ -399,19 +376,12 @@ function PriorityBadge({ project }: { project: WorkItem }) {
   const priority = priorityFor(project);
   const tone =
     priority === "Urgent" || priority === "High"
-      ? "bg-[var(--status-danger-bg)] text-[var(--status-danger)]"
+      ? "text-[var(--status-danger)]"
       : priority === "Medium"
-        ? "bg-[var(--status-warning-bg)] text-[var(--status-warning)]"
-        : "bg-[var(--app-soft-panel)] text-[var(--app-muted)]";
+        ? "text-[var(--status-warning)]"
+        : "text-[var(--app-muted)]";
   return (
-    <span
-      className={cn(
-        "rounded-full px-2 py-0.5 text-[10px] font-medium uppercase tracking-[0.05em]",
-        tone
-      )}
-    >
-      {priority}
-    </span>
+    <span className={cn("text-[11px] font-medium", tone)}>{priority}</span>
   );
 }
 
@@ -538,9 +508,11 @@ export function PrecisionDashboard(props: DashboardProps) {
                 </span>
                 <PriorityBadge project={row.original} />
               </div>
-              <div className="h-1 overflow-hidden rounded-sm bg-[var(--app-progress-track)]">
-                <AnimatedProgress value={progress} />
-              </div>
+              <Progress
+                value={progress}
+                aria-hidden="true"
+                className="h-1 rounded-sm bg-[var(--app-progress-track)] [&_[data-slot=progress-indicator]]:rounded-sm [&_[data-slot=progress-indicator]]:bg-[var(--app-accent)]"
+              />
             </div>
           );
         },
@@ -859,103 +831,70 @@ export function PrecisionDashboard(props: DashboardProps) {
               <MetricStrip
                 columns={showSalaryBatch ? 5 : 4}
                 aria-label="Overview"
-                className="gap-2 bg-transparent"
+                className="gap-2"
               >
-                <div className="rounded-xl border border-[var(--app-border)] bg-[var(--app-panel)] px-4 py-3">
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-[var(--app-muted)]">
-                    Active
-                  </p>
-                  <div className="mt-1 flex items-baseline gap-2">
-                    <p className="text-xl font-semibold tracking-[-0.04em] tabular-nums text-[var(--app-highlight)]">
+                <MetricItem
+                  label="Active"
+                  value={
+                    <span className="text-[var(--app-highlight)]">
                       <AnimatedNumber value={props.stats.active} />
-                    </p>
-                    <span className="text-[10px] text-[var(--app-muted)]">
-                      of {props.stats.total} projects
                     </span>
-                  </div>
-                </div>
-                <div className="rounded-xl border border-[var(--app-border)] bg-[var(--app-panel)] px-4 py-3">
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-[var(--app-muted)]">
-                    Due this week
-                  </p>
-                  <div className="mt-1 flex items-baseline gap-2">
-                    <p className="text-xl font-semibold tracking-[-0.04em] tabular-nums text-[var(--app-ink)]">
-                      <AnimatedNumber value={dueThisWeek.length} />
-                    </p>
-                    <span className="text-[10px] text-[var(--app-muted)]">
-                      to deliver
-                    </span>
-                  </div>
-                </div>
-                <div className="rounded-xl border border-[var(--app-border)] bg-[var(--app-panel)] px-4 py-3">
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-[var(--app-muted)]">
-                    In review
-                  </p>
-                  <div className="mt-1 flex items-baseline gap-2">
-                    <p
+                  }
+                  supporting={`of ${props.stats.total} projects`}
+                />
+                <MetricItem
+                  label="Due this week"
+                  value={<AnimatedNumber value={dueThisWeek.length} />}
+                  supporting="to deliver"
+                />
+                <MetricItem
+                  label="In review"
+                  value={
+                    <span
                       className={cn(
-                        "text-xl font-semibold tracking-[-0.04em] tabular-nums",
-                        waitingReviews.length
-                          ? "text-[var(--app-warning)]"
-                          : "text-[var(--app-ink)]"
+                        waitingReviews.length && "text-[var(--app-warning)]"
                       )}
                     >
                       <AnimatedNumber value={waitingReviews.length} />
-                    </p>
-                    <span className="text-[10px] text-[var(--app-muted)]">
-                      reviews and revisions
                     </span>
-                  </div>
-                </div>
-                <div className="rounded-xl border border-[var(--app-border)] bg-[var(--app-panel)] px-4 py-3">
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-[var(--app-muted)]">
-                    Paid
-                  </p>
-                  <div className="mt-1 flex items-baseline gap-2">
-                    <p className="truncate text-xl font-semibold tracking-[-0.04em] tabular-nums text-[var(--app-ink)]">
-                      <AnimatedNumber
-                        value={props.stats.collected}
-                        format={(value) =>
-                          formatMoney(value, props.settings.currencyCode)
-                        }
-                      />
-                    </p>
-                    <span className="shrink-0 text-[10px] text-[var(--app-muted)]">
-                      {formatMoney(
-                        props.stats.outstanding,
-                        props.settings.currencyCode
-                      )}{" "}
-                      unpaid
-                    </span>
-                  </div>
-                </div>
+                  }
+                  supporting="Reviews and revisions"
+                />
+                <MetricItem
+                  label="Paid"
+                  value={
+                    <AnimatedNumber
+                      value={props.stats.collected}
+                      format={(value) =>
+                        formatMoney(value, props.settings.currencyCode)
+                      }
+                    />
+                  }
+                  supporting={`${formatMoney(
+                    props.stats.outstanding,
+                    props.settings.currencyCode
+                  )} unpaid`}
+                />
                 {showSalaryBatch ? (
-                  <div className="rounded-xl border border-[var(--app-border)] bg-[var(--app-panel)] px-4 py-2.5">
-                    <div className="flex items-center justify-between gap-2">
-                      <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-[var(--app-muted)]">
-                        Payment batch
-                      </p>
-                      <span className="font-mono text-[11px] tabular-nums text-[var(--app-muted)]">
-                        {salaryPercent}%
-                      </span>
-                    </div>
-                    <div className="mt-1 flex items-end justify-between gap-3">
-                      <div
+                  <MetricItem
+                    label="Salary batch"
+                    value={
+                      <span
                         data-testid="salary-batch-progress"
                         className="flex items-baseline gap-1"
                       >
-                        <p className="text-xl font-semibold tracking-[-0.04em] tabular-nums text-[var(--app-ink)]">
-                          <AnimatedNumber value={salaryProgress} />
-                        </p>
-                        <span className="text-[10px] text-[var(--app-muted)]">
+                        <AnimatedNumber value={salaryProgress} />
+                        <span className="text-xs font-normal text-muted-foreground">
                           / {salarySize} edits
                         </span>
-                      </div>
+                      </span>
+                    }
+                    action={
                       <Button
                         type="button"
                         variant="outline"
                         size="sm"
-                        className="h-6 shrink-0 px-2 text-[11px] shadow-none"
+                        className="h-7 px-2 text-[11px] shadow-none"
                         disabled={!pendingSalaryBatch}
                         aria-label={
                           pendingSalaryBatch
@@ -969,11 +908,18 @@ export function PrecisionDashboard(props: DashboardProps) {
                       >
                         Mark paid
                       </Button>
-                    </div>
-                    <div className="mt-1.5 h-1 overflow-hidden rounded-sm bg-[var(--app-progress-track)]">
-                      <AnimatedProgress value={salaryPercent} />
-                    </div>
-                  </div>
+                    }
+                    supporting={
+                      <div className="flex items-center gap-3">
+                        <span className="shrink-0">{salaryPercent}%</span>
+                        <Progress
+                          value={salaryPercent}
+                          aria-hidden="true"
+                          className="h-1 flex-1 rounded-sm bg-[var(--app-progress-track)] [&_[data-slot=progress-indicator]]:rounded-sm [&_[data-slot=progress-indicator]]:bg-[var(--app-accent)]"
+                        />
+                      </div>
+                    }
+                  />
                 ) : null}
               </MetricStrip>
             </div>
@@ -989,30 +935,29 @@ export function PrecisionDashboard(props: DashboardProps) {
               ease: easing,
             }}
           >
-            <WorkspaceSection
+            <ContentSection
               title="Needs attention"
-              count={attentionContext.length}
-              icon={CalendarClock}
-              action={
-                <div className="flex flex-wrap items-center justify-end gap-2">
-                  {overdue.length ? (
-                    <span className="font-mono text-[11px] text-[var(--app-danger)]">
-                      {overdue.length} overdue
-                    </span>
-                  ) : null}
-                </div>
+              actions={
+                overdue.length ? (
+                  <span className="text-xs text-[var(--app-danger)]">
+                    {overdue.length} overdue
+                  </span>
+                ) : null
               }
+              bodyMode="flush"
             >
               {attentionContext.length ? (
-                <div className="divide-y divide-[var(--app-border)]">
+                <div className={sectionListClassName}>
                   {attentionContext.map((project) => {
                     const days = daysFromToday(project.dueDate);
                     return (
-                      <button
+                      <Button
                         key={project.id}
                         type="button"
+                        variant="ghost"
                         className={cn(
-                          "grid w-full gap-3 px-4 py-3 text-left outline-none transition-colors hover:bg-[var(--app-hover)] focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--app-accent)] sm:grid-cols-[minmax(180px,0.8fr)_minmax(220px,1.4fr)_auto] sm:items-center",
+                          sectionRowClassName,
+                          "h-auto min-h-9 w-full grid gap-3 whitespace-normal px-3 py-2 text-left font-normal hover:bg-[var(--app-hover)] dark:hover:bg-[var(--app-hover)] focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--app-accent)] active:translate-y-0 active:scale-100 sm:grid-cols-[minmax(180px,0.8fr)_minmax(220px,1.4fr)_auto] sm:items-center",
                           selected?.id === project.id &&
                             "bg-[var(--app-active)]"
                         )}
@@ -1056,14 +1001,14 @@ export function PrecisionDashboard(props: DashboardProps) {
                                   day: "numeric",
                                 })}
                         </span>
-                      </button>
+                      </Button>
                     );
                   })}
                 </div>
               ) : (
                 <EmptySection label="No deadlines, blockers, or reviews need attention." />
               )}
-            </WorkspaceSection>
+            </ContentSection>
           </motion.div>
 
           <motion.div
@@ -1081,16 +1026,12 @@ export function PrecisionDashboard(props: DashboardProps) {
               className="items-stretch"
               primary={
                 <div className="h-full min-w-0">
-                  <WorkspaceSection
+                  <ContentSection
                     title="Projects"
-                    count={
-                      ledgerProjects.length > LEDGER_PREVIEW_ROWS
-                        ? `${LEDGER_PREVIEW_ROWS} of ${ledgerProjects.length}`
-                        : ledgerProjects.length
-                    }
-                    icon={FolderKanban}
-                    className="h-full rounded-xl"
-                    action={
+                    titleId="projects-heading"
+                    className="h-full"
+                    bodyMode="flush"
+                    actions={
                       <div className="flex items-center gap-2">
                         <Button
                           variant="ghost"
@@ -1123,68 +1064,75 @@ export function PrecisionDashboard(props: DashboardProps) {
                     <DataTableFrame bounded={false}>
                       {ledgerProjects.length ? (
                         <>
-                          <div className="divide-y divide-[var(--app-border)] sm:hidden">
-                            {table
-                              .getRowModel()
-                              .rows.slice(0, LEDGER_PREVIEW_ROWS)
-                              .map((row, rowIndex) => {
-                                const project = row.original;
-                                const progress = getProjectProgress(project);
-                                return (
-                                  <motion.button
-                                    key={row.id}
-                                    type="button"
-                                    data-testid="mobile-project-row"
-                                    className={cn(
-                                      "grid w-full grid-cols-[minmax(0,1fr)_auto] gap-3 px-4 py-3.5 text-left outline-none transition-colors hover:bg-[var(--app-hover)] focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--app-accent)]",
-                                      selected?.id === project.id &&
-                                        "bg-[var(--app-active)]"
-                                    )}
-                                    initial={
-                                      reduceMotion
-                                        ? false
-                                        : { opacity: 0, y: 8 }
-                                    }
-                                    animate={{ opacity: 1, y: 0 }}
-                                    transition={{
-                                      delay: reduceMotion
-                                        ? 0
-                                        : Math.min(rowIndex * 0.08, 0.4),
-                                      duration: reduceMotion ? 0 : 0.4,
-                                      ease: easing,
-                                    }}
-                                    onClick={() => props.onViewProject(project)}
-                                  >
-                                    <span className="min-w-0">
-                                      <span className="flex items-center gap-2">
-                                        <span className="truncate text-[13px] font-medium tracking-[-0.01em]">
-                                          {project.title}
+                          <div className="sm:hidden">
+                            <div className={sectionListClassName}>
+                              {table
+                                .getRowModel()
+                                .rows.slice(0, LEDGER_PREVIEW_ROWS)
+                                .map((row, rowIndex) => {
+                                  const project = row.original;
+                                  const progress = getProjectProgress(project);
+                                  return (
+                                    <MotionButton
+                                      key={row.id}
+                                      type="button"
+                                      variant="ghost"
+                                      data-testid="mobile-project-row"
+                                      className={cn(
+                                        sectionRowClassName,
+                                        "h-auto w-full grid grid-cols-[minmax(0,1fr)_auto] justify-start gap-3 whitespace-normal px-3 py-2 text-left font-normal hover:bg-[var(--app-hover)] dark:hover:bg-[var(--app-hover)] focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--app-accent)] active:translate-y-0 active:scale-100",
+                                        selected?.id === project.id &&
+                                          "bg-[var(--app-active)]"
+                                      )}
+                                      initial={
+                                        reduceMotion
+                                          ? false
+                                          : { opacity: 0, y: 8 }
+                                      }
+                                      animate={{ opacity: 1, y: 0 }}
+                                      transition={{
+                                        delay: reduceMotion
+                                          ? 0
+                                          : Math.min(rowIndex * 0.08, 0.4),
+                                        duration: reduceMotion ? 0 : 0.4,
+                                        ease: easing,
+                                      }}
+                                      onClick={() =>
+                                        props.onViewProject(project)
+                                      }
+                                    >
+                                      <div className="min-w-0">
+                                        <span className="flex items-center gap-2">
+                                          <span className="truncate text-[13px] font-medium tracking-[-0.01em]">
+                                            {project.title}
+                                          </span>
+                                          <StatusBadge
+                                            status={project.status}
+                                          />
                                         </span>
-                                        <StatusBadge status={project.status} />
-                                      </span>
-                                      <span className="mt-1 block truncate text-[11px] text-[var(--app-muted)]">
-                                        {project.client || project.workType} ·{" "}
-                                        {formatDate(project.dueDate, {
-                                          month: "short",
-                                          day: "numeric",
-                                        })}
-                                      </span>
-                                      <span className="mt-2.5 block h-1 overflow-hidden rounded-sm bg-[var(--app-progress-track)]">
-                                        <span
-                                          className="block h-full rounded-sm bg-[var(--app-accent)]"
-                                          style={{ width: `${progress}%` }}
+                                        <span className="mt-1 block truncate text-[11px] text-[var(--app-muted)]">
+                                          {project.client || project.workType} ·{" "}
+                                          {formatDate(project.dueDate, {
+                                            month: "short",
+                                            day: "numeric",
+                                          })}
+                                        </span>
+                                        <Progress
+                                          value={progress}
+                                          aria-hidden="true"
+                                          className="mt-2.5 h-1 rounded-sm bg-[var(--app-progress-track)] [&_[data-slot=progress-indicator]]:rounded-sm [&_[data-slot=progress-indicator]]:bg-[var(--app-accent)]"
                                         />
+                                      </div>
+                                      <span className="flex flex-col items-end justify-between">
+                                        <PriorityBadge project={project} />
+                                        <span className="font-mono text-[11px] font-medium tabular-nums text-[var(--app-muted)]">
+                                          {progress}%
+                                        </span>
                                       </span>
-                                    </span>
-                                    <span className="flex flex-col items-end justify-between">
-                                      <PriorityBadge project={project} />
-                                      <span className="font-mono text-[11px] font-medium tabular-nums text-[var(--app-muted)]">
-                                        {progress}%
-                                      </span>
-                                    </span>
-                                  </motion.button>
-                                );
-                              })}
+                                    </MotionButton>
+                                  );
+                                })}
+                            </div>
                           </div>
                           <div className="hidden sm:block">
                             <Table
@@ -1213,15 +1161,17 @@ export function PrecisionDashboard(props: DashboardProps) {
                                               : "none"
                                         }
                                         className={cn(
-                                          "h-8 px-3 text-left text-[11px] font-semibold uppercase tracking-[0.1em] text-[var(--app-subtle)]",
+                                          "h-8 px-3 text-left text-xs font-medium text-[var(--app-subtle)]",
                                           header.column.id === "workType" &&
                                             "hidden 2xl:table-cell"
                                         )}
                                       >
                                         {header.isPlaceholder ? null : header.column.getCanSort() ? (
-                                          <button
+                                          <Button
                                             type="button"
-                                            className="group inline-flex items-center gap-1 rounded-sm py-1 text-left transition-colors hover:text-[var(--app-ink)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--app-accent)]"
+                                            variant="ghost"
+                                            size="sm"
+                                            className="group h-auto gap-1 rounded-sm px-0 py-1 text-left text-xs hover:bg-transparent hover:text-[var(--app-ink)] dark:hover:bg-transparent focus-visible:ring-2 focus-visible:ring-[var(--app-accent)] active:translate-y-0 active:scale-100"
                                             onClick={header.column.getToggleSortingHandler()}
                                           >
                                             {flexRender(
@@ -1231,7 +1181,7 @@ export function PrecisionDashboard(props: DashboardProps) {
                                             <SortIcon
                                               direction={header.column.getIsSorted()}
                                             />
-                                          </button>
+                                          </Button>
                                         ) : (
                                           flexRender(
                                             header.column.columnDef.header,
@@ -1245,7 +1195,7 @@ export function PrecisionDashboard(props: DashboardProps) {
                               </TableHeader>
                               <motion.tbody
                                 key={`${props.query}-${props.statusFilter}-${props.kindFilter}-${props.clientFilter}-${props.dueFilter}-${props.billingFilter}-${props.sortKey}`}
-                                className="divide-y divide-[var(--app-border)]"
+                                className="[&_tr]:border-0"
                                 initial={reduceMotion ? false : { opacity: 0 }}
                                 animate={{ opacity: 1 }}
                                 transition={{
@@ -1256,85 +1206,86 @@ export function PrecisionDashboard(props: DashboardProps) {
                                   .getRowModel()
                                   .rows.slice(0, LEDGER_PREVIEW_ROWS)
                                   .map((row, rowIndex) => (
-                                    <motion.tr
+                                    <Button
                                       key={row.id}
-                                      role="button"
-                                      tabIndex={0}
-                                      data-testid="project-row"
-                                      data-project-title={row.original.title}
-                                      data-project-id={row.original.id}
-                                      aria-selected={
-                                        selected?.id === row.original.id
-                                      }
-                                      aria-label={`Select ${row.original.title}. ${row.original.status}. Due ${formatDate(row.original.dueDate, { month: "short", day: "numeric" })}.`}
-                                      className={cn(
-                                        "h-[var(--workspace-row-height,58px)] cursor-pointer outline-none transition-colors hover:bg-[var(--app-hover)] focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--app-accent)]",
-                                        selected?.id === row.original.id &&
-                                          "bg-[var(--app-active)]"
-                                      )}
-                                      initial={
-                                        reduceMotion
-                                          ? false
-                                          : { opacity: 0, y: 8 }
-                                      }
-                                      animate={{ opacity: 1, y: 0 }}
-                                      transition={{
-                                        delay: reduceMotion
-                                          ? 0
-                                          : Math.min(rowIndex * 0.08, 0.4),
-                                        duration: reduceMotion ? 0 : 0.4,
-                                        ease: easing,
-                                      }}
-                                      whileTap={
-                                        reduceMotion
-                                          ? undefined
-                                          : { scale: 0.998 }
-                                      }
-                                      onClick={() => {
-                                        setSelectedId(row.original.id);
-                                        if (
-                                          window.matchMedia(
-                                            "(max-width: 1279px)"
-                                          ).matches
-                                        ) {
-                                          setMobileInspectorOpen(true);
-                                        }
-                                      }}
-                                      onDoubleClick={() =>
-                                        props.onViewProject(row.original)
-                                      }
-                                      onKeyDown={(event) =>
-                                        handleRowKeyDown(
-                                          event,
-                                          row.original,
-                                          rowIndex
-                                        )
-                                      }
+                                      variant="ghost"
+                                      asChild
+                                      className="table-row h-[var(--workspace-row-height,58px)] w-full rounded-none px-0 py-0 font-normal whitespace-normal hover:bg-[var(--app-hover)] hover:text-[var(--app-ink)] dark:hover:bg-[var(--app-hover)] focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--app-accent)] active:translate-y-0 active:scale-100"
                                     >
-                                      {row.getVisibleCells().map((cell) => (
-                                        <TableCell
-                                          key={cell.id}
-                                          className={cn(
-                                            "px-3 py-2 text-xs text-[var(--app-ink)]",
-                                            cell.column.id === "workType" &&
-                                              "hidden 2xl:table-cell"
-                                          )}
-                                        >
-                                          {flexRender(
-                                            cell.column.columnDef.cell,
-                                            cell.getContext()
-                                          )}
-                                        </TableCell>
-                                      ))}
-                                    </motion.tr>
+                                      <motion.tr
+                                        role="button"
+                                        tabIndex={0}
+                                        data-testid="project-row"
+                                        data-project-title={row.original.title}
+                                        data-project-id={row.original.id}
+                                        aria-selected={
+                                          selected?.id === row.original.id
+                                        }
+                                        aria-label={`Select ${row.original.title}. ${row.original.status}. Due ${formatDate(row.original.dueDate, { month: "short", day: "numeric" })}.`}
+                                        className={cn(
+                                          "h-[var(--workspace-row-height,58px)] cursor-pointer border-0 outline-none transition-colors hover:bg-[var(--app-hover)] focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--app-accent)]",
+                                          selected?.id === row.original.id &&
+                                            "bg-[var(--app-active)]"
+                                        )}
+                                        initial={
+                                          reduceMotion
+                                            ? false
+                                            : { opacity: 0, y: 8 }
+                                        }
+                                        animate={{ opacity: 1, y: 0 }}
+                                        transition={{
+                                          delay: reduceMotion
+                                            ? 0
+                                            : Math.min(rowIndex * 0.08, 0.4),
+                                          duration: reduceMotion ? 0 : 0.4,
+                                          ease: easing,
+                                        }}
+                                        onClick={() => {
+                                          setSelectedId(row.original.id);
+                                          if (
+                                            window.matchMedia(
+                                              "(max-width: 1279px)"
+                                            ).matches
+                                          ) {
+                                            setMobileInspectorOpen(true);
+                                          }
+                                        }}
+                                        onDoubleClick={() =>
+                                          props.onViewProject(row.original)
+                                        }
+                                        onKeyDown={(event) =>
+                                          handleRowKeyDown(
+                                            event,
+                                            row.original,
+                                            rowIndex
+                                          )
+                                        }
+                                      >
+                                        {row.getVisibleCells().map((cell) => (
+                                          <TableCell
+                                            key={cell.id}
+                                            className={cn(
+                                              "px-3 py-2 text-xs text-[var(--app-ink)]",
+                                              cell.column.id === "workType" &&
+                                                "hidden 2xl:table-cell"
+                                            )}
+                                          >
+                                            {flexRender(
+                                              cell.column.columnDef.cell,
+                                              cell.getContext()
+                                            )}
+                                          </TableCell>
+                                        ))}
+                                      </motion.tr>
+                                    </Button>
                                   ))}
                               </motion.tbody>
                             </Table>
                           </div>
                         </>
                       ) : (
-                        <motion.div
-                          className="grid min-h-52 place-items-center px-6 py-8 text-center"
+                        <MotionEmpty
+                          className="grid flex-none place-items-center gap-0 rounded-none border-0 px-6 py-6 text-center [text-wrap:wrap] md:px-6 md:py-6"
                           initial={reduceMotion ? false : { opacity: 0, y: 8 }}
                           animate={{ opacity: 1, y: 0 }}
                           transition={{
@@ -1343,13 +1294,7 @@ export function PrecisionDashboard(props: DashboardProps) {
                           }}
                         >
                           <div>
-                            <div className="mx-auto grid size-10 place-items-center rounded-md border border-[var(--app-border)] bg-[var(--app-soft-panel)]">
-                              <FolderKanban
-                                className="size-4 text-[var(--app-muted)]"
-                                strokeWidth={1.75}
-                              />
-                            </div>
-                            <p className="mt-4 text-sm font-medium tracking-[-0.01em]">
+                            <p className="text-sm font-medium tracking-[-0.01em]">
                               No projects in this view
                             </p>
                             <p className="mt-1.5 max-w-xs text-xs leading-relaxed text-[var(--app-muted)]">
@@ -1359,7 +1304,7 @@ export function PrecisionDashboard(props: DashboardProps) {
                                   ? "No unfinished projects. Show delivered to see completed work."
                                   : "Create the first project in your workspace."}
                             </p>
-                            <div className="mt-5 flex justify-center gap-2">
+                            <div className="mt-3 flex justify-center gap-2">
                               {activeFilterCount || props.query ? (
                                 <Button
                                   variant="outline"
@@ -1380,10 +1325,10 @@ export function PrecisionDashboard(props: DashboardProps) {
                               </Button>
                             </div>
                           </div>
-                        </motion.div>
+                        </MotionEmpty>
                       )}
                     </DataTableFrame>
-                  </WorkspaceSection>
+                  </ContentSection>
                 </div>
               }
               secondary={
@@ -1413,11 +1358,10 @@ export function PrecisionDashboard(props: DashboardProps) {
             }}
             aria-label="Workspace follow-up"
           >
-            <WorkspaceSection
+            <ContentSection
               title="Activity"
-              count={Math.min(activity.length, 4)}
-              icon={Clock3}
-              action={
+              titleId="activity-heading"
+              actions={
                 <Tabs
                   value={activityMode}
                   onValueChange={(value) =>
@@ -1430,7 +1374,7 @@ export function PrecisionDashboard(props: DashboardProps) {
                       id="activity-recent-tab"
                       aria-controls="activity-panel"
                       value="recent"
-                      className="text-[11px] uppercase tracking-[0.05em]"
+                      className="text-xs"
                     >
                       Recent
                     </TabsTrigger>
@@ -1438,7 +1382,7 @@ export function PrecisionDashboard(props: DashboardProps) {
                       id="activity-team-tab"
                       aria-controls="activity-panel"
                       value="team"
-                      className="text-[11px] uppercase tracking-[0.05em]"
+                      className="text-xs"
                     >
                       Team
                     </TabsTrigger>
@@ -1450,14 +1394,14 @@ export function PrecisionDashboard(props: DashboardProps) {
                 id="activity-panel"
                 role="tabpanel"
                 aria-labelledby={`activity-${activityMode}-tab`}
-                className="min-h-[224px]"
+                className="min-h-40"
               >
                 {props.teamLoading && activityMode === "team" ? (
                   <ActivitySkeleton />
                 ) : activity.length ? (
                   <motion.div
                     key={activityMode}
-                    className="divide-y divide-[var(--app-border)]"
+                    className={sectionListClassName}
                     initial={reduceMotion ? false : { opacity: 0, y: 6 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{
@@ -1468,7 +1412,10 @@ export function PrecisionDashboard(props: DashboardProps) {
                     {activity.slice(0, 4).map((item, index) => (
                       <motion.div
                         key={item.id}
-                        className="flex items-start gap-3 px-4 py-3"
+                        className={cn(
+                          sectionRowClassName,
+                          "flex items-start gap-3"
+                        )}
                         initial={reduceMotion ? false : { opacity: 0, y: 6 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{
@@ -1476,31 +1423,12 @@ export function PrecisionDashboard(props: DashboardProps) {
                           ease: easing,
                         }}
                       >
-                        <span
-                          className={cn(
-                            "mt-0.5 grid size-5 shrink-0 place-items-center rounded-md",
-                            item.kind === "delivered"
-                              ? "bg-[var(--app-success-bg)] text-[var(--app-success)]"
-                              : "bg-[var(--app-active)] text-[var(--app-highlight)]"
-                          )}
-                        >
-                          {item.kind === "delivered" ? (
-                            <CheckCircle2
-                              className="size-3"
-                              strokeWidth={1.75}
-                            />
-                          ) : (
-                            <MessageSquareText
-                              className="size-3"
-                              strokeWidth={1.75}
-                            />
-                          )}
-                        </span>
+                        <span className="mt-2 size-1.5 shrink-0 rounded-full bg-[var(--app-muted)]" />
                         <span className="min-w-0 flex-1">
                           <span className="line-clamp-2 block text-[11px] font-medium leading-4 text-[var(--app-ink)]">
                             {item.message}
                           </span>
-                          <span className="mt-0.5 block font-mono text-[11px] text-[var(--app-muted)]">
+                          <span className="mt-0.5 block text-xs text-[var(--app-muted)]">
                             {item.actor || props.teamName || "Workspace"} ·{" "}
                             {relativeActivityTime(item.createdAt)}
                           </span>
@@ -1509,10 +1437,10 @@ export function PrecisionDashboard(props: DashboardProps) {
                     ))}
                   </motion.div>
                 ) : (
-                  <EmptySection label="No activity has been recorded yet." />
+                  <EmptySection label="No activity yet." />
                 )}
               </div>
-            </WorkspaceSection>
+            </ContentSection>
           </motion.section>
         </PageContent>
 
@@ -1542,95 +1470,36 @@ export function PrecisionDashboard(props: DashboardProps) {
   );
 }
 
-function WorkspaceSection({
-  title,
-  count,
-  icon: Icon,
-  action,
-  className,
-  children,
-}: {
-  title: string;
-  count?: number | string;
-  icon: typeof FolderKanban;
-  action?: React.ReactNode;
-  className?: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <Card
-      role="region"
-      aria-label={title}
-      className={cn("h-full min-w-0 overflow-hidden shadow-none", className)}
-    >
-      <CardHeader>
-        <div className="flex min-w-0 flex-wrap items-center gap-2">
-          <h2 className="text-sm font-semibold text-foreground">{title}</h2>
-          <Icon
-            className="size-3.5 text-[var(--app-muted)]"
-            strokeWidth={1.75}
-          />
-          {count !== undefined ? (
-            <span className="rounded-md bg-[var(--app-soft-panel)] px-2 py-0.5 font-mono text-[10px] tabular-nums text-[var(--app-muted)]">
-              {count}
-            </span>
-          ) : null}
-        </div>
-        {action ? (
-          <div className="flex shrink-0 items-center gap-2">{action}</div>
-        ) : null}
-      </CardHeader>
-      <CardContent className="p-0">{children}</CardContent>
-    </Card>
-  );
-}
-
 function EmptySection({ label }: { label: string }) {
   const reduceMotion = useHydratedReducedMotion();
   return (
-    <motion.div
-      className="grid min-h-28 place-items-center px-6 text-center text-xs leading-relaxed text-[var(--app-muted)]"
+    <MotionEmpty
+      className="flex-none items-start justify-start gap-0 rounded-none border-0 p-0 px-4 pb-4 text-left text-xs leading-relaxed text-[var(--app-muted)] [text-wrap:wrap] md:px-4 md:pt-0 md:pb-4"
       initial={reduceMotion ? false : { opacity: 0 }}
       animate={{ opacity: 1 }}
     >
       {label}
-    </motion.div>
+    </MotionEmpty>
   );
 }
 
 function ActivitySkeleton() {
-  const reduceMotion = useHydratedReducedMotion();
   return (
     <div
-      className="divide-y divide-[var(--app-border)]"
+      className={sectionListClassName}
       aria-label="Loading team activity"
       aria-busy="true"
     >
       {[0, 1, 2].map((item) => (
-        <div key={item} className="flex items-start gap-3 px-4 py-3.5">
-          <motion.span
-            className="size-6 shrink-0 rounded-md bg-[var(--app-soft-panel)]"
-            animate={reduceMotion ? undefined : { opacity: [0.45, 0.8, 0.45] }}
-            transition={{
-              duration: 1.4,
-              repeat: Infinity,
-              ease: "easeInOut",
-              delay: item * 0.1,
-            }}
-          />
+        <div
+          key={item}
+          className={cn(sectionRowClassName, "flex items-start gap-3")}
+        >
+          <span className="size-6 shrink-0 rounded-md bg-[var(--app-soft-panel)]" />
           <div className="flex-1 space-y-2">
-            <motion.div
+            <div
               className="h-2.5 rounded-sm bg-[var(--app-soft-panel)]"
               style={{ width: `${78 - item * 9}%` }}
-              animate={
-                reduceMotion ? undefined : { opacity: [0.45, 0.8, 0.45] }
-              }
-              transition={{
-                duration: 1.4,
-                repeat: Infinity,
-                ease: "easeInOut",
-                delay: item * 0.1,
-              }}
             />
             <div className="h-2 w-24 rounded-sm bg-[var(--app-soft-panel)] opacity-60" />
           </div>
@@ -1669,20 +1538,25 @@ function ProjectInspector({
         initial={reduceMotion ? false : { opacity: 0 }}
         animate={{ opacity: 1 }}
       >
-        <div className="px-8 text-center">
-          <div className="mx-auto grid size-10 place-items-center rounded-md border border-[var(--app-border)] bg-[var(--app-soft-panel)]">
-            <FolderKanban
-              className="size-4 text-[var(--app-muted)]"
-              strokeWidth={1.75}
-            />
-          </div>
-          <p className="mt-4 text-sm font-medium tracking-[-0.01em]">
-            Select a project
-          </p>
-          <p className="mt-1.5 text-xs leading-relaxed text-[var(--app-muted)]">
-            Project context will stay visible here.
-          </p>
-        </div>
+        <Empty className="flex-none gap-0 rounded-none border-0 p-8 text-center [text-wrap:wrap] md:p-8">
+          <EmptyHeader className="max-w-none gap-0">
+            <EmptyMedia
+              variant="default"
+              className="mx-auto grid size-10 place-items-center rounded-md border border-[var(--app-border)] bg-[var(--app-soft-panel)]"
+            >
+              <FolderKanban
+                className="size-4 text-[var(--app-muted)]"
+                strokeWidth={1.75}
+              />
+            </EmptyMedia>
+            <p className="mt-4 text-sm font-medium tracking-[-0.01em]">
+              Select a project
+            </p>
+            <p className="mt-1.5 text-xs leading-relaxed text-[var(--app-muted)]">
+              Project context will stay visible here.
+            </p>
+          </EmptyHeader>
+        </Empty>
       </MotionCard>
     );
   }
@@ -1705,10 +1579,7 @@ function ProjectInspector({
         transition={{ duration: reduceMotion ? 0 : 0.16, ease: easing }}
       >
         <motion.div
-          className={cn(
-            "flex items-start gap-3 border-b border-[var(--app-border)]",
-            mobile ? "p-5" : "p-3.5"
-          )}
+          className={cn("flex items-start gap-3", mobile ? "p-5" : "p-3.5")}
         >
           <span className="mt-1.5 size-1.5 shrink-0 rounded-full bg-[var(--app-accent)]" />
           <div className="min-w-0 flex-1">
@@ -1782,16 +1653,18 @@ function ProjectInspector({
             )}
           >
             <div className="flex items-center justify-between">
-              <p className="text-[10px] font-medium uppercase tracking-[0.06em] text-[var(--app-muted)]">
+              <p className="text-xs font-medium text-[var(--app-muted)]">
                 Progress
               </p>
               <span className="font-mono text-[11px] tabular-nums text-[var(--app-muted)]">
                 {progress}%
               </span>
             </div>
-            <div className="mt-2 h-1.5 overflow-hidden rounded-sm bg-[var(--app-progress-track)]">
-              <AnimatedProgress value={progress} />
-            </div>
+            <Progress
+              value={progress}
+              aria-hidden="true"
+              className="mt-2 h-1.5 rounded-sm bg-[var(--app-progress-track)] [&_[data-slot=progress-indicator]]:rounded-sm [&_[data-slot=progress-indicator]]:bg-[var(--app-accent)]"
+            />
             <p className="mt-2 text-[10px] leading-relaxed text-[var(--app-muted)]">
               {progress === 100
                 ? "Delivery complete"
@@ -1812,7 +1685,7 @@ function ProjectInspector({
             )}
           >
             <div>
-              <p className="text-[10px] font-medium uppercase tracking-[0.06em] text-[var(--app-muted)]">
+              <p className="text-xs font-medium text-[var(--app-muted)]">
                 Value
               </p>
               <p className="mt-1 text-lg font-semibold tracking-[-0.02em] tabular-nums">
@@ -1851,9 +1724,7 @@ function InspectorField({
         strokeWidth={1.75}
       />
       <div>
-        <p className="text-[10px] font-medium uppercase tracking-[0.06em] text-[var(--app-subtle)]">
-          {label}
-        </p>
+        <p className="text-xs font-medium text-[var(--app-subtle)]">{label}</p>
         <p className="mt-1 text-[13px] font-medium tracking-[-0.01em]">
           {value}
         </p>

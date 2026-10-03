@@ -29,7 +29,11 @@ type ProjectControllerOptions = {
   salaryWorkType: string;
   currencyCode: string;
   workflow: ProjectWorkflowPort;
-  confirmDelivery?: (message: string) => boolean;
+  /** Asks the user to confirm delivery; resolves `true` to proceed. */
+  confirmDelivery: (request: {
+    title: string;
+    description: string;
+  }) => Promise<boolean>;
   notify: (message: string, tone?: "success" | "info" | "warning") => void;
   onStatusChanged: (
     project: WorkItem,
@@ -89,15 +93,11 @@ export function useProjectController(options: ProjectControllerOptions) {
             : preview.kind === "client" && preview.earned > 0
               ? `This records ${formatMoney(preview.earned)} as earned.`
               : "This records delivery for the team Project.";
-        const confirmDelivery =
-          options.confirmDelivery ??
-          ((message: string) => window.confirm(message));
-        if (
-          !confirmDelivery(
-            `Mark ${project.title} as Delivered? Relay will record the delivery time.\n\n${effect}`
-          )
-        )
-          return;
+        const confirmed = await options.confirmDelivery({
+          title: `Mark ${project.title} as Delivered?`,
+          description: `Relay will record the delivery time. ${effect}`,
+        });
+        if (!confirmed) return;
       }
       try {
         const result = await options.workflow.transitionStage({

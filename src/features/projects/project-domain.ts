@@ -256,6 +256,7 @@ export function projectStatusUpdate(
 }
 
 export type ProjectStageGroup = {
+  key: string;
   stage: WorkflowStage;
   projects: WorkItem[];
 };
@@ -301,8 +302,16 @@ export function getProjectWorkflowStage(
   const matchingPurpose = stages.find(
     (stage) => getWorkflowStageStatus(project, stage) === project.status
   );
+  // An unmatched active project falls back to the first working stage, never
+  // to a delivered stage.
+  const firstWorkingStage = stages.find(
+    (stage, index) => index > 0 && stage.purpose !== "delivered"
+  );
   return (
-    matchingPurpose ?? stages[1] ?? stages[0] ?? DEFAULT_WORKFLOW_STAGES[0]
+    matchingPurpose ??
+    firstWorkingStage ??
+    stages[0] ??
+    DEFAULT_WORKFLOW_STAGES[0]
   );
 }
 
@@ -370,46 +379,196 @@ export function resolveProjectWorkflowStage(
   );
 }
 
-/** Keeps empty workflow columns visible while preserving projects in unknown stages. */
-export function groupProjectsByStage(
+/** Keeps empty columns visible and resolves merged columns to each workflow's own IDs. */
+export function createProjectStageBoard(
   projects: readonly WorkItem[],
-  stages: readonly (WorkflowStage | string)[] = [
-    ...new Set(
-      projects.flatMap(getProjectWorkflowStages).map((stage) => stage.id)
-    ),
-  ]
-): ProjectStageGroup[] {
-  const availableStages = projects.flatMap(getProjectWorkflowStages);
-  const knownStages = [
-    ...new Map(
-      stages.flatMap((stage) => {
-        if (typeof stage !== "string") return [[stage.id, stage] as const];
-        const resolved = availableStages.find((candidate) =>
+  stages?: readonly (WorkflowStage | string)[]
+) {
+  const workflows = projects.map(getProjectWorkflowStages);
+  const available = workflows.flat();
+  const currentStages = projects.map((project) =>
+    project.status === "Cancelled"
+      ? { id: "cancelled", label: "Cancelled", purpose: "delivered" as const }
+      : getProjectWorkflowStage(project)
+  );
+  const selected = stages
+    ? stages.flatMap((stage) => {
+        if (typeof stage !== "string") return [stage];
+        const resolved = available.find((candidate) =>
           stageMatches(candidate, stage)
         );
-        return resolved ? [[resolved.id, resolved] as const] : [];
+        return resolved ? [resolved] : [];
       })
-    ),
-  ].map(([, stage]) => stage);
-  const unknownStages = projects
-    .map(getProjectWorkflowStage)
-    .filter(
-      (stage) => !knownStages.some((knownStage) => knownStage.id === stage.id)
+    : available;
+  const candidates = [...selected, ...currentStages];
+  const normalize = (label: string) => label.trim().toLowerCase();
+  const compareText = (left: string, right: string) =>
+    left < right ? -1 : left > right ? 1 : 0;
+  // Identity is transitive: an ID match can connect two otherwise different labels.
+  const parents = candidates.map((_, index) => index);
+  const root = (index: number): number => {
+    while (parents[index] !== index) index = parents[index];
+    return index;
+  };
+  const ids = new Map<string, number>();
+  const labels = new Map<string, number>();
+  candidates.forEach((stage, index) => {
+    for (const match of [
+      ids.get(stage.id),
+      labels.get(normalize(stage.label)),
+    ]) {
+      if (match !== undefined) parents[root(index)] = root(match);
+    }
+    ids.set(stage.id, index);
+    labels.set(normalize(stage.label), index);
+  });
+  const members = new Map<number, WorkflowStage[]>();
+  candidates.forEach((stage, index) => {
+    const key = root(index);
+    const group = members.get(key) ?? [];
+    group.push(stage);
+    members.set(key, group);
+  });
+  const defaultRank = (stage: WorkflowStage) => {
+    const index = DEFAULT_WORKFLOW_STAGES.findIndex(
+      (candidate) =>
+        candidate.id === stage.id ||
+        normalize(candidate.label) === normalize(stage.label)
     );
-
-  const allStages = [
-    ...new Map(
-      [...knownStages, ...unknownStages].map(
-        (stage) => [stage.id, stage] as const
+    return index < 0 ? Infinity : index;
+  };
+  const columns = [...members.values()].map((stages) => {
+    stages.sort(
+      (left, right) =>
+        defaultRank(left) - defaultRank(right) ||
+        Number(DEFAULT_WORKFLOW_STAGES.some((stage) => stage.id === right.id)) -
+          Number(
+            DEFAULT_WORKFLOW_STAGES.some((stage) => stage.id === left.id)
+          ) ||
+        compareText(left.id, right.id) ||
+        compareText(left.label, right.label)
+    );
+    const stage = stages[0];
+    const rank = Math.min(...stages.map(defaultRank));
+    return {
+      key: stage.id,
+      stage,
+      members: stages,
+      rank,
+      terminal: stages.some(
+        (stage) =>
+          stage.purpose === "delivered" ||
+          ["delivered", "cancelled", "canceled"].includes(
+            normalize(stage.label)
+          )
+      ),
+      projects: [] as WorkItem[],
+    };
+  });
+  const byId = new Map(
+    columns.flatMap((column) =>
+      column.members.map((stage) => [stage.id, column] as const)
+    )
+  );
+  const byLabel = new Map(
+    columns.flatMap((column) =>
+      column.members.map((stage) => [normalize(stage.label), column] as const)
+    )
+  );
+  const columnFor = (stage: WorkflowStage) =>
+    byId.get(stage.id) ?? byLabel.get(normalize(stage.label));
+  const compareColumns = (
+    left: (typeof columns)[number],
+    right: (typeof columns)[number]
+  ) =>
+    Number(left.terminal) - Number(right.terminal) ||
+    left.rank - right.rank ||
+    compareText(left.key, right.key);
+  const edges = new Map(
+    columns.map((column) => [column.key, new Set<string>()])
+  );
+  const reaches = (
+    from: string,
+    target: string,
+    visited = new Set<string>()
+  ): boolean => {
+    if (from === target) return true;
+    if (visited.has(from)) return false;
+    visited.add(from);
+    return [...(edges.get(from) ?? [])].some((next) =>
+      reaches(next, target, visited)
+    );
+  };
+  const addOrder = (ordered: typeof columns) => {
+    for (let index = 1; index < ordered.length; index++) {
+      const previous = ordered[index - 1];
+      const next = ordered[index];
+      if (
+        previous.key !== next.key &&
+        previous.terminal === next.terminal &&
+        !reaches(next.key, previous.key)
       )
-    ).values(),
-  ];
-  return allStages.map((stage) => ({
-    stage,
-    projects: projects.filter(
-      (project) => getProjectWorkflowStage(project).id === stage.id
-    ),
-  }));
+        edges.get(previous.key)?.add(next.key);
+    }
+  };
+  // Default order wins conflicts. Sorted workflow constraints make cycle handling deterministic.
+  addOrder(
+    columns
+      .filter((column) => Number.isFinite(column.rank))
+      .sort(compareColumns)
+  );
+  const sequences = workflows.map((workflow) =>
+    workflow.flatMap((stage) => {
+      const column = columnFor(stage);
+      return column ? [column] : [];
+    })
+  );
+  sequences.sort((left, right) =>
+    compareText(
+      JSON.stringify(left.map((column) => column.key)),
+      JSON.stringify(right.map((column) => column.key))
+    )
+  );
+  sequences.forEach(addOrder);
+  const remaining = new Set(columns);
+  const ordered: typeof columns = [];
+  while (remaining.size) {
+    const next = [...remaining]
+      .filter(
+        (column) =>
+          ![...remaining].some((other) => edges.get(other.key)?.has(column.key))
+      )
+      .sort(compareColumns)[0];
+    remaining.delete(next);
+    ordered.push(next);
+  }
+  projects.forEach((project, index) =>
+    columnFor(currentStages[index])?.projects.push(project)
+  );
+  const board: ProjectStageGroup[] = ordered.map(
+    ({ key, stage, projects }) => ({ key, stage, projects })
+  );
+  return {
+    board,
+    resolveMoveStage: (
+      project: WorkItem,
+      columnKey: string
+    ): string | undefined => {
+      const current = getProjectWorkflowStage(project);
+      if (columnFor(current)?.key === columnKey) return current.id;
+      return getProjectWorkflowStages(project).find(
+        (stage) => columnFor(stage)?.key === columnKey
+      )?.id;
+    },
+  };
+}
+
+/** Backwards-compatible grouping entry point, including an optional explicit column set. */
+export function groupProjectsByStage(
+  projects: readonly WorkItem[],
+  stages?: readonly (WorkflowStage | string)[]
+): ProjectStageGroup[] {
+  return createProjectStageBoard(projects, stages).board;
 }
 
 export type ProjectStageMenuChoice = {

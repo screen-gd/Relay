@@ -24,6 +24,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { useConfirm } from "@/components/confirm-dialog";
 
 type ProjectGroupsDialogProps = {
   open: boolean;
@@ -55,6 +56,7 @@ export function ProjectGroupsDialog({
   onSave,
   onArchive,
 }: ProjectGroupsDialogProps) {
+  const confirm = useConfirm();
   const [editingId, setEditingId] = useState("");
   const [name, setName] = useState("");
   const [clientId, setClientId] = useState("");
@@ -113,11 +115,14 @@ export function ProjectGroupsDialog({
     if (editingId === group.id) reset();
   }
 
-  function requestClose() {
+  async function requestClose() {
     if (
       (name.trim() || clientId || notes.trim()) &&
-      typeof window !== "undefined" &&
-      !window.confirm("Discard these Project Group changes?")
+      !(await confirm({
+        title: "Discard these Project Group changes?",
+        confirmLabel: "Discard",
+        destructive: true,
+      }))
     )
       return;
     reset();
@@ -128,7 +133,7 @@ export function ProjectGroupsDialog({
     <Dialog
       open={open}
       onOpenChange={(next) => {
-        if (!next) requestClose();
+        if (!next) void requestClose();
       }}
     >
       <DialogContent className="max-h-[90dvh] overflow-y-auto border-border bg-background text-foreground sm:max-w-3xl">

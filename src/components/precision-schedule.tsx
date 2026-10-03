@@ -28,6 +28,8 @@ import {
 } from "@/features/workspace-discovery/workspace-discovery";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { ButtonGroup } from "@/components/ui/button-group";
+import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Tooltip,
@@ -75,6 +77,7 @@ function daysUntil(value: string) {
 }
 
 const revealTransition = { duration: 0.22, ease: [0.22, 1, 0.36, 1] } as const;
+const MotionButton = motion.create(Button);
 
 function weekdayIndex(day: string) {
   const index = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].indexOf(day);
@@ -432,16 +435,14 @@ export function PrecisionCalendar({
                         const isToday = key === iso(todayDate());
 
                         return (
-                          <motion.button
+                          <Button
                             key={key}
                             type="button"
-                            whileTap={
-                              reduceMotion ? undefined : { scale: 0.995 }
-                            }
+                            variant="ghost"
                             aria-label={`Select ${formatDate(key, { month: "long", day: "numeric", year: "numeric" })} with ${dayEvents.length} scheduled ${dayEvents.length === 1 ? "commitment" : "commitments"}`}
                             onClick={() => setSelectedDate(key)}
                             className={cn(
-                              "min-h-[84px] border-b border-r border-[var(--app-border)] p-1.5 text-left outline-none transition-colors hover:bg-[var(--app-hover)] focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--app-highlight)] sm:min-h-[108px] sm:p-2",
+                              "h-auto min-h-[84px] w-full min-w-0 flex-col items-stretch justify-start gap-0 rounded-none border-b border-r border-[var(--app-border)] p-1.5 text-left font-normal whitespace-normal hover:bg-[var(--app-hover)] dark:hover:bg-[var(--app-hover)] focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--app-highlight)] active:translate-y-0 active:scale-100 sm:min-h-[108px] sm:p-2",
                               isSelected
                                 ? "bg-[var(--app-active)]"
                                 : isCurrentMonth
@@ -496,7 +497,7 @@ export function PrecisionCalendar({
                                 </span>
                               ) : null}
                             </span>
-                          </motion.button>
+                          </Button>
                         );
                       })}
                     </div>
@@ -519,14 +520,15 @@ export function PrecisionCalendar({
                 >
                   <div className="divide-y divide-[var(--app-border)]">
                     {calendarViewRows.map(({ project, dateKey }, index) => (
-                      <button
+                      <Button
                         key={`${dateKey}-${project?.id ?? "empty"}-${index}`}
                         type="button"
+                        variant="ghost"
                         onClick={() => {
                           setSelectedDate(dateKey);
                           if (project) onViewProject(project);
                         }}
-                        className="grid w-full gap-3 px-4 py-3 text-left transition-colors hover:bg-[var(--app-hover)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--app-highlight)] sm:grid-cols-[120px_minmax(0,1fr)_120px] sm:items-center"
+                        className="h-auto w-full grid justify-start gap-3 px-4 py-3 text-left font-normal whitespace-normal hover:bg-[var(--app-hover)] dark:hover:bg-[var(--app-hover)] focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--app-highlight)] active:translate-y-0 active:scale-100 sm:grid-cols-[120px_minmax(0,1fr)_120px] sm:items-center"
                       >
                         <span className="text-xs font-medium text-[var(--app-muted)]">
                           {formatDate(dateKey, {
@@ -556,7 +558,7 @@ export function PrecisionCalendar({
                             {project.status}
                           </Badge>
                         ) : null}
-                      </button>
+                      </Button>
                     ))}
                   </div>
                 </ContentSection>
@@ -615,14 +617,11 @@ export function PrecisionCalendar({
                               {event.kind}
                             </Badge>
                           </div>
-                          <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-[var(--app-progress-track)]">
-                            <div
-                              className="h-full rounded-full bg-[var(--app-highlight)]"
-                              style={{
-                                width: `${getProjectProgress(project)}%`,
-                              }}
-                            />
-                          </div>
+                          <Progress
+                            value={getProjectProgress(project)}
+                            aria-hidden="true"
+                            className="mt-3 h-1.5 rounded-full bg-[var(--app-progress-track)] [&_[data-slot=progress-indicator]]:rounded-full [&_[data-slot=progress-indicator]]:bg-[var(--app-highlight)]"
+                          />
                           <Button
                             variant="ghost"
                             className="mt-3 h-8 px-0 text-xs text-[var(--app-highlight)] hover:bg-transparent"
@@ -747,20 +746,21 @@ export function PrecisionTimeline({
       <PageContent>
         <PageToolbar
           primary={
-            <div
-              className="flex flex-wrap items-center gap-1"
-              role="group"
+            <ButtonGroup
+              className="flex w-fit flex-wrap items-center gap-1 [&>*:not(:first-child)]:!rounded-l-md [&>*:not(:last-child)]:!rounded-r-md"
               aria-label="Filter timeline"
             >
               {(["All", "Active", "Review", "Delivered"] as const).map(
                 (option) => (
-                  <button
+                  <Button
                     key={option}
                     type="button"
+                    variant="ghost"
+                    size="sm"
                     aria-pressed={filter === option}
                     onClick={() => setFilter(option)}
                     className={cn(
-                      "h-8 rounded-md px-3 text-xs font-medium text-[var(--app-muted)] transition-colors hover:bg-[var(--app-hover)] hover:text-[var(--app-text)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--app-highlight)]",
+                      "h-8 gap-0 rounded-md px-3 text-xs text-[var(--app-muted)] hover:bg-[var(--app-hover)] hover:text-[var(--app-text)] dark:hover:bg-[var(--app-hover)] focus-visible:ring-2 focus-visible:ring-[var(--app-highlight)] active:translate-y-0 active:scale-100",
                       filter === option &&
                         "bg-[var(--app-active)] text-[var(--app-highlight)]"
                     )}
@@ -775,10 +775,10 @@ export function PrecisionTimeline({
                             ? review
                             : delivered}
                     </span>
-                  </button>
+                  </Button>
                 )
               )}
-            </div>
+            </ButtonGroup>
           }
           secondary={
             <span
@@ -819,9 +819,10 @@ export function PrecisionTimeline({
                   >
                     <div className="divide-y divide-[var(--app-border)]">
                       {group.projects.map((project, projectIndex) => (
-                        <motion.button
+                        <MotionButton
                           key={project.id}
                           type="button"
+                          variant="ghost"
                           initial={reduceMotion ? false : { opacity: 0, x: -5 }}
                           animate={{ opacity: 1, x: 0 }}
                           transition={
@@ -833,9 +834,8 @@ export function PrecisionTimeline({
                                     groupIndex * 0.035 + projectIndex * 0.025,
                                 }
                           }
-                          whileTap={reduceMotion ? undefined : { scale: 0.995 }}
                           aria-label={`${project.title}, ${project.status}, due ${formatDate(project.dueDate, { month: "long", day: "numeric", year: "numeric" })}`}
-                          className="relative grid w-full gap-3 px-4 py-4 text-left transition-colors hover:bg-[var(--app-hover)] focus-visible:z-10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--app-highlight)] sm:grid-cols-[120px_minmax(0,1fr)_120px_90px] sm:items-center"
+                          className="relative h-auto w-full grid justify-start gap-3 px-4 py-4 text-left font-normal whitespace-normal hover:bg-[var(--app-hover)] dark:hover:bg-[var(--app-hover)] focus-visible:z-10 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--app-highlight)] active:translate-y-0 active:scale-100 sm:grid-cols-[120px_minmax(0,1fr)_120px_90px] sm:items-center"
                           onClick={() => onViewProject(project)}
                         >
                           <span
@@ -885,7 +885,7 @@ export function PrecisionTimeline({
                                 ? "Overdue"
                                 : `${Math.max(0, daysUntil(project.dueDate))}d`}
                           </span>
-                        </motion.button>
+                        </MotionButton>
                       ))}
                     </div>
                   </ContentSection>

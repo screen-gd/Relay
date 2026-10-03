@@ -10,14 +10,15 @@ import { ProjectOutputsPanel } from "@/components/project-outputs-panel";
 import { ProjectPortalPanel } from "@/components/project-portal-panel";
 import { Badge as OwnedBadge } from "@/components/ui/badge";
 import { Button as OwnedButton } from "@/components/ui/button";
+import { cardSurfaceClassName } from "@/components/ui/card";
 import { Progress as OwnedProgress } from "@/components/ui/progress";
 import { Switch as OwnedSwitch } from "@/components/ui/switch";
 import {
   ContentSection,
-  MetricItem,
-  MetricStrip,
   PageContent,
-  PageHeader,
+  SectionNav,
+  sectionListClassName,
+  sectionRowClassName,
   SplitPane,
   WorkspacePage,
 } from "@/components/workspace-page";
@@ -30,7 +31,8 @@ import {
 import { projectStatusTone } from "@/lib/project-status-style";
 import type { SettingsState, WorkItem } from "@/lib/types";
 import { cn } from "@/lib/utils";
-import { ExternalLink, MoreHorizontal } from "lucide-react";
+import { useWorkspaceBreadcrumb } from "@/components/workspace-shell";
+import { ArrowLeft, ExternalLink, MoreHorizontal } from "lucide-react";
 import {
   formatShortDateTime,
   ProjectActivityFeed,
@@ -45,6 +47,17 @@ import type {
 import { ProjectSelect } from "@/features/projects/project-select";
 
 const statusOptions: ProjectStatus[] = [...PROJECT_STATUS_VALUES];
+
+const projectViews: ReadonlyArray<{ id: ProjectWorkspaceView; label: string }> =
+  [
+    { id: "overview", label: "Overview" },
+    { id: "outputs", label: "Outputs and Versions" },
+    { id: "review", label: "Client Review" },
+    { id: "files", label: "Files and Links" },
+    { id: "activity", label: "Activity" },
+  ];
+
+const WORKFLOW_STAGES = ["Planned", "In Progress", "Review", "Delivered"];
 
 function isSalaryWorkType(value: string, settings: SettingsState) {
   return (
@@ -96,6 +109,7 @@ function money(value: number, currencyCode: string) {
   }).format(value || 0);
 }
 
+/** Project record page with an Overview-only details inspector. */
 export function ProjectWorkspace({
   project,
   projectGroup,
@@ -139,11 +153,13 @@ export function ProjectWorkspace({
   onStatusChange: (project: WorkItem, status: ProjectStatus) => void;
   onPaymentChange: (project: WorkItem, paid: boolean) => void;
 }) {
+  useWorkspaceBreadcrumb(project.title);
+  const isSalary = isSalaryWorkType(project.workType, settings);
   const isClientBillable =
-    !isSalaryWorkType(project.workType, settings) &&
+    !isSalary &&
     isDoneStatus(project.status) &&
     safeMoneyValue(project.earnings) > 0;
-  const amount = isSalaryWorkType(project.workType, settings)
+  const amount = isSalary
     ? "Paid per batch"
     : money(project.earnings, settings.currencyCode);
   const assignedMembers = teamMembers.filter((member) =>
@@ -161,110 +177,82 @@ export function ProjectWorkspace({
     ? project.paid
       ? "Paid"
       : "Unpaid"
-    : isSalaryWorkType(project.workType, settings)
+    : isSalary
       ? "Paid per batch"
       : "Not billable";
+  const dueLabel = formatDate(project.dueDate, settings.dateFormat);
+  const createdLabel = project.createdAt
+    ? formatShortDateTime(project.createdAt)
+    : "Not recorded";
   const configuredLinks = integrationServices
     .map((service) => ({
       service,
       link: project.integrationLinks?.[service.id],
     }))
     .filter(({ link }) => hasIntegrationLink(link));
-  const views: Array<{ id: ProjectWorkspaceView; label: string }> = [
-    { id: "overview", label: "Overview" },
-    { id: "outputs", label: "Outputs and Versions" },
-    { id: "review", label: "Client Review" },
-    { id: "files", label: "Files and Links" },
-    { id: "activity", label: "Activity" },
-  ];
 
   return (
     <WorkspacePage family="master-detail" mode="fill">
-      <PageHeader
-        eyebrow={`${project.client || "No Client"}${projectGroup ? ` / ${projectGroup.name}` : ""}`}
-        title={project.title}
-        description={`Due ${formatDate(project.dueDate, settings.dateFormat)} · Lead ${lead} · ${assignedMembers.length ? assignedMembers.map((member) => member.name || member.email).join(", ") : "No assignees"}`}
-        actions={
-          <>
-            <OwnedButton variant="ghost" onClick={onBack}>
-              Back to Projects
-            </OwnedButton>
-            {canEdit ? (
-              <OwnedButton variant="outline" onClick={() => onEdit(project)}>
-                Edit
-              </OwnedButton>
-            ) : null}
-            {canDelete ? (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <OwnedButton
-                    variant="ghost"
-                    size="icon"
-                    aria-label="Project actions"
-                  >
-                    <MoreHorizontal />
-                  </OwnedButton>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuItem
-                    className="text-destructive"
-                    onSelect={() => onDelete(project)}
-                  >
-                    Delete project
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            ) : null}
-          </>
-        }
-      />
+      {/* The visible title lives in the shell breadcrumb. */}
+      <h1 className="sr-only">{project.title}</h1>
       <PageContent mode="fill">
-        <SplitPane
-          ratio="inspector"
-          className="min-h-0 flex-1 lg:h-full"
-          primary={
-            <div className="flex h-full min-h-0 flex-col">
-              <nav
-                aria-label="Project workspace views"
-                className="flex min-w-0 shrink-0 items-stretch overflow-x-auto border-b border-[var(--app-border)]"
-              >
-                {views.map((item) => (
-                  <OwnedButton
-                    key={item.id}
-                    size="sm"
-                    variant="ghost"
-                    aria-current={view === item.id ? "page" : undefined}
-                    className={cn(
-                      "relative h-11 min-w-[8.5rem] flex-1 shrink-0 rounded-none border-b-2 border-transparent px-3 text-xs font-medium text-[var(--app-muted)] transition-colors hover:bg-[var(--app-hover)] hover:text-[var(--app-ink)] focus-visible:z-10 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--app-accent)] sm:min-w-0",
-                      view === item.id &&
-                        "border-b-[var(--app-accent)] bg-transparent text-[var(--app-ink)] hover:bg-transparent"
-                    )}
-                    onClick={() => onViewChange(item.id)}
-                  >
-                    {item.label}
-                  </OwnedButton>
-                ))}
-              </nav>
-              <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
-                {view === "overview" ? (
-                  <div className="grid gap-4 overflow-y-auto pb-5">
-                    <MetricStrip columns={4}>
-                      <MetricItem label="Stage" value={project.status} />
-                      <MetricItem
-                        label="Due"
-                        value={formatDate(project.dueDate, settings.dateFormat)}
-                      />
-                      <MetricItem label="Value" value={amount} />
-                      <MetricItem label="Payment" value={paymentLabel} />
-                    </MetricStrip>
-                    <ContentSection
-                      title="Workflow"
-                      description={`${getProjectProgress(project)}% complete`}
+        <div className="flex h-full min-h-0 flex-col">
+          <div className="flex min-w-0 shrink-0 items-center justify-between gap-3">
+            <SectionNav
+              aria-label="Project workspace views"
+              items={projectViews}
+              value={view}
+              onValueChange={onViewChange}
+            />
+            <div className="flex shrink-0 items-center gap-2">
+              <OwnedButton variant="ghost" size="sm" onClick={onBack}>
+                <ArrowLeft aria-hidden="true" />
+                Projects
+              </OwnedButton>
+              {canEdit ? (
+                <OwnedButton
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => onEdit(project)}
+                >
+                  Edit
+                </OwnedButton>
+              ) : null}
+              {canDelete ? (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <OwnedButton
+                      variant="ghost"
+                      size="icon-sm"
+                      aria-label="Project actions"
                     >
+                      <MoreHorizontal />
+                    </OwnedButton>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem
+                      className="text-destructive"
+                      onSelect={() => onDelete(project)}
+                    >
+                      Delete project
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              ) : null}
+            </div>
+          </div>
+          <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain pt-4 pb-5">
+            {view === "overview" ? (
+              <SplitPane
+                ratio="inspector"
+                className="h-auto items-start"
+                primary={
+                  <div className="grid content-start gap-4">
+                    <ContentSection title="Workflow">
                       <ProjectStageTracker status={project.status} />
                     </ContentSection>
                     <ContentSection
-                      title="Project details"
+                      title="Internal notes"
                       actions={
                         canEdit ? (
                           <OwnedButton
@@ -272,39 +260,31 @@ export function ProjectWorkspace({
                             variant="ghost"
                             onClick={() => onEdit(project)}
                           >
-                            Edit details
+                            Edit
                           </OwnedButton>
                         ) : null
                       }
                     >
-                      <dl className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                        <ProjectMetadataRow
-                          label="Client"
-                          value={project.client || "Not assigned"}
-                        />
-                        <ProjectMetadataRow
-                          label="Project Group"
-                          value={projectGroup?.name || "None"}
-                        />
-                        <ProjectMetadataRow
-                          label="Financial type"
-                          value={project.workType}
-                        />
-                        <ProjectMetadataRow
-                          label="Created"
-                          value={
-                            project.createdAt
-                              ? formatShortDateTime(project.createdAt)
-                              : "Not recorded"
-                          }
-                        />
-                      </dl>
-                      <p className="mt-4 whitespace-pre-wrap text-sm leading-6 text-muted-foreground">
+                      <p
+                        className={cn(
+                          "whitespace-pre-wrap text-sm leading-6",
+                          !project.notes && "text-muted-foreground"
+                        )}
+                      >
                         {project.notes || "No internal notes."}
                       </p>
                     </ContentSection>
                     <ContentSection
                       title="Client payment"
+                      description={
+                        isClientBillable
+                          ? project.paid
+                            ? `Paid${project.paidDate ? ` · ${formatShortDateTime(project.paidDate)}` : ""}`
+                            : "Delivered, not paid"
+                          : isSalary
+                            ? "Paid per batch"
+                            : "Payment tracking starts after delivery"
+                      }
                       actions={
                         <OwnedSwitch
                           checked={Boolean(project.paid)}
@@ -315,18 +295,88 @@ export function ProjectWorkspace({
                           }
                         />
                       }
-                    >
-                      <p className="text-sm text-muted-foreground">
-                        {isClientBillable
-                          ? project.paid
-                            ? `Paid${project.paidDate ? ` ${formatShortDateTime(project.paidDate)}` : ""}.`
-                            : "Delivered, not paid yet."
-                          : "Payment tracking starts after delivery for client-priced work."}
-                      </p>
-                    </ContentSection>
+                    />
                   </div>
-                ) : null}
-
+                }
+                secondary={
+                  <aside
+                    aria-label="Project details"
+                    className={cn(
+                      cardSurfaceClassName,
+                      "h-fit text-sm lg:sticky lg:top-0"
+                    )}
+                  >
+                    <div className="flex items-center justify-between gap-3 px-5 pt-5">
+                      <h2 className="text-sm font-semibold">Details</h2>
+                      <span className="font-mono text-xs tabular-nums text-muted-foreground">
+                        {progress}%
+                      </span>
+                    </div>
+                    <div className="px-5 pt-4">
+                      <OwnedProgress
+                        value={progress}
+                        aria-label="Project workflow progress"
+                        className="h-1"
+                      />
+                      <p className="mt-2 text-xs text-muted-foreground">
+                        {clientPortalStage(project.status)}
+                      </p>
+                    </div>
+                    <dl className="grid px-5 pt-3 pb-4">
+                      <div className="flex min-h-9 items-center justify-between gap-4 text-xs">
+                        <dt className="shrink-0 text-muted-foreground">
+                          Stage
+                        </dt>
+                        <dd className="min-w-0">
+                          {canUpdateStatus ? (
+                            <ProjectSelect
+                              value={project.status}
+                              options={statusOptions}
+                              onChange={(status) => {
+                                if (status !== "Client Review")
+                                  onStatusChange(project, status);
+                              }}
+                              compact
+                              className="!h-7 min-w-[8.5rem] text-xs"
+                            />
+                          ) : (
+                            <ProjectStatusBadge status={project.status} />
+                          )}
+                        </dd>
+                      </div>
+                      <ProjectMetadataRow
+                        label="Client"
+                        value={project.client || "Not assigned"}
+                      />
+                      <ProjectMetadataRow
+                        label="Project Group"
+                        value={projectGroup?.name || "None"}
+                      />
+                      <ProjectMetadataRow label="Lead" value={lead} />
+                      <ProjectMetadataRow
+                        label="Assignees"
+                        value={assigneeLabel}
+                      />
+                      <ProjectMetadataRow label="Due" value={dueLabel} />
+                      <ProjectMetadataRow
+                        label="Work type"
+                        value={project.workType}
+                      />
+                      <ProjectMetadataRow label="Value" value={amount} />
+                      <ProjectMetadataRow
+                        label="Payment"
+                        value={paymentLabel}
+                      />
+                      <ProjectMetadataRow
+                        label="Created"
+                        value={createdLabel}
+                      />
+                    </dl>
+                  </aside>
+                }
+              />
+            ) : (
+              <div className="grid content-start gap-4">
                 {view === "outputs" ? (
                   <ProjectOutputsPanel
                     project={project}
@@ -336,7 +386,7 @@ export function ProjectWorkspace({
                 ) : null}
 
                 {view === "review" ? (
-                  <div className="grid gap-4 overflow-y-auto pb-5">
+                  <>
                     <ProjectDetailCollaborationPanel
                       project={project}
                       teamMembers={teamMembers}
@@ -348,46 +398,53 @@ export function ProjectWorkspace({
                       clientHubEnabled={clientHubEnabled}
                       customPortalBrandingEnabled={customPortalBrandingEnabled}
                     />
-                  </div>
+                  </>
                 ) : null}
 
                 {view === "files" ? (
-                  <div className="grid gap-4 overflow-y-auto pb-5">
+                  <>
                     <ContentSection
                       title="External links"
                       metadata={
-                        <OwnedBadge variant="secondary">
+                        <OwnedBadge variant="secondary" className="rounded-sm">
                           {configuredLinks.length}
                         </OwnedBadge>
                       }
+                      bodyMode="flush"
                     >
-                      <div className="divide-y divide-border">
-                        {configuredLinks.length ? (
-                          configuredLinks.map(({ service, link }) =>
+                      {configuredLinks.length ? (
+                        <div className={sectionListClassName}>
+                          {configuredLinks.map(({ service, link }) =>
                             link ? (
                               <a
                                 key={service.id}
                                 href={link.url}
                                 target="_blank"
                                 rel="noreferrer"
-                                className="flex items-center justify-between gap-3 py-3 text-sm hover:underline"
+                                className={cn(
+                                  sectionRowClassName,
+                                  "flex items-center justify-between gap-3 text-sm"
+                                )}
                               >
-                                <span>
+                                <span className="min-w-0 truncate">
                                   {integrationDisplayText(link, service.name)}
                                 </span>
-                                <ExternalLink className="size-4" />
+                                <ExternalLink
+                                  className="size-4 shrink-0 text-muted-foreground"
+                                  aria-hidden="true"
+                                />
                               </a>
                             ) : null
-                          )
-                        ) : (
-                          <p className="py-6 text-center text-sm text-muted-foreground">
-                            No external links yet.
-                          </p>
-                        )}
-                      </div>
+                          )}
+                        </div>
+                      ) : (
+                        <p className="px-5 pb-5 text-sm text-muted-foreground">
+                          No external links yet.
+                        </p>
+                      )}
                     </ContentSection>
                     <ProjectFileManager project={project} canEdit={canEdit} />
-                  </div>
+                  </>
                 ) : null}
 
                 {view === "activity" ? (
@@ -397,109 +454,50 @@ export function ProjectWorkspace({
                   />
                 ) : null}
               </div>
-            </div>
-          }
-          secondary={
-            <div className="h-full min-h-0 pt-11">
-              <aside
-                aria-label="Project details"
-                className="h-fit rounded-xl border border-[var(--app-border)] bg-[var(--app-panel)] p-4 text-card-foreground lg:sticky lg:top-0"
-              >
-                <div className="flex items-start justify-between gap-3">
-                  <div className="min-w-0">
-                    <h2 className="text-[10px] font-semibold uppercase tracking-[0.12em] text-[var(--app-muted)]">
-                      Project details
-                    </h2>
-                  </div>
-                  {canUpdateStatus ? (
-                    <ProjectSelect
-                      value={project.status}
-                      options={statusOptions}
-                      onChange={(status) => {
-                        if (status !== "Client Review")
-                          onStatusChange(project, status);
-                      }}
-                      compact
-                      className="min-w-[8.5rem]"
-                    />
-                  ) : (
-                    <ProjectStatusBadge status={project.status} />
-                  )}
-                </div>
-
-                <div className="mt-4 border-y border-[var(--app-border)] py-3">
-                  <div className="flex items-center justify-between gap-3 text-[11px]">
-                    <span className="font-medium text-[var(--app-muted)]">
-                      Workflow
-                    </span>
-                    <span className="font-mono tabular-nums text-[var(--app-ink)]">
-                      {progress}%
-                    </span>
-                  </div>
-                  <OwnedProgress
-                    value={progress}
-                    aria-label="Project workflow progress"
-                    className="mt-2"
-                  />
-                  <p className="mt-2 text-[11px] text-[var(--app-muted)]">
-                    {clientPortalStage(project.status)}
-                  </p>
-                </div>
-
-                <dl className="mt-2 grid gap-0 text-sm">
-                  <ProjectMetadataRow
-                    label="Client"
-                    value={project.client || "Not assigned"}
-                  />
-                  <ProjectMetadataRow
-                    label="Project Group"
-                    value={projectGroup?.name || "None"}
-                  />
-                  <ProjectMetadataRow label="Stage" value={project.status} />
-                  <ProjectMetadataRow label="Lead" value={lead} />
-                  <ProjectMetadataRow label="Assignees" value={assigneeLabel} />
-                  <ProjectMetadataRow
-                    label="Due"
-                    value={formatDate(project.dueDate, settings.dateFormat)}
-                  />
-                  <ProjectMetadataRow
-                    label="Work type"
-                    value={project.workType}
-                  />
-                  <ProjectMetadataRow label="Value" value={amount} />
-                  <ProjectMetadataRow label="Payment" value={paymentLabel} />
-                </dl>
-              </aside>
-            </div>
-          }
-        />
+            )}
+          </div>
+        </div>
       </PageContent>
     </WorkspacePage>
   );
 }
 
+/** Four-segment stage bar; each segment fills once its stage is reached. */
 function ProjectStageTracker({ status }: { status: string }) {
-  const stages = ["Planned", "In Progress", "Review", "Delivered"];
-  const currentStage = clientPortalStage(status);
-  const currentIndex = stages.indexOf(currentStage);
+  const currentIndex = WORKFLOW_STAGES.indexOf(clientPortalStage(status));
 
   return (
-    <div>
-      <OwnedProgress
-        value={Math.max(8, ((currentIndex + 1) / stages.length) * 100)}
-        aria-label="Project workflow progress"
-      />
-      <div className="mt-2 grid grid-cols-4 gap-2">
-        {stages.map((stage, index) => (
-          <span
+    <ol className="grid grid-cols-4 gap-1.5" aria-label="Workflow stages">
+      {WORKFLOW_STAGES.map((stage, index) => {
+        const reached = index <= currentIndex;
+        return (
+          <li
             key={stage}
-            className={`text-xs ${index <= currentIndex ? "text-foreground" : "text-muted-foreground"} ${index === currentIndex ? "font-semibold" : ""} ${index === 0 ? "text-left" : index === stages.length - 1 ? "text-right" : "text-center"}`}
+            aria-current={index === currentIndex ? "step" : undefined}
           >
-            {stage}
-          </span>
-        ))}
-      </div>
-    </div>
+            <span
+              aria-hidden="true"
+              className={cn(
+                "block h-1 rounded-sm",
+                reached
+                  ? "bg-[var(--app-ink)]"
+                  : "bg-[var(--app-progress-track)]",
+                "rounded-sm"
+              )}
+            />
+            <span
+              className={cn(
+                "mt-2 block text-xs",
+                reached ? "text-foreground" : "text-muted-foreground",
+                index === currentIndex && "font-medium"
+              )}
+            >
+              {stage}
+            </span>
+          </li>
+        );
+      })}
+    </ol>
   );
 }
 
@@ -511,11 +509,11 @@ function ProjectMetadataRow({
   value: string;
 }) {
   return (
-    <div className="flex justify-between gap-4 py-2 text-xs">
-      <span className="text-muted-foreground">{label}</span>
-      <span className="text-right font-medium [overflow-wrap:anywhere]">
+    <div className="flex min-h-9 items-center justify-between gap-4 text-xs">
+      <dt className="shrink-0 text-muted-foreground">{label}</dt>
+      <dd className="text-right font-medium [overflow-wrap:anywhere]">
         {value}
-      </span>
+      </dd>
     </div>
   );
 }
@@ -524,13 +522,17 @@ function ProjectStatusBadge({ status }: { status: string }) {
   return (
     <OwnedBadge
       variant="outline"
-      className={projectStatusTone(isDoneStatus(status) ? "Delivered" : status)}
+      className={cn(
+        "rounded-sm",
+        projectStatusTone(isDoneStatus(status) ? "Delivered" : status)
+      )}
     >
       {status}
     </OwnedBadge>
   );
 }
 
+/** Maps any custom project status onto the four workflow stages. */
 function clientPortalStage(status: string) {
   const normalized = status.trim().toLowerCase();
   if (
@@ -551,5 +553,5 @@ function clientPortalStage(status: string) {
     normalized.includes("active")
   )
     return "In Progress";
-  return "Planning";
+  return "Planned";
 }

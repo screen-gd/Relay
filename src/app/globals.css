@@ -12,15 +12,15 @@
   --popover-foreground: var(--app-ink);
   --primary: var(--app-accent);
   --primary-foreground: var(--app-accent-foreground);
-  --secondary: var(--app-soft-panel);
+  --secondary: var(--app-secondary);
   --secondary-foreground: var(--app-ink);
   --muted: var(--app-soft-panel);
   --muted-foreground: var(--app-muted);
-  --accent: var(--app-soft-panel);
+  --accent: var(--app-secondary);
   --accent-foreground: var(--app-ink);
   --destructive: var(--app-danger);
   --border: var(--app-border);
-  --input: var(--app-border);
+  --input: var(--app-input-border);
   --ring: var(--app-accent);
   --chart-1: var(--app-accent);
   --chart-2: var(--app-highlight);
@@ -28,15 +28,15 @@
   --chart-4: var(--app-danger);
   --chart-5: var(--app-muted);
   /* Theme values live here; runtime code only overrides the user's accent. */
-  --surface-canvas: #f8fafc;
+  --surface-canvas: #f4f4f5;
   --surface-panel: #ffffff;
   --surface-panel-raised: #ffffff;
-  --surface-sunken: #f1f5f9;
+  --surface-sunken: #f4f4f5;
   --surface-overlay: #ffffff;
   --text-primary: #000000;
   --text-secondary: #3f3f46;
   --text-muted: #52525b;
-  --text-disabled: #a1a1aa;
+  --text-disabled: #52525b;
   --status-info: #2563eb;
   --status-info-bg: #eff6ff;
   --status-success: #15803d;
@@ -46,9 +46,9 @@
   --status-danger: #b91c1c;
   --status-danger-bg: #fef2f2;
   --focus-ring: #18181b;
-  --selected-bg: rgb(24 24 27 / 0.08);
-  --disabled-bg: #f1f5f9;
-  --overlay-scrim: rgba(15, 23, 42, 0.58);
+  --selected-bg: #e4e4e7;
+  --disabled-bg: #f4f4f5;
+  --overlay-scrim: rgb(24 24 27 / 0.58);
   --brand-google-drive: #4285f4;
   --brand-dropbox: #0061ff;
   --brand-slack: #4a154b;
@@ -75,11 +75,13 @@
   --density-control-height: 40px;
   --radius: 0.375rem;
   --radius-control: 0.375rem;
-  --radius-panel: 0.375rem;
+  --radius-panel: 0.75rem;
   --radius-overlay: 0.5rem;
+  /* Badges and tags are small squares, never pills. */
+  --radius-badge: 0.25rem;
   --radius-pill: 9999px;
   --shadow-panel: none;
-  --shadow-overlay: 0 18px 50px rgb(15 23 42 / 0.16);
+  --shadow-overlay: 0 18px 50px rgb(24 24 27 / 0.16);
   --sidebar: var(--app-sidebar);
   --sidebar-foreground: var(--app-ink);
   --sidebar-primary: var(--app-accent);
@@ -94,17 +96,24 @@
   --app-highlight: #18181b;
   --app-canvas: var(--surface-canvas);
   --app-panel: var(--surface-panel);
-  --app-sidebar: var(--surface-sunken);
+  /* Light chrome is white so the gray canvas and white panels read as layers. */
+  --app-sidebar: var(--surface-panel);
   --app-soft-panel: var(--surface-sunken);
   --app-header-panel: var(--surface-panel-raised);
   --app-active: var(--selected-bg);
-  --app-hover: rgba(15, 23, 42, 0.05);
+  --app-hover: rgb(24 24 27 / 0.05);
   --app-ink: var(--text-primary);
   --app-muted: var(--text-muted);
   --app-subtle: var(--text-disabled);
-  --app-border: #e2e8f0;
-  --app-strong-border: #cbd5e1;
+  --app-border: #e4e4e7;
+  --app-strong-border: #d4d4d8;
   --app-control: var(--surface-panel);
+  --app-input-border: #d4d4d8;
+  --app-secondary: #e4e4e7;
+  /* Panels separate from the canvas by fill; the edge is only a hint. */
+  --panel-edge: #e4e4e7;
+  /* Inset wells inside panels (nested records, comments, previews). */
+  --surface-inset: var(--surface-sunken);
   --app-success: var(--status-success);
   --app-warning: var(--status-warning);
   --app-danger: var(--status-danger);
@@ -114,7 +123,9 @@
   --app-progress-track: var(--app-border);
   --app-chart-grid: var(--app-border);
   --app-avatar-surface: var(--surface-sunken);
-  --app-thumb-icon: rgba(15, 23, 42, 0.36);
+  --app-thumb-icon: rgb(24 24 27 / 0.36);
+  /* Keeps the switch thumb crisp white on light panels. */
+  --app-switch-thumb: #ffffff;
   --app-shadow-1: var(--shadow-panel);
   --app-shadow-2: var(--shadow-overlay);
   --motion-fast: 120ms;
@@ -129,15 +140,22 @@
   --app-accent-foreground: #000000;
   --app-highlight: #ffffff;
   --app-hover: rgb(255 255 255 / 0.06);
-  --app-border: #27272a;
-  --app-strong-border: #3f3f46;
+  --app-border: rgb(255 255 255 / 0.08);
+  --app-strong-border: rgb(255 255 255 / 0.16);
+  --app-input-border: rgb(255 255 255 / 0.12);
+  --app-secondary: rgb(255 255 255 / 0.08);
+  --app-control: #0a0a0a;
+  --panel-edge: rgb(255 255 255 / 0.05);
+  --surface-inset: #0a0a0a;
   --app-thumb-icon: rgba(241, 245, 249, 0.38);
+  --app-switch-thumb: #000000;
   --media-package-1: #17263a;
   --media-package-2: #29251f;
   --media-package-3: #172a21;
   --media-package-4: #252039;
   --media-package-5: #252b33;
   --surface-canvas: #000000;
+  --app-sidebar: var(--surface-sunken);
   --surface-panel: #121212;
   --surface-panel-raised: #171717;
   --surface-sunken: #0a0a0a;
@@ -365,16 +383,16 @@ button:not(:disabled):active,
 [data-slot="select-trigger"] {
   min-height: 40px;
   border-radius: var(--radius-control);
-  background-color: var(--surface-panel);
+  background-color: var(--app-control);
 }
 
 [data-slot="textarea"] {
   border-radius: var(--radius-control);
-  background-color: var(--surface-panel);
+  background-color: var(--app-control);
 }
 
 [data-slot="badge"] {
-  min-height: 24px;
+  min-height: 20px;
 }
 [data-slot="select-item"],
 [data-slot="dropdown-menu-item"],
@@ -406,7 +424,7 @@ button:not(:disabled):active,
 
 [data-slot="badge"],
 [data-slot="tag"] {
-  border-radius: var(--radius-pill);
+  border-radius: var(--radius-badge);
 }
 
 [data-slot="skeleton"] {

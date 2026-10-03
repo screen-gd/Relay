@@ -1,17 +1,23 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
-import { ExternalLink, RefreshCw } from "lucide-react";
+import { ChevronRight, ExternalLink, RefreshCw } from "lucide-react";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { FieldLayout } from "@/components/ui/field-layout";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { CapabilityUpgradePrompt } from "@/components/subscription-plans";
+import { ContentSection } from "@/components/workspace-page";
 import { useProjectOutputs } from "@/lib/project-output-data";
 import type { WorkItem } from "@/lib/types";
 import {
@@ -20,13 +26,28 @@ import {
   type ProjectPortalDraft,
 } from "@/features/client-portals/internal/project-portal-data";
 
-const reviewStateLabels: Record<string, string> = {
-  draft: "Draft",
-  sent_to_client: "Sent to Client",
-  changes_requested: "Changes Requested",
-  approved: "Approved",
-  final_delivered: "Final Delivered",
-};
+/** Aligns each portal setting label and hint with its control. */
+function PortalSettingRow({
+  label,
+  hint,
+  children,
+}: {
+  label: string;
+  hint?: string;
+  children: ReactNode;
+}) {
+  return (
+    <div className="grid gap-2 py-2 sm:grid-cols-[minmax(9rem,0.7fr)_minmax(0,1.3fr)] sm:items-center sm:gap-6">
+      <div>
+        <p className="text-sm font-medium">{label}</p>
+        {hint ? (
+          <p className="mt-0.5 text-xs text-muted-foreground">{hint}</p>
+        ) : null}
+      </div>
+      <div className="min-w-0">{children}</div>
+    </div>
+  );
+}
 
 type ProjectPortalPanelProps = {
   project: WorkItem;
@@ -59,7 +80,7 @@ export function ProjectPortalPanel({
   const setHubPublished = useMutation(api.clientHub.setProjectPublished);
   const saveBranding = useMutation(api.clientHub.setBranding);
   const [brandName, setBrandName] = useState("");
-  const [accentColor, setAccentColor] = useState("#f59e0b");
+  const [accentColor, setAccentColor] = useState("");
   const [draft, setDraft] = useState<ProjectPortalDraft>(() =>
     draftFromPortal(null)
   );
@@ -203,15 +224,11 @@ export function ProjectPortalPanel({
 
   if (!data.available && !data.loading) {
     return (
-      <section aria-labelledby="project-portal-title" className="border-b py-5">
-        <h2 id="project-portal-title" className="text-base font-semibold">
-          Client Portal
-        </h2>
-        <p className="mt-2 max-w-[62ch] text-sm text-muted-foreground">
-          Client Portals require a cloud account. Local records stay private to
-          this browser.
-        </p>
-      </section>
+      <ContentSection
+        titleId="project-portal-title"
+        title="Client Portal"
+        description="Requires a cloud account."
+      />
     );
   }
 
@@ -226,209 +243,138 @@ export function ProjectPortalPanel({
     );
   }
 
-  return (
-    <section
-      data-testid="project-portal-panel"
-      aria-labelledby="project-portal-title"
-      className="min-h-0 overflow-y-auto pb-5"
-    >
-      <div className="flex flex-wrap items-start justify-between gap-3 border-b pb-4">
-        <div>
-          <h2 id="project-portal-title" className="text-base font-semibold">
-            Client Portal
-          </h2>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Share current Outputs and approved Project Files through one private
-            link.
-          </p>
-        </div>
-        {data.portal ? (
-          <Badge variant="outline">
-            {data.portal.status === "open"
-              ? "Open"
-              : data.portal.status === "draft"
-                ? "Draft"
-                : "Closed"}
-          </Badge>
-        ) : (
-          <Badge variant="outline">Not published</Badge>
-        )}
-      </div>
+  const statusLabel = data.portal
+    ? data.portal.status === "open"
+      ? "Open"
+      : data.portal.status === "draft"
+        ? "Draft"
+        : "Closed"
+    : "Not published";
 
+  return (
+    <div data-testid="project-portal-panel" className="grid gap-4">
       {data.error || formError ? (
-        <p role="alert" className="mt-3 text-sm text-destructive">
+        <p
+          role="alert"
+          className="bg-[var(--status-danger-bg)] px-4 py-3 text-sm text-[var(--status-danger)]"
+        >
           {formError || data.error}
         </p>
       ) : null}
 
-      <div className="grid gap-6 py-5">
-        {canEdit && clientHubEnabled && hubSettings?.available ? (
-          <section
-            className="grid gap-4 border-b pb-6"
-            aria-labelledby="client-hub-title"
-          >
-            <div>
-              <h3 id="client-hub-title" className="font-medium">
-                Client Hub and branding
-              </h3>
-              <p className="mt-1 text-sm text-muted-foreground">
-                Publish this Project to signed-in Client Contacts. Branding
-                changes presentation only.
-              </p>
-            </div>
-            <label className="flex items-center gap-3 text-sm">
-              <Checkbox
-                checked={hubSettings.published}
-                onCheckedChange={(checked) =>
-                  void changeHubPublished(checked === true)
-                }
-              />
-              Publish to Client Hub
-            </label>
-            {customPortalBrandingEnabled ? (
-              <div className="grid gap-3 sm:grid-cols-[1fr_110px_auto]">
-                <Input
-                  value={brandName}
-                  onChange={(event) => setBrandName(event.target.value)}
-                  aria-label="Portal brand name"
-                />
-                <Input
-                  type="color"
-                  value={accentColor}
-                  onChange={(event) => setAccentColor(event.target.value)}
-                  aria-label="Portal accent color"
-                />
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => void saveHubBranding()}
-                >
-                  Save branding
-                </Button>
-              </div>
-            ) : (
-              <CapabilityUpgradePrompt capability="customPortalBranding" />
-            )}
-          </section>
-        ) : canEdit && !clientHubEnabled ? (
-          <section
-            className="grid gap-3 border-b pb-6"
-            aria-labelledby="client-hub-title"
-          >
-            <div>
-              <h3 id="client-hub-title" className="font-medium">
-                Client Hub and branding
-              </h3>
-              <p className="mt-1 text-sm text-muted-foreground">
-                Publish Projects to signed-in Client Contacts and customize
-                their presentation.
-              </p>
-            </div>
-            <CapabilityUpgradePrompt capability="clientHub" />
-            <CapabilityUpgradePrompt capability="customPortalBranding" />
-          </section>
-        ) : null}
-        <section
-          className="grid gap-4 border-b pb-6"
-          aria-labelledby="portal-link-title"
-        >
-          <div>
-            <h3 id="portal-link-title" className="font-medium">
-              Private link
-            </h3>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Regenerating the link immediately invalidates the previous URL.
-            </p>
-          </div>
-          {data.portal ? (
+      <ContentSection
+        titleId="project-portal-title"
+        title="Client Portal"
+        metadata={
+          <Badge variant="secondary" className="rounded-sm">
+            {statusLabel}
+          </Badge>
+        }
+        footer={
+          canEdit ? (
             <>
-              {portalUrl ? (
-                <div className="flex flex-col gap-2 sm:flex-row">
-                  <Input
-                    readOnly
-                    value={portalUrl}
-                    aria-label="Client Portal link"
-                    className="font-mono text-xs"
-                  />
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => void copyPortalLink()}
-                    disabled={busy !== ""}
-                  >
-                    {busy === "copy" ? "Copying..." : "Copy link"}
-                  </Button>
-                  {portalUrl ? (
+              <p className="text-xs text-muted-foreground">
+                Client access stays scoped to this project.
+              </p>
+              <Button
+                type="button"
+                size="sm"
+                onClick={() => void savePortal()}
+                disabled={busy !== ""}
+              >
+                {busy === "save"
+                  ? "Saving..."
+                  : data.portal
+                    ? "Save changes"
+                    : "Publish portal"}
+              </Button>
+            </>
+          ) : null
+        }
+      >
+        <div className="grid gap-2">
+          <PortalSettingRow
+            label="Portal link"
+            hint={
+              data.portal
+                ? "Regenerating invalidates the current link."
+                : "Publish to create a private link."
+            }
+          >
+            {data.portal ? (
+              <div className="grid gap-2">
+                {portalUrl ? (
+                  <div className="flex flex-wrap gap-2">
+                    <Input
+                      readOnly
+                      value={portalUrl}
+                      aria-label="Client Portal link"
+                      className="min-w-0 flex-1 font-mono text-xs"
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => void copyPortalLink()}
+                      disabled={busy !== ""}
+                    >
+                      {busy === "copy" ? "Copying..." : "Copy"}
+                    </Button>
                     <Button asChild type="button" variant="outline">
                       <a href={portalUrl} target="_blank" rel="noreferrer">
                         Open <ExternalLink aria-hidden="true" />
                       </a>
                     </Button>
-                  ) : null}
-                </div>
-              ) : (
-                <p className="text-sm text-muted-foreground">
-                  This browser no longer has the bearer link. Regenerate it to
-                  create and copy a new one.
-                </p>
-              )}
-              {canEdit ? (
-                <div className="flex flex-wrap gap-2">
-                  <Button
-                    type="button"
-                    variant={
-                      data.portal.status === "open" ? "outline" : "default"
-                    }
-                    onClick={() =>
-                      void changeOpen(data.portal?.status !== "open")
-                    }
-                    disabled={busy !== ""}
-                  >
-                    {busy === "open"
-                      ? "Opening..."
-                      : busy === "close"
-                        ? "Closing..."
-                        : data.portal.status === "open"
-                          ? "Close portal"
-                          : "Open portal"}
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    onClick={() => void regenerate()}
-                    disabled={busy !== ""}
-                  >
-                    <RefreshCw aria-hidden="true" />
-                    {busy === "regenerate"
-                      ? "Regenerating..."
-                      : "Regenerate link"}
-                  </Button>
-                </div>
-              ) : null}
-            </>
-          ) : (
-            <p className="text-sm text-muted-foreground">
-              Save the settings below to create a private Client Portal link.
-            </p>
-          )}
-        </section>
-
-        <section
-          className="grid gap-4 border-b pb-6"
-          aria-labelledby="portal-details-title"
-        >
-          <div>
-            <h3 id="portal-details-title" className="font-medium">
-              Public details
-            </h3>
-            <p className="mt-1 text-sm text-muted-foreground">
-              These fields are client-facing. Internal Project notes and dates
-              stay private.
-            </p>
-          </div>
-          <FieldLayout
+                  </div>
+                ) : (
+                  <p className="text-xs text-muted-foreground">
+                    Link unavailable in this browser.
+                  </p>
+                )}
+                {canEdit ? (
+                  <div className="flex flex-wrap gap-2">
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant={
+                        data.portal.status === "open" ? "outline" : "default"
+                      }
+                      onClick={() =>
+                        void changeOpen(data.portal?.status !== "open")
+                      }
+                      disabled={busy !== ""}
+                    >
+                      {busy === "open"
+                        ? "Opening..."
+                        : busy === "close"
+                          ? "Closing..."
+                          : data.portal.status === "open"
+                            ? "Close portal"
+                            : "Open portal"}
+                    </Button>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => void regenerate()}
+                      disabled={busy !== ""}
+                    >
+                      <RefreshCw aria-hidden="true" />{" "}
+                      {busy === "regenerate"
+                        ? "Regenerating..."
+                        : "Regenerate link"}
+                    </Button>
+                  </div>
+                ) : null}
+              </div>
+            ) : (
+              <p className="text-sm text-muted-foreground">
+                Set the options below, then publish.
+              </p>
+            )}
+          </PortalSettingRow>
+          <PortalSettingRow
             label="Public notes"
-            description={`${draft.publicNotes.length}/2000 characters`}
+            hint={`${draft.publicNotes.length}/2000 characters`}
           >
             <Textarea
               value={draft.publicNotes}
@@ -438,138 +384,82 @@ export function ProjectPortalPanel({
               maxLength={2000}
               disabled={!canEdit}
             />
-          </FieldLayout>
-          <label className="flex items-center gap-3 text-sm">
-            <Checkbox
-              checked={draft.showStartDate}
-              onCheckedChange={(checked) =>
-                updateDraft({ showStartDate: checked === true })
+          </PortalSettingRow>
+          <PortalSettingRow
+            label="Project dates"
+            hint="Choose which dates clients can see."
+          >
+            <div className="flex flex-wrap gap-x-5 gap-y-2">
+              <Label className="flex items-center gap-2 text-sm font-normal">
+                <Checkbox
+                  checked={draft.showStartDate}
+                  onCheckedChange={(checked) =>
+                    updateDraft({ showStartDate: checked === true })
+                  }
+                  disabled={!canEdit}
+                />
+                Start date
+              </Label>
+              <Label className="flex items-center gap-2 text-sm font-normal">
+                <Checkbox
+                  checked={draft.showDueDate}
+                  onCheckedChange={(checked) =>
+                    updateDraft({ showDueDate: checked === true })
+                  }
+                  disabled={!canEdit}
+                />
+                Due date
+              </Label>
+            </div>
+          </PortalSettingRow>
+          <PortalSettingRow
+            label="Shared outputs"
+            hint="Only current versions are shared."
+          >
+            {outputs.length ? (
+              <div className="grid gap-2">
+                {outputs.map((output) => (
+                  <Label
+                    key={output.id}
+                    className="flex items-center gap-2 text-sm font-normal"
+                  >
+                    <Checkbox
+                      checked={selectedOutputs.has(output.id)}
+                      onCheckedChange={() => toggleOutput(output.id)}
+                      disabled={!canEdit}
+                    />
+                    <span className="min-w-0 truncate">{output.title}</span>
+                    <span className="shrink-0 text-xs text-muted-foreground">
+                      {output.hasCurrentVersion ? "Ready" : "No version"}
+                    </span>
+                  </Label>
+                ))}
+              </div>
+            ) : (
+              <p className="text-sm text-muted-foreground">
+                No outputs to share.
+              </p>
+            )}
+          </PortalSettingRow>
+          <PortalSettingRow label="Expiry" hint="Optional. Uses local time.">
+            <Input
+              type="datetime-local"
+              value={draft.expiresAt}
+              onChange={(event) =>
+                updateDraft({ expiresAt: event.target.value })
               }
               disabled={!canEdit}
             />
-            Show the Project start date
-          </label>
-          <label className="flex items-center gap-3 text-sm">
-            <Checkbox
-              checked={draft.showDueDate}
-              onCheckedChange={(checked) =>
-                updateDraft({ showDueDate: checked === true })
-              }
-              disabled={!canEdit}
-            />
-            Show the Project due date
-          </label>
-          <details className="border-l pl-4">
-            <summary className="cursor-pointer text-sm font-medium">
-              Preview portal content
-            </summary>
-            <div className="mt-4 max-w-sm space-y-3 text-sm">
-              <p className="text-lg font-semibold">{project.title}</p>
-              {draft.publicNotes ? (
-                <p className="whitespace-pre-wrap text-muted-foreground">
-                  {draft.publicNotes}
-                </p>
-              ) : null}
-              <p className="text-muted-foreground">
-                {[
-                  draft.showStartDate ? `Start ${project.startDate}` : "",
-                  draft.showDueDate ? `Due ${project.dueDate}` : "",
-                ]
-                  .filter(Boolean)
-                  .join(" · ") || "No Project dates shared"}
-              </p>
-              <p>
-                {draft.selectedOutputIds.length} Project{" "}
-                {draft.selectedOutputIds.length === 1 ? "Output" : "Outputs"}{" "}
-                selected
-              </p>
-            </div>
-          </details>
-        </section>
-
-        <section
-          className="grid gap-4 border-b pb-6"
-          aria-labelledby="portal-outputs-title"
-        >
-          <div>
-            <h3 id="portal-outputs-title" className="font-medium">
-              Shared Project Outputs
-            </h3>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Only the current Media Version of selected Outputs appears in the
-              Client Portal.
-            </p>
-          </div>
-          {outputs.length ? (
-            <div className="grid gap-2">
-              {outputs.map((output) => (
-                <label
-                  key={output.id}
-                  className="flex items-start gap-3 border-b py-3 last:border-b-0"
-                >
-                  <Checkbox
-                    checked={selectedOutputs.has(output.id)}
-                    onCheckedChange={() => toggleOutput(output.id)}
-                    disabled={!canEdit}
-                    className="mt-1"
-                  />
-                  <span className="min-w-0">
-                    <span className="block text-sm font-medium">
-                      {output.title}
-                    </span>
-                    <span className="mt-1 block text-xs text-muted-foreground">
-                      {reviewStateLabels[output.reviewState] ??
-                        output.reviewState}
-                      {output.hasCurrentVersion
-                        ? " · Current version ready"
-                        : " · No current version"}
-                    </span>
-                  </span>
-                </label>
-              ))}
-            </div>
-          ) : (
-            <p className="text-sm text-muted-foreground">
-              Add a Project Output before choosing what to share.
-            </p>
-          )}
-        </section>
-
-        <section
-          className="grid gap-4 border-b pb-6"
-          aria-labelledby="portal-access-title"
-        >
-          <div>
-            <h3 id="portal-access-title" className="font-medium">
-              Access controls
-            </h3>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Use a short PIN only when the link itself is not enough. The PIN
-              is never shown again.
-            </p>
-          </div>
-          <div className="grid gap-4 sm:grid-cols-2">
-            <FieldLayout
-              label="Expires"
-              description="Optional. Uses your local time."
-            >
-              <Input
-                type="datetime-local"
-                value={draft.expiresAt}
-                onChange={(event) =>
-                  updateDraft({ expiresAt: event.target.value })
-                }
-                disabled={!canEdit}
-              />
-            </FieldLayout>
-            <FieldLayout
-              label="PIN"
-              description={
-                draft.pinProtected
-                  ? "Leave blank to keep the current PIN."
-                  : "Optional. Four or more characters."
-              }
-            >
+          </PortalSettingRow>
+          <PortalSettingRow
+            label="PIN"
+            hint={
+              draft.pinProtected
+                ? "Leave blank to keep the current PIN."
+                : "Optional. Four or more characters."
+            }
+          >
+            <div className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
               <Input
                 type="password"
                 value={draft.pin}
@@ -582,39 +472,115 @@ export function ProjectPortalPanel({
                   (!draft.pinProtected && Boolean(data.portal?.hasPin))
                 }
               />
-            </FieldLayout>
-          </div>
-          <label className="flex items-center gap-3 text-sm">
-            <Checkbox
-              checked={draft.pinProtected}
-              onCheckedChange={(checked) =>
-                updateDraft({ pinProtected: checked === true })
-              }
-              disabled={!canEdit}
+              <Label className="flex items-center gap-2 text-sm font-normal">
+                <Checkbox
+                  checked={draft.pinProtected}
+                  onCheckedChange={(checked) =>
+                    updateDraft({ pinProtected: checked === true })
+                  }
+                  disabled={!canEdit}
+                />
+                Protect with PIN
+              </Label>
+            </div>
+          </PortalSettingRow>
+        </div>
+        <Collapsible className="mt-3">
+          <CollapsibleTrigger className="group inline-flex items-center gap-1 rounded-md outline-none focus-visible:ring-2 focus-visible:ring-[var(--app-accent)] text-[13px] text-muted-foreground hover:text-foreground">
+            <ChevronRight
+              aria-hidden="true"
+              className="size-3.5 shrink-0 text-muted-foreground transition-transform group-data-[state=open]:rotate-90"
             />
-            Protect this portal with a PIN
-          </label>
-        </section>
+            Preview
+          </CollapsibleTrigger>
+          <CollapsibleContent className="mt-3 space-y-2 rounded-lg bg-[var(--surface-inset)] p-4 text-sm">
+            <p className="font-semibold">{project.title}</p>
+            {draft.publicNotes ? (
+              <p className="whitespace-pre-wrap text-muted-foreground">
+                {draft.publicNotes}
+              </p>
+            ) : null}
+            <p className="text-muted-foreground">
+              {[
+                draft.showStartDate ? `Start ${project.startDate}` : "",
+                draft.showDueDate ? `Due ${project.dueDate}` : "",
+              ]
+                .filter(Boolean)
+                .join(" · ") || "No dates shared"}
+            </p>
+            <p>
+              {draft.selectedOutputIds.length}{" "}
+              {draft.selectedOutputIds.length === 1 ? "output" : "outputs"}{" "}
+              selected
+            </p>
+          </CollapsibleContent>
+        </Collapsible>
+      </ContentSection>
 
-        {canEdit ? (
-          <Button
-            type="button"
-            className="justify-self-start"
-            onClick={() => void savePortal()}
-            disabled={busy !== ""}
-          >
-            {busy === "save"
-              ? "Saving..."
-              : data.portal
-                ? "Save portal settings"
-                : "Publish portal"}
-          </Button>
-        ) : null}
-        <p className="text-xs text-muted-foreground">
-          {project.title} stays scoped to this portal. Client access never
-          grants Workspace access.
-        </p>
-      </div>
-    </section>
+      {canEdit &&
+      (clientHubEnabled ? Boolean(hubSettings?.available) : true) ? (
+        <ContentSection titleId="client-hub-title" title="Client Hub">
+          {clientHubEnabled && hubSettings?.available ? (
+            <div className="grid gap-4">
+              <PortalSettingRow
+                label="Publish"
+                hint="Show this project to signed-in clients."
+              >
+                <Label className="flex items-center gap-2 text-sm font-normal">
+                  <Checkbox
+                    checked={hubSettings.published}
+                    onCheckedChange={(checked) =>
+                      void changeHubPublished(checked === true)
+                    }
+                  />
+                  Publish to Client Hub
+                </Label>
+              </PortalSettingRow>
+              <PortalSettingRow
+                label="Branding"
+                hint="Changes the client-facing presentation."
+              >
+                {customPortalBrandingEnabled ? (
+                  <div className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_5rem_auto]">
+                    <Input
+                      value={brandName}
+                      onChange={(event) => setBrandName(event.target.value)}
+                      aria-label="Portal brand name"
+                    />
+                    <Input
+                      type="color"
+                      value={accentColor}
+                      onChange={(event) => setAccentColor(event.target.value)}
+                      aria-label="Portal accent color"
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => void saveHubBranding()}
+                      disabled={!accentColor}
+                    >
+                      Save
+                    </Button>
+                  </div>
+                ) : (
+                  <CapabilityUpgradePrompt
+                    capability="customPortalBranding"
+                    inline
+                  />
+                )}
+              </PortalSettingRow>
+            </div>
+          ) : (
+            <div className="grid gap-2">
+              <CapabilityUpgradePrompt capability="clientHub" inline />
+              <CapabilityUpgradePrompt
+                capability="customPortalBranding"
+                inline
+              />
+            </div>
+          )}
+        </ContentSection>
+      ) : null}
+    </div>
   );
 }

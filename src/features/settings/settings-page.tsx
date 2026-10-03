@@ -16,6 +16,7 @@ import {
 import { Button as OwnedButton } from "@/components/ui/button";
 import { FieldLayout } from "@/components/ui/field-layout";
 import { Input as OwnedInput } from "@/components/ui/input";
+import { Label as OwnedLabel } from "@/components/ui/label";
 import {
   Select as OwnedSelect,
   SelectContent as OwnedSelectContent,
@@ -24,6 +25,10 @@ import {
   SelectValue as OwnedSelectValue,
 } from "@/components/ui/select";
 import { Switch as OwnedSwitch } from "@/components/ui/switch";
+import {
+  ToggleGroup as OwnedToggleGroup,
+  ToggleGroupItem as OwnedToggleGroupItem,
+} from "@/components/ui/toggle-group";
 import {
   Bell,
   Check,
@@ -579,7 +584,7 @@ export function SettingsDesignPage({
                                 });
                             }}
                           />
-                          <label className="flex items-center justify-between gap-3 rounded-md border border-border px-3 py-2 text-sm">
+                          <OwnedLabel className="flex items-center justify-between gap-3 rounded-md border border-border px-3 py-2 text-sm font-normal">
                             <span>
                               <span className="block font-medium">
                                 Editors see all Team Projects
@@ -603,7 +608,7 @@ export function SettingsDesignPage({
                                   });
                               }}
                             />
-                          </label>
+                          </OwnedLabel>
                         </div>
                       ) : null}
                     </SettingsPanel>
@@ -627,7 +632,7 @@ export function SettingsDesignPage({
                         >
                           <Upload aria-hidden="true" /> Import backup
                         </OwnedButton>
-                        <input
+                        <OwnedInput
                           ref={backupInputRef}
                           type="file"
                           accept="application/json,.json"
@@ -978,7 +983,16 @@ export function SettingsDesignPage({
                         <p className="mb-2 text-xs font-medium text-muted-foreground">
                           Accent Color
                         </p>
-                        <div className="flex gap-3">
+                        <OwnedToggleGroup
+                          type="single"
+                          value={settings.accentColor}
+                          aria-label="Accent Color"
+                          onValueChange={(color) => {
+                            if (color)
+                              setSettings({ ...settings, accentColor: color });
+                          }}
+                          className="h-auto gap-3 rounded-none bg-transparent p-0"
+                        >
                           {[
                             relay.color.teal,
                             relay.color.cyan,
@@ -987,21 +1001,15 @@ export function SettingsDesignPage({
                             relay.color.pink,
                             relay.color.deepTeal,
                           ].map((color) => (
-                            <OwnedButton
+                            <OwnedToggleGroupItem
                               key={color}
-                              type="button"
-                              variant="ghost"
-                              size="icon"
+                              value={color}
                               aria-label={`Use accent color ${color}`}
-                              aria-pressed={settings.accentColor === color}
-                              onClick={() =>
-                                setSettings({ ...settings, accentColor: color })
-                              }
-                              className={`size-7 cursor-pointer rounded-full border p-0 transition-shadow hover:opacity-90 ${settings.accentColor === color ? "border-foreground ring-2 ring-foreground ring-offset-2 ring-offset-card" : "border-border"}`}
+                              className="size-7 cursor-pointer rounded-full border p-0 transition-shadow hover:opacity-90 data-[state=on]:border-foreground data-[state=on]:ring-2 data-[state=on]:ring-foreground data-[state=on]:ring-offset-2 data-[state=on]:ring-offset-card data-[state=off]:border-border"
                               style={{ backgroundColor: color }}
                             />
                           ))}
-                        </div>
+                        </OwnedToggleGroup>
                       </div>
                     </div>
                   </SettingsPanel>

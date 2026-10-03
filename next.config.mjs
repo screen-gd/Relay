@@ -23,6 +23,8 @@ const nextConfig = {
   agentRules: false,
   allowedDevOrigins: ["127.0.0.1"],
   compress: true,
+  // Keeps the dev-only indicator off the sidebar's bottom-left links.
+  devIndicators: { position: "bottom-right" },
   images: {
     formats: ["image/avif", "image/webp"],
   },

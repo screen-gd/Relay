@@ -386,13 +386,14 @@ function Choice({
   note?: string;
 }) {
   return (
-    <button
+    <Button
       type="button"
+      variant="ghost"
       role="radio"
       aria-checked={selected}
       onClick={onSelect}
       className={cn(
-        "flex w-full items-start gap-3 rounded-md border px-4 py-3 text-left outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ring",
+        "h-auto w-full justify-start items-start gap-3 rounded-md border px-4 py-3 text-left font-normal whitespace-normal hover:bg-transparent hover:text-current dark:hover:bg-transparent focus-visible:ring-2 focus-visible:ring-ring active:translate-y-0 active:scale-100",
         selected
           ? "border-[var(--app-ink)]"
           : "border-[var(--app-border)] hover:border-[var(--app-muted)]"
@@ -420,6 +421,6 @@ function Choice({
           </span>
         ) : null}
       </span>
-    </button>
+    </Button>
   );
 }

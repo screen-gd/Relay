@@ -6,6 +6,7 @@ import { ConvexProviderWithClerk } from "convex/react-clerk";
 import { ConvexProviderWithAuth, ConvexReactClient } from "convex/react";
 import { DataProvider } from "@/lib/data-context";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { ConfirmProvider } from "@/components/confirm-dialog";
 import { ClerkAuthBridge } from "@/lib/optional-auth";
 import { FirstLoginPlanDialog } from "@/components/subscription-plans";
 
@@ -76,7 +77,9 @@ export function Providers({
       mode={hasCloudConfig ? "cloud" : "local"}
       authEnabled={hasCloudConfig}
     >
-      <TooltipProvider delayDuration={250}>{children}</TooltipProvider>
+      <TooltipProvider delayDuration={250}>
+        <ConfirmProvider>{children}</ConfirmProvider>
+      </TooltipProvider>
     </DataProvider>
   );
 

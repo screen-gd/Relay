@@ -33,6 +33,7 @@ import { FieldLayout } from "@/components/ui/field-layout";
 import { Input } from "@/components/ui/input";
 import { Check, ChevronDown } from "lucide-react";
 import { ProjectDatePicker } from "@/features/projects/project-dialogs";
+import { useConfirm } from "@/components/confirm-dialog";
 
 type NewProjectDialogProps = {
   open: boolean;
@@ -157,6 +158,7 @@ export function NewProjectDialog({
   onClose,
   onCreate,
 }: NewProjectDialogProps) {
+  const confirm = useConfirm();
   const activeClients = clients.filter((client) => !client.archived);
   const activeTemplates = workflowTemplates.filter(
     (template) => !template.archived
@@ -212,14 +214,17 @@ export function NewProjectDialog({
     setClientError("");
   }
 
-  function requestClose() {
+  async function requestClose() {
     const hasClientDraft = Object.values(clientDraft).some((value) =>
       value.trim()
     );
     if (
       (form.state.isDirty || hasClientDraft) &&
-      typeof window !== "undefined" &&
-      !window.confirm("Discard this unfinished Project?")
+      !(await confirm({
+        title: "Discard this unfinished Project?",
+        confirmLabel: "Discard",
+        destructive: true,
+      }))
     )
       return;
     onClose();
@@ -229,7 +234,7 @@ export function NewProjectDialog({
     <Dialog
       open={open}
       onOpenChange={(next) => {
-        if (!next) requestClose();
+        if (!next) void requestClose();
       }}
     >
       <DialogContent
