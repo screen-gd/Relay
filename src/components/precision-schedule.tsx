@@ -32,11 +32,6 @@ import { ButtonGroup } from "@/components/ui/button-group";
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
-import {
   ContentSection,
   FillViewport,
   PageContent,
@@ -44,6 +39,8 @@ import {
   PageToolbar,
   PageEmptyState,
   SplitPane,
+  sectionListClassName,
+  sectionRowClassName,
   WorkspacePage,
 } from "@/components/workspace-page";
 
@@ -126,32 +123,38 @@ function formatLongDate(value: string) {
     : "Select a date";
 }
 
-function statusPalette(status: WorkItem["status"]) {
-  if (status === "Delivered")
-    return {
-      fg: "var(--app-success)",
-      bg: "color-mix(in srgb,var(--app-success)_14%,transparent)",
-    };
-  if (status === "In Progress")
-    return {
-      fg: "var(--app-warning)",
-      bg: "color-mix(in srgb,var(--app-warning)_14%,transparent)",
-    };
-  if (status === "Cancelled")
-    return {
-      fg: "var(--app-danger)",
-      bg: "color-mix(in srgb,var(--app-danger)_14%,transparent)",
-    };
-  if (
-    status === "Review" ||
-    status === "Revision" ||
-    status === "Client Review"
-  )
-    return {
-      fg: "var(--app-warning)",
-      bg: "color-mix(in srgb,var(--app-warning)_14%,transparent)",
-    };
-  return { fg: "var(--app-highlight)", bg: "var(--app-active)" };
+/** "Sep 28 – Oct 4, 2026", or "Dec 28, 2026 – Jan 3, 2027" across years. */
+function formatWeekRange(start: Date, end: Date) {
+  const sameYear = start.getFullYear() === end.getFullYear();
+  const startLabel = new Intl.DateTimeFormat("en", {
+    month: "short",
+    day: "numeric",
+    ...(sameYear ? {} : { year: "numeric" }),
+  }).format(start);
+  const endLabel = new Intl.DateTimeFormat("en", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  }).format(end);
+  return `${startLabel} – ${endLabel}`;
+}
+
+/** Trims the 42-day grid to the weeks that contain days from `month`. */
+function monthWeeks(month: Date, weekStart: string) {
+  const days = calendarMonthDays(month, weekStart);
+  return Array.from({ length: 6 }, (_, week) =>
+    days.slice(week * 7, week * 7 + 7)
+  ).filter((week) =>
+    week.some((day) => day.date.getMonth() === month.getMonth())
+  );
+}
+
+function inMonth(value: string, month: Date) {
+  const date = parseDate(value);
+  return (
+    date?.getFullYear() === month.getFullYear() &&
+    date.getMonth() === month.getMonth()
+  );
 }
 
 export function PrecisionCalendar({
@@ -174,6 +177,7 @@ export function PrecisionCalendar({
     "month"
   );
   const reduceMotion = useHydratedReducedMotion();
+  const todayKey = iso(todayDate());
   const events = useMemo(
     () =>
       deriveCalendarEvents(projects, outputs, {
@@ -181,9 +185,22 @@ export function PrecisionCalendar({
       }),
     [outputs, projects, settings.salaryWorkType]
   );
+  const eventsByDate = useMemo(() => {
+    const map = new Map<string, typeof events>();
+    for (const event of events) {
+      const list = map.get(event.date);
+      if (list) list.push(event);
+      else map.set(event.date, [event]);
+    }
+    return map;
+  }, [events]);
+  const projectsById = useMemo(
+    () => new Map(projects.map((project) => [project.id, project])),
+    [projects]
+  );
 
-  const monthDays = useMemo(
-    () => calendarMonthDays(visibleMonth, settings.weekStart),
+  const weeks = useMemo(
+    () => monthWeeks(visibleMonth, settings.weekStart),
     [visibleMonth, settings.weekStart]
   );
   const weekdays = useMemo(
@@ -194,87 +211,76 @@ export function PrecisionCalendar({
     month: "long",
     year: "numeric",
   }).format(visibleMonth);
-  const selectedEvents = useMemo(
-    () => events.filter((event) => event.date === selectedDate),
-    [events, selectedDate]
-  );
-  const monthProjectCount = useMemo(
-    () =>
-      events.filter((event) => {
-        const due = parseDate(event.date);
-        return (
-          due?.getFullYear() === visibleMonth.getFullYear() &&
-          due.getMonth() === visibleMonth.getMonth()
-        );
-      }).length,
+  const selectedEvents = eventsByDate.get(selectedDate) ?? [];
+  const monthEventCount = useMemo(
+    () => events.filter((event) => inMonth(event.date, visibleMonth)).length,
     [events, visibleMonth]
   );
   const visibleMonthProjects = useMemo(
     () =>
       projects
-        .filter((project) => {
-          const due = parseDate(project.dueDate);
-          return (
-            due?.getFullYear() === visibleMonth.getFullYear() &&
-            due.getMonth() === visibleMonth.getMonth()
-          );
-        })
+        .filter((project) => inMonth(project.dueDate, visibleMonth))
         .sort(
           (a, b) =>
             a.dueDate.localeCompare(b.dueDate) || a.title.localeCompare(b.title)
         ),
     [projects, visibleMonth]
   );
+  /** The seven days of the week that contains `selectedDate`. */
   const selectedWeekDays = useMemo(() => {
     const selected = parseDate(selectedDate) ?? todayDate();
     const weekOffset =
-      settings.weekStart === "Sun"
-        ? selected.getDay()
-        : (selected.getDay() + 6) % 7;
-    const start = new Date(
-      selected.getFullYear(),
-      selected.getMonth(),
-      selected.getDate() - weekOffset
-    );
+      (selected.getDay() - weekdayIndex(settings.weekStart) + 7) % 7;
     return Array.from(
       { length: 7 },
       (_, index) =>
-        new Date(start.getFullYear(), start.getMonth(), start.getDate() + index)
+        new Date(
+          selected.getFullYear(),
+          selected.getMonth(),
+          selected.getDate() - weekOffset + index
+        )
     );
   }, [selectedDate, settings.weekStart]);
-  const calendarViewRows = useMemo<
-    Array<{ project: WorkItem | null; dateKey: string }>
-  >(() => {
-    if (viewMode === "agenda") {
-      return visibleMonthProjects.map((project) => ({
-        project,
-        dateKey: project.dueDate,
-      }));
-    }
-    if (viewMode === "week") {
-      return selectedWeekDays.flatMap(
-        (date): Array<{ project: WorkItem | null; dateKey: string }> => {
-          const dateKey = iso(date);
-          const matches = projects.filter(
-            (project) => project.dueDate === dateKey
-          );
-          return matches.length
-            ? matches.map((project) => ({ project, dateKey }))
-            : [{ project: null, dateKey }];
-        }
-      );
-    }
-    return [];
-  }, [projects, selectedWeekDays, viewMode, visibleMonthProjects]);
+  const weekKeys = selectedWeekDays.map(iso);
+  const weekEventCount = weekKeys.reduce(
+    (count, key) => count + (eventsByDate.get(key)?.length ?? 0),
+    0
+  );
+  const weekLabel = formatWeekRange(selectedWeekDays[0], selectedWeekDays[6]);
 
+  /** Week view pages by week; month and agenda page by month. */
+  function shiftPeriod(offset: number) {
+    if (viewMode === "week") shiftWeek(offset);
+    else shiftMonth(offset);
+  }
+
+  /** Moves the selection by whole weeks, keeping the visible month in sync. */
+  function shiftWeek(offset: number) {
+    const selected = parseDate(selectedDate) ?? todayDate();
+    const next = new Date(
+      selected.getFullYear(),
+      selected.getMonth(),
+      selected.getDate() + offset * 7
+    );
+    setSelectedDate(iso(next));
+    setVisibleMonth(new Date(next.getFullYear(), next.getMonth(), 1));
+  }
+
+  /** Moves the month and selects today, the first scheduled day, or the 1st. */
   function shiftMonth(offset: number) {
     const next = new Date(
       visibleMonth.getFullYear(),
       visibleMonth.getMonth() + offset,
       1
     );
+    const firstScheduled = events
+      .filter((event) => inMonth(event.date, next))
+      .map((event) => event.date)
+      .sort()[0];
     setVisibleMonth(next);
-    setSelectedDate(iso(next));
+    setSelectedDate(
+      inMonth(todayKey, next) ? todayKey : (firstScheduled ?? iso(next))
+    );
   }
 
   function jumpToToday() {
@@ -305,17 +311,12 @@ export function PrecisionCalendar({
           <div className="flex gap-2">
             <Button
               variant="outline"
-              className="h-10"
               onClick={downloadFeed}
               disabled={!events.length}
             >
               <Download className="size-4" /> Export calendar
             </Button>
-            <Button
-              variant="outline"
-              className="h-10 border-[var(--app-highlight)] px-4 text-[var(--app-highlight)] hover:bg-[var(--app-active)]"
-              onClick={jumpToToday}
-            >
+            <Button variant="outline" onClick={jumpToToday}>
               <CalendarDays className="size-4" />
               Today
             </Button>
@@ -328,76 +329,60 @@ export function PrecisionCalendar({
           data-family-toolbar="calendar"
           primary={
             <>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    aria-label="Previous month"
-                    className="size-9 border-[var(--app-border)] text-[var(--app-highlight)]"
-                    onClick={() => shiftMonth(-1)}
-                  >
-                    <ChevronLeft className="size-4" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>Previous month</TooltipContent>
-              </Tooltip>
-              <div className="min-w-[170px]">
-                <p className="text-sm font-semibold text-[var(--app-ink)]">
-                  {monthLabel}
-                </p>
-                <p className="text-[10px] text-[var(--app-muted)]">
-                  {monthProjectCount} scheduled items
-                </p>
+              <h2 className="min-w-[9.5rem] text-base font-semibold text-[var(--app-ink)]">
+                {viewMode === "week" ? weekLabel : monthLabel}
+              </h2>
+              <div className="flex items-center">
+                <Button
+                  variant="ghost"
+                  size="icon-sm"
+                  aria-label={`Previous ${viewMode === "week" ? "week" : "month"}`}
+                  onClick={() => shiftPeriod(-1)}
+                >
+                  <ChevronLeft className="size-4" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon-sm"
+                  aria-label={`Next ${viewMode === "week" ? "week" : "month"}`}
+                  onClick={() => shiftPeriod(1)}
+                >
+                  <ChevronRight className="size-4" />
+                </Button>
               </div>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    aria-label="Next month"
-                    className="size-9 border-[var(--app-border)] text-[var(--app-highlight)]"
-                    onClick={() => shiftMonth(1)}
-                  >
-                    <ChevronRight className="size-4" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>Next month</TooltipContent>
-              </Tooltip>
+              <span className="text-xs text-[var(--app-muted)]">
+                {viewMode === "week" ? weekEventCount : monthEventCount}{" "}
+                scheduled
+              </span>
             </>
           }
           secondary={
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="hidden text-[10px] text-[var(--app-muted)] sm:inline">
-                {monthProjectCount} scheduled
-              </span>
-              <Tabs
-                value={viewMode}
-                onValueChange={(value) =>
-                  setViewMode(
-                    value === "week" || value === "agenda" ? value : "month"
-                  )
-                }
-                className="block"
+            <Tabs
+              value={viewMode}
+              onValueChange={(value) =>
+                setViewMode(
+                  value === "week" || value === "agenda" ? value : "month"
+                )
+              }
+              className="block"
+            >
+              <TabsList
+                aria-label="Calendar view"
+                className="h-9 rounded-md border border-[var(--app-border)] bg-[var(--app-soft-panel)] p-0.5"
               >
-                <TabsList
-                  aria-label="Calendar view"
-                  className="h-9 rounded-md border border-[var(--app-border)] bg-[var(--app-soft-panel)] p-0.5"
-                >
-                  {(["month", "week", "agenda"] as const).map((mode) => (
-                    <TabsTrigger
-                      key={mode}
-                      id={`calendar-${mode}-tab`}
-                      aria-controls="calendar-view-panel"
-                      value={mode}
-                      className="h-8 px-3 text-xs capitalize"
-                    >
-                      {mode}
-                    </TabsTrigger>
-                  ))}
-                </TabsList>
-              </Tabs>
-            </div>
+                {(["month", "week", "agenda"] as const).map((mode) => (
+                  <TabsTrigger
+                    key={mode}
+                    id={`calendar-${mode}-tab`}
+                    aria-controls="calendar-view-panel"
+                    value={mode}
+                    className="h-8 px-3 text-xs capitalize"
+                  >
+                    {mode}
+                  </TabsTrigger>
+                ))}
+              </TabsList>
+            </Tabs>
           }
         />
         <FillViewport
@@ -410,128 +395,202 @@ export function PrecisionCalendar({
         >
           <SplitPane
             ratio="inspector"
-            className="min-h-full"
             primary={
               viewMode === "month" ? (
-                <ContentSection bodyMode="flush" className="h-full">
-                  <>
-                    <div className="grid grid-cols-7 border-l border-t border-[var(--app-border)]">
-                      {weekdays.map((day) => (
-                        <div
-                          key={day}
-                          className="border-b border-r border-[var(--app-border)] px-2 py-2 text-[11px] font-semibold uppercase text-[var(--app-muted)]"
-                        >
-                          {day}
-                        </div>
-                      ))}
-                      {monthDays.map((day) => {
-                        const key = iso(day.date);
-                        const dayEvents = events.filter(
-                          (event) => event.date === key
-                        );
-                        const isCurrentMonth =
-                          day.date.getMonth() === visibleMonth.getMonth();
-                        const isSelected = selectedDate === key;
-                        const isToday = key === iso(todayDate());
+                <ContentSection
+                  bodyMode="flush"
+                  className="h-full"
+                  bodyClassName="flex min-h-0 flex-1 flex-col"
+                >
+                  <div className="grid grid-cols-7 border-b border-[var(--app-border)]">
+                    {weekdays.map((day) => (
+                      <div
+                        key={day}
+                        className="px-3 py-2 text-xs font-medium text-[var(--app-muted)]"
+                      >
+                        {day}
+                      </div>
+                    ))}
+                  </div>
+                  <div
+                    className="grid min-h-0 flex-1 grid-cols-7 gap-px bg-[var(--app-border)]"
+                    style={{
+                      gridTemplateRows: `repeat(${weeks.length}, minmax(6.5rem, 1fr))`,
+                    }}
+                  >
+                    {weeks.flat().map((day) => {
+                      const key = iso(day.date);
+                      const dayEvents = eventsByDate.get(key) ?? [];
+                      const isCurrentMonth =
+                        day.date.getMonth() === visibleMonth.getMonth();
+                      const isSelected = selectedDate === key;
+                      const isToday = key === todayKey;
 
-                        return (
-                          <Button
-                            key={key}
-                            type="button"
-                            variant="ghost"
-                            aria-label={`Select ${formatDate(key, { month: "long", day: "numeric", year: "numeric" })} with ${dayEvents.length} scheduled ${dayEvents.length === 1 ? "commitment" : "commitments"}`}
-                            onClick={() => setSelectedDate(key)}
+                      return (
+                        <Button
+                          key={key}
+                          type="button"
+                          variant="ghost"
+                          aria-label={`${formatDate(key, { month: "long", day: "numeric", year: "numeric" })}, ${dayEvents.length} scheduled`}
+                          aria-pressed={isSelected}
+                          aria-current={isToday ? "date" : undefined}
+                          onClick={() => setSelectedDate(key)}
+                          className={cn(
+                            "h-full min-h-0 w-full min-w-0 flex-col items-stretch justify-start gap-1.5 overflow-hidden rounded-none p-2 text-left font-normal whitespace-normal focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--app-highlight)] active:translate-y-0 active:scale-100",
+                            isSelected
+                              ? "bg-[var(--app-active)] hover:bg-[var(--app-active)] dark:hover:bg-[var(--app-active)]"
+                              : "bg-[var(--app-panel)] hover:bg-[var(--app-hover)] dark:hover:bg-[var(--app-hover)]"
+                          )}
+                        >
+                          <span
                             className={cn(
-                              "h-auto min-h-[84px] w-full min-w-0 flex-col items-stretch justify-start gap-0 rounded-none border-b border-r border-[var(--app-border)] p-1.5 text-left font-normal whitespace-normal hover:bg-[var(--app-hover)] dark:hover:bg-[var(--app-hover)] focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--app-highlight)] active:translate-y-0 active:scale-100 sm:min-h-[108px] sm:p-2",
-                              isSelected
-                                ? "bg-[var(--app-active)]"
+                              "grid size-6 place-items-center rounded-full text-xs font-semibold tabular-nums",
+                              isToday
+                                ? "bg-foreground text-background"
                                 : isCurrentMonth
-                                  ? "bg-[var(--app-panel)]"
-                                  : "bg-[var(--app-soft-panel)] opacity-55",
-                              isToday &&
-                                !isSelected &&
-                                "shadow-[inset_0_0_0_2px_var(--app-highlight)]"
+                                  ? "text-[var(--app-ink)]"
+                                  : "text-[var(--app-muted)]"
                             )}
                           >
-                            <span className="flex items-center justify-between gap-2">
+                            {day.date.getDate()}
+                          </span>
+                          {dayEvents.slice(0, 3).map((event) => (
+                            <span
+                              key={event.id}
+                              className="flex min-w-0 items-center gap-1.5 text-xs text-[var(--app-ink)]"
+                            >
                               <span
-                                className={cn(
-                                  "text-[13px] font-semibold",
-                                  isSelected || isToday
-                                    ? "text-[var(--app-highlight)]"
-                                    : "text-[var(--app-ink)]"
-                                )}
-                              >
-                                {day.date.getDate()}
-                              </span>
-                              {dayEvents.length ? (
-                                <span className="grid h-5 min-w-5 place-items-center rounded-full bg-[var(--app-active)] px-1 text-[11px] font-semibold text-[var(--app-highlight)]">
-                                  {dayEvents.length}
-                                </span>
-                              ) : null}
+                                aria-hidden="true"
+                                className="size-1.5 shrink-0 rounded-full"
+                                style={{
+                                  background: projectStatusColor(
+                                    projectsById.get(event.projectId)?.status ??
+                                      "Planned"
+                                  ),
+                                }}
+                              />
+                              <span className="truncate">{event.title}</span>
                             </span>
-                            <span className="mt-2 block space-y-1">
-                              {dayEvents.slice(0, 3).map((event) => {
-                                const project = projects.find(
-                                  (item) => item.id === event.projectId
-                                );
-                                const palette = statusPalette(
-                                  project?.status ?? "Planned"
-                                );
-                                return (
-                                  <span
-                                    key={event.id}
-                                    className="block truncate rounded border border-black/5 px-1.5 py-1 text-[11px] font-semibold"
-                                    style={{
-                                      background: palette.bg,
-                                      color: palette.fg,
-                                    }}
-                                  >
-                                    {event.title}
-                                  </span>
-                                );
-                              })}
-                              {dayEvents.length > 3 ? (
-                                <span className="block text-[11px] text-[var(--app-muted)]">
-                                  +{dayEvents.length - 3} more
-                                </span>
-                              ) : null}
+                          ))}
+                          {dayEvents.length > 3 ? (
+                            <span className="text-xs text-[var(--app-muted)]">
+                              +{dayEvents.length - 3} more
+                            </span>
+                          ) : null}
+                        </Button>
+                      );
+                    })}
+                  </div>
+                </ContentSection>
+              ) : viewMode === "week" ? (
+                <ContentSection
+                  bodyMode="flush"
+                  className="h-full"
+                  bodyClassName="flex min-h-0 flex-1 flex-col"
+                >
+                  <div className="grid min-h-0 flex-1 grid-cols-7 gap-px bg-[var(--app-border)]">
+                    {selectedWeekDays.map((date) => {
+                      const key = iso(date);
+                      const dayEvents = eventsByDate.get(key) ?? [];
+                      const isSelected = selectedDate === key;
+                      const isToday = key === todayKey;
+                      return (
+                        <div
+                          key={key}
+                          onClick={() => setSelectedDate(key)}
+                          className={cn(
+                            "flex min-h-[18rem] min-w-0 flex-col gap-1 p-2",
+                            isSelected
+                              ? "bg-[var(--app-active)]"
+                              : "bg-[var(--app-panel)]"
+                          )}
+                        >
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            aria-label={`${formatDate(key, { weekday: "long", month: "long", day: "numeric" })}, ${dayEvents.length} scheduled`}
+                            aria-pressed={isSelected}
+                            aria-current={isToday ? "date" : undefined}
+                            onClick={() => setSelectedDate(key)}
+                            className="h-auto justify-start gap-2 px-1 py-1 font-normal hover:bg-transparent dark:hover:bg-transparent active:translate-y-0 active:scale-100"
+                          >
+                            <span className="text-xs text-[var(--app-muted)]">
+                              {formatDate(key, { weekday: "short" })}
+                            </span>
+                            <span
+                              className={cn(
+                                "grid size-7 place-items-center rounded-full text-sm font-semibold tabular-nums",
+                                isToday
+                                  ? "bg-foreground text-background"
+                                  : "text-[var(--app-ink)]"
+                              )}
+                            >
+                              {date.getDate()}
                             </span>
                           </Button>
-                        );
-                      })}
-                    </div>
-                  </>
+                          {dayEvents.map((event) => {
+                            const project = projectsById.get(event.projectId);
+                            return (
+                              <Button
+                                key={event.id}
+                                type="button"
+                                variant="ghost"
+                                disabled={!project}
+                                onClick={(clickEvent) => {
+                                  clickEvent.stopPropagation();
+                                  setSelectedDate(key);
+                                  if (project) onViewProject(project);
+                                }}
+                                className="h-auto w-full min-w-0 flex-col items-stretch gap-0.5 rounded-md px-2 py-1.5 text-left font-normal whitespace-normal hover:bg-[var(--app-hover)] dark:hover:bg-[var(--app-hover)] active:translate-y-0 active:scale-100"
+                              >
+                                <span className="flex min-w-0 items-center gap-1.5">
+                                  <span
+                                    aria-hidden="true"
+                                    className="size-1.5 shrink-0 rounded-full"
+                                    style={{
+                                      background: projectStatusColor(
+                                        project?.status ?? "Planned"
+                                      ),
+                                    }}
+                                  />
+                                  <span className="truncate text-xs font-semibold text-[var(--app-ink)]">
+                                    {event.title}
+                                  </span>
+                                </span>
+                                <span className="truncate pl-3 text-[11px] text-[var(--app-muted)] capitalize">
+                                  {event.detail ?? event.kind}
+                                </span>
+                              </Button>
+                            );
+                          })}
+                        </div>
+                      );
+                    })}
+                  </div>
                 </ContentSection>
               ) : (
                 <ContentSection
-                  title={
-                    viewMode === "week"
-                      ? `Week of ${formatDate(iso(selectedWeekDays[0]), { month: "short", day: "numeric" })}`
-                      : `${monthLabel} agenda`
-                  }
-                  description={
-                    viewMode === "week"
-                      ? "Seven-day delivery and review window."
-                      : `${visibleMonthProjects.length} scheduled projects ordered by due date.`
-                  }
                   bodyMode="flush"
                   className="h-full"
+                  bodyClassName="min-h-0 flex-1 overflow-y-auto pt-1.5"
                 >
-                  <div className="divide-y divide-[var(--app-border)]">
-                    {calendarViewRows.map(({ project, dateKey }, index) => (
+                  <div className={sectionListClassName}>
+                    {visibleMonthProjects.map((project) => (
                       <Button
-                        key={`${dateKey}-${project?.id ?? "empty"}-${index}`}
+                        key={project.id}
                         type="button"
                         variant="ghost"
                         onClick={() => {
-                          setSelectedDate(dateKey);
-                          if (project) onViewProject(project);
+                          setSelectedDate(project.dueDate);
+                          onViewProject(project);
                         }}
-                        className="h-auto w-full grid justify-start gap-3 px-4 py-3 text-left font-normal whitespace-normal hover:bg-[var(--app-hover)] dark:hover:bg-[var(--app-hover)] focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--app-highlight)] active:translate-y-0 active:scale-100 sm:grid-cols-[120px_minmax(0,1fr)_120px] sm:items-center"
+                        className={cn(
+                          sectionRowClassName,
+                          "h-auto w-full grid justify-start gap-3 text-left font-normal whitespace-normal dark:hover:bg-[var(--app-hover)] focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--app-highlight)] active:translate-y-0 active:scale-100 sm:grid-cols-[120px_minmax(0,1fr)_120px] sm:items-center"
+                        )}
                       >
                         <span className="text-xs font-medium text-[var(--app-muted)]">
-                          {formatDate(dateKey, {
+                          {formatDate(project.dueDate, {
                             weekday: "short",
                             month: "short",
                             day: "numeric",
@@ -539,101 +598,91 @@ export function PrecisionCalendar({
                         </span>
                         <span className="min-w-0">
                           <span className="block truncate text-sm font-semibold">
-                            {project?.title ?? "No scheduled delivery"}
+                            {project.title}
                           </span>
                           <span className="mt-0.5 block truncate text-xs text-[var(--app-muted)]">
-                            {project
-                              ? project.client || project.workType
-                              : "Open production time"}
+                            {project.client || project.workType}
                           </span>
                         </span>
-                        {project ? (
-                          <Badge
-                            variant="outline"
-                            className={cn(
-                              "h-5 w-fit rounded px-1.5 text-[10px]",
-                              projectStatusTone(project.status)
-                            )}
-                          >
-                            {project.status}
-                          </Badge>
-                        ) : null}
+                        <span
+                          className="flex items-center gap-1.5 text-xs"
+                          style={{ color: projectStatusColor(project.status) }}
+                        >
+                          <span
+                            aria-hidden="true"
+                            className="size-1.5 rounded-full bg-current"
+                          />
+                          {project.status}
+                        </span>
                       </Button>
                     ))}
+                    {!visibleMonthProjects.length ? (
+                      <p className="px-3 py-2 text-sm text-[var(--app-muted)]">
+                        Nothing due this month.
+                      </p>
+                    ) : null}
                   </div>
                 </ContentSection>
               )
             }
             secondary={
               <ContentSection
-                title={
-                  selectedEvents.length
-                    ? formatLongDate(selectedDate)
-                    : undefined
-                }
-                description={
-                  selectedEvents.length
-                    ? `${selectedEvents.length} scheduled commitments`
-                    : undefined
-                }
+                title={formatLongDate(selectedDate)}
+                bodyMode="flush"
                 className="h-full"
                 bodyClassName="min-h-0 flex-1 overflow-y-auto"
-                aria-label={
-                  selectedEvents.length
-                    ? `Schedule for ${formatLongDate(selectedDate)}`
-                    : "No schedule selected"
-                }
               >
                 {selectedEvents.length ? (
-                  <div className="mt-8 space-y-3">
+                  <div className={sectionListClassName}>
                     {selectedEvents.map((event) => {
-                      const project = projects.find(
-                        (item) => item.id === event.projectId
-                      );
+                      const project = projectsById.get(event.projectId);
                       if (!project) return null;
                       return (
-                        <motion.div
+                        <MotionButton
                           key={event.id}
+                          type="button"
+                          variant="ghost"
                           initial={reduceMotion ? false : { opacity: 0, y: 4 }}
                           animate={{ opacity: 1, y: 0 }}
                           transition={
                             reduceMotion ? { duration: 0 } : revealTransition
                           }
-                          className="rounded-md border border-[var(--app-border)] bg-[var(--app-soft-panel)] p-3"
+                          onClick={() => onViewProject(project)}
+                          className={cn(
+                            sectionRowClassName,
+                            "h-auto w-full flex-col items-stretch gap-2 text-left font-normal whitespace-normal dark:hover:bg-[var(--app-hover)] focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--app-highlight)] active:translate-y-0 active:scale-100"
+                          )}
                         >
-                          <div className="flex items-start justify-between gap-3">
-                            <div className="min-w-0">
-                              <p className="truncate text-sm font-semibold">
-                                {event.title}
-                              </p>
-                              <p className="mt-1 truncate text-xs text-[var(--app-muted)]">
-                                {event.detail ?? event.kind}
-                              </p>
-                            </div>
-                            <Badge
-                              variant="outline"
-                              className="h-5 shrink-0 rounded px-1.5 text-[10px] capitalize"
-                            >
-                              {event.kind}
-                            </Badge>
-                          </div>
+                          <span className="flex items-center gap-2">
+                            <span
+                              aria-hidden="true"
+                              className="size-2 shrink-0 rounded-full"
+                              style={{
+                                background: projectStatusColor(project.status),
+                              }}
+                            />
+                            <span className="min-w-0 flex-1 truncate text-sm font-semibold">
+                              {event.title}
+                            </span>
+                            <ArrowRight className="size-3.5 shrink-0 text-[var(--app-muted)]" />
+                          </span>
+                          <span className="truncate pl-4 text-xs text-[var(--app-muted)] capitalize">
+                            {event.detail ?? event.kind}
+                          </span>
                           <Progress
                             value={getProjectProgress(project)}
                             aria-hidden="true"
-                            className="mt-3 h-1.5 rounded-full bg-[var(--app-progress-track)] [&_[data-slot=progress-indicator]]:rounded-full [&_[data-slot=progress-indicator]]:bg-[var(--app-highlight)]"
+                            className="ml-4 h-1 w-auto rounded-full bg-[var(--app-progress-track)] [&_[data-slot=progress-indicator]]:rounded-full [&_[data-slot=progress-indicator]]:bg-[var(--app-highlight)]"
                           />
-                          <Button
-                            variant="ghost"
-                            className="mt-3 h-8 px-0 text-xs text-[var(--app-highlight)] hover:bg-transparent"
-                            onClick={() => onViewProject(project)}
-                          >
-                            Open project <ArrowRight className="size-3.5" />
-                          </Button>
-                        </motion.div>
+                        </MotionButton>
                       );
                     })}
                   </div>
-                ) : null}
+                ) : (
+                  <p className="px-4 pb-4 text-sm text-[var(--app-muted)]">
+                    Nothing due.
+                  </p>
+                )}
               </ContentSection>
             }
           />

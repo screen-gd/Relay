@@ -382,6 +382,7 @@ export function ProjectWorkspace({
                     project={project}
                     canEdit={canEdit}
                     canResolveComments={canComment}
+                    settings={settings}
                   />
                 ) : null}
 
@@ -397,6 +398,7 @@ export function ProjectWorkspace({
                       canEdit={canEdit && canManagePortal}
                       clientHubEnabled={clientHubEnabled}
                       customPortalBrandingEnabled={customPortalBrandingEnabled}
+                      settings={settings}
                     />
                   </>
                 ) : null}

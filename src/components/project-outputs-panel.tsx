@@ -13,7 +13,7 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
-import type { WorkItem } from "@/lib/types";
+import type { SettingsState, WorkItem } from "@/lib/types";
 import type { FileCategory } from "@/lib/domain-values";
 import { useProjectOutputs } from "@/lib/project-output-data";
 import { useInternalMediaVersionComments } from "@/features/media-version-comments/media-version-comments-data";
@@ -33,6 +33,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "./ui/dialog";
+import { DatePicker } from "./ui/date-picker";
 import { FieldLayout } from "./ui/field-layout";
 import { Input } from "./ui/input";
 import {
@@ -78,10 +79,12 @@ export function ProjectOutputsPanel({
   project,
   canEdit,
   canResolveComments,
+  settings,
 }: {
   project: WorkItem;
   canEdit: boolean;
   canResolveComments: boolean;
+  settings: Pick<SettingsState, "weekStart" | "dateFormat">;
 }) {
   const data = useProjectOutputs(project, canEdit);
   const reviews = useInternalMediaVersionComments(project.id, true);
@@ -488,12 +491,14 @@ export function ProjectOutputsPanel({
               </Select>
             </FieldLayout>
             <FieldLayout label="Due date">
-              <Input
-                type="date"
+              <DatePicker
                 value={outputForm.dueDate}
-                onChange={(event) =>
-                  setOutputForm({ ...outputForm, dueDate: event.target.value })
+                onChange={(dueDate) =>
+                  setOutputForm({ ...outputForm, dueDate })
                 }
+                weekStart={settings.weekStart}
+                dateFormat={settings.dateFormat}
+                clearable
               />
             </FieldLayout>
           </div>

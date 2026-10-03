@@ -59,6 +59,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { DatePicker } from "@/components/ui/date-picker";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -1481,27 +1482,25 @@ export function PrecisionReports({
             className="flex flex-wrap gap-2"
             aria-label="Custom report dates"
           >
-            <Input
-              type="date"
+            <DatePicker
               aria-label="Report start date"
+              placeholder="Start date"
+              className="w-auto"
               value={customRange.start}
-              onChange={(event) =>
-                setCustomRange((range) => ({
-                  ...range,
-                  start: event.target.value,
-                }))
+              onChange={(start) =>
+                setCustomRange((range) => ({ ...range, start }))
               }
+              weekStart={settings.weekStart}
+              dateFormat={settings.dateFormat}
             />
-            <Input
-              type="date"
+            <DatePicker
               aria-label="Report end date"
+              placeholder="End date"
+              className="w-auto"
               value={customRange.end}
-              onChange={(event) =>
-                setCustomRange((range) => ({
-                  ...range,
-                  end: event.target.value,
-                }))
-              }
+              onChange={(end) => setCustomRange((range) => ({ ...range, end }))}
+              weekStart={settings.weekStart}
+              dateFormat={settings.dateFormat}
             />
           </div>
         ) : null}
