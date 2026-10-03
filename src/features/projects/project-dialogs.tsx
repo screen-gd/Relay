@@ -26,6 +26,7 @@ import {
   DialogHeader as OwnedDialogHeader,
   DialogTitle as OwnedDialogTitle,
 } from "@/components/ui/dialog";
+import { DatePicker } from "@/components/ui/date-picker";
 import { FieldLayout } from "@/components/ui/field-layout";
 import { Input as OwnedInput } from "@/components/ui/input";
 import {
@@ -43,7 +44,6 @@ import {
 } from "@/lib/domain-values";
 import type { SettingsState, WorkItem } from "@/lib/types";
 import { workflowStagesFromLabels } from "@/lib/workflow-templates";
-import { iso, todayDate } from "@/features/routes/utils/date-utils";
 import { normalizeChecklistCompleted } from "@/features/routes/utils/project-utils";
 import {
   canonicalClientName,
@@ -51,13 +51,7 @@ import {
   findExistingClientName,
   getTypeConfig,
 } from "@/features/routes/utils/work-type-utils";
-import {
-  CalendarDays,
-  Check,
-  ChevronsUpDown,
-  Plus,
-  Trash2,
-} from "lucide-react";
+import { Check, ChevronsUpDown, Plus, Trash2 } from "lucide-react";
 import { useState, type RefObject } from "react";
 import type { WorkspaceMemberOption } from "./project-view";
 import { ProjectSelect } from "@/features/projects/project-select";
@@ -72,52 +66,6 @@ function clientSuggestionText(value: string, options: string[]) {
   return options.length
     ? "Select an existing client or type a new client name."
     : "Typing a client name creates it when the project is saved.";
-}
-
-function isIsoDate(value: string) {
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
-  const [year, month, day] = value.split("-").map(Number);
-  const date = new Date(year, month - 1, day);
-  return (
-    date.getFullYear() === year &&
-    date.getMonth() === month - 1 &&
-    date.getDate() === day
-  );
-}
-
-function weekdayIndex(day: string) {
-  const index = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].indexOf(day);
-  return index >= 0 ? index : 1;
-}
-
-function calendarMonthDays(month: Date, weekStart: string) {
-  const first = new Date(month.getFullYear(), month.getMonth(), 1);
-  const start = new Date(first);
-  start.setDate(
-    first.getDate() - ((first.getDay() - weekdayIndex(weekStart) + 7) % 7)
-  );
-  return Array.from({ length: 42 }, (_, index) => {
-    const date = new Date(start);
-    date.setDate(start.getDate() + index);
-    return { date };
-  });
-}
-
-function orderedWeekdays(weekStart: string) {
-  const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-  const start = weekdayIndex(weekStart);
-  return [...days.slice(start), ...days.slice(0, start)];
-}
-
-function formatDate(value: string, dateFormat: string) {
-  if (dateFormat === "YYYY-MM-DD") return value;
-  const date = new Date(`${value}T00:00:00`);
-  return new Intl.DateTimeFormat(
-    "en",
-    dateFormat === "Day Month Year"
-      ? { day: "2-digit", month: "short", year: "numeric" }
-      : { month: "short", day: "numeric", year: "numeric" }
-  ).format(date);
 }
 
 export function ProjectDialog({
@@ -682,6 +630,7 @@ export function DeleteProjectDialog({
   );
 }
 
+/** Labelled app date picker used by the project dialogs. */
 export function ProjectDatePicker({
   label,
   value,
@@ -693,130 +642,14 @@ export function ProjectDatePicker({
   settings: SettingsState;
   onChange: (value: string) => void;
 }) {
-  const selected = isIsoDate(value)
-    ? new Date(`${value}T00:00:00`)
-    : todayDate();
-  const [open, setOpen] = useState(false);
-  const [visibleMonth, setVisibleMonth] = useState(
-    () => new Date(selected.getFullYear(), selected.getMonth(), 1)
-  );
-  const monthDays = calendarMonthDays(visibleMonth, settings.weekStart);
-  const weekdays = orderedWeekdays(settings.weekStart);
-  const monthLabel = new Intl.DateTimeFormat("en", {
-    month: "long",
-    year: "numeric",
-  }).format(visibleMonth);
-
-  function shiftMonth(offset: number) {
-    setVisibleMonth(
-      (current) =>
-        new Date(current.getFullYear(), current.getMonth() + offset, 1)
-    );
-  }
-
-  function chooseDate(next: string) {
-    onChange(next);
-    setOpen(false);
-  }
-
   return (
-    <OwnedPopover open={open} onOpenChange={setOpen}>
-      <FieldLayout label={label}>
-        <OwnedPopoverTrigger asChild>
-          <OwnedButton
-            type="button"
-            variant="outline"
-            className="w-full justify-start font-normal"
-            onClick={() => {
-              const nextSelected = isIsoDate(value)
-                ? new Date(`${value}T00:00:00`)
-                : todayDate();
-              setVisibleMonth(
-                new Date(nextSelected.getFullYear(), nextSelected.getMonth(), 1)
-              );
-            }}
-          >
-            <CalendarDays aria-hidden="true" />
-            {isIsoDate(value)
-              ? formatDate(value, settings.dateFormat)
-              : "Choose date"}
-          </OwnedButton>
-        </OwnedPopoverTrigger>
-      </FieldLayout>
-      <OwnedPopoverContent
-        align="start"
-        className="w-[330px] max-w-[calc(100vw-2rem)] p-3"
-      >
-        <div className="mb-2 flex items-center justify-between gap-2">
-          <OwnedButton
-            type="button"
-            size="icon-sm"
-            variant="outline"
-            aria-label={`Previous ${label.toLowerCase()} month`}
-            onClick={() => shiftMonth(-1)}
-          >
-            ‹
-          </OwnedButton>
-          <strong className="text-sm">{monthLabel}</strong>
-          <OwnedButton
-            type="button"
-            size="icon-sm"
-            variant="outline"
-            aria-label={`Next ${label.toLowerCase()} month`}
-            onClick={() => shiftMonth(1)}
-          >
-            ›
-          </OwnedButton>
-        </div>
-        <div className="grid grid-cols-7 gap-1">
-          {weekdays.map((day) => (
-            <span
-              key={day}
-              className="py-1 text-center text-[10px] font-semibold uppercase text-muted-foreground"
-            >
-              {day}
-            </span>
-          ))}
-          {monthDays.map((day) => {
-            const key = iso(day.date);
-            const selectedDay = key === value;
-            const isCurrentMonth =
-              day.date.getMonth() === visibleMonth.getMonth();
-            const isToday = key === iso(todayDate());
-            return (
-              <OwnedButton
-                key={key}
-                type="button"
-                size="icon-sm"
-                variant={selectedDay ? "default" : "ghost"}
-                aria-label={`Choose ${formatDate(key, settings.dateFormat)} for ${label}`}
-                onClick={() => chooseDate(key)}
-                className={`${isToday && !selectedDay ? "border border-primary" : ""} ${isCurrentMonth ? "" : "opacity-40"}`}
-              >
-                {day.date.getDate()}
-              </OwnedButton>
-            );
-          })}
-        </div>
-        <div className="mt-2 flex justify-between">
-          <OwnedButton
-            type="button"
-            size="sm"
-            variant="ghost"
-            onClick={() => chooseDate(iso(todayDate()))}
-          >
-            Today
-          </OwnedButton>
-          <OwnedButton
-            type="button"
-            size="sm"
-            variant="ghost"
-            onClick={() => setOpen(false)}
-          >
-            Close
-          </OwnedButton>
-        </div>
-      </OwnedPopoverContent>
-    </OwnedPopover>
+    <FieldLayout label={label}>
+      <DatePicker
+        value={value}
+        onChange={onChange}
+        weekStart={settings.weekStart}
+        dateFormat={settings.dateFormat}
+      />
+    </FieldLayout>
   );
 }

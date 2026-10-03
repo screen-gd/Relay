@@ -17,6 +17,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { FieldLayout } from "@/components/ui/field-layout";
+import { DatePicker } from "@/components/ui/date-picker";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -351,6 +352,7 @@ export function SalaryPlansPanel({
       <PlanDialog
         draft={draft}
         clients={clients}
+        settings={settings}
         saving={busy === "plan"}
         error={draftError}
         onChange={setDraft}
@@ -567,6 +569,7 @@ function SalaryPlanRow({
 function PlanDialog({
   draft,
   clients,
+  settings,
   saving,
   error,
   onChange,
@@ -575,6 +578,7 @@ function PlanDialog({
 }: {
   draft: PlanDraft | null;
   clients: ReadonlyArray<{ id: string; name: string }>;
+  settings: Pick<SettingsState, "weekStart" | "dateFormat">;
   saving: boolean;
   error: string;
   onChange: (draft: PlanDraft) => void;
@@ -619,12 +623,11 @@ function PlanDialog({
                 </Select>
               </FieldLayout>
               <FieldLayout label="Start date">
-                <Input
-                  type="date"
+                <DatePicker
                   value={draft.startDate}
-                  onChange={(event) =>
-                    onChange({ ...draft, startDate: event.target.value })
-                  }
+                  onChange={(startDate) => onChange({ ...draft, startDate })}
+                  weekStart={settings.weekStart}
+                  dateFormat={settings.dateFormat}
                 />
               </FieldLayout>
               <FieldLayout label="Projects per batch">

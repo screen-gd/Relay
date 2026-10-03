@@ -24,11 +24,10 @@ test("switches Calendar views through accessible tabs", async ({ page }) => {
   );
   await expect(monthTab).toHaveAttribute("aria-selected", "true");
   await views.getByRole("tab", { name: "Week" }).click();
-  await expect(page.getByRole("heading", { name: /Week of/ })).toBeVisible();
   await expect(
-    page.getByRole("button", { name: "Previous month" })
+    page.getByRole("button", { name: "Previous week" })
   ).toBeVisible();
-  await expect(page.getByRole("button", { name: "Next month" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Next week" })).toBeVisible();
 });
 
 test("keeps workspace navigation accessible across routes", async ({

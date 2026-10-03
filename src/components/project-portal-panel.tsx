@@ -13,13 +13,21 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import { DatePicker } from "@/components/ui/date-picker";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { CapabilityUpgradePrompt } from "@/components/subscription-plans";
 import { ContentSection } from "@/components/workspace-page";
 import { useProjectOutputs } from "@/lib/project-output-data";
-import type { WorkItem } from "@/lib/types";
+import type { SettingsState, WorkItem } from "@/lib/types";
 import {
   draftFromPortal,
   useProjectPortal,
@@ -49,8 +57,78 @@ function PortalSettingRow({
   );
 }
 
+/** Half-hour steps plus end of day, as `HH:mm`. */
+const EXPIRY_TIMES = [
+  ...Array.from({ length: 48 }, (_, index) => {
+    const hours = String(Math.floor(index / 2)).padStart(2, "0");
+    return `${hours}:${index % 2 ? "30" : "00"}`;
+  }),
+  "23:59",
+];
+
+function timeLabel(time: string) {
+  const [hours, minutes] = time.split(":").map(Number);
+  return new Intl.DateTimeFormat("en", {
+    hour: "numeric",
+    minute: "2-digit",
+  }).format(new Date(2000, 0, 1, hours, minutes));
+}
+
+/**
+ * Edits a local `YYYY-MM-DDTHH:mm` value with the app date picker and a time
+ * select, so the portal expiry never opens the browser datetime picker.
+ */
+function ExpiryPicker({
+  value,
+  onChange,
+  settings,
+  disabled,
+}: {
+  value: string;
+  onChange: (value: string) => void;
+  settings: Pick<SettingsState, "weekStart" | "dateFormat">;
+  disabled: boolean;
+}) {
+  const [date = "", time = ""] = value.split("T");
+  const times =
+    time && !EXPIRY_TIMES.includes(time)
+      ? [...EXPIRY_TIMES, time].sort()
+      : EXPIRY_TIMES;
+  return (
+    <div className="flex gap-2">
+      <DatePicker
+        aria-label="Expiry date"
+        placeholder="No expiry"
+        value={date}
+        onChange={(next) => onChange(next ? `${next}T${time || "23:59"}` : "")}
+        weekStart={settings.weekStart}
+        dateFormat={settings.dateFormat}
+        disabled={disabled}
+        clearable
+      />
+      <Select
+        value={time || undefined}
+        onValueChange={(next) => onChange(`${date}T${next}`)}
+        disabled={disabled || !date}
+      >
+        <SelectTrigger aria-label="Expiry time" className="w-32 shrink-0">
+          <SelectValue placeholder="Time" />
+        </SelectTrigger>
+        <SelectContent>
+          {times.map((option) => (
+            <SelectItem key={option} value={option}>
+              {timeLabel(option)}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    </div>
+  );
+}
+
 type ProjectPortalPanelProps = {
   project: WorkItem;
+  settings: Pick<SettingsState, "weekStart" | "dateFormat">;
   canEdit: boolean;
   clientHubEnabled?: boolean;
   customPortalBrandingEnabled?: boolean;
@@ -59,6 +137,7 @@ type ProjectPortalPanelProps = {
 export function ProjectPortalPanel({
   project,
   canEdit,
+  settings,
   clientHubEnabled = true,
   customPortalBrandingEnabled = true,
 }: ProjectPortalPanelProps) {
@@ -442,12 +521,10 @@ export function ProjectPortalPanel({
             )}
           </PortalSettingRow>
           <PortalSettingRow label="Expiry" hint="Optional. Uses local time.">
-            <Input
-              type="datetime-local"
+            <ExpiryPicker
               value={draft.expiresAt}
-              onChange={(event) =>
-                updateDraft({ expiresAt: event.target.value })
-              }
+              onChange={(expiresAt) => updateDraft({ expiresAt })}
+              settings={settings}
               disabled={!canEdit}
             />
           </PortalSettingRow>
