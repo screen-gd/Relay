@@ -3,8 +3,21 @@
 import { useDeferredValue, useEffect, useMemo, useState } from "react";
 import type { StoredTeamRole } from "@/lib/domain-values";
 import type { Client, WorkItem } from "@/lib/types";
-import { DEFAULT_PROJECT_TABLE_STATE, filterProjectTableProjects, getProjectPaymentState, parseProjectTableSearch, serializeProjectTableSearch, shouldShowProjectAssignees, sortProjectTableProjects, type ProjectTableState } from "./project-table-domain";
-import { getProjectStageMenuChoices, getProjectWorkflowStage, getProjectWorkflowStages, groupProjectsByStage } from "./project-domain";
+import {
+  DEFAULT_PROJECT_TABLE_STATE,
+  filterProjectTableProjects,
+  getProjectPaymentState,
+  parseProjectTableSearch,
+  serializeProjectTableSearch,
+  shouldShowProjectAssignees,
+  sortProjectTableProjects,
+  type ProjectTableState,
+} from "./project-table-domain";
+import {
+  createProjectStageBoard,
+  getProjectStageMenuChoices,
+  getProjectWorkflowStage,
+} from "./project-domain";
 
 type ProjectTableControllerOptions = {
   scope: "personal" | "team";
@@ -19,8 +32,12 @@ type ProjectTableControllerOptions = {
   canUpdateProjectStatus: boolean;
 };
 
-export function useProjectTableController(options: ProjectTableControllerOptions) {
-  const [state, setState] = useState<ProjectTableState>(DEFAULT_PROJECT_TABLE_STATE);
+export function useProjectTableController(
+  options: ProjectTableControllerOptions
+) {
+  const [state, setState] = useState<ProjectTableState>(
+    DEFAULT_PROJECT_TABLE_STATE
+  );
   const [ready, setReady] = useState(false);
   const deferredState = useDeferredValue(state);
 
@@ -28,44 +45,93 @@ export function useProjectTableController(options: ProjectTableControllerOptions
     const parsed = parseProjectTableSearch(window.location.search);
     const rememberedView = window.localStorage.getItem("relay-project-view");
     const hasUrlView = new URLSearchParams(window.location.search).has("view");
-    setState(!hasUrlView && rememberedView === "board" ? { ...parsed, view: "board" } : parsed);
+    setState(
+      !hasUrlView && rememberedView === "board"
+        ? { ...parsed, view: "board" }
+        : parsed
+    );
     setReady(true);
   }, []);
 
   useEffect(() => {
     if (!ready) return;
     const query = serializeProjectTableSearch(state);
-    window.history.replaceState(null, "", `${window.location.pathname}${query ? `?${query}` : ""}`);
+    window.history.replaceState(
+      null,
+      "",
+      `${window.location.pathname}${query ? `?${query}` : ""}`
+    );
     window.localStorage.setItem("relay-project-view", state.view);
   }, [ready, state]);
 
-  const source = options.scope === "team" ? (options.currentUserRole ? options.teamProjects : []) : options.personalProjects;
-  const rules = useMemo(() => ({
-    isBillableProject: (project: WorkItem) => project.earnings > 0 && project.workType !== options.salaryWorkType,
-    isSalaryProject: (project: WorkItem) => project.workType === options.salaryWorkType,
-  }), [options.salaryWorkType]);
-  const projects = useMemo(() => sortProjectTableProjects(
-    filterProjectTableProjects(source, deferredState, {
-      ...rules,
-      clients: options.clients,
-      scope: options.scope === "team" && options.currentUserRole
-        ? { kind: "team", currentUserId: options.currentUserId, role: options.currentUserRole, allowAllTeamProjects: options.allowAllTeamProjects }
-        : { kind: "personal" },
+  const source =
+    options.scope === "team"
+      ? options.currentUserRole
+        ? options.teamProjects
+        : []
+      : options.personalProjects;
+  const rules = useMemo(
+    () => ({
+      isBillableProject: (project: WorkItem) =>
+        project.earnings > 0 && project.workType !== options.salaryWorkType,
+      isSalaryProject: (project: WorkItem) =>
+        project.workType === options.salaryWorkType,
     }),
-    deferredState,
-    { ...rules, clients: options.clients },
-  ), [deferredState, options.allowAllTeamProjects, options.clients, options.currentUserId, options.currentUserRole, options.scope, rules, source]);
+    [options.salaryWorkType]
+  );
+  const projects = useMemo(
+    () =>
+      sortProjectTableProjects(
+        filterProjectTableProjects(source, deferredState, {
+          ...rules,
+          clients: options.clients,
+          scope:
+            options.scope === "team" && options.currentUserRole
+              ? {
+                  kind: "team",
+                  currentUserId: options.currentUserId,
+                  role: options.currentUserRole,
+                  allowAllTeamProjects: options.allowAllTeamProjects,
+                }
+              : { kind: "personal" },
+        }),
+        deferredState,
+        { ...rules, clients: options.clients }
+      ),
+    [
+      deferredState,
+      options.allowAllTeamProjects,
+      options.clients,
+      options.currentUserId,
+      options.currentUserRole,
+      options.scope,
+      rules,
+      source,
+    ]
+  );
+  const { board, resolveMoveStage } = useMemo(
+    () => createProjectStageBoard(projects),
+    [projects]
+  );
   const summary = useMemo(() => {
-    const delivered = source.filter((project) => project.status === "Delivered");
+    const delivered = source.filter(
+      (project) => project.status === "Delivered"
+    );
     return {
-      active: source.filter((project) => project.status !== "Delivered" && project.status !== "Cancelled").length,
-      review: source.filter((project) => ["Review", "Revision", "Client Review"].includes(project.status)).length,
+      active: source.filter(
+        (project) =>
+          project.status !== "Delivered" && project.status !== "Cancelled"
+      ).length,
+      review: source.filter((project) =>
+        ["Review", "Revision", "Client Review"].includes(project.status)
+      ).length,
       delivered: delivered.length,
       dueSoon: source.filter((project) => {
-        if (project.status === "Delivered" || project.status === "Cancelled") return false;
+        if (project.status === "Delivered" || project.status === "Cancelled")
+          return false;
         const due = new Date(`${project.dueDate}T00:00:00`).getTime();
         const now = Date.now();
-        return due >= now && due <= now + (7 * 86_400_000);
+        return due >= now && due <= now + 7 * 86_400_000;
       }).length,
       earned: delivered.reduce((total, project) => total + project.earnings, 0),
     };
@@ -78,18 +144,42 @@ export function useProjectTableController(options: ProjectTableControllerOptions
     isUpdating: deferredState !== state,
     source,
     projects,
-    board: groupProjectsByStage(projects),
+    board,
+    resolveMoveStage,
     summary,
-    hasFilters: Boolean(state.query || state.clientId || state.assigneeUserId) || state.stage !== "all" || state.payment !== "all" || state.salary !== "all" || state.archive !== "active",
-    showAssignees: shouldShowProjectAssignees({ isTeamWorkspace: options.scope === "team", activeMemberCount: options.activeTeamMemberCount }),
-    getPaymentState: (project: WorkItem) => getProjectPaymentState(project, rules),
+    hasFilters:
+      Boolean(state.query || state.clientId || state.assigneeUserId) ||
+      state.stage !== "all" ||
+      state.payment !== "all" ||
+      state.salary !== "all" ||
+      state.archive !== "active",
+    showAssignees: shouldShowProjectAssignees({
+      isTeamWorkspace: options.scope === "team",
+      activeMemberCount: options.activeTeamMemberCount,
+    }),
+    getPaymentState: (project: WorkItem) =>
+      getProjectPaymentState(project, rules),
     isSalaryProject: rules.isSalaryProject,
-    canMoveProject: (project: WorkItem, stageId: string) => (!project.teamId || options.canUpdateProjectStatus)
-      && getProjectWorkflowStage(project).id !== stageId
-      && getProjectWorkflowStages(project).some((stage) => stage.id === stageId),
-    getStageChoices: (project: WorkItem) => getProjectStageMenuChoices(project).map((choice) => ({
-      ...choice,
-      disabled: choice.disabled || (Boolean(project.teamId) && !options.canUpdateProjectStatus),
-    })),
+    canMoveProject: (project: WorkItem, columnKey: string): boolean => {
+      const stageId = resolveMoveStage(project, columnKey);
+      return (
+        (!project.teamId || options.canUpdateProjectStatus) &&
+        stageId !== undefined &&
+        !board.some(
+          (column) =>
+            column.key === columnKey &&
+            column.projects.some((item) => item.id === project.id)
+        ) &&
+        (project.status === "Cancelled" ||
+          getProjectWorkflowStage(project).id !== stageId)
+      );
+    },
+    getStageChoices: (project: WorkItem) =>
+      getProjectStageMenuChoices(project).map((choice) => ({
+        ...choice,
+        disabled:
+          choice.disabled ||
+          (Boolean(project.teamId) && !options.canUpdateProjectStatus),
+      })),
   };
 }

@@ -16,6 +16,7 @@ import { Button as OwnedButton } from "@/components/ui/button";
 import { Badge as OwnedBadge } from "@/components/ui/badge";
 import { FieldLayout } from "@/components/ui/field-layout";
 import { Input as OwnedInput } from "@/components/ui/input";
+import { Label as OwnedLabel } from "@/components/ui/label";
 import { Switch as OwnedSwitch } from "@/components/ui/switch";
 import { Textarea as OwnedTextarea } from "@/components/ui/textarea";
 import { trackOptionalEvent } from "@/lib/telemetry";
@@ -42,6 +43,7 @@ import {
   Users,
 } from "lucide-react";
 import { ProjectSelect } from "@/features/projects/project-select";
+import { useConfirm } from "@/components/confirm-dialog";
 
 type EditableTeamRole = "Editor" | "Viewer";
 
@@ -60,6 +62,7 @@ export function TeamDesignPage({
   projects: WorkItem[];
   settings: SettingsState;
 }) {
+  const confirm = useConfirm();
   const [workspaceName, setWorkspaceName] = useState(
     settings.studioName || "Relay Team"
   );
@@ -546,9 +549,9 @@ export function TeamDesignPage({
                             <div className="grid w-full gap-2 sm:grid-cols-2">
                               {TEAM_MEMBER_PERMISSION_LABELS.map(
                                 ([permission, label]) => (
-                                  <label
+                                  <OwnedLabel
                                     key={permission}
-                                    className="flex items-center gap-2 text-xs text-muted-foreground"
+                                    className="flex items-center gap-2 text-xs font-normal text-muted-foreground"
                                   >
                                     <OwnedSwitch
                                       checked={Boolean(
@@ -569,7 +572,7 @@ export function TeamDesignPage({
                                       }
                                     />
                                     {label}
-                                  </label>
+                                  </OwnedLabel>
                                 )
                               )}
                             </div>
@@ -582,11 +585,15 @@ export function TeamDesignPage({
                               size="sm"
                               variant="outline"
                               disabled={Boolean(busyAction)}
-                              onClick={() => {
+                              onClick={async () => {
                                 if (
-                                  window.confirm(
-                                    `Transfer workspace ownership to ${member.name}? Workspace billing will not transfer. The current owner's personal Clerk subscription remains separate; manage or cancel it in Clerk as needed.`
-                                  )
+                                  await confirm({
+                                    title: `Transfer workspace ownership to ${member.name}?`,
+                                    description:
+                                      "Workspace billing will not transfer. The current owner's personal Clerk subscription remains separate; manage or cancel it in Clerk as needed.",
+                                    confirmLabel: "Transfer ownership",
+                                    destructive: true,
+                                  })
                                 ) {
                                   void runTeamAction("transfer", () =>
                                     transferOwnership({

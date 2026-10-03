@@ -30,6 +30,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { PublicMediaVersionComments } from "@/components/media-version-comments";
 import { normalizeMediaUrl } from "@/features/project-outputs/project-output-domain";
 import type { MediaVersionComment } from "@/features/media-version-comments/media-version-comments";
@@ -508,9 +509,9 @@ export function ClientPortalView({ token }: { token: string }) {
           onSubmit={(event) => void unlock(event)}
           className="w-full max-w-sm space-y-3 text-left"
         >
-          <label htmlFor="portal-pin" className="text-sm font-medium">
+          <Label htmlFor="portal-pin" className="text-sm font-medium">
             Portal PIN
-          </label>
+          </Label>
           <Input
             id="portal-pin"
             type="password"

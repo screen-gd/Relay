@@ -24,6 +24,10 @@ import { Card as OwnedCard } from "@/components/ui/card";
 import { FieldLayout } from "@/components/ui/field-layout";
 import { Input as OwnedInput } from "@/components/ui/input";
 import {
+  ToggleGroup as OwnedToggleGroup,
+  ToggleGroupItem as OwnedToggleGroupItem,
+} from "@/components/ui/toggle-group";
+import {
   Select as OwnedSelect,
   SelectContent as OwnedSelectContent,
   SelectItem as OwnedSelectItem,
@@ -592,7 +596,7 @@ export function ProfileEditPage({
               <div className="grid place-items-center">
                 <ProfileEditAvatar settings={settings} />
               </div>
-              <input
+              <OwnedInput
                 ref={fileInputRef}
                 hidden
                 type="file"
@@ -801,26 +805,27 @@ export function ProfileEditPage({
                 <legend className="mb-2 text-sm font-medium">
                   Week Start Day
                 </legend>
-                <div className="grid grid-cols-4 gap-2 sm:grid-cols-7">
+                <OwnedToggleGroup
+                  type="single"
+                  value={settings.weekStart}
+                  aria-label="Week Start Day"
+                  onValueChange={(value) => {
+                    if (value) setSettings({ ...settings, weekStart: value });
+                  }}
+                  className="grid h-auto w-full grid-cols-4 gap-2 rounded-none bg-transparent p-0 sm:grid-cols-7"
+                >
                   {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map(
                     (day) => (
-                      <OwnedButton
-                        type="button"
+                      <OwnedToggleGroupItem
                         key={day}
-                        variant={
-                          settings.weekStart === day ? "default" : "outline"
-                        }
-                        aria-pressed={settings.weekStart === day}
-                        onClick={() =>
-                          setSettings({ ...settings, weekStart: day })
-                        }
-                        className="min-w-0 px-2 text-xs"
+                        value={day}
+                        className="h-9 w-full min-w-0 border border-input bg-background px-2 text-xs text-foreground shadow-xs hover:bg-accent hover:text-accent-foreground data-[state=on]:border-transparent data-[state=on]:bg-primary data-[state=on]:text-primary-foreground data-[state=on]:hover:bg-primary/90 dark:bg-input/30 dark:hover:bg-input/50"
                       >
                         {day}
-                      </OwnedButton>
+                      </OwnedToggleGroupItem>
                     )
                   )}
-                </div>
+                </OwnedToggleGroup>
               </fieldset>
             </OwnedCard>
           }

@@ -19,6 +19,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { shouldShowSubscriptionWelcome } from "@/lib/subscription-onboarding";
+import { cn } from "@/lib/utils";
 
 export type WorkspaceSubscriptionState = NonNullable<
   FunctionReturnType<typeof api.workspaceSubscriptions.getCurrent>
@@ -34,14 +35,26 @@ const capabilityUpgradeCopy = {
 
 type PaidWorkspaceCapability = keyof typeof capabilityUpgradeCopy;
 
+/**
+ * Upsell row for a locked capability. Use `inline` inside an existing panel so
+ * the prompt does not become a card nested in a card.
+ */
 export function CapabilityUpgradePrompt({
   capability,
+  inline = false,
 }: {
   capability: PaidWorkspaceCapability;
+  inline?: boolean;
 }) {
   const name = capabilityUpgradeCopy[capability];
   return (
-    <div className="flex flex-col gap-3 rounded-md border border-border/70 bg-muted/30 p-4 sm:flex-row sm:items-center sm:justify-between">
+    <div
+      className={cn(
+        "flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between",
+        !inline &&
+          "rounded-[var(--radius-panel)] border bg-[var(--surface-sunken)] p-4"
+      )}
+    >
       <div>
         <p className="text-sm font-medium">Creator unlocks {name}.</p>
         <p className="mt-1 text-xs text-muted-foreground">

@@ -62,6 +62,12 @@ export async function openProject(page: Page, title: string) {
   const detail = page.locator("main#main-content");
   await expect(
     detail.getByRole("heading", { name: title, exact: true, level: 1 })
-  ).toBeVisible();
+  ).toHaveClass(/sr-only/);
+  const breadcrumb = page.getByRole("navigation", {
+    name: `Current location: Projects / ${title}`,
+    exact: true,
+  });
+  await expect(breadcrumb).toBeVisible();
+  await expect(breadcrumb).toContainText(title);
   return detail;
 }

@@ -4,6 +4,14 @@ import { UserButton } from "@clerk/nextjs";
 import { useOptionalAuth } from "@/lib/optional-auth";
 import { useConvexAuth, useQuery } from "convex/react";
 import { api } from "../../../convex/_generated/api";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
 function formatDate(value: string) {
   return new Intl.DateTimeFormat(undefined, {
@@ -47,34 +55,46 @@ export default function ClientHubPage() {
           Only projects your Workspace has published to you appear here.
         </p>
 
-        <div className="mt-10 overflow-x-auto border-t border-white/20">
-          <table
+        <div className="mt-10 border-t border-white/20">
+          <Table
             aria-label="Published projects"
             className="w-full min-w-[680px] border-collapse text-left"
           >
-            <thead className="text-xs tracking-wider text-zinc-500 uppercase">
-              <tr className="border-b border-white/15">
-                <th className="px-2 py-3 font-medium">Project</th>
-                <th className="px-2 py-3 font-medium">Stage</th>
-                <th className="px-2 py-3 font-medium">Progress</th>
-                <th className="px-2 py-3 font-medium">Due</th>
-              </tr>
-            </thead>
-            <tbody>
+            <TableHeader className="text-xs tracking-wider text-zinc-500 uppercase">
+              <TableRow className="border-b border-white/15">
+                <TableHead className="h-auto px-2 py-3 font-medium text-zinc-500">
+                  Project
+                </TableHead>
+                <TableHead className="h-auto px-2 py-3 font-medium text-zinc-500">
+                  Stage
+                </TableHead>
+                <TableHead className="h-auto px-2 py-3 font-medium text-zinc-500">
+                  Progress
+                </TableHead>
+                <TableHead className="h-auto px-2 py-3 font-medium text-zinc-500">
+                  Due
+                </TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody className="[&_tr:last-child]:border-b">
               {hub?.projects.map((project) => (
-                <tr key={project.id} className="border-b border-white/10">
-                  <td className="px-2 py-5 font-medium">{project.title}</td>
-                  <td className="px-2 py-5 text-zinc-300">{project.status}</td>
-                  <td className="px-2 py-5 text-zinc-300">
+                <TableRow key={project.id} className="border-b border-white/10">
+                  <TableCell className="px-2 py-5 font-medium">
+                    {project.title}
+                  </TableCell>
+                  <TableCell className="px-2 py-5 text-zinc-300">
+                    {project.status}
+                  </TableCell>
+                  <TableCell className="px-2 py-5 text-zinc-300">
                     {project.progress}%
-                  </td>
-                  <td className="px-2 py-5 text-zinc-400">
+                  </TableCell>
+                  <TableCell className="px-2 py-5 text-zinc-400">
                     {formatDate(project.dueDate)}
-                  </td>
-                </tr>
+                  </TableCell>
+                </TableRow>
               ))}
-            </tbody>
-          </table>
+            </TableBody>
+          </Table>
           {hub && hub.projects.length === 0 ? (
             <p className="py-10 text-sm text-zinc-400">
               No projects have been published to you yet.

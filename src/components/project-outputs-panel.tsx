@@ -1,7 +1,18 @@
 "use client";
 
 import { useState } from "react";
-import { ExternalLink, History, Plus } from "lucide-react";
+import {
+  ChevronRight,
+  ExternalLink,
+  History,
+  MoreHorizontal,
+  Plus,
+} from "lucide-react";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 import type { WorkItem } from "@/lib/types";
 import type { FileCategory } from "@/lib/domain-values";
 import { useProjectOutputs } from "@/lib/project-output-data";
@@ -11,6 +22,7 @@ import type {
   ProjectOutput,
   ProjectOutputReviewState,
 } from "@/features/project-outputs/project-output-domain";
+import { ContentSection, PageEmptyState } from "./workspace-page";
 import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
 import {
@@ -31,6 +43,12 @@ import {
   SelectValue,
 } from "./ui/select";
 import { Textarea } from "./ui/textarea";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "./ui/dropdown-menu";
 
 const reviewStates: Array<{ value: ProjectOutputReviewState; label: string }> =
   [
@@ -182,20 +200,11 @@ export function ProjectOutputsPanel({
 
   return (
     <>
-      <section
-        aria-labelledby="project-outputs-title"
-        className="min-h-0 overflow-y-auto pb-5"
-      >
-        <div className="flex flex-wrap items-start justify-between gap-3 border-b pb-4">
-          <div>
-            <h2 id="project-outputs-title" className="text-base font-semibold">
-              Project Outputs
-            </h2>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Promised results and their retained Media Version history.
-            </p>
-          </div>
-          {canEdit ? (
+      <ContentSection
+        titleId="project-outputs-title"
+        title="Project Outputs"
+        actions={
+          canEdit ? (
             <Button
               id="add-project-output"
               type="button"
@@ -205,16 +214,17 @@ export function ProjectOutputsPanel({
               <Plus aria-hidden="true" />
               Add Output
             </Button>
-          ) : null}
-        </div>
+          ) : null
+        }
+      >
         {data.error ? (
-          <p role="alert" className="mt-3 text-sm text-destructive">
+          <p role="alert" className="mb-4 text-sm text-destructive">
             {data.error}
           </p>
         ) : null}
 
         {data.outputs.length ? (
-          <div className="divide-y divide-border">
+          <div className="grid gap-8">
             {data.outputs.map((output) => {
               const versions = data.versions
                 .filter((version) => version.projectOutputId === output.id)
@@ -224,28 +234,32 @@ export function ProjectOutputsPanel({
               const current = data.currentVersion(output);
               const unresolvedOld = data.unresolvedOldComments(output);
               return (
-                <article key={output.id} className="py-5">
+                <article key={output.id}>
                   <div className="flex flex-col justify-between gap-4 lg:flex-row lg:items-start">
                     <div className="min-w-0">
                       <div className="flex flex-wrap items-center gap-2">
-                        <h3 className="font-semibold">{output.title}</h3>
-                        <Badge variant="outline">{output.category}</Badge>
-                        <Badge variant="secondary">
-                          {reviewStates.find(
-                            ({ value }) => value === output.reviewState
-                          )?.label ?? output.reviewState}
+                        <h3 className="text-sm font-semibold">
+                          {output.title}
+                        </h3>
+                        <Badge variant="secondary" className="rounded-sm">
+                          {output.category}
                         </Badge>
+                        {canEdit ? null : (
+                          <Badge variant="secondary" className="rounded-sm">
+                            {reviewStates.find(
+                              ({ value }) => value === output.reviewState
+                            )?.label ?? output.reviewState}
+                          </Badge>
+                        )}
                       </div>
-                      <p className="mt-2 text-sm text-muted-foreground">
+                      <p className="mt-1 text-[13px] text-muted-foreground">
                         {output.dueDate
                           ? `Due ${output.dueDate}`
                           : "No output due date"}
-                      </p>
-                      <p className="mt-1 text-sm text-muted-foreground">
-                        Next: {nextAction[output.reviewState]}
+                        {" · "}Next: {nextAction[output.reviewState]}
                       </p>
                       {unresolvedOld ? (
-                        <p className="mt-2 text-sm font-medium text-amber-700 dark:text-amber-300">
+                        <p className="mt-2 text-[13px] font-medium text-[var(--status-warning)]">
                           {unresolvedOld} unresolved{" "}
                           {unresolvedOld === 1 ? "Comment" : "Comments"} on
                           older versions
@@ -253,7 +267,7 @@ export function ProjectOutputsPanel({
                       ) : null}
                     </div>
                     {canEdit ? (
-                      <div className="flex flex-wrap gap-2">
+                      <div className="flex flex-wrap items-center gap-1.5">
                         <Select
                           value={output.reviewState}
                           onValueChange={(value) => {
@@ -283,7 +297,7 @@ export function ProjectOutputsPanel({
                         <Button
                           type="button"
                           size="sm"
-                          variant="outline"
+                          variant="secondary"
                           onClick={() => {
                             setVersionOutput(output);
                             setVersionLabel(`Version ${versions.length + 1}`);
@@ -293,38 +307,46 @@ export function ProjectOutputsPanel({
                           <Plus aria-hidden="true" />
                           Media Version
                         </Button>
-                        <Button
-                          type="button"
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => openOutput(output)}
-                        >
-                          Edit
-                        </Button>
-                        <Button
-                          type="button"
-                          size="sm"
-                          variant="ghost"
-                          onClick={() =>
-                            void runOutputAction(() =>
-                              data.archiveOutput(output.id)
-                            )
-                          }
-                        >
-                          Archive
-                        </Button>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button
+                              type="button"
+                              size="icon-sm"
+                              variant="ghost"
+                              aria-label={`More actions for ${output.title}`}
+                            >
+                              <MoreHorizontal aria-hidden="true" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem
+                              onSelect={() => openOutput(output)}
+                            >
+                              Edit
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              onSelect={() =>
+                                void runOutputAction(() =>
+                                  data.archiveOutput(output.id)
+                                )
+                              }
+                            >
+                              Archive
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
                       </div>
                     ) : null}
                   </div>
 
-                  <div className="mt-4 border-l pl-4">
+                  <div className="mt-4 grid gap-4">
                     {current ? (
-                      <div className="flex flex-wrap items-center justify-between gap-3">
+                      <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg bg-[var(--surface-inset)] px-4 py-3">
                         <div>
                           <p className="text-sm font-medium">
                             Current: {current.label}
                           </p>
-                          <p className="mt-1 text-xs text-muted-foreground">
+                          <p className="mt-0.5 text-xs text-muted-foreground">
                             Version {current.versionNumber} ·{" "}
                             {current.source.provider === "external"
                               ? "External link"
@@ -333,12 +355,7 @@ export function ProjectOutputsPanel({
                                 : "Vimeo"}
                           </p>
                         </div>
-                        <Button
-                          asChild
-                          type="button"
-                          size="sm"
-                          variant="outline"
-                        >
+                        <Button asChild type="button" size="sm" variant="ghost">
                           <a
                             href={current.source.url}
                             target="_blank"
@@ -349,43 +366,46 @@ export function ProjectOutputsPanel({
                         </Button>
                       </div>
                     ) : (
-                      <p className="text-sm text-muted-foreground">
+                      <p className="rounded-lg bg-[var(--surface-inset)] px-4 py-3 text-sm text-muted-foreground">
                         No Media Version yet.
                       </p>
                     )}
                     {versions.length > 1 ? (
-                      <details className="mt-4">
-                        <summary className="cursor-pointer text-sm font-medium">
-                          <History
+                      <Collapsible>
+                        <CollapsibleTrigger className="group inline-flex items-center gap-1 rounded-md outline-none focus-visible:ring-2 focus-visible:ring-[var(--app-accent)] text-[13px] font-medium text-muted-foreground hover:text-foreground">
+                          <ChevronRight
                             aria-hidden="true"
-                            className="mr-2 inline size-4"
+                            className="size-3.5 shrink-0 text-muted-foreground transition-transform group-data-[state=open]:rotate-90"
                           />
+                          <History aria-hidden="true" className="size-4" />
                           Version history ({versions.length})
-                        </summary>
-                        <ol className="mt-3 divide-y divide-border">
-                          {versions.map((version) => (
-                            <li
-                              key={version.id}
-                              className="flex items-center justify-between gap-3 py-2 text-sm"
-                            >
-                              <span>
-                                v{version.versionNumber} · {version.label}
-                                {version.id === current?.id
-                                  ? " · Current"
-                                  : " · Internal"}
-                              </span>
-                              <a
-                                href={version.source.url}
-                                target="_blank"
-                                rel="noreferrer"
-                                className="text-primary hover:underline"
+                        </CollapsibleTrigger>
+                        <CollapsibleContent asChild>
+                          <ol className="mt-2 grid gap-0.5">
+                            {versions.map((version) => (
+                              <li
+                                key={version.id}
+                                className="flex items-center justify-between gap-3 rounded-md px-3 py-2 text-sm hover:bg-[var(--app-hover)]"
                               >
-                                Open
-                              </a>
-                            </li>
-                          ))}
-                        </ol>
-                      </details>
+                                <span>
+                                  v{version.versionNumber} · {version.label}
+                                  {version.id === current?.id
+                                    ? " · Current"
+                                    : " · Internal"}
+                                </span>
+                                <a
+                                  href={version.source.url}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  className="font-medium hover:underline"
+                                >
+                                  Open
+                                </a>
+                              </li>
+                            ))}
+                          </ol>
+                        </CollapsibleContent>
+                      </Collapsible>
                     ) : null}
                     <MediaVersionComments
                       versions={versions.map((version) => ({
@@ -417,14 +437,13 @@ export function ProjectOutputsPanel({
             })}
           </div>
         ) : (
-          <div className="py-12 text-center">
-            <p className="text-sm font-medium">No Project Outputs yet.</p>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Add the first promised result for this Project.
-            </p>
-          </div>
+          <PageEmptyState
+            compact
+            title="No Project Outputs yet."
+            description="Add the first promised result for this Project."
+          />
         )}
-      </section>
+      </ContentSection>
 
       <Dialog open={outputDialog} onOpenChange={setOutputDialog}>
         <DialogContent>

@@ -157,8 +157,16 @@ test("creates and persists a project in local mode", async ({ page }) => {
   const detail = await openProject(page, title);
   await expect(
     detail
-      .locator('[data-slot="page-header"]')
+      .getByRole("complementary", { name: "Project details" })
       .getByText("E2E Client", { exact: true })
+  ).toBeVisible();
+  await detail.getByRole("button", { name: "Outputs and Versions" }).click();
+  await expect(
+    detail.getByRole("complementary", { name: "Project details" })
+  ).toHaveCount(0);
+  await detail.getByRole("button", { name: "Overview", exact: true }).click();
+  await expect(
+    detail.getByRole("complementary", { name: "Project details" })
   ).toBeVisible();
 });
 
@@ -210,6 +218,25 @@ test("dismisses the project launcher with Escape and restores focus", async ({
   const dialog = page.getByRole("dialog", { name: "New Project" });
   await expect(dialog).toBeVisible();
   await page.keyboard.press("Escape");
+  await expect(dialog).toBeHidden();
+  await expect(trigger).toBeFocused();
+
+  await trigger.click();
+  await dialog.getByLabel("Project name").fill("Unfinished project");
+  await page.keyboard.press("Escape");
+  const discardDialog = page.getByRole("alertdialog", {
+    name: "Discard this unfinished Project?",
+  });
+  await discardDialog
+    .getByRole("button", { name: "Cancel", exact: true })
+    .click();
+  await expect(dialog.getByLabel("Project name")).toHaveValue(
+    "Unfinished project"
+  );
+  await page.keyboard.press("Escape");
+  await discardDialog
+    .getByRole("button", { name: "Discard", exact: true })
+    .click();
   await expect(dialog).toBeHidden();
   await expect(trigger).toBeFocused();
 
@@ -358,6 +385,7 @@ test("shows the compact dashboard overview and links to all projects", async ({
   await expect(pulse.getByTestId("salary-batch-progress")).toContainText(
     /5\s*\/\s*5 edits/
   );
+  await expect(pulse.getByText("100%", { exact: true })).toBeVisible();
   const markPayment = pulse.getByRole("button", { name: /paid/i });
   await expect(markPayment).toBeEnabled();
 
@@ -376,6 +404,7 @@ test("shows the compact dashboard overview and links to all projects", async ({
   await expect(pulse.getByTestId("salary-batch-progress")).toContainText(
     /0\s*\/\s*5 edits/
   );
+  await expect(pulse.getByText("0%", { exact: true })).toBeVisible();
   await expect(markPayment).toBeDisabled();
   const storedSalaryBatch = await page.evaluate(() => {
     const stored = JSON.parse(
@@ -471,8 +500,13 @@ test("operates the Projects table by keyboard", async ({ page }) => {
   await expect(rows.last()).toBeFocused();
   await page.keyboard.press("Space");
   await expect(rows.last()).toHaveAttribute("aria-selected", "true");
+  const focusedProjectId = await rows.last().getAttribute("data-project-id");
+  if (!focusedProjectId)
+    throw new Error("Focused Project row is missing its ID.");
   await page.keyboard.press("Enter");
-  await expect(page).toHaveURL(/\/projects\/keyboard-b(?:\?|$)/);
+  await expect(page).toHaveURL(
+    new RegExp(`/projects/${focusedProjectId}(?:\\?|$)`)
+  );
 });
 
 test("moves a Project on the board with the stage menu and pointer drag", async ({
@@ -593,12 +627,13 @@ test("moves a Project on the board with the stage menu and pointer drag", async 
     )
     .toBe("editing");
 
-  page.once("dialog", async (dialog) => {
-    expect(dialog.message()).toContain("records $500 as earned");
-    await dialog.accept();
-  });
   await stageMenu.click();
   await page.getByRole("menuitem", { name: /Delivered/ }).click();
+  const deliveryDialog = page.getByRole("alertdialog", {
+    name: "Mark Workflow Project as Delivered?",
+  });
+  await expect(deliveryDialog).toContainText("records $500 as earned");
+  await deliveryDialog.getByRole("button", { name: "Mark delivered" }).click();
   await expect
     .poll(() =>
       page.evaluate(
@@ -713,7 +748,16 @@ test("keeps Project Outputs and linked Media Version history separate from Proje
   await page.getByLabel("Version label").fill("Final review");
   await page.getByRole("button", { name: "Add Media Version" }).click();
   await expect(film.getByText("Current: Final review")).toBeVisible();
-  await expect(film.getByText("Version history (2)")).toBeVisible();
+  const versionHistory = film.getByRole("button", {
+    name: "Version history (2)",
+  });
+  await expect(versionHistory).toHaveAttribute("aria-expanded", "false");
+  await versionHistory.click();
+  await expect(versionHistory).toHaveAttribute("aria-expanded", "true");
+  const history = film.getByRole("list");
+  await expect(history).toContainText("v1 · Client cut · Internal");
+  await expect(history).toContainText("v2 · Final review · Current");
+  await expect(history.getByRole("link", { name: "Open" })).toHaveCount(2);
 
   await page.reload();
   await expect(

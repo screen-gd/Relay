@@ -7,8 +7,10 @@ import type {
   WorkflowStage,
 } from "@/lib/types";
 import {
+  createProjectStageBoard,
   deriveProjectGroupSummary,
   getProjectStageMenuChoices,
+  getProjectWorkflowStage,
   groupProjectsByStage,
   dueDateAfterDelivery,
   moveProjectToStage,
@@ -18,6 +20,7 @@ import {
   validateNewProjectInput,
   type ProjectGroup,
 } from "./project-domain";
+import { DEFAULT_WORKFLOW_STAGES } from "@/lib/workflow-templates";
 
 const clients: Client[] = [
   {
@@ -372,6 +375,138 @@ describe("Project delivery", () => {
 });
 
 describe("Project workflow board", () => {
+  it("never places an active project with a stale stage in a delivered stage", () => {
+    const stale = project({
+      status: "In Progress",
+      workflowStageId: "missing",
+      workflowStages: [
+        { id: "plan", label: "Planned", purpose: "planned" },
+        { id: "done", label: "Delivered", purpose: "delivered" },
+      ],
+    });
+    expect(getProjectWorkflowStage(stale).id).toBe("plan");
+  });
+
+  it("merges trimmed case-insensitive labels and resolves each workflow's own stage ID", () => {
+    const first = project({
+      id: "one",
+      workflowStageId: "edit-a",
+      workflowStages: [
+        { id: "edit-a", label: "Editing", purpose: "editing" },
+        { id: "done-a", label: "Delivered", purpose: "delivered" },
+      ],
+    });
+    const second = project({
+      id: "two",
+      workflowStageId: "edit-b",
+      workflowStages: [
+        { id: "edit-b", label: " editing ", purpose: "editing" },
+        { id: "done-b", label: " delivered ", purpose: "delivered" },
+      ],
+    });
+    const { board, resolveMoveStage } = createProjectStageBoard([
+      second,
+      first,
+    ]);
+    expect(board.map(({ projects }) => projects.map(({ id }) => id))).toEqual([
+      ["two", "one"],
+      [],
+    ]);
+    expect(new Set(board.map(({ key }) => key)).size).toBe(2);
+    expect(resolveMoveStage(first, board[1].key)).toBe("done-a");
+    expect(resolveMoveStage(second, board[1].key)).toBe("done-b");
+    expect(resolveMoveStage(second, "missing")).toBeUndefined();
+    expect(
+      groupProjectsByStage([first, second]).map(({ key, stage }) => ({
+        key,
+        stage,
+      }))
+    ).toEqual(board.map(({ key, stage }) => ({ key, stage })));
+  });
+
+  it("places custom stages between their default neighbours", () => {
+    const custom = project({
+      id: "custom",
+      workflowStageId: "sound",
+      workflowStages: [
+        ...DEFAULT_WORKFLOW_STAGES.slice(0, 2),
+        { id: "sound", label: "Sound mix", purpose: "editing" },
+        ...DEFAULT_WORKFLOW_STAGES.slice(2),
+      ],
+    });
+    const standard = project({ id: "standard", workflowStageId: "editing" });
+    const board = groupProjectsByStage([standard, custom]);
+    expect(board.map(({ stage }) => stage.label)).toEqual([
+      "Planned",
+      "Editing",
+      "Sound mix",
+      "Client Review",
+      "Revisions",
+      "Approved",
+      "Delivered",
+    ]);
+    expect(
+      board.flatMap(({ projects }) => projects.map(({ id }) => id)).sort()
+    ).toEqual(["custom", "standard"]);
+    expect(
+      groupProjectsByStage([custom, standard]).map(({ key }) => key)
+    ).toEqual(board.map(({ key }) => key));
+  });
+
+  it("keeps delivered-purpose and cancelled columns after active work", () => {
+    const custom = project({
+      id: "custom",
+      workflowStageId: "work",
+      workflowStages: [
+        { id: "published", label: "Published", purpose: "delivered" },
+        { id: "work", label: "Work", purpose: "editing" },
+      ],
+    });
+    const cancelled = project({ id: "cancelled-project", status: "Cancelled" });
+    const board = groupProjectsByStage([custom, cancelled]);
+    expect(board.slice(-3).map(({ stage }) => stage.label)).toEqual([
+      "Delivered",
+      "Cancelled",
+      "Published",
+    ]);
+    expect(board.find(({ key }) => key === "cancelled")?.projects).toEqual([
+      cancelled,
+    ]);
+  });
+
+  it("merges transitive ID and label matches without losing current stages", () => {
+    const projects = [
+      project({
+        id: "one",
+        workflowStageId: "shared",
+        workflowStages: [{ id: "shared", label: "Edit", purpose: "editing" }],
+      }),
+      project({
+        id: "two",
+        workflowStageId: "shared",
+        workflowStages: [{ id: "shared", label: "Cut", purpose: "editing" }],
+      }),
+      project({
+        id: "three",
+        workflowStageId: "other",
+        workflowStages: [{ id: "other", label: " cut ", purpose: "editing" }],
+      }),
+    ];
+    const { board, resolveMoveStage } = createProjectStageBoard(projects);
+    expect(board).toHaveLength(1);
+    expect(board[0].projects).toEqual(projects);
+    expect(resolveMoveStage(projects[2], board[0].key)).toBe("other");
+  });
+
+  it("keeps default order when custom workflows disagree", () => {
+    const custom = project({
+      workflowStages: [...DEFAULT_WORKFLOW_STAGES].reverse(),
+    });
+    expect(groupProjectsByStage([custom]).map(({ key }) => key)).toEqual(
+      DEFAULT_WORKFLOW_STAGES.map(({ id }) => id)
+    );
+  });
+
   it("groups projects in copied stage order and keeps empty stages", () => {
     const projects = [
       project({

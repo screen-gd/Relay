@@ -35,14 +35,20 @@ import {
   type DragEndEvent,
 } from "@dnd-kit/core";
 import { AnimatePresence, motion, MotionConfig } from "motion/react";
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
 import type { SettingsState, WorkItem, WorkflowStage } from "@/lib/types";
 import type { StoredTeamRole } from "@/lib/domain-values";
 import { useHydratedReducedMotion } from "@/lib/motion";
 import { projectStatusTone } from "@/lib/project-status-style";
 import {
   DEFAULT_PROJECT_TABLE_STATE,
-  getProjectTableDeletionWarning,
   parseProjectTableSearch,
 } from "@/features/projects/project-table-domain";
 import { useProjectTableController } from "@/features/projects/project-table-controller";
@@ -51,6 +57,9 @@ import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { Empty, EmptyHeader, EmptyMedia } from "@/components/ui/empty";
+import { Progress } from "@/components/ui/progress";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -87,6 +96,7 @@ import {
 type WorkspaceScope = "personal" | "team";
 
 const MotionCard = motion.create(Card);
+const MotionEmpty = motion.create(Empty);
 
 type ProjectMenuOption<T extends string> = {
   value: T;
@@ -160,9 +170,7 @@ function FilterField({
 }) {
   return (
     <div className="grid gap-1.5">
-      <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--app-subtle)]">
-        {label}
-      </span>
+      <span className="text-xs font-medium text-muted-foreground">{label}</span>
       {children}
     </div>
   );
@@ -279,6 +287,45 @@ function ProjectVideoThumbnail({
   );
 }
 
+/**
+ * Converts mouse-wheel input over board chrome into horizontal board scroll.
+ * Returns a callback ref so the listener attaches whenever the board mounts,
+ * including after switching from the table view.
+ */
+function useBoardHorizontalWheel() {
+  return useCallback((board: HTMLDivElement | null) => {
+    if (!board) return;
+
+    const handleWheel = (event: WheelEvent) => {
+      const target = event.target;
+      if (!(target instanceof Element)) return;
+      if (target.closest("[data-board-card]")) return;
+      // Populated columns keep native vertical scrolling.
+      const column = target.closest<HTMLElement>("[data-board-column-body]");
+      if (column && column.scrollHeight > column.clientHeight) return;
+      const wheelTarget = target.closest("[data-board-wheel]");
+      if (!wheelTarget || !board.contains(wheelTarget)) return;
+      if (event.shiftKey || event.deltaX !== 0) return;
+      if (event.deltaY === 0) return;
+
+      const maxScrollLeft = board.scrollWidth - board.clientWidth;
+      if (maxScrollLeft <= 0) return;
+
+      const nextScrollLeft = Math.max(
+        0,
+        Math.min(maxScrollLeft, board.scrollLeft + event.deltaY)
+      );
+      if (nextScrollLeft === board.scrollLeft) return;
+
+      event.preventDefault();
+      board.scrollLeft = nextScrollLeft;
+    };
+
+    board.addEventListener("wheel", handleWheel, { passive: false });
+    return () => board.removeEventListener("wheel", handleWheel);
+  }, []);
+}
+
 function ProjectBoardCard({
   project,
   selected,
@@ -302,21 +349,23 @@ function ProjectBoardCard({
   return (
     <article
       ref={setNodeRef}
+      data-board-card
       style={{
         transform: transform
           ? `translate3d(${transform.x}px, ${transform.y}px, 0)`
           : undefined,
       }}
       className={cn(
-        "relative flex items-start gap-1 px-3 py-3",
+        "relative flex items-start gap-2 rounded-lg border border-[var(--panel-edge)] bg-card p-2.5 text-card-foreground",
         selected && "bg-[var(--app-active)]",
         isDragging && "z-20 opacity-60"
       )}
     >
-      <button
+      <Button
         type="button"
+        variant="ghost"
         className={cn(
-          "min-w-0 flex-1 text-left outline-none focus-visible:ring-2 focus-visible:ring-[var(--app-accent)]",
+          "h-auto min-w-0 flex-1 flex-col items-start justify-start gap-0 rounded-none px-0 py-0 text-left font-normal whitespace-normal hover:bg-transparent hover:text-current dark:hover:bg-transparent focus-visible:ring-2 focus-visible:ring-[var(--app-accent)] active:translate-y-0 active:scale-100",
           !disabled && "cursor-grab active:cursor-grabbing"
         )}
         onClick={onSelect}
@@ -330,13 +379,13 @@ function ProjectBoardCard({
         <span className="mt-1 block truncate text-[11px] text-[var(--app-muted)]">
           {project.client || "No client"} · {formatDate(project.dueDate)}
         </span>
-      </button>
+      </Button>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button
             variant="ghost"
             size="icon-sm"
-            className="!bg-[var(--app-panel)] transition-transform active:scale-95"
+            className="shrink-0 !bg-transparent text-[var(--app-muted)]"
             aria-label={`Change stage for ${project.title}`}
           >
             <MoreHorizontal />
@@ -360,30 +409,50 @@ function ProjectBoardCard({
 }
 
 function ProjectBoardColumn({
+  columnKey,
   stage,
   projects,
   children,
 }: {
+  columnKey: string;
   stage: WorkflowStage;
   projects: number;
   children: ReactNode;
 }) {
-  const { setNodeRef, isOver } = useDroppable({ id: `stage:${stage.id}` });
+  const { setNodeRef, isOver } = useDroppable({ id: `stage:${columnKey}` });
   return (
     <section
       ref={setNodeRef}
       className={cn(
-        "min-w-[210px] border-r border-[var(--app-border)] last:border-r-0",
+        "flex h-full min-h-0 min-w-[280px] flex-col rounded-lg bg-[var(--surface-inset)]",
         isOver && "bg-[var(--app-hover)]"
       )}
       aria-label={`${stage.label} projects`}
     >
-      <h3 className="sticky top-0 z-10 flex h-9 items-center justify-between border-b border-[var(--app-border)] bg-[var(--app-soft-panel)] px-3 text-[10px] font-semibold uppercase text-[var(--app-subtle)]">
+      <h3
+        data-board-wheel
+        className="flex shrink-0 items-center justify-between px-3 py-3 text-sm font-medium text-[var(--app-ink)]"
+      >
         <span>{stage.label}</span>
-        <span>{projects}</span>
+        <span className="text-[11px] font-normal tabular-nums text-[var(--app-muted)]">
+          {projects}
+        </span>
       </h3>
-      <div className="min-h-24 divide-y divide-[var(--app-border)]">
-        {children}
+      <div
+        className={cn(
+          "min-h-0 flex-1 overflow-y-auto overscroll-contain p-2",
+          projects === 0 && "grid place-items-center"
+        )}
+        data-board-column-body
+        data-board-wheel={projects === 0 ? true : undefined}
+      >
+        {projects === 0 ? (
+          <span className="text-xs text-[var(--app-muted)] opacity-45">
+            Drop here
+          </span>
+        ) : (
+          <div className="grid gap-2">{children}</div>
+        )}
       </div>
     </section>
   );
@@ -396,6 +465,7 @@ export function PrecisionProjects(props: PrecisionProjectsProps) {
   const [filtersOpen, setFiltersOpen] = useState(false);
   const reduceMotion = useHydratedReducedMotion();
   const hasTeam = Boolean(props.teamName);
+  const boardRef = useBoardHorizontalWheel();
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
     useSensor(KeyboardSensor)
@@ -413,6 +483,7 @@ export function PrecisionProjects(props: PrecisionProjectsProps) {
     getPaymentState,
     isSalaryProject,
     canMoveProject,
+    resolveMoveStage,
     getStageChoices,
   } = useProjectTableController({
     scope,
@@ -460,7 +531,7 @@ export function PrecisionProjects(props: PrecisionProjectsProps) {
     return Boolean(project && stage && canMoveProject(project, stage));
   };
   const stageLabel = (stageId: string | undefined) =>
-    board.find(({ stage }) => stage.id === stageId)?.stage.label ?? stageId;
+    board.find(({ key }) => key === stageId)?.stage.label ?? stageId;
   const announcements: Announcements = {
     onDragStart: ({ active }) => `Picked up ${projectName(active.id)}.`,
     onDragOver: ({ active, over }) => {
@@ -482,9 +553,12 @@ export function PrecisionProjects(props: PrecisionProjectsProps) {
     const project = projects.find(
       (candidate) => candidate.id === String(active.id)
     );
-    const stage = dropStage(over?.id);
-    if (project && stage && canMoveProject(project, stage)) {
-      props.onUpdateProjectStatus(project, stage);
+    const columnKey = dropStage(over?.id);
+    if (project && columnKey && canMoveProject(project, columnKey)) {
+      const stageId = resolveMoveStage(project, columnKey);
+      if (stageId !== undefined) {
+        props.onUpdateProjectStatus(project, stageId);
+      }
     }
   };
 
@@ -621,14 +695,7 @@ export function PrecisionProjects(props: PrecisionProjectsProps) {
               <DropdownMenuItem
                 className="text-destructive focus:text-destructive"
                 disabled={!props.canDeleteProject(row.original)}
-                onSelect={() => {
-                  if (
-                    window.confirm(
-                      getProjectTableDeletionWarning(row.original.title)
-                    )
-                  )
-                    props.onDeleteProject(row.original.id);
-                }}
+                onSelect={() => props.onDeleteProject(row.original.id)}
               >
                 <Trash2 /> Permanently delete (Owner only)
               </DropdownMenuItem>
@@ -664,7 +731,7 @@ export function PrecisionProjects(props: PrecisionProjectsProps) {
       <WorkspacePage
         family="data-index"
         mode="fill"
-        className="workspace-scrollbar-hidden min-w-0 overflow-x-hidden lg:min-h-full"
+        className="min-w-0 overflow-visible lg:min-h-full lg:overflow-visible"
       >
         <motion.div
           initial={reduceMotion ? false : { opacity: 0 }}
@@ -1003,34 +1070,36 @@ export function PrecisionProjects(props: PrecisionProjectsProps) {
                     aria-labelledby={`project-${tableState.view}-tab project-${scope}-tab`}
                     aria-busy={isUpdating}
                     bodyLabel="Project library viewport"
-                    className="relative h-full min-h-0 rounded-xl border border-[var(--app-border)] bg-[var(--app-panel)]"
-                    bodyClassName="workspace-scrollbar-hidden flex min-h-0 flex-1 flex-col overflow-hidden max-lg:flex-none max-lg:overflow-visible"
+                    className="relative h-full min-h-0 overflow-visible rounded-xl border border-[var(--app-border)] bg-[var(--app-panel)]"
+                    bodyClassName="flex min-h-0 flex-1 flex-col max-lg:flex-none max-lg:overflow-visible"
                   >
                     {isUpdating ? (
                       <div className="absolute inset-x-0 top-0 z-20 h-0.5 bg-[var(--app-accent)]" />
                     ) : null}
-                    <header className="flex h-12 items-center justify-between border-b border-[var(--app-border)] px-4">
-                      <span
-                        className="flex items-center gap-2 text-[11px] text-[var(--app-muted)]"
-                        aria-live="polite"
-                      >
-                        <AnimatePresence mode="popLayout" initial={false}>
-                          <motion.span
-                            key={`${scope}-${deferredTableState.stage}-${projects.length}`}
-                            initial={
-                              reduceMotion ? false : { opacity: 0, y: 4 }
-                            }
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={
-                              reduceMotion ? undefined : { opacity: 0, y: -4 }
-                            }
-                            transition={contentTransition}
-                          >
-                            {projects.length} records
-                          </motion.span>
-                        </AnimatePresence>
-                      </span>
-                    </header>
+                    {tableState.view === "table" ? (
+                      <header className="flex h-12 items-center justify-between border-b border-[var(--app-border)] px-4">
+                        <span
+                          className="flex items-center gap-2 text-[11px] text-[var(--app-muted)]"
+                          aria-live="polite"
+                        >
+                          <AnimatePresence mode="popLayout" initial={false}>
+                            <motion.span
+                              key={`${scope}-${deferredTableState.stage}-${projects.length}`}
+                              initial={
+                                reduceMotion ? false : { opacity: 0, y: 4 }
+                              }
+                              animate={{ opacity: 1, y: 0 }}
+                              exit={
+                                reduceMotion ? undefined : { opacity: 0, y: -4 }
+                              }
+                              transition={contentTransition}
+                            >
+                              {projects.length} records
+                            </motion.span>
+                          </AnimatePresence>
+                        </span>
+                      </header>
+                    ) : null}
 
                     {props.error ? (
                       <div
@@ -1051,38 +1120,45 @@ export function PrecisionProjects(props: PrecisionProjectsProps) {
                           onDragEnd={handleDragEnd}
                         >
                           <div
-                            className="workspace-scrollbar-hidden grid min-h-0 flex-1 auto-cols-[minmax(210px,1fr)] grid-flow-col overflow-x-auto bg-[var(--app-panel)]"
+                            ref={boardRef}
+                            data-board-wheel
+                            className="grid min-h-0 flex-1 auto-cols-[280px] grid-flow-col items-stretch gap-3 overflow-x-auto overflow-y-hidden bg-[var(--app-panel)] px-3 pb-3 pt-3"
                             aria-label="Project board"
                           >
-                            {board.map(({ stage, projects: stageProjects }) => {
-                              return (
-                                <ProjectBoardColumn
-                                  key={stage.id}
-                                  stage={stage}
-                                  projects={stageProjects.length}
-                                >
-                                  {stageProjects.map((project) => (
-                                    <ProjectBoardCard
-                                      key={project.id}
-                                      project={project}
-                                      selected={selected?.id === project.id}
-                                      disabled={
-                                        !props.canUpdateProjectStatus &&
-                                        Boolean(project.teamId)
-                                      }
-                                      stageChoices={getStageChoices(project)}
-                                      onSelect={() => setSelectedId(project.id)}
-                                      onOpen={() =>
-                                        props.onViewProject(project)
-                                      }
-                                      onUpdateProjectStatus={
-                                        props.onUpdateProjectStatus
-                                      }
-                                    />
-                                  ))}
-                                </ProjectBoardColumn>
-                              );
-                            })}
+                            {board.map(
+                              ({ key, stage, projects: stageProjects }) => {
+                                return (
+                                  <ProjectBoardColumn
+                                    key={key}
+                                    columnKey={key}
+                                    stage={stage}
+                                    projects={stageProjects.length}
+                                  >
+                                    {stageProjects.map((project) => (
+                                      <ProjectBoardCard
+                                        key={project.id}
+                                        project={project}
+                                        selected={selected?.id === project.id}
+                                        disabled={
+                                          !props.canUpdateProjectStatus &&
+                                          Boolean(project.teamId)
+                                        }
+                                        stageChoices={getStageChoices(project)}
+                                        onSelect={() =>
+                                          setSelectedId(project.id)
+                                        }
+                                        onOpen={() =>
+                                          props.onViewProject(project)
+                                        }
+                                        onUpdateProjectStatus={
+                                          props.onUpdateProjectStatus
+                                        }
+                                      />
+                                    ))}
+                                  </ProjectBoardColumn>
+                                );
+                              }
+                            )}
                           </div>
                         </DndContext>
                       ) : (
@@ -1092,14 +1168,16 @@ export function PrecisionProjects(props: PrecisionProjectsProps) {
                             aria-label="Project cards"
                           >
                             {table.getRowModel().rows.map((row) => (
-                              <button
+                              <Button
                                 key={row.id}
                                 type="button"
+                                variant="ghost"
+                                size="default"
                                 data-testid="mobile-project-row"
                                 data-project-title={row.original.title}
                                 aria-label={`Open ${row.original.title} project details`}
                                 className={cn(
-                                  "grid w-full grid-cols-[48px_minmax(0,1fr)_auto] items-center gap-3 px-3 py-3 text-left outline-none transition-colors hover:bg-[var(--app-hover)] focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--app-accent)]",
+                                  "h-auto w-full grid grid-cols-[48px_minmax(0,1fr)_auto] justify-start items-center gap-3 px-3 py-3 text-left font-normal whitespace-normal hover:bg-[var(--app-hover)] dark:hover:bg-[var(--app-hover)] focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--app-accent)] active:translate-y-0 active:scale-100",
                                   selected?.id === row.original.id &&
                                     "bg-[var(--app-active)]"
                                 )}
@@ -1130,7 +1208,7 @@ export function PrecisionProjects(props: PrecisionProjectsProps) {
                                 >
                                   {row.original.status}
                                 </Badge>
-                              </button>
+                              </Button>
                             ))}
                           </div>
                           <motion.div
@@ -1192,7 +1270,6 @@ export function PrecisionProjects(props: PrecisionProjectsProps) {
                                 {table.getRowModel().rows.map((row) => (
                                   <motion.tr
                                     key={row.id}
-                                    layout="position"
                                     role="button"
                                     tabIndex={0}
                                     data-testid="project-row"
@@ -1279,10 +1356,10 @@ export function PrecisionProjects(props: PrecisionProjectsProps) {
                     ) : isUpdating ? (
                       <ProjectTableSkeleton reduceMotion={reduceMotion} />
                     ) : (
-                      <motion.div
+                      <MotionEmpty
                         initial={reduceMotion ? false : { opacity: 0, y: 8 }}
                         animate={{ opacity: 1, y: 0 }}
-                        className="grid min-h-72 place-items-center px-5 text-center"
+                        className="grid min-h-72 flex-none place-items-center gap-0 rounded-none border-0 px-5 py-6 text-center [text-wrap:wrap] md:px-5 md:py-6"
                       >
                         <div className="max-w-xs">
                           <FolderKanban className="mx-auto size-7 text-[var(--app-muted)]" />
@@ -1325,7 +1402,7 @@ export function PrecisionProjects(props: PrecisionProjectsProps) {
                             </Button>
                           )}
                         </div>
-                      </motion.div>
+                      </MotionEmpty>
                     )}
                   </DataTableFrame>
                 }
@@ -1399,8 +1476,17 @@ function ProjectInspector({
           className
         )}
       >
-        <FolderOpen className="mx-auto mb-2 size-6 opacity-70" />
-        Select a project to inspect its production details.
+        <Empty className="flex-none gap-0 rounded-none border-0 p-0 text-center text-xs text-[var(--app-muted)] [text-wrap:wrap] md:p-0">
+          <EmptyHeader className="max-w-none gap-0">
+            <EmptyMedia
+              variant="default"
+              className="mx-auto mb-2 size-6 opacity-70"
+            >
+              <FolderOpen />
+            </EmptyMedia>
+            Select a project to inspect its production details.
+          </EmptyHeader>
+        </Empty>
       </MotionCard>
     );
   }
@@ -1410,97 +1496,93 @@ function ProjectInspector({
       role="region"
       aria-label="Selected project details"
       className={cn(
-        "workspace-scrollbar-hidden h-full min-h-0 overflow-y-auto overscroll-contain rounded-xl border border-[var(--app-border)] bg-[var(--app-panel)] shadow-none",
+        "h-full min-h-0 overflow-hidden rounded-xl border border-[var(--app-border)] bg-[var(--app-panel)] shadow-none",
         className
       )}
     >
-      <div className="p-4">
-        <ProjectVideoThumbnail
-          project={project}
-          className="mb-3 aspect-video h-auto w-full"
-        />
-        <div>
-          <div className="border-b border-[var(--app-border)] pb-4">
-            <div className="min-w-0 flex-1">
-              <h2 className="truncate text-sm font-semibold">
-                {project.title}
-              </h2>
-              <p className="mt-0.5 truncate text-[11px] text-[var(--app-muted)]">
-                {project.client || "No client"}
-              </p>
-              <Badge
-                variant="outline"
-                className={cn(
-                  "mt-2 h-5 rounded px-1.5 text-[10px] font-semibold",
-                  projectStatusTone(project.status)
-                )}
-              >
-                {project.status}
-              </Badge>
-            </div>
-          </div>
-          <div className="space-y-4 pt-4">
-            <dl className="grid grid-cols-2 gap-x-4 gap-y-5">
-              <Detail label="Client" value={project.client || "No client"} />
-              <Detail label="Work type" value={project.workType} />
-              <Detail label="Due date" value={formatDate(project.dueDate)} />
-              <Detail
-                label="Value"
-                value={
-                  project.workType === settings.salaryWorkType
-                    ? "Paid per batch"
-                    : money(project.earnings, settings.currencyCode)
-                }
-              />
-            </dl>
-            <div className="border-t border-[var(--app-border)] pt-4">
-              <div className="flex justify-between text-xs font-semibold">
-                <span>Progress</span>
-                <span>{value}%</span>
+      <ScrollArea className="h-full min-h-0 flex-1 rounded-[inherit] [&_[data-slot=scroll-area-viewport]]:overscroll-contain [&_[data-slot=scroll-area-scrollbar]]:hidden">
+        <div className="p-4">
+          <ProjectVideoThumbnail
+            project={project}
+            className="mb-3 aspect-video h-auto w-full"
+          />
+          <div>
+            <div className="border-b border-[var(--app-border)] pb-4">
+              <div className="min-w-0 flex-1">
+                <h2 className="truncate text-sm font-semibold">
+                  {project.title}
+                </h2>
+                <p className="mt-0.5 truncate text-[11px] text-[var(--app-muted)]">
+                  {project.client || "No client"}
+                </p>
+                <Badge
+                  variant="outline"
+                  className={cn(
+                    "mt-2 h-5 rounded px-1.5 text-[10px] font-semibold",
+                    projectStatusTone(project.status)
+                  )}
+                >
+                  {project.status}
+                </Badge>
               </div>
-              <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-[var(--app-progress-track)]">
-                <motion.div
-                  className="h-full origin-left rounded-full bg-[var(--app-accent)]"
-                  initial={reduceMotion ? false : { scaleX: 0 }}
-                  animate={{ scaleX: value / 100 }}
+            </div>
+            <div className="space-y-4 pt-4">
+              <dl className="grid grid-cols-2 gap-x-4 gap-y-5">
+                <Detail label="Client" value={project.client || "No client"} />
+                <Detail label="Work type" value={project.workType} />
+                <Detail label="Due date" value={formatDate(project.dueDate)} />
+                <Detail
+                  label="Value"
+                  value={
+                    project.workType === settings.salaryWorkType
+                      ? "Paid per batch"
+                      : money(project.earnings, settings.currencyCode)
+                  }
+                />
+              </dl>
+              <div className="pt-1">
+                <div className="flex justify-between text-xs font-semibold">
+                  <span>Progress</span>
+                  <span>{value}%</span>
+                </div>
+                <Progress
+                  value={value}
+                  aria-hidden="true"
+                  className="mt-2 h-1.5 rounded-full bg-[var(--app-progress-track)] [&_[data-slot=progress-indicator]]:rounded-full [&_[data-slot=progress-indicator]]:bg-[var(--app-accent)]"
                 />
               </div>
-            </div>
-            <div className="border-t border-[var(--app-border)] pt-4">
-              <p className="text-[10px] font-semibold uppercase text-[var(--app-subtle)]">
-                Project note
-              </p>
-              <p className="mt-2 text-xs leading-5 text-[var(--app-muted)]">
-                {project.notes || "No project notes yet."}
-              </p>
-            </div>
-            <div className="border-t border-[var(--app-border)] pt-4">
-              <p className="text-[10px] font-semibold uppercase text-[var(--app-subtle)]">
-                Next action
-              </p>
-              <p className="mt-2 text-xs leading-5 text-[var(--app-ink)]">
-                {projectNextAction(project)}
-              </p>
-            </div>
-            <div className="grid grid-cols-2 gap-2 pt-1">
-              <Button
-                variant="outline"
-                className="h-9 !bg-[var(--app-panel)] transition-transform active:scale-[0.98]"
-                disabled={!canEdit && Boolean(project.teamId)}
-                onClick={() => onEdit(project)}
-              >
-                <Edit3 /> Edit
-              </Button>
-              <Button
-                className="h-9 transition-transform active:scale-[0.98]"
-                onClick={() => onOpen(project)}
-              >
-                Open <ArrowRight />
-              </Button>
+              <div>
+                <p className="text-xs text-[var(--app-muted)]">Project note</p>
+                <p className="mt-2 text-xs leading-5 text-[var(--app-muted)]">
+                  {project.notes || "No project notes yet."}
+                </p>
+              </div>
+              <div>
+                <p className="text-xs text-[var(--app-muted)]">Next action</p>
+                <p className="mt-2 text-xs leading-5 text-[var(--app-ink)]">
+                  {projectNextAction(project)}
+                </p>
+              </div>
+              <div className="grid grid-cols-2 gap-2 pt-1">
+                <Button
+                  variant="outline"
+                  className="h-9 !bg-[var(--app-panel)] transition-transform active:scale-[0.98]"
+                  disabled={!canEdit && Boolean(project.teamId)}
+                  onClick={() => onEdit(project)}
+                >
+                  <Edit3 /> Edit
+                </Button>
+                <Button
+                  className="h-9 transition-transform active:scale-[0.98]"
+                  onClick={() => onOpen(project)}
+                >
+                  Open <ArrowRight />
+                </Button>
+              </div>
             </div>
           </div>
         </div>
-      </div>
+      </ScrollArea>
     </MotionCard>
   );
 }
@@ -1508,9 +1590,7 @@ function ProjectInspector({
 function Detail({ label, value }: { label: string; value: string }) {
   return (
     <div>
-      <p className="text-[9px] font-semibold uppercase text-[var(--app-subtle)]">
-        {label}
-      </p>
+      <p className="text-xs text-[var(--app-muted)]">{label}</p>
       <p className="mt-1 text-xs font-medium">{value}</p>
     </div>
   );

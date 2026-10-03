@@ -50,6 +50,7 @@ import {
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Empty } from "@/components/ui/empty";
 import {
   Dialog,
   DialogContent,
@@ -91,6 +92,9 @@ import {
   SplitPane,
   WorkspacePage,
 } from "@/components/workspace-page";
+
+const MotionButton = motion.create(Button);
+const MotionEmpty = motion.create(Empty);
 
 function delivered(project: WorkItem) {
   return project.status === "Delivered";
@@ -442,9 +446,10 @@ export function PrecisionClients({
                   aria-label="Scrollable client directory"
                 >
                   {clients.map((client, index) => (
-                    <motion.button
+                    <MotionButton
                       key={client.name}
                       type="button"
+                      variant="ghost"
                       aria-pressed={selected?.name === client.name}
                       initial={reduceMotion ? false : { opacity: 0, x: -5 }}
                       animate={{ opacity: 1, x: 0 }}
@@ -456,9 +461,8 @@ export function PrecisionClients({
                               delay: Math.min(index * 0.025, 0.18),
                             }
                       }
-                      whileTap={reduceMotion ? undefined : { scale: 0.99 }}
                       className={cn(
-                        "relative flex w-full items-center gap-3 px-3 py-3 text-left transition-colors hover:bg-[var(--app-hover)] focus-visible:z-10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--app-highlight)]",
+                        "relative h-auto w-full justify-start gap-3 px-3 py-3 text-left font-normal whitespace-normal hover:bg-[var(--app-hover)] dark:hover:bg-[var(--app-hover)] focus-visible:z-10 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--app-highlight)] active:translate-y-0 active:scale-100",
                         selected?.name === client.name &&
                           "bg-[var(--app-active)]"
                       )}
@@ -466,13 +470,7 @@ export function PrecisionClients({
                       onClick={() => setSelectedName(client.name)}
                     >
                       {selected?.name === client.name ? (
-                        <motion.span
-                          layoutId="client-directory-selection"
-                          className="absolute inset-y-2 left-0 w-0.5 rounded-full bg-[var(--app-highlight)]"
-                          transition={
-                            reduceMotion ? { duration: 0 } : revealTransition
-                          }
-                        />
+                        <span className="absolute inset-y-2 left-0 w-0.5 rounded-full bg-[var(--app-highlight)]" />
                       ) : null}
                       <span className="grid size-9 shrink-0 place-items-center rounded-md bg-[var(--app-panel)] text-xs font-semibold text-[var(--app-highlight)] ring-1 ring-[var(--app-border)]">
                         {clientInitials(client.name)}
@@ -487,12 +485,12 @@ export function PrecisionClients({
                         </span>
                       </span>
                       <ArrowRight className="size-3.5 text-[var(--app-muted)]" />
-                    </motion.button>
+                    </MotionButton>
                   ))}
                   {!clients.length ? (
-                    <div className="p-6 text-center text-xs text-[var(--app-muted)]">
+                    <Empty className="flex-none gap-0 rounded-none border-0 p-6 text-center text-xs text-[var(--app-muted)] [text-wrap:wrap] md:p-6">
                       No clients match this view.
-                    </div>
+                    </Empty>
                   ) : null}
                 </div>
               </aside>
@@ -648,10 +646,11 @@ export function PrecisionClients({
                             .slice()
                             .sort((a, b) => b.dueDate.localeCompare(a.dueDate))
                             .map((project) => (
-                              <button
+                              <Button
                                 key={project.id}
                                 type="button"
-                                className="grid w-full gap-2 px-3 py-3 text-left transition-colors hover:bg-[var(--app-hover)] focus-visible:z-10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--app-highlight)] sm:grid-cols-[minmax(0,1fr)_120px_100px_auto] sm:items-center"
+                                variant="ghost"
+                                className="h-auto w-full grid justify-start gap-2 px-3 py-3 text-left font-normal whitespace-normal hover:bg-[var(--app-hover)] dark:hover:bg-[var(--app-hover)] focus-visible:z-10 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--app-highlight)] active:translate-y-0 active:scale-100 sm:grid-cols-[minmax(0,1fr)_120px_100px_auto] sm:items-center"
                                 aria-label={`Open ${project.title}`}
                                 onClick={() => onViewProject(project)}
                               >
@@ -676,11 +675,11 @@ export function PrecisionClients({
                                   {project.status}
                                 </Badge>
                                 <ArrowRight className="size-3.5 text-[var(--app-muted)]" />
-                              </button>
+                              </Button>
                             ))}
                         </div>
                       ) : (
-                        <div className="grid min-h-56 place-items-center rounded-xl border border-dashed border-[var(--app-border)] text-center">
+                        <Empty className="min-h-56 flex-none gap-0 rounded-xl border border-dashed border-[var(--app-border)] p-0 text-center [text-wrap:wrap] md:p-0">
                           <div>
                             <BriefcaseBusiness className="mx-auto size-6 text-[var(--app-muted)]" />
                             <p className="mt-2 text-sm font-semibold">
@@ -690,7 +689,7 @@ export function PrecisionClients({
                               Assign this client when creating a project.
                             </p>
                           </div>
-                        </div>
+                        </Empty>
                       )}
                     </section>
                   </main>
@@ -995,9 +994,10 @@ export function PrecisionFeedback({
                       className="divide-y divide-[var(--app-border)]"
                     >
                       {visibleQueue.map((project, index) => (
-                        <motion.button
+                        <MotionButton
                           key={project.id}
                           type="button"
+                          variant="ghost"
                           initial={reduceMotion ? false : { opacity: 0, y: 5 }}
                           animate={{ opacity: 1, y: 0 }}
                           transition={
@@ -1008,10 +1008,9 @@ export function PrecisionFeedback({
                                   delay: Math.min(index * 0.03, 0.18),
                                 }
                           }
-                          whileTap={reduceMotion ? undefined : { scale: 0.996 }}
                           aria-pressed={selected?.id === project.id}
                           className={cn(
-                            "grid w-full gap-3 px-4 py-4 text-left transition-colors hover:bg-[var(--app-hover)] focus-visible:z-10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--app-highlight)] sm:grid-cols-[minmax(0,1fr)_150px_120px_auto] sm:items-center",
+                            "h-auto w-full grid justify-start gap-3 px-4 py-4 text-left font-normal whitespace-normal hover:bg-[var(--app-hover)] dark:hover:bg-[var(--app-hover)] focus-visible:z-10 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--app-highlight)] active:translate-y-0 active:scale-100 sm:grid-cols-[minmax(0,1fr)_150px_120px_auto] sm:items-center",
                             selected?.id === project.id &&
                               "bg-[var(--app-active)]"
                           )}
@@ -1049,11 +1048,11 @@ export function PrecisionFeedback({
                           <span className="inline-flex h-7 items-center gap-1 justify-self-start rounded-md px-2 text-xs font-medium text-[var(--app-highlight)] sm:justify-self-end">
                             Open <ArrowRight className="size-3.5" />
                           </span>
-                        </motion.button>
+                        </MotionButton>
                       ))}
                     </motion.div>
                   ) : (
-                    <motion.div
+                    <MotionEmpty
                       key={`empty-${filter}`}
                       initial={reduceMotion ? false : { opacity: 0, y: 5 }}
                       animate={{ opacity: 1, y: 0 }}
@@ -1061,7 +1060,7 @@ export function PrecisionFeedback({
                       transition={
                         reduceMotion ? { duration: 0 } : revealTransition
                       }
-                      className="grid min-h-72 place-items-center px-5 text-center"
+                      className="grid min-h-72 flex-none place-items-center gap-0 rounded-none border-0 px-5 py-6 text-center [text-wrap:wrap] md:px-5 md:py-6"
                     >
                       <div>
                         <CheckCircle2 className="mx-auto size-7 text-[var(--app-success)]" />
@@ -1075,7 +1074,7 @@ export function PrecisionFeedback({
                           here.
                         </p>
                       </div>
-                    </motion.div>
+                    </MotionEmpty>
                   )}
                 </AnimatePresence>
               </div>

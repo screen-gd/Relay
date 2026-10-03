@@ -12,6 +12,7 @@ import { TEAM_CHAT_MESSAGE_LIMIT } from "./team-constants";
 import { Badge as OwnedBadge } from "@/components/ui/badge";
 import { Button as OwnedButton } from "@/components/ui/button";
 import { Card as OwnedCard } from "@/components/ui/card";
+import { Label as OwnedLabel } from "@/components/ui/label";
 import { Textarea as OwnedTextarea } from "@/components/ui/textarea";
 import { LoaderCircle, MessageSquare, Send, Users } from "lucide-react";
 
@@ -127,12 +128,12 @@ export function TeamChatPage() {
                   </p>
                 ) : null}
                 <div className="grid gap-2">
-                  <label
+                  <OwnedLabel
                     htmlFor={messageInputId}
                     className="text-sm font-medium"
                   >
                     Message
-                  </label>
+                  </OwnedLabel>
                   <div className="flex flex-col items-stretch gap-2 sm:flex-row sm:items-start">
                     <OwnedTextarea
                       id={messageInputId}

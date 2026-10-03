@@ -60,26 +60,23 @@ export function MetricItem({
   return (
     <Card
       data-slot="metric-item"
-      className={cn(
-        "min-w-0 p-4 shadow-none transition-colors hover:bg-muted/30",
-        className
-      )}
+      className={cn("min-w-0 px-4 py-3", className)}
       {...props}
     >
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <dt className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.1em] text-muted-foreground">
+          <dt className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
             {icon}
             {label}
           </dt>
-          <dd className="mt-1.5 text-2xl font-semibold leading-none tracking-[-0.025em] text-foreground tabular-nums">
+          <dd className="mt-1.5 text-xl font-semibold leading-none tracking-[-0.02em] text-foreground tabular-nums">
             {value}
           </dd>
         </div>
         {action}
       </div>
       {supporting ? (
-        <div className="mt-2 text-xs leading-4 text-muted-foreground">
+        <div className="mt-1.5 text-xs leading-4 text-muted-foreground">
           {supporting}
         </div>
       ) : null}
