@@ -31,6 +31,8 @@ type Env = {
   readonly CONVEX_CLOUD_URL: string;
   readonly CONVEX_SITE_URL: string;
   readonly CLERK_SECRET_KEY: string | undefined;
+  readonly GOOGLE_GENERATIVE_AI_API_KEY: string | undefined;
+  readonly OPENAI_API_KEY: string | undefined;
 };
 
 /**

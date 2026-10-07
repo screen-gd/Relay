@@ -37,6 +37,43 @@ const unhealthyStates = [
 >;
 
 describe("User subscription pricing", () => {
+  test("offers only the no-card Creator trial to an eligible Free owner", () => {
+    const html = renderToStaticMarkup(
+      <SubscriptionPricingView
+        subscription={freeSubscription}
+        trial={{ canStart: true, used: false, active: false, endsAt: null }}
+        onStartTrial={() => undefined}
+      />
+    );
+    expect(html).toContain("Start 7-day Creator trial");
+    expect(html).toContain("No card required and no automatic charge.");
+    expect(html).toContain("Team does not include a free trial.");
+    expect(html).not.toContain('disabled=""');
+  });
+
+  test("a used trial cannot be restarted from the pricing UI", () => {
+    const html = renderToStaticMarkup(
+      <SubscriptionPricingView
+        subscription={freeSubscription}
+        trial={{ canStart: false, used: true, active: false, endsAt: null }}
+      />
+    );
+    expect(html).toContain("already used its Creator trial");
+    expect(html).not.toContain("Start 7-day Creator trial");
+  });
+
+  test("non-owners cannot start the trial", () => {
+    const html = renderToStaticMarkup(
+      <SubscriptionPricingView
+        subscription={{ ...freeSubscription, canManageBilling: false }}
+        trial={{ canStart: false, used: false, active: false, endsAt: null }}
+        onStartTrial={() => undefined}
+      />
+    );
+    expect(html).toContain('disabled=""');
+    expect(html).toContain("Only the Workspace Owner can start the trial.");
+  });
+
   test("shows a confirmed Creator trial without reading Clerk markup", () => {
     const html = renderToStaticMarkup(
       <SubscriptionPricingView
