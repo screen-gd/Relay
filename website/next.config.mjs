@@ -24,7 +24,9 @@ const nextConfig = (phase) => {
   return {
     ...(isProductionBuild ? { outputFileTracingRoot: workspaceRoot } : {}),
     turbopack: {
-      root: isProductionBuild ? workspaceRoot : projectRoot,
+      // pnpm uses node-linker=hoisted, so `next` and other deps live in the
+      // workspace root node_modules. Turbopack must resolve from there in dev too.
+      root: workspaceRoot,
     },
     async headers() {
       return [

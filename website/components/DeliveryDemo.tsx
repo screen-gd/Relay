@@ -1,175 +1,229 @@
 "use client";
 
 import {
+  ArrowRight,
   Check,
   CheckCircle2,
-  Link2,
+  Film,
   LockKeyhole,
   RotateCcw,
   Send,
-  Upload,
 } from "lucide-react";
 import { useState } from "react";
+import AppWindow, { ProjectTabs } from "./features/AppWindow";
+import ui from "./features/app-ui.module.css";
+import chapter from "./features/chapter.module.css";
+import Reveal from "./site/Reveal";
 import styles from "./DeliveryDemo.module.css";
+
+type Tone = "info" | "warning" | "success" | undefined;
 
 const steps = [
   {
-    label: "Upload version",
-    title: "Upload the cut",
-    detail: "Keep the working source and its version in one project.",
+    label: "Add version",
+    title: "Add the new cut",
+    detail:
+      "Paste a YouTube, Vimeo, Drive, or Dropbox link for the new version.",
     action: "Share review link",
-    icon: Upload,
-    file: "Summer-launch-v4.mp4",
-    status: "Uploaded",
-    meta: "28 MB · H.264 · v4",
-    record: ["Summer launch film", "Version v4", "Ready to share"],
+    meta: "YouTube · Linked",
+    badge: { label: "In Progress", tone: "info" },
+    log: { title: "v4 linked", who: "Maya Chen", time: "9:40 AM" },
   },
   {
-    label: "Share password link",
+    label: "Share link",
     title: "Share a private review link",
-    detail: "Clients can watch and comment without creating an account.",
+    detail: "Clients watch and comment without creating an account.",
     action: "Mark client approved",
-    icon: Link2,
-    file: "Summer-launch-v4.mp4",
-    status: "Link ready",
     meta: "Password protected · 4 comments",
-    record: ["Summer launch film", "Private review link", "Password required"],
+    badge: { label: "Client Review", tone: "warning" },
+    log: { title: "Review link shared", who: "Maya Chen", time: "9:42 AM" },
   },
   {
-    label: "Client approval",
+    label: "Approval",
     title: "Capture the client decision",
-    detail: "Keep the reviewer and the exact approved version visible.",
+    detail: "Keep the reviewer and the exact approved version on record.",
     action: "Confirm delivery",
-    icon: CheckCircle2,
-    file: "Summer-launch-v4.mp4",
-    status: "Approved by Maya Chen",
-    meta: "Approved version · v4",
-    record: ["Summer launch film", "Maya Chen approved", "Version v4"],
+    meta: "Approved by Jordan Patel",
+    badge: { label: "Approved", tone: "success" },
+    log: { title: "v4 approved", who: "Jordan Patel", time: "3:12 PM" },
   },
   {
     label: "Delivered",
     title: "Hand off the final file",
-    detail: "Keep the approved file and its delivery status together.",
+    detail: "The approved file and its delivery status stay together.",
     action: "Start again",
+    meta: "Delivered to Aperture Coffee",
+    badge: { label: "Delivered", tone: "success" },
+    log: { title: "Delivered to client", who: "Maya Chen", time: "5:01 PM" },
+  },
+] as const satisfies readonly {
+  label: string;
+  title: string;
+  detail: string;
+  action: string;
+  meta: string;
+  badge: { label: string; tone: Tone };
+  log: { title: string; who: string; time: string };
+}[];
+
+const facts = [
+  {
+    icon: LockKeyhole,
+    title: "Private review links",
+    text: "Password protected. Clients never make an account.",
+  },
+  {
+    icon: CheckCircle2,
+    title: "Approval on record",
+    text: "Who approved, which version, and when.",
+  },
+  {
     icon: Send,
-    file: "Summer-launch-v4.mp4",
-    status: "Delivered",
-    meta: "Approved by Maya Chen · v4",
-    record: ["Summer launch film", "Version v4", "Handoff confirmed"],
+    title: "Clear handoff",
+    text: "The team sees which file is ready to send.",
   },
 ] as const;
 
+/**
+ * Delivery chapter on /features: a Relay project's Outputs and Versions tab.
+ * The stage bar and the white primary action move one version from link to
+ * delivery; the Activity panel grows as steps complete.
+ */
 export default function DeliveryDemo() {
   const [activeStep, setActiveStep] = useState(0);
   const step = steps[activeStep];
-  const Icon = step.icon;
   const isComplete = activeStep === steps.length - 1;
-
-  const advance = () => {
-    setActiveStep((current) =>
-      current === steps.length - 1 ? 0 : current + 1
-    );
-  };
+  const next = steps[activeStep + 1];
 
   return (
     <section
-      className={`story-section delivery-story ${styles.section}`}
+      className={`story-section ${chapter.chapter}`}
       id="delivery"
-      aria-label="Tracking and delivery"
+      aria-labelledby="delivery-title"
     >
-      <div className="delivery-copy">
-        <h2 className="story-title">Track approvals and delivery.</h2>
-        <p>See the file, reviewer, and handoff status at each step.</p>
-        <div
-          className={styles.steps}
-          role="group"
-          aria-label="Sample delivery workflow"
-        >
-          {steps.map((item, index) => {
-            const StepIcon = item.icon;
-            return (
-              <button
-                key={item.label}
-                className={`${styles.step} ${index === activeStep ? styles.active : ""} ${index < activeStep ? styles.complete : ""}`}
-                type="button"
-                aria-pressed={index === activeStep}
-                onClick={() => setActiveStep(index)}
-              >
-                <span className={styles.stepNumber}>
-                  {index < activeStep ? <Check size={13} /> : `0${index + 1}`}
-                </span>
-                <span>{item.label}</span>
-                <StepIcon size={15} aria-hidden="true" />
-              </button>
-            );
-          })}
-        </div>
-      </div>
+      <Reveal className={chapter.head}>
+        <h2 className={chapter.title} id="delivery-title">
+          Track approvals and delivery.
+        </h2>
+        <p>
+          See the file, reviewer, and handoff status at each step. Click through
+          the sample.
+        </p>
+      </Reveal>
 
-      <div
-        className={styles.panel}
-        role="region"
-        aria-label="Sample delivery record"
-        aria-live="polite"
-      >
-        <div className={styles.panelTopline}>
-          <span className={styles.brandMark}>RELAY / SAMPLE WORKFLOW</span>
-          <span className={styles.demoBadge}>DEMO ONLY</span>
-        </div>
-        <div className={styles.panelBody}>
-          <div className={styles.preview} aria-label={`${step.label} record`}>
-            <div className={styles.recordHeader}>
-              <span>SUMMER LAUNCH FILM</span>
-              <span className={styles.recordVersion}>V4</span>
-            </div>
-            <div className={styles.recordList}>
-              {step.record.map((item, index) => (
-                <div className={styles.recordItem} key={item}>
-                  <span className={styles.recordCheck}>
-                    <Check size={13} />
-                  </span>
-                  <span>{item}</span>
-                  {index === step.record.length - 1 && (
-                    <span className={styles.recordState}>{step.status}</span>
-                  )}
+      <Reveal delay={0.1}>
+        <AppWindow
+          crumbs={["Projects", "Summer launch film"]}
+          page="projects"
+          label="Sample delivery record"
+        >
+          <ProjectTabs active="Outputs and Versions" />
+          <div className={styles.page}>
+            <section className={ui.panel}>
+              <div className={ui.panelHead}>
+                <h3 className={ui.panelTitle}>Summer launch v4</h3>
+                <span className={ui.badge} data-tone={step.badge.tone}>
+                  {step.badge.label}
+                </span>
+              </div>
+              <div className={ui.panelBody}>
+                <div
+                  className={styles.stages}
+                  role="group"
+                  aria-label="Sample delivery steps"
+                >
+                  {steps.map((item, index) => (
+                    <button
+                      key={item.label}
+                      type="button"
+                      className={styles.stage}
+                      data-reached={index <= activeStep}
+                      aria-pressed={index === activeStep}
+                      onClick={() => setActiveStep(index)}
+                    >
+                      <span aria-hidden="true" />
+                      {item.label}
+                    </button>
+                  ))}
                 </div>
-              ))}
-            </div>
-            <div className={styles.recordFooter}>
-              <LockKeyhole size={14} /> Sample project record · no upload
-              required
-            </div>
-          </div>
-          <div className={styles.details}>
-            <div className={styles.titleRow}>
-              <h3>{step.title}</h3>
-              <span className={styles.statusIcon}>
-                <Icon size={16} />
-              </span>
-            </div>
-            <p>{step.detail}</p>
-            <div className={styles.fileCard}>
-              <div className={styles.fileIcon}>
-                <LockKeyhole size={16} />
+
+                <div className={styles.current} aria-live="polite">
+                  <h4>{step.title}</h4>
+                  <p>{step.detail}</p>
+                  <div className={styles.file}>
+                    <span className={ui.tile}>
+                      <Film size={14} aria-hidden="true" />
+                    </span>
+                    <span className={ui.rowMain}>
+                      <b>Summer launch v4</b>
+                      <span>{step.meta}</span>
+                    </span>
+                    <span className={ui.mono}>00:23</span>
+                  </div>
+                </div>
+
+                <div className={styles.actions}>
+                  <button
+                    className={`${ui.button} ${isComplete ? "" : ui.primary}`}
+                    type="button"
+                    onClick={() =>
+                      setActiveStep((current) =>
+                        current === steps.length - 1 ? 0 : current + 1
+                      )
+                    }
+                  >
+                    {isComplete ? (
+                      <RotateCcw size={13} aria-hidden="true" />
+                    ) : (
+                      <Check size={13} aria-hidden="true" />
+                    )}
+                    {step.action}
+                  </button>
+                  {next ? (
+                    <span className={styles.next}>
+                      Next: {next.label}{" "}
+                      <ArrowRight size={12} aria-hidden="true" />
+                    </span>
+                  ) : null}
+                </div>
               </div>
-              <div>
-                <strong>{step.file}</strong>
-                <span>{step.meta}</span>
+            </section>
+
+            <section className={ui.panel} aria-label="Version activity">
+              <div className={ui.panelHead}>
+                <h3 className={ui.panelTitle}>Activity</h3>
+                <span className={`${ui.badge} ${ui.mono}`}>
+                  {activeStep + 1}
+                </span>
               </div>
-              <span className={styles.fileStatus}>{step.status}</span>
-            </div>
-            <button className={styles.action} type="button" onClick={advance}>
-              {isComplete ? <RotateCcw size={15} /> : <Check size={15} />}
-              {step.action}
-            </button>
-            <span className={styles.nextHint}>
-              {isComplete
-                ? "Reset the sample workflow"
-                : `Next: ${steps[activeStep + 1].label}`}
-            </span>
+              <ol className={styles.activity}>
+                {steps
+                  .slice(0, activeStep + 1)
+                  .reverse()
+                  .map((item) => (
+                    <li key={item.label}>
+                      <b>{item.log.title}</b>
+                      <span>
+                        {item.log.who} ·{" "}
+                        <span className={ui.mono}>{item.log.time}</span>
+                      </span>
+                    </li>
+                  ))}
+              </ol>
+            </section>
           </div>
-        </div>
-      </div>
+        </AppWindow>
+      </Reveal>
+
+      <ul className="review-facts">
+        {facts.map(({ icon: Icon, title, text }) => (
+          <li key={title}>
+            <Icon size={20} aria-hidden="true" />
+            <h3>{title}</h3>
+            <p>{text}</p>
+          </li>
+        ))}
+      </ul>
     </section>
   );
 }

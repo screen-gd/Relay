@@ -1,11 +1,16 @@
 import type { Metadata, Viewport } from "next";
-import { Geist, Geist_Mono, Space_Grotesk } from "next/font/google";
+import { Geist, Geist_Mono } from "next/font/google";
 import {
   siteUrl,
   siteTitle,
   siteDescription,
   siteOpenGraph,
 } from "../lib/site-metadata";
+import BrandCta from "../components/site/BrandCta";
+import MotionProvider from "../components/site/MotionProvider";
+import DitherBackdrop from "../components/site/DitherBackdrop";
+import SiteFooter from "../components/site/SiteFooter";
+import SiteHeader from "../components/site/SiteHeader";
 import "./globals.css";
 
 const geist = Geist({
@@ -20,16 +25,10 @@ const geistMono = Geist_Mono({
   display: "swap",
 });
 
-const display = Space_Grotesk({
-  subsets: ["latin"],
-  variable: "--font-display",
-  display: "swap",
-});
-
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   applicationName: "Relay",
-  title: siteTitle,
+  title: { default: siteTitle, template: "%s | Relay" },
   description: siteDescription,
   keywords: [
     "video editing project management",
@@ -69,9 +68,13 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
-  colorScheme: "dark",
-  themeColor: "#000000",
+  colorScheme: "light dark",
+  themeColor: "#ffffff",
 };
+
+// Applies the stored theme before hydration. Light is the default; system
+// preference is intentionally ignored so the choice is always explicit.
+const themeInit = `try{if(localStorage.getItem("relay-theme")==="dark"){document.documentElement.classList.add("dark")}}catch(e){}`;
 
 const structuredData = {
   "@context": "https://schema.org",
@@ -90,8 +93,9 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <head>
+        <script dangerouslySetInnerHTML={{ __html: themeInit }} />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
@@ -99,10 +103,17 @@ export default function RootLayout({
           }}
         />
       </head>
-      <body
-        className={`${geist.variable} ${geistMono.variable} ${display.variable}`}
-      >
-        <div className="site-content">{children}</div>
+      <body className={`${geist.variable} ${geistMono.variable}`}>
+        <a className="skip-link" href="#main-content">
+          Skip to main content
+        </a>
+        <DitherBackdrop />
+        <MotionProvider>
+          <SiteHeader />
+          <main id="main-content">{children}</main>
+          <BrandCta />
+          <SiteFooter />
+        </MotionProvider>
       </body>
     </html>
   );

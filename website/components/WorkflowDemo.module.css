@@ -1,98 +1,167 @@
-.workflow {
-  margin-top: 36px;
+/* Four steps in a ruled row above the app window. The current step marks
+   its top edge in lime. No filled highlight. */
+.steps {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  margin-bottom: 32px;
+  border-top: 1px solid var(--border);
 }
-.stages {
-  display: flex;
-  gap: 28px;
-  border-bottom: 1px solid #303030;
-}
-.stages button {
-  padding: 14px 0;
+
+.step {
+  position: relative;
+  display: grid;
+  align-content: start;
+  gap: 6px;
+  padding: 22px 24px 4px;
   border: 0;
-  border-bottom: 2px solid transparent;
-  border-radius: 0;
   background: transparent;
-  color: #b8b8bd;
-  font: inherit;
+  color: var(--foreground);
+  text-align: left;
   cursor: pointer;
 }
-.stages button[aria-pressed="true"] {
-  border-bottom-color: #c6ff00;
-  color: #c6ff00;
+
+.step:first-child {
+  padding-left: 0;
 }
-.stages button:focus-visible {
-  outline: 2px solid #c6ff00;
-  outline-offset: 4px;
+
+.step + .step {
+  border-left: 1px solid var(--border);
 }
-.content {
-  display: grid;
-  grid-template-columns: minmax(0, 0.7fr) minmax(0, 1.3fr);
-  align-items: start;
-  gap: clamp(32px, 5vw, 80px);
-  min-height: 320px;
-  padding: 32px 0 0;
+
+.step::before {
+  position: absolute;
+  top: -1px;
+  right: 0;
+  left: 0;
+  height: 2px;
+  background: transparent;
+  content: "";
+  transition: background-color 150ms ease-out;
 }
-.explanation h3 {
-  margin: 0;
-  color: white;
-  font-size: clamp(1.4rem, 2vw, 2rem);
-  line-height: 1.15;
-  letter-spacing: -0.03em;
+
+.step:hover::before {
+  background: var(--border-strong);
 }
-.explanation p {
-  max-width: 440px;
-  color: #b8b8bd;
-  font-size: 1rem;
-  line-height: 1.65;
+
+.step[data-state="active"]::before {
+  background: var(--brand);
 }
-.example {
-  min-height: 240px;
-  padding: 24px;
-  background: #0b0b0d;
+
+.step:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: -2px;
 }
-.example > p {
-  margin: 0 0 20px;
-  color: white;
-  font-size: 14px;
+
+.stepNumber {
+  font:
+    12px var(--font-geist-mono),
+    monospace;
 }
-.example dl {
-  margin: 0;
+
+.stepLabel {
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  line-height: 1.3;
 }
-.example dl > div {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr);
-  gap: 20px;
-  padding: 14px 0;
-  border-top: 1px solid #27272a;
+
+.stepText {
+  color: var(--muted-foreground);
   font-size: 14px;
   line-height: 1.5;
-  overflow-wrap: anywhere;
 }
-.example dt {
-  color: #a1a1aa;
+
+.content {
+  outline: none;
 }
-.example dd {
+
+/* Project page inside the window: main column and Details panel. */
+.page {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 280px;
+  align-items: start;
+  gap: 14px;
+  min-height: 430px;
+}
+
+.main {
+  display: grid;
+  align-content: start;
+  gap: 14px;
+  min-width: 0;
+}
+
+.detailsPanel {
+  position: sticky;
+  top: 0;
+}
+
+.detailsPanel dl {
+  margin-top: 14px;
+}
+
+.note {
   margin: 0;
-  color: white;
+  font-size: 13px;
+  line-height: 1.55;
 }
+
+.foot {
+  margin: 0;
+  font-size: 12px;
+}
+
+.check {
+  width: 16px;
+  height: 16px;
+  flex: 0 0 auto;
+  border: 1px solid rgb(255 255 255 / 24%);
+  border-radius: 4px;
+}
+
 .video {
   width: 100%;
-  max-height: 540px;
   aspect-ratio: 16 / 9;
-  background: #090909;
+  border-radius: 10px;
+  background: #000000;
   object-fit: contain;
 }
-@media (max-width: 700px) {
-  .content {
-    grid-template-columns: 1fr;
-    gap: 16px;
+
+@container (max-width: 760px) {
+  .page {
+    grid-template-columns: minmax(0, 1fr);
     min-height: 0;
   }
-  .stages {
-    gap: 0;
-    justify-content: space-between;
+
+  .detailsPanel {
+    position: static;
   }
-  .example {
-    padding: 16px;
+}
+
+@media (max-width: 900px) {
+  .steps {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .step,
+  .step:first-child {
+    padding: 18px 16px 18px 0;
+  }
+
+  .step + .step {
+    border-left: 0;
+  }
+
+  .step:nth-child(2n) {
+    padding-left: 16px;
+    border-left: 1px solid var(--border);
+  }
+
+  .step:nth-child(n + 3) {
+    border-top: 1px solid var(--border);
+  }
+
+  .stepText {
+    display: none;
   }
 }

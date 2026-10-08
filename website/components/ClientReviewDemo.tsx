@@ -1,10 +1,45 @@
 "use client";
 
 import Image from "next/image";
-import { Volume2, VolumeX } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import {
+  Check,
+  Link2,
+  LockKeyhole,
+  MessageSquare,
+  Pause,
+  Play,
+  Volume2,
+  VolumeX,
+} from "lucide-react";
+import { useEffect, useRef, useState, type CSSProperties } from "react";
+import chapter from "./features/chapter.module.css";
 import AnimatedList from "./react-bits/AnimatedList";
-import ElasticSlider from "./ElasticSlider";
+import Reveal from "./site/Reveal";
+import SectionHeading from "./site/SectionHeading";
+
+const heading = {
+  title: "Client reviews without accounts.",
+  description:
+    "Share one link. Clients watch, comment on the exact moment, and approve.",
+};
+
+const facts = [
+  {
+    icon: LockKeyhole,
+    title: "Password-protected links",
+    text: "Clients open the link and review. No account needed.",
+  },
+  {
+    icon: MessageSquare,
+    title: "Timestamped comments",
+    text: "YouTube and Vimeo comments land on the exact moment.",
+  },
+  {
+    icon: Link2,
+    title: "Drive and Dropbox",
+    text: "General comments and manual timestamps on linked files.",
+  },
+] as const;
 
 const comments = [
   {
@@ -52,15 +87,29 @@ const clampTime = (seconds: number, duration: number) => {
   return Math.min(safeSeconds, safeDuration || safeSeconds);
 };
 
-export default function ClientReviewDemo() {
+const initials = (name: string) =>
+  name
+    .split(" ")
+    .map((part) => part[0])
+    .join("");
+
+/**
+ * Interactive sample of the client review page: a 16:9 player with comment
+ * markers on its timeline, a comment list that seeks the video, and an
+ * approve button. Used on the home page and, with `variant="chapter"`, as a
+ * framed chapter on /features.
+ */
+export default function ClientReviewDemo({ variant }: { variant?: "chapter" }) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [commentId, setCommentId] = useState<number | null>(null);
   const [playing, setPlaying] = useState(false);
-  const [volume, setVolume] = useState(0.7);
+  const [muted, setMuted] = useState(false);
+  const [approved, setApproved] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [playbackError, setPlaybackError] = useState(false);
   const comment = comments.find((item) => item.id === commentId);
+  const progress = duration > 0 ? (currentTime / duration) * 100 : 0;
 
   const syncDuration = (video: HTMLVideoElement) => {
     const nextDuration = video.duration;
@@ -78,11 +127,8 @@ export default function ClientReviewDemo() {
 
   useEffect(() => {
     const video = videoRef.current;
-    if (!video) return;
-
-    video.volume = volume;
-    video.muted = volume === 0;
-  }, [volume]);
+    if (video) video.muted = muted;
+  }, [muted]);
 
   useEffect(() => {
     const video = videoRef.current;
@@ -145,33 +191,55 @@ export default function ClientReviewDemo() {
 
   return (
     <section
-      className="story-section review-story"
+      className={`story-section review-story ${variant === "chapter" ? chapter.chapter : ""}`}
       id="client-review"
-      aria-label="Client review"
+      aria-labelledby="client-review-title"
     >
-      <div className="review-heading">
-        <h2 className="story-title">Client reviews without accounts.</h2>
-        <p>
-          Clients open a password-protected shared link, with no account needed.
-          Review YouTube and Vimeo embeds with playback timestamps. Drive and
-          Dropbox links support general comments and manual timestamps.
-        </p>
-      </div>
+      {variant === "chapter" ? (
+        <Reveal className={chapter.head}>
+          <h2 className={chapter.title} id="client-review-title">
+            {heading.title}
+          </h2>
+          <p>{heading.description}</p>
+        </Reveal>
+      ) : (
+        <SectionHeading
+          id="client-review-title"
+          title={heading.title}
+          description={heading.description}
+          align="center"
+        />
+      )}
 
-      <div className="review-room">
+      <Reveal className="review-room" delay={0.1}>
         <div className="review-room-bar">
-          <span>
+          <div className="review-room-title">
             <Image
               src="/brand/relay/mark-accent.svg"
               alt=""
               width={20}
               height={20}
             />
-            Relay
-          </span>
-          <strong>Demo / v4 client review</strong>
-          <span>{comments.length} comments</span>
+            <i aria-hidden="true" />
+            <b>Summer launch film</b>
+            <span className="review-version">v4</span>
+          </div>
+          <button
+            className="review-approve"
+            type="button"
+            aria-pressed={approved}
+            onClick={() => setApproved((value) => !value)}
+          >
+            {approved ? (
+              <>
+                <Check size={15} aria-hidden="true" /> Approved
+              </>
+            ) : (
+              "Approve v4"
+            )}
+          </button>
         </div>
+
         <div className="review-room-grid">
           <div className="review-player">
             <div
@@ -193,7 +261,7 @@ export default function ClientReviewDemo() {
                 src="/videos/client-review-city.mp4"
                 preload="metadata"
                 playsInline
-                muted={volume === 0}
+                muted={muted}
                 onPlay={() => {
                   setPlaybackError(false);
                   setPlaying(true);
@@ -228,6 +296,13 @@ export default function ClientReviewDemo() {
                 onDurationChange={(event) => syncDuration(event.currentTarget)}
                 onCanPlay={(event) => syncDuration(event.currentTarget)}
               />
+              {!playing && (
+                <div className="review-play-overlay" aria-hidden="true">
+                  <span>
+                    <Play size={24} fill="currentColor" />
+                  </span>
+                </div>
+              )}
               {comment && (
                 <div className="frame-note">
                   <span>
@@ -236,8 +311,28 @@ export default function ClientReviewDemo() {
                   {comment.text}
                 </div>
               )}
-              <div className="review-controls">
-                <span>{formatTime(currentTime)}</span>
+              {playbackError && (
+                <p className="review-error" role="status" aria-live="polite">
+                  The video could not be played. Try again.
+                </p>
+              )}
+            </div>
+
+            <div className="review-controls">
+              <button
+                className="review-icon-button"
+                type="button"
+                aria-label={playing ? "Pause video" : "Play video"}
+                onClick={() => void togglePlayback()}
+              >
+                {playing ? (
+                  <Pause size={16} fill="currentColor" />
+                ) : (
+                  <Play size={16} fill="currentColor" />
+                )}
+              </button>
+              <span>{formatTime(currentTime)}</span>
+              <div className="review-timeline">
                 <input
                   type="range"
                   min={0}
@@ -246,36 +341,41 @@ export default function ClientReviewDemo() {
                   value={Math.min(currentTime, duration > 0 ? duration : 1)}
                   disabled={duration <= 0}
                   aria-label="Video position"
-                  onClick={(event) => event.stopPropagation()}
+                  style={{ "--progress": `${progress}%` } as CSSProperties}
                   onChange={(event) => seek(Number(event.currentTarget.value))}
                 />
-                <span>{formatTime(duration)}</span>
+                {duration > 0 &&
+                  comments.map((item) => (
+                    <button
+                      key={item.id}
+                      className={`review-marker ${item.id === commentId ? "is-active" : ""}`}
+                      type="button"
+                      aria-label={`Jump to ${item.author}'s comment at ${item.time}`}
+                      style={{ left: `${(item.seconds / duration) * 100}%` }}
+                      onClick={() => void selectComment(item.id, item.seconds)}
+                    />
+                  ))}
               </div>
-              {playbackError && (
-                <p role="status" aria-live="polite">
-                  The video could not be played. Try again.
-                </p>
-              )}
-            </div>
-            <div className="review-volume" aria-label="Video volume">
-              <span className="review-volume-label">Volume</span>
-              <ElasticSlider
-                className="review-volume-slider"
-                defaultValue={volume * 100}
-                maxValue={100}
-                leftIcon={<VolumeX size={14} />}
-                rightIcon={<Volume2 size={14} />}
-                onValueChange={(value) => setVolume(value / 100)}
-              />
+              <span>{formatTime(duration)}</span>
+              <button
+                className="review-icon-button"
+                type="button"
+                aria-label={muted ? "Unmute video" : "Mute video"}
+                aria-pressed={muted}
+                onClick={() => setMuted((value) => !value)}
+              >
+                {muted ? <VolumeX size={16} /> : <Volume2 size={16} />}
+              </button>
             </div>
           </div>
+
           <aside
             className="review-comments"
             aria-label="Client review comments"
           >
             <header>
               <span>Comments</span>
-              <small>{comments.length} open</small>
+              <small>{comments.length}</small>
             </header>
             <AnimatedList
               className="review-comment-list"
@@ -292,20 +392,34 @@ export default function ClientReviewDemo() {
                   aria-current={selected ? "true" : undefined}
                   onClick={() => void selectComment(item.id, item.seconds)}
                 >
-                  <span>
-                    {item.author}
-                    <small>
-                      {selected && playing ? "Playing · " : ""}
-                      {item.time}
-                    </small>
+                  <span className="review-avatar" aria-hidden="true">
+                    {initials(item.author)}
                   </span>
-                  <p>{item.text}</p>
+                  <span>
+                    <span className="review-comment-meta">
+                      <b>{item.author}</b>
+                      <time>{item.time}</time>
+                    </span>
+                    <p>{item.text}</p>
+                  </span>
                 </button>
               )}
             />
           </aside>
         </div>
-      </div>
+      </Reveal>
+
+      <ul className="review-facts">
+        {facts.map(({ icon: Icon, title, text }, index) => (
+          <li key={title}>
+            <Reveal delay={0.15 + index * 0.05}>
+              <Icon size={20} aria-hidden="true" />
+              <h3>{title}</h3>
+              <p>{text}</p>
+            </Reveal>
+          </li>
+        ))}
+      </ul>
     </section>
   );
 }

@@ -1,0 +1,94 @@
+/* Spans rail to rail inside the page frame, like the home feature grid. */
+.frame {
+  position: relative;
+  width: min(100%, var(--frame));
+  margin: 96px auto 0;
+}
+
+/* Top line runs across the whole screen, like the chapter lines below. */
+.frame::before {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: 100vw;
+  border-top: 1px dashed var(--border-strong);
+  content: "";
+  pointer-events: none;
+  transform: translateX(-50%);
+}
+
+.list {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.list li + li {
+  border-left: 1px solid var(--border);
+}
+
+.list a {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  min-height: 72px;
+  padding: 0 24px;
+  color: var(--foreground);
+  font-size: 15px;
+  font-weight: 500;
+  text-decoration: none;
+}
+
+.list a:focus-visible {
+  outline-offset: -2px;
+}
+
+.list svg {
+  transition: translate 200ms ease-out;
+}
+
+.list a:hover svg,
+.list a:focus-visible svg {
+  translate: 0 2px;
+}
+
+.number {
+  font:
+    12px var(--font-geist-mono),
+    monospace;
+  font-variant-numeric: tabular-nums;
+}
+
+@media (max-width: 900px) {
+  .frame {
+    margin-top: 64px;
+  }
+
+  .list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .list li {
+    border-bottom: 1px solid var(--border);
+  }
+
+  .list li + li {
+    border-left: 0;
+  }
+
+  .list li:nth-child(2n) {
+    border-left: 1px solid var(--border);
+  }
+
+  .list li:last-child {
+    border-bottom: 0;
+  }
+
+  .list a {
+    min-height: 60px;
+    padding: 0 16px;
+  }
+}

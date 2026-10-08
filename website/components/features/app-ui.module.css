@@ -1,0 +1,508 @@
+/*
+ * Relay app look for the /features samples. Values copy the app's dark theme
+ * (src/app/globals.css `.dark`): black canvas, #121212 panels with 8% white
+ * edges, #0a0a0a inset wells, 12px panels, 6px controls, 4px square badges,
+ * white primary actions, and the app's status colors. Text stays white;
+ * hierarchy comes from size and weight.
+ */
+.window {
+  --line: rgb(255 255 255 / 8%);
+  --line-strong: rgb(255 255 255 / 16%);
+  --panel: #121212;
+  --raised: #171717;
+  --inset: #0a0a0a;
+  --info: #60a5fa;
+  --success: #4ade80;
+  --warning: #fbbf24;
+  --danger: #f87171;
+  --border: var(--line);
+  container-type: inline-size;
+  min-width: 0;
+  overflow: hidden;
+  border: 1px solid #27272a;
+  border-radius: 14px;
+  background: #000000;
+  box-shadow: 0 40px 80px -40px rgb(0 0 0 / 45%);
+  color: #ffffff;
+  font-size: 13px;
+  line-height: 1.45;
+  text-align: left;
+}
+
+/* Top bar: mark and breadcrumb, Quick Search in the middle, actions right. */
+.topbar {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  height: 52px;
+  padding: 0 14px;
+  border-bottom: 1px solid var(--line);
+}
+
+.crumbs {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 8px;
+  margin-left: 14px;
+  font-size: 12px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.crumbs i {
+  color: var(--line-strong);
+  font-style: normal;
+}
+
+.crumbs b {
+  overflow: hidden;
+  font-size: 13px;
+  font-weight: 600;
+  text-overflow: ellipsis;
+}
+
+.search {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 200px;
+  height: 32px;
+  padding: 0 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--inset);
+  font-size: 12px;
+  translate: -50% -50%;
+}
+
+.search kbd {
+  margin-left: auto;
+  font:
+    9px var(--font-geist-mono),
+    monospace;
+}
+
+.topActions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-left: auto;
+}
+
+.avatar {
+  display: grid;
+  width: 30px;
+  height: 30px;
+  flex: 0 0 auto;
+  place-items: center;
+  border: 1px solid var(--line-strong);
+  border-radius: 50%;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+/* Icon rail, then the page. */
+.shell {
+  display: grid;
+  grid-template-columns: 48px minmax(0, 1fr);
+}
+
+.rail {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 12px 0;
+  border-right: 1px solid var(--line);
+  background: var(--inset);
+}
+
+.rail hr {
+  width: 24px;
+  margin: 6px 0;
+  border: 0;
+  border-top: 1px solid var(--line);
+}
+
+.railItem {
+  display: grid;
+  width: 32px;
+  height: 32px;
+  place-items: center;
+  border-radius: 6px;
+}
+
+.railItem[data-active="true"] {
+  background: rgb(255 255 255 / 10%);
+}
+
+.page {
+  min-width: 0;
+  padding: 18px;
+}
+
+/* Page tabs. The current tab gets a 1px edge, not a fill. */
+.tabs {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-bottom: 14px;
+  overflow: hidden;
+}
+
+.tab {
+  display: inline-flex;
+  height: 30px;
+  flex: 0 0 auto;
+  align-items: center;
+  padding: 0 10px;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.tab[data-active="true"] {
+  border-color: var(--line-strong);
+  font-weight: 600;
+}
+
+.tabsEnd {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: auto;
+  font-size: 13px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+/* App card: panel fill, faint edge, 12px corners. */
+.panel {
+  min-width: 0;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--panel);
+}
+
+.panelHead {
+  display: flex;
+  min-height: 48px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 0 16px;
+}
+
+.panelTitle {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: -0.005em;
+}
+
+.panelBody {
+  padding: 0 16px 16px;
+}
+
+/* Rows inside a panel, divided by hairlines. */
+.rows {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.rows > li {
+  display: flex;
+  min-height: 52px;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 16px;
+  border-top: 1px solid var(--line);
+}
+
+.rowMain {
+  display: grid;
+  min-width: 0;
+  flex: 1;
+  gap: 1px;
+}
+
+.rowMain b {
+  overflow: hidden;
+  font-size: 13px;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rowMain span {
+  overflow: hidden;
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tile {
+  display: grid;
+  width: 30px;
+  height: 30px;
+  flex: 0 0 auto;
+  place-items: center;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--inset);
+}
+
+/* Label left, value right; the project Details panel. */
+.details {
+  margin: 0;
+}
+
+.details > div {
+  display: flex;
+  min-height: 34px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  font-size: 12px;
+}
+
+.details dd {
+  margin: 0;
+  font-weight: 600;
+  text-align: right;
+}
+
+/* Square badge with the app's tinted status fills. */
+.badge {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 4px;
+  padding: 1px 7px;
+  border: 1px solid var(--line-strong);
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.badge[data-tone="info"] {
+  border-color: rgb(96 165 250 / 35%);
+  background: rgb(37 99 235 / 16%);
+  color: var(--info);
+}
+
+.badge[data-tone="warning"] {
+  border-color: rgb(251 191 36 / 35%);
+  background: rgb(251 191 36 / 14%);
+  color: var(--warning);
+}
+
+.badge[data-tone="success"] {
+  border-color: rgb(74 222 128 / 35%);
+  background: rgb(34 197 94 / 14%);
+  color: var(--success);
+}
+
+/* Colored status words, as in the dashboard Projects table. */
+.status {
+  font-size: 12px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.status[data-tone="info"] {
+  color: var(--info);
+}
+
+.status[data-tone="warning"] {
+  color: var(--warning);
+}
+
+.status[data-tone="success"] {
+  color: var(--success);
+}
+
+.status[data-tone="danger"] {
+  color: var(--danger);
+}
+
+/* Four-segment stage bar from the project Overview. */
+.stages {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.stages li > span {
+  display: block;
+  height: 4px;
+  border-radius: 2px;
+  background: rgb(255 255 255 / 12%);
+}
+
+.stages li[data-reached="true"] > span {
+  background: #ffffff;
+}
+
+.stages small {
+  display: block;
+  margin-top: 8px;
+  font-size: 12px;
+}
+
+.stages li[aria-current="step"] small {
+  font-weight: 600;
+}
+
+.progress {
+  height: 4px;
+  overflow: hidden;
+  border-radius: 2px;
+  background: rgb(255 255 255 / 12%);
+}
+
+.progress > i {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: #ffffff;
+}
+
+/* Controls. Primary is white like the app; outline uses the input edge. */
+.button {
+  display: inline-flex;
+  height: 32px;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 0 12px;
+  border: 1px solid rgb(255 255 255 / 12%);
+  border-radius: 6px;
+  background: transparent;
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    border-color 120ms ease-out,
+    transform 120ms ease-out;
+}
+
+.button:hover:not(:disabled) {
+  border-color: rgb(255 255 255 / 32%);
+}
+
+.button:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+.button:disabled {
+  cursor: default;
+  opacity: 0.4;
+}
+
+.button.icon {
+  width: 32px;
+  padding: 0;
+}
+
+.primary {
+  border-color: #ffffff;
+  background: #ffffff;
+  color: #000000;
+}
+
+.primary:hover:not(:disabled) {
+  border-color: #ffffff;
+}
+
+/* App switch: white track when on, dim track when off. */
+.switch {
+  position: relative;
+  display: inline-flex;
+  width: 32px;
+  height: 18px;
+  flex: 0 0 auto;
+  align-items: center;
+  padding: 0 1px;
+  border: 0;
+  border-radius: 9px;
+  background: rgb(255 255 255 / 14%);
+  cursor: pointer;
+  transition: background-color 120ms ease-out;
+}
+
+.switch::after {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #ffffff;
+  content: "";
+  transition: translate 160ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.switch[aria-checked="true"],
+.switch[data-on="true"] {
+  background: #ffffff;
+}
+
+.switch[aria-checked="true"]::after,
+.switch[data-on="true"]::after {
+  background: #000000;
+  translate: 14px 0;
+}
+
+.switch:focus-visible,
+.button:focus-visible {
+  outline: 2px solid #ffffff;
+  outline-offset: 2px;
+}
+
+.mono {
+  font-family: var(--font-geist-mono), monospace;
+  font-variant-numeric: tabular-nums;
+}
+
+@container (max-width: 760px) {
+  .search,
+  .quickLabel {
+    display: none;
+  }
+}
+
+@container (max-width: 560px) {
+  .shell {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .rail,
+  .crumbHidden {
+    display: none;
+  }
+
+  .crumbs {
+    margin-left: 8px;
+  }
+
+  .page {
+    padding: 12px;
+  }
+
+  .tabsEnd {
+    display: none;
+  }
+}
