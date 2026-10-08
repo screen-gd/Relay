@@ -8,9 +8,12 @@
  * @module
  */
 
+import type * as aiRuns from "../aiRuns.js";
+import type * as aiValidators from "../aiValidators.js";
 import type * as billingParsing from "../billingParsing.js";
 import type * as clientHub from "../clientHub.js";
 import type * as clientPortals from "../clientPortals.js";
+import type * as creatorTrials from "../creatorTrials.js";
 import type * as domainValidators from "../domainValidators.js";
 import type * as http from "../http.js";
 import type * as mediaVersionComments from "../mediaVersionComments.js";
@@ -42,9 +45,12 @@ import type {
 } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
+  aiRuns: typeof aiRuns;
+  aiValidators: typeof aiValidators;
   billingParsing: typeof billingParsing;
   clientHub: typeof clientHub;
   clientPortals: typeof clientPortals;
+  creatorTrials: typeof creatorTrials;
   domainValidators: typeof domainValidators;
   http: typeof http;
   mediaVersionComments: typeof mediaVersionComments;
@@ -98,4 +104,5 @@ export declare const internal: FilterApi<
 
 export declare const components: {
   migrations: import("@convex-dev/migrations/_generated/component.js").ComponentApi<"migrations">;
+  rateLimiter: import("@convex-dev/rate-limiter/_generated/component.js").ComponentApi<"rateLimiter">;
 };

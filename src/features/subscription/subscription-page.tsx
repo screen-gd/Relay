@@ -22,6 +22,10 @@ export function SubscriptionPage() {
     isConvexAuthenticated,
     isConvexAuthLoading,
     subscription,
+    trial,
+    startingTrial,
+    trialError,
+    startTrial,
   } = useSubscriptionController();
   return (
     <WorkspacePage
@@ -31,7 +35,7 @@ export function SubscriptionPage() {
       <PageHeader
         eyebrow="Workspace / Subscription"
         title="Plans and billing"
-        description="Start with the Free plan. Paid plans are coming later."
+        description="Start with Free. Paid plans are coming later."
         actions={
           <OwnedBadge variant={isSignedIn ? "default" : "secondary"}>
             {isSignedIn ? "Signed in" : "Local mode"}
@@ -58,31 +62,40 @@ export function SubscriptionPage() {
               />
             </div>
           ) : isSignedIn ? (
-            <SubscriptionPricingView subscription={subscription} />
+            <SubscriptionPricingView
+              subscription={subscription}
+              trial={trial}
+              startingTrial={startingTrial}
+              trialError={trialError}
+              onStartTrial={() => void startTrial()}
+            />
           ) : (
-            <div className="grid max-w-[620px] gap-4 p-5 md:p-6">
-              <h2 className="text-xl font-semibold text-foreground">
-                Account required
-              </h2>
-              <p className="text-sm leading-6 text-muted-foreground">
-                Sign in or create an account to start a Free Workspace. No
-                payment is required.
-              </p>
-              {isAuthEnabled ? (
-                <div className="flex flex-col gap-2 sm:flex-row">
-                  <OwnedButton type="button" onClick={() => openSignUp()}>
-                    Create account
-                  </OwnedButton>
-                  <OwnedButton
-                    type="button"
-                    variant="outline"
-                    onClick={() => openSignIn()}
-                  >
-                    Sign in
-                  </OwnedButton>
-                </div>
-              ) : null}
-            </div>
+            <>
+              <div className="grid max-w-[620px] gap-4 p-5 md:p-6">
+                <h2 className="text-xl font-semibold text-foreground">
+                  Account required
+                </h2>
+                <p className="text-sm leading-6 text-muted-foreground">
+                  Sign in or create an account to start a Free Workspace. No
+                  payment is required.
+                </p>
+                {isAuthEnabled ? (
+                  <div className="flex flex-col gap-2 sm:flex-row">
+                    <OwnedButton type="button" onClick={() => openSignUp()}>
+                      Create account
+                    </OwnedButton>
+                    <OwnedButton
+                      type="button"
+                      variant="outline"
+                      onClick={() => openSignIn()}
+                    >
+                      Sign in
+                    </OwnedButton>
+                  </div>
+                ) : null}
+              </div>
+              <SubscriptionPricingView />
+            </>
           )}
         </ContentSection>
       </PageContent>

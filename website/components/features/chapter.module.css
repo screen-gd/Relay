@@ -1,0 +1,143 @@
+/*
+ * Shared layout for the /features chapters. Each chapter is a full-width
+ * `.story-section`, so its dashed top line runs across the whole screen like
+ * the header and footer lines, with a square node where it crosses each rail.
+ */
+section.chapter {
+  --node: linear-gradient(var(--border-strong), var(--border-strong));
+  position: relative;
+  border-top: 1px dashed var(--border-strong);
+  padding-block: 112px 120px;
+}
+
+section.chapter::before {
+  position: absolute;
+  top: -4px;
+  right: 0;
+  left: 0;
+  height: 7px;
+  background:
+    var(--node) calc(50% - var(--frame) / 2) 0 / 7px 7px no-repeat,
+    var(--node) calc(50% + var(--frame) / 2) 0 / 7px 7px no-repeat;
+  content: "";
+  pointer-events: none;
+}
+
+/* Title left, short lead right, bottoms aligned. */
+.head {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  align-items: end;
+  gap: 16px 64px;
+  margin-bottom: 56px;
+}
+
+.head > p {
+  max-width: 46ch;
+  margin: 0 0 4px auto;
+  color: var(--muted-foreground);
+  font-size: 17px;
+  line-height: 1.6;
+}
+
+.title {
+  max-width: 18ch;
+  margin: 0;
+  color: var(--foreground);
+  font-size: clamp(30px, 3.4vw, 44px);
+  font-weight: 600;
+  letter-spacing: -0.035em;
+  line-height: 1.08;
+  text-wrap: balance;
+}
+
+/* Copy column next to a product window. `.reverse` puts the window first. */
+.split {
+  display: grid;
+  grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+  align-items: center;
+  gap: clamp(40px, 6vw, 88px);
+}
+
+.split.reverse {
+  grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+}
+
+.split.reverse > :first-child {
+  order: 2;
+}
+
+.lead {
+  max-width: 44ch;
+  margin: 16px 0 0;
+  color: var(--muted-foreground);
+  font-size: 17px;
+  line-height: 1.6;
+}
+
+/* Short supporting points: icon, title, one line. Hairlines between. */
+.points {
+  display: grid;
+  margin: 36px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.points li {
+  display: grid;
+  grid-template-columns: 20px minmax(0, 1fr);
+  gap: 4px 14px;
+  padding: 16px 0;
+  border-top: 1px solid var(--border);
+}
+
+.points li:last-child {
+  border-bottom: 1px solid var(--border);
+}
+
+.points svg {
+  margin-top: 2px;
+  color: var(--foreground);
+}
+
+.points h3 {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  line-height: 1.4;
+}
+
+.points p {
+  grid-column: 2;
+  margin: 0;
+  color: var(--muted-foreground);
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+@media (max-width: 980px) {
+  .split,
+  .split.reverse {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .split.reverse > :first-child {
+    order: 0;
+  }
+}
+
+@media (max-width: 768px) {
+  section.chapter {
+    padding-block: 72px 80px;
+  }
+
+  .head {
+    grid-template-columns: minmax(0, 1fr);
+    margin-bottom: 36px;
+  }
+
+  .head > p {
+    margin: 0;
+  }
+}

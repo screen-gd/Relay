@@ -1,0 +1,151 @@
+/* Dashboard-style metric cards across the top. */
+.totals {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+  margin: 0 0 14px;
+}
+
+.totals > div {
+  padding: 14px 16px;
+}
+
+.totals dt {
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.totals dd {
+  margin: 6px 0 0;
+  font-size: 22px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+}
+
+.totals dd.note {
+  margin-top: 6px;
+  font-size: 12px;
+  font-weight: 400;
+  letter-spacing: 0;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 280px;
+  align-items: start;
+  gap: 14px;
+}
+
+.tableHead,
+.table li {
+  display: grid;
+  grid-template-columns: minmax(0, 1.8fr) 64px minmax(0, 1fr) 72px 92px;
+  align-items: center;
+  gap: 12px;
+  padding: 0 16px;
+}
+
+.tableHead {
+  min-height: 36px;
+  border-top: 1px solid rgb(255 255 255 / 8%);
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.tableHead > :nth-child(4) {
+  text-align: right;
+}
+
+.table {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.table li {
+  min-height: 56px;
+  border-top: 1px solid rgb(255 255 255 / 8%);
+}
+
+.due,
+.value {
+  font-size: 12px;
+}
+
+.value {
+  text-align: right;
+}
+
+.paid {
+  display: flex;
+  align-items: center;
+}
+
+.later {
+  font-size: 11px;
+}
+
+.planClient {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.planCount {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin: 14px 0 8px;
+  font-size: 12px;
+}
+
+.planCount b {
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.grid dl {
+  margin-top: 12px;
+}
+
+@container (max-width: 860px) {
+  .totals {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@container (max-width: 560px) {
+  .tableHead {
+    display: none;
+  }
+
+  .table li {
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 4px 12px;
+    padding-block: 12px;
+  }
+
+  .due {
+    display: none;
+  }
+
+  .value {
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  .paid {
+    grid-column: 2;
+    justify-content: flex-end;
+  }
+
+  .totals dd {
+    font-size: 18px;
+  }
+}

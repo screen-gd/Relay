@@ -1,6 +1,7 @@
 import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
 import { clientValidator } from "./workspaceClients";
+import { aiRunValidator } from "./aiValidators";
 import {
   clientPortalStageValidator,
   fileCategoryValidator,
@@ -28,6 +29,19 @@ import {
 } from "./domainValidators";
 
 export default defineSchema({
+  creatorTrials: defineTable({
+    workspaceId: v.id("teamWorkspaces"),
+    userId: v.string(),
+    startsAt: v.number(),
+    endsAt: v.number(),
+    status: v.union(v.literal("active"), v.literal("expired")),
+  })
+    .index("by_workspaceId", ["workspaceId"])
+    .index("by_userId", ["userId"]),
+  aiRuns: defineTable(aiRunValidator).index(
+    "by_workspaceId_and_requestedBy_and_requestHash",
+    ["workspaceId", "requestedBy", "requestHash"]
+  ),
   clients: defineTable(
     clientValidator.extend({ ownerUserId: v.string() })
   ).index("by_ownerUserId_and_id", ["ownerUserId", "id"]),
@@ -350,6 +364,7 @@ export default defineSchema({
     defaultWorkflowTemplateId: v.optional(v.string()),
     portalBrandName: v.optional(v.string()),
     portalAccentColor: v.optional(v.string()),
+    aiEnabled: v.optional(v.boolean()),
   })
     .index("by_ownerUserId", ["ownerUserId"])
     .index("by_inviteCode", ["inviteCode"]),

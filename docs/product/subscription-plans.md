@@ -1,28 +1,29 @@
 # Relay subscription plans
 
-Status: Free plan open to everyone; future payments use Razorpay
+Status: Free plan open to everyone, with an opt-in 7-day Creator trial; future payments use Razorpay
 
 The Free plan is open to everyone without an invite. Creator, Team, extra Editor
 Seats, and Storage Add-ons are future offers, not available for purchase. Free-only
 does not unlock paid capabilities for everyone: the existing Free limits apply.
 A Workspace owns one Subscription Plan. Clerk remains the authentication provider;
 Razorpay is the selected future payment provider. Convex remains the authority for
-Workspace entitlements. Clients and Client Contacts do not consume internal seats.
+Workspace entitlements, including the no-card Creator trial. Clients and Client Contacts do not consume internal seats.
 
 Paid checkout stays disabled. Do not connect Stripe or activate Clerk
 Billing. Razorpay integration and migration of the existing Clerk-specific billing
 code are separate post-launch work. Workspace accounting supports multiple currencies. Paid prices, billing periods,
-trials, cancellations, and refund terms await ticket 02 approval. No former
+paid subscription cancellations and refund terms await ticket 02 approval. The
+7-day no-card Creator trial is approved separately. No former
 Clerk or Stripe commercial terms carry forward. The implementation checklist lives in
 `.scratch/subscription-plans/`.
 
 ## Plan summary
 
-| Plan    |  Monthly |   Annual | Trial    | Storage                 | Internal Editors   |
-| ------- | -------: | -------: | -------- | ----------------------- | ------------------ |
-| Free    |       $0 |       $0 | None     | No Relay-hosted uploads | 1 Workspace owner  |
-| Creator |  Pending |  Pending | Pending  | 5 GB                    | 1 Workspace owner  |
-| Team    | Deferred | Deferred | Deferred | 15 GB shared            | 3 included Editors |
+| Plan    |  Monthly |   Annual | Trial  | Storage                 | Internal Editors   |
+| ------- | -------: | -------: | ------ | ----------------------- | ------------------ |
+| Free    |       $0 |       $0 | None   | No Relay-hosted uploads | 1 Workspace owner  |
+| Creator |  Pending |  Pending | 7 days | 5 GB                    | 1 Workspace owner  |
+| Team    | Deferred | Deferred | None   | 15 GB shared            | 3 included Editors |
 
 Paid capacities describe the current product design, not approved commercial
 offers. Annual discounts and negotiated bundles are not approved.
@@ -63,6 +64,29 @@ Includes everything in Free, plus:
 - Advanced reports
 
 Creator supports one internal Workspace owner. Client Contacts remain free and do not become Team Members.
+
+### Free Creator trial
+
+An eligible Free Workspace Owner can start a 7-day Creator trial from Plans and
+billing. It is opt-in, requires no card, creates no paid subscription, and makes
+no automatic charge. Only Creator has a trial; Team does not.
+
+Trials last 168 hours from the server-recorded start. A Convex scheduled mutation
+expires the trial and restores Free entitlements. Capability mutations also check
+the server deadline, so a delayed expiry job cannot extend trial privileges. Existing files and projects
+remain; new hosted uploads and other Creator-only capabilities become locked.
+The trial includes the Creator AI allowance, but does not opt the Workspace into
+AI or reset any consumed monthly AI quota.
+
+There is one trial per account and per Workspace. Repeated start requests do not
+extend its deadline. Changing Workspace ownership or recreating a Workspace
+does not grant another trial to an account that has used one. Paid or delinquent
+subscriptions cannot start a trial. Confirmed paid billing takes precedence over
+the local trial, and trial expiry never cancels a paid subscription.
+
+Trial records live in `creatorTrials`, separate from provider billing projections,
+so a Free-plan reconciliation cannot overwrite an active local trial. Paid
+checkout and Clerk Billing activation remain disabled.
 
 ## Team (deferred)
 

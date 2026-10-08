@@ -142,7 +142,10 @@ export async function insertPendingFreeProjection(
   );
 }
 
-async function currentWorkspace(ctx: QueryCtx | MutationCtx, userId: string) {
+export async function currentWorkspace(
+  ctx: QueryCtx | MutationCtx,
+  userId: string
+) {
   const memberships = await ctx.db
     .query("teamMembers")
     .withIndex("by_userId_and_status", (q) =>
@@ -224,7 +227,8 @@ function storageQuotaBytes(
 function entitlements(projection: SubscriptionProjection) {
   const paid =
     (projection.subscriptionStatus === "active" ||
-      projection.subscriptionStatus === "trialing") &&
+      (projection.subscriptionStatus === "trialing" &&
+        projection.plan === "creator")) &&
     projection.plan !== "free";
   const plan: SubscriptionPlan = paid ? projection.plan : "free";
   const blockedReasons: ("payment_past_due" | "subscription_canceled")[] = [];
@@ -295,12 +299,28 @@ export async function resolveWorkspaceEntitlements(
   workspaceId: Id<"teamWorkspaces">
 ) {
   const projection = await projectionForWorkspace(ctx, workspaceId);
-  return entitlements(
-    projection ?? {
-      ...pendingFreeProjection(workspaceId),
-      reconciliationState: "repair",
-    }
-  );
+  const base = projection ?? {
+    ...pendingFreeProjection(workspaceId),
+    reconciliationState: "repair" as const,
+  };
+  const resolved = entitlements(base);
+  if (resolved.plan !== "free" || resolved.subscriptionStatus !== "free") {
+    return resolved;
+  }
+  const trial = await ctx.db
+    .query("creatorTrials")
+    .withIndex("by_workspaceId", (q) => q.eq("workspaceId", workspaceId))
+    .unique();
+  if (trial?.status !== "active") return resolved;
+  if ("scheduler" in ctx && Date.now() >= trial.endsAt) return resolved;
+  return entitlements({
+    ...base,
+    plan: "creator",
+    subscriptionStatus: "trialing",
+    billingPeriod: null,
+    trialStartsAt: new Date(trial.startsAt).toISOString(),
+    trialEndsAt: new Date(trial.endsAt).toISOString(),
+  });
 }
 
 export async function requireCurrentWorkspaceCapability(
@@ -325,14 +345,8 @@ export const getCurrent = query({
     if (!identity) throw new Error("Not authenticated");
     const current = await currentWorkspace(ctx, identity.tokenIdentifier);
     if (!current) return null;
-    const projection = await projectionForWorkspace(ctx, current.workspace._id);
     return {
-      ...entitlements(
-        projection ?? {
-          ...pendingFreeProjection(current.workspace._id),
-          reconciliationState: "repair",
-        }
-      ),
+      ...(await resolveWorkspaceEntitlements(ctx, current.workspace._id)),
       canManageBilling: current.membership.role === "Owner",
     };
   },

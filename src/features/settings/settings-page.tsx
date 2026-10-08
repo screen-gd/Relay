@@ -47,6 +47,7 @@ import {
 import { ProjectSelect } from "@/features/projects/project-select";
 import { cn } from "@/lib/utils";
 import { useSettingsController } from "./settings-controller";
+import { WorkspaceAiSettings } from "./workspace-ai-settings";
 import {
   currencyLabels,
   createDefaultSettings,
@@ -612,6 +613,10 @@ export function SettingsDesignPage({
                         </div>
                       ) : null}
                     </SettingsPanel>
+                    <WorkspaceAiSettings
+                      workspaceId={teamWorkspace?._id}
+                      notify={notify}
+                    />
                     <SettingsPanel
                       id="workspace-backup"
                       title="Backup and restore"

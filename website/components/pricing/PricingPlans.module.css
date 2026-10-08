@@ -1,0 +1,167 @@
+/* Three separate cards; rows share a subgrid so panels, lists, and buttons
+   line up. Top padding leaves room for a card's label tab. */
+.plans {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-rows: repeat(5, auto);
+  gap: 0 16px;
+  padding-top: 32px;
+  /* Contains the tab's z-index: -1 so it sits behind the (positioned) card
+     but above whatever is behind the grid. */
+  isolation: isolate;
+}
+
+.plan {
+  display: grid;
+  grid-row: span 5;
+  grid-template-rows: subgrid;
+  min-width: 0;
+  padding: 8px;
+  color: var(--foreground);
+}
+
+/* Label tab above the card; its lower 16px tucks under the card's top. */
+.tab {
+  position: absolute;
+  z-index: -1;
+  top: -32px;
+  right: -1px;
+  left: -1px;
+  height: 48px;
+  margin: 0;
+  padding-top: 6px;
+  border-radius: 16px 16px 0 0;
+  background: var(--primary);
+  color: var(--primary-foreground);
+  font-size: 13px;
+  font-weight: 600;
+  text-align: center;
+}
+
+/* Price panel at the top of the card. */
+.top {
+  padding: 24px 20px;
+  border-radius: 12px;
+  background: var(--muted);
+}
+
+.top h3 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+
+.description {
+  margin: 8px 0 0;
+  color: var(--muted-foreground);
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+.price {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 8px;
+  margin: 28px 0 0;
+}
+
+.price strong {
+  font-size: 40px;
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  line-height: 1;
+}
+
+.price span {
+  color: var(--muted-foreground);
+  font-size: 15px;
+}
+
+.status {
+  margin: 8px 0 0;
+  color: var(--muted-foreground);
+  font-size: 14px;
+}
+
+.features {
+  display: grid;
+  align-content: start;
+  gap: 12px;
+  margin: 0;
+  padding: 28px 20px 24px;
+  list-style: none;
+}
+
+.features li {
+  display: grid;
+  grid-template-columns: 18px 1fr;
+  gap: 12px;
+  align-items: start;
+  font-size: 15px;
+  line-height: 1.4;
+}
+
+.features svg {
+  margin-top: 1px;
+}
+
+.soon {
+  color: var(--muted-foreground);
+}
+
+/* "Who's the plan for?" block below a dotted rule. */
+.audience {
+  margin: 0 20px;
+  padding-top: 20px;
+  border-top: 2px dotted var(--border-strong);
+}
+
+.audience h4 {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.audience p {
+  margin: 6px 0 0;
+  color: var(--muted-foreground);
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+.note {
+  margin: 16px 20px 0;
+  color: var(--muted-foreground);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.note:empty {
+  margin-top: 0;
+}
+
+.cta {
+  align-self: end;
+  padding: 24px 12px 12px;
+}
+
+@media (max-width: 900px) {
+  .plans {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: none;
+    gap: 48px;
+  }
+
+  .plan {
+    display: flex;
+    flex-direction: column;
+    grid-row: auto;
+  }
+
+  .cta {
+    margin-top: auto;
+  }
+}
