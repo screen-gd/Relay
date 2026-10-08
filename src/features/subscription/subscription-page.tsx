@@ -35,7 +35,7 @@ export function SubscriptionPage() {
       <PageHeader
         eyebrow="Workspace / Subscription"
         title="Plans and billing"
-        description="Start with Free or try Creator free for 7 days. Paid plans are coming later."
+        description="Start with Free. Paid plans are coming later."
         actions={
           <OwnedBadge variant={isSignedIn ? "default" : "secondary"}>
             {isSignedIn ? "Signed in" : "Local mode"}
@@ -77,8 +77,7 @@ export function SubscriptionPage() {
                 </h2>
                 <p className="text-sm leading-6 text-muted-foreground">
                   Sign in or create an account to start a Free Workspace. No
-                  payment is required. Eligible Workspace Owners can start a
-                  free 7-day Creator trial with no card and no automatic charge.
+                  payment is required.
                 </p>
                 {isAuthEnabled ? (
                   <div className="flex flex-col gap-2 sm:flex-row">

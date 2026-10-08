@@ -11,14 +11,17 @@ const modules = import.meta.glob("./**/*.ts");
 const startTime = new Date("2026-10-07T12:00:00.000Z");
 const duration = 7 * 24 * 60 * 60 * 1000;
 
+// Trials are closed by default; most tests cover the open behavior.
 beforeEach(() => {
   vi.useFakeTimers();
   vi.setSystemTime(startTime);
+  vi.stubEnv("CREATOR_TRIALS_OPEN", "true");
 });
 
 afterEach(() => {
   vi.clearAllTimers();
   vi.useRealTimers();
+  vi.unstubAllEnvs();
 });
 
 async function fixture() {
@@ -72,6 +75,33 @@ async function fixture() {
   });
   return { t, owner, editor, viewer, outsider, workspaceId, subscriptionId };
 }
+
+test("while trials are closed, no one can start one and a running trial keeps its access", async () => {
+  const f = await fixture();
+  const trialId = await f.owner.mutation(api.creatorTrials.start, {});
+  vi.unstubAllEnvs();
+  expect(
+    await f.owner.query(api.creatorTrials.getAvailability, {})
+  ).toMatchObject({ open: false, canStart: false, active: true });
+  expect(
+    await f.owner.query(api.workspaceSubscriptions.getCurrent, {})
+  ).toMatchObject({ plan: "creator", subscriptionStatus: "trialing" });
+
+  const other = f.t.withIdentity({
+    subject: "other",
+    tokenIdentifier: "test|other",
+  });
+  await other.mutation(api.team.createWorkspace, { name: "Closed Studio" });
+  expect(
+    await other.query(api.creatorTrials.getAvailability, {})
+  ).toMatchObject({ open: false, canStart: false, used: false });
+  await expect(other.mutation(api.creatorTrials.start, {})).rejects.toThrow(
+    "not available right now"
+  );
+  expect(await f.t.run((ctx) => ctx.db.query("creatorTrials").take(3))).toEqual(
+    [expect.objectContaining({ _id: trialId })]
+  );
+});
 
 test("a Free Owner explicitly starts a no-card trial with exactly seven days of Creator entitlements", async () => {
   const f = await fixture();

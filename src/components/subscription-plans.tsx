@@ -58,8 +58,7 @@ export function CapabilityUpgradePrompt({
       <div>
         <p className="text-sm font-medium">Creator unlocks {name}.</p>
         <p className="mt-1 text-xs text-muted-foreground">
-          Try Creator free for 7 days. No card required; paid plans are coming
-          later.
+          Creator is not available yet. Paid plans are coming later.
         </p>
       </div>
       <Button asChild size="sm" variant="outline">
@@ -135,6 +134,12 @@ function BillingStatus({
   );
 }
 
+/**
+ * Plans and billing body. The Creator trial card only offers a trial when the
+ * backend reports trials as open; otherwise it says Creator is not available
+ * yet (signed-out visitors, with no `trial`, see the same). A running trial
+ * still shows as active.
+ */
 export function SubscriptionPricingView({
   subscription,
   trial,
@@ -148,11 +153,16 @@ export function SubscriptionPricingView({
   startingTrial?: boolean;
   trialError?: string;
 }) {
+  const trialsOpen = trial?.open === true;
   return (
     <div className="min-h-[calc(100dvh-15rem)] p-4 md:p-6">
       <div className="mb-4 flex items-center gap-2">
         <span className="text-sm text-muted-foreground">Workspace plans</span>
-        <Badge variant="outline">Creator trial: 7 days</Badge>
+        <Badge variant="outline">
+          {trialsOpen
+            ? "Creator trial: 7 days"
+            : "Paid plans: not available yet"}
+        </Badge>
       </div>
       <Card className="mb-4">
         <CardContent className="space-y-3 py-5">
@@ -170,47 +180,70 @@ export function SubscriptionPricingView({
           </p>
         </CardContent>
       </Card>
-      <Card className="mb-4">
-        <CardContent className="space-y-3 py-5">
-          <h2 className="text-lg font-semibold">Try Creator free for 7 days</h2>
-          <p>
-            Try hosted uploads, 5 GB of storage, custom Workflow Templates,
-            advanced reports, Client Hub, and custom portal branding.
-          </p>
-          <p className="text-sm text-muted-foreground">
-            No card required and no automatic charge. After 7 days your
-            Workspace returns to Free; your existing work stays available. One
-            trial per account and Workspace. Team does not include a free trial.
-          </p>
-          {trial?.active ? (
-            <p role="status" className="text-sm text-muted-foreground">
-              Your Creator trial is active.
+      {trialsOpen || trial?.active ? (
+        <Card className="mb-4">
+          <CardContent className="space-y-3 py-5">
+            <h2 className="text-lg font-semibold">
+              Try Creator free for 7 days
+            </h2>
+            <p>
+              Try hosted uploads, 5 GB of storage, custom Workflow Templates,
+              advanced reports, Client Hub, and custom portal branding.
             </p>
-          ) : trial?.used ? (
-            <p role="status" className="text-sm text-muted-foreground">
-              This account or Workspace has already used its Creator trial.
-            </p>
-          ) : (
-            <Button
-              type="button"
-              disabled={!trial?.canStart || startingTrial || !onStartTrial}
-              onClick={onStartTrial}
-            >
-              {startingTrial ? "Starting trial…" : "Start 7-day Creator trial"}
-            </Button>
-          )}
-          {subscription && !subscription.canManageBilling ? (
             <p className="text-sm text-muted-foreground">
-              Only the Workspace Owner can start the trial.
+              No card required and no automatic charge. After 7 days your
+              Workspace returns to Free; your existing work stays available. One
+              trial per account and Workspace. Team does not include a free
+              trial.
             </p>
-          ) : null}
-          {trialError ? (
-            <p role="alert" className="text-sm text-destructive">
-              {trialError}
+            {trial?.active ? (
+              <p role="status" className="text-sm text-muted-foreground">
+                Your Creator trial is active.
+              </p>
+            ) : trial?.used ? (
+              <p role="status" className="text-sm text-muted-foreground">
+                This account or Workspace has already used its Creator trial.
+              </p>
+            ) : (
+              <Button
+                type="button"
+                disabled={!trial?.canStart || startingTrial || !onStartTrial}
+                onClick={onStartTrial}
+              >
+                {startingTrial
+                  ? "Starting trial…"
+                  : "Start 7-day Creator trial"}
+              </Button>
+            )}
+            {subscription && !subscription.canManageBilling ? (
+              <p className="text-sm text-muted-foreground">
+                Only the Workspace Owner can start the trial.
+              </p>
+            ) : null}
+            {trialError ? (
+              <p role="alert" className="text-sm text-destructive">
+                {trialError}
+              </p>
+            ) : null}
+          </CardContent>
+        </Card>
+      ) : (
+        <Card className="mb-4">
+          <CardContent className="space-y-3 py-5">
+            <h2 className="text-lg font-semibold">
+              Creator is not available yet
+            </h2>
+            <p>
+              Hosted uploads, 5 GB of storage, custom Workflow Templates,
+              advanced reports, Client Hub, and custom portal branding arrive
+              with paid plans.
             </p>
-          ) : null}
-        </CardContent>
-      </Card>
+            <p role="status" className="text-sm text-muted-foreground">
+              Creator and Team cannot be started or purchased right now.
+            </p>
+          </CardContent>
+        </Card>
+      )}
       {subscription && subscription.subscriptionStatus !== "free" ? (
         <BillingStatus subscription={subscription} />
       ) : null}
@@ -270,8 +303,7 @@ export function FirstLoginPlanDialog() {
         <DialogHeader>
           <DialogTitle>Welcome to Relay</DialogTitle>
           <DialogDescription>
-            Your Workspace starts on Free. You can choose a free 7-day Creator
-            trial from Plans and billing. No card is required; paid plans are
+            Your Workspace starts on Free. No card is required; paid plans are
             coming later.
           </DialogDescription>
         </DialogHeader>

@@ -41,7 +41,13 @@ describe("User subscription pricing", () => {
     const html = renderToStaticMarkup(
       <SubscriptionPricingView
         subscription={freeSubscription}
-        trial={{ canStart: true, used: false, active: false, endsAt: null }}
+        trial={{
+          open: true,
+          canStart: true,
+          used: false,
+          active: false,
+          endsAt: null,
+        }}
         onStartTrial={() => undefined}
       />
     );
@@ -51,11 +57,42 @@ describe("User subscription pricing", () => {
     expect(html).not.toContain('disabled=""');
   });
 
+  test.each([
+    [
+      "closed trials",
+      {
+        open: false,
+        canStart: false,
+        used: false,
+        active: false,
+        endsAt: null,
+      },
+    ],
+    ["signed-out visitors", undefined],
+  ] as const)("offers no trial or purchase for %s", (_label, trial) => {
+    const html = renderToStaticMarkup(
+      <SubscriptionPricingView
+        subscription={freeSubscription}
+        trial={trial}
+        onStartTrial={() => undefined}
+      />
+    );
+    expect(html).toContain("Creator is not available yet");
+    expect(html).toContain("Paid plans: not available yet");
+    expect(html).not.toContain("Start 7-day Creator trial");
+  });
+
   test("a used trial cannot be restarted from the pricing UI", () => {
     const html = renderToStaticMarkup(
       <SubscriptionPricingView
         subscription={freeSubscription}
-        trial={{ canStart: false, used: true, active: false, endsAt: null }}
+        trial={{
+          open: true,
+          canStart: false,
+          used: true,
+          active: false,
+          endsAt: null,
+        }}
       />
     );
     expect(html).toContain("already used its Creator trial");
@@ -66,7 +103,13 @@ describe("User subscription pricing", () => {
     const html = renderToStaticMarkup(
       <SubscriptionPricingView
         subscription={{ ...freeSubscription, canManageBilling: false }}
-        trial={{ canStart: false, used: false, active: false, endsAt: null }}
+        trial={{
+          open: true,
+          canStart: false,
+          used: false,
+          active: false,
+          endsAt: null,
+        }}
         onStartTrial={() => undefined}
       />
     );

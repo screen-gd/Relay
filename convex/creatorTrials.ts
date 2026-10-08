@@ -8,11 +8,22 @@ import {
 
 const CREATOR_TRIAL_DURATION_MS = 7 * 24 * 60 * 60 * 1000;
 
+/**
+ * New Creator trials are closed while paid plans are unavailable. Set the
+ * `CREATOR_TRIALS_OPEN` deployment env var to "true" to reopen them without a
+ * code change. Trials that already started keep Creator access until they
+ * expire.
+ */
+function creatorTrialsOpen() {
+  return process.env.CREATOR_TRIALS_OPEN === "true";
+}
+
 export const getAvailability = query({
   args: {},
   returns: v.union(
     v.null(),
     v.object({
+      open: v.boolean(),
       canStart: v.boolean(),
       used: v.boolean(),
       active: v.boolean(),
@@ -45,8 +56,11 @@ export const getAvailability = query({
     const isOwner =
       current.membership.role === "Owner" &&
       current.workspace.ownerUserId === identity.tokenIdentifier;
+    const open = creatorTrialsOpen();
     return {
+      open,
       canStart:
+        open &&
         isOwner &&
         !workspaceTrial &&
         !ownerTrial &&
@@ -65,6 +79,9 @@ export const start = mutation({
   handler: async (ctx) => {
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) throw new Error("Not authenticated");
+    if (!creatorTrialsOpen()) {
+      throw new Error("Creator trials are not available right now");
+    }
     const current = await currentWorkspace(ctx, identity.tokenIdentifier);
     if (
       !current ||
