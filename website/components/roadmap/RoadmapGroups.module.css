@@ -1,0 +1,41 @@
+.groups {
+  display: grid;
+  gap: 64px;
+}
+
+.group {
+  display: grid;
+  gap: 24px;
+}
+
+.heading {
+  margin: 0;
+  color: var(--foreground);
+  font-size: clamp(22px, 2.6vw, 28px);
+  font-weight: 600;
+  letter-spacing: -0.025em;
+  line-height: 1.15;
+}
+
+.idea {
+  display: grid;
+  gap: 12px;
+  justify-items: start;
+  margin-top: 64px;
+}
+
+.link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--foreground);
+  font-size: 16px;
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+.link:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}

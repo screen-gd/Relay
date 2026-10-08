@@ -1,234 +1,133 @@
-"use client";
+import {
+  CalendarDays,
+  CheckCircle2,
+  FolderKanban,
+  Link2,
+  MessageSquare,
+  Wallet,
+} from "lucide-react";
+import Link from "next/link";
+import type { ReactNode } from "react";
+import { APP_URL } from "../lib/links";
+import { Button } from "@/components/ui/button";
+import { InteractiveHoverButton } from "@/components/ui/interactive-hover-button";
+import ClientReviewDemo from "./ClientReviewDemo";
+import PricingPlans from "./pricing/PricingPlans";
+import HeroVideo from "./site/HeroVideo";
+import Reveal from "./site/Reveal";
+import SectionHeading from "./site/SectionHeading";
 
-import Image from "next/image";
-import dynamic from "next/dynamic";
-import { useGSAP } from "@gsap/react";
-import { gsap } from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { MotionConfig, useReducedMotion } from "motion/react";
-import { useEffect, useRef, useState } from "react";
-import InteractiveDashboard from "./InteractiveDashboard";
-import ProductStory from "./ProductStory";
-import SpecularButton from "./react-bits/SpecularButton";
-import GradualBlur from "./react-bits/GradualBlur";
+const features = [
+  {
+    icon: FolderKanban,
+    title: "Projects and deadlines",
+    text: "See every project, client, and due date in one ledger.",
+  },
+  {
+    icon: Link2,
+    title: "Private review links",
+    text: "Clients review on a password-protected link. No account needed.",
+  },
+  {
+    icon: MessageSquare,
+    title: "Timestamped comments",
+    text: "YouTube and Vimeo comments land on the exact moment.",
+  },
+  {
+    icon: CheckCircle2,
+    title: "Approvals and delivery",
+    text: "Track which version was approved and when it shipped.",
+  },
+  {
+    icon: Wallet,
+    title: "Payment tracking",
+    text: "Record fees, mark payments, and see what is still owed.",
+  },
+  {
+    icon: CalendarDays,
+    title: "Activity and calendar",
+    text: "Follow project changes and upcoming deadlines.",
+  },
+] as const;
 
-const MagicRings = dynamic(() => import("./react-bits/MagicRings"), {
-  ssr: false,
-});
-
-gsap.registerPlugin(useGSAP, ScrollTrigger);
-
-function useViewportEntry() {
-  const ref = useRef<HTMLDivElement>(null);
-  const [isInView, setIsInView] = useState(false);
-
-  useEffect(() => {
-    const element = ref.current;
-    if (!element) return;
-    const observer = new IntersectionObserver(([entry]) => {
-      setIsInView(entry?.isIntersecting ?? false);
-    });
-    observer.observe(element);
-    return () => observer.disconnect();
-  }, []);
-
-  return [ref, isInView] as const;
-}
-
-export default function Home() {
-  const siteRef = useRef<HTMLDivElement>(null);
-  const reduceMotion = useReducedMotion();
-  const [ringsRef, ringsInView] = useViewportEntry();
-  const [isHeaderCompact, setIsHeaderCompact] = useState(false);
-
-  useEffect(() => {
-    const updateHeader = () => setIsHeaderCompact(window.scrollY > 120);
-
-    updateHeader();
-    window.addEventListener("scroll", updateHeader, { passive: true });
-    return () => window.removeEventListener("scroll", updateHeader);
-  }, []);
-
-  useGSAP(
-    () => {
-      const media = gsap.matchMedia();
-
-      media.add("(prefers-reduced-motion: no-preference)", () => {
-        gsap
-          .timeline({ defaults: { ease: "power3.out" } })
-          .from(".hero-heading span", {
-            yPercent: 115,
-            opacity: 0,
-            duration: 0.95,
-            stagger: 0.1,
-          })
-          .from(
-            ".hero-support > *",
-            {
-              y: 22,
-              opacity: 0,
-              duration: 0.65,
-              stagger: 0.08,
-            },
-            "-=0.48"
-          )
-          .from(
-            ".product-frame",
-            {
-              y: 64,
-              scale: 0.94,
-              opacity: 0,
-              duration: 1.05,
-            },
-            "-=0.38"
-          );
-      });
-
-      media.add(
-        "(min-width: 701px) and (prefers-reduced-motion: no-preference)",
-        () => {
-          const productSurfaces = [
-            "#workflow > :last-child",
-            "#client-review .review-room",
-            "#delivery > :last-child",
-            "#proof .proof-workspace",
-          ];
-
-          productSurfaces.forEach((selector) => {
-            const surface =
-              siteRef.current?.querySelector<HTMLElement>(selector);
-            if (!surface) return;
-
-            gsap.from(surface, {
-              y: 44,
-              scale: 0.97,
-              duration: 0.85,
-              ease: "power3.out",
-              clearProps: "transform",
-              scrollTrigger: {
-                trigger: surface,
-                start: "top 88%",
-                once: true,
-              },
-            });
-          });
-        }
-      );
-
-      return () => media.revert();
-    },
-    { scope: siteRef }
-  );
-
+/**
+ * Home page sections: hero, feature grid, client review demo, pricing, and
+ * the streamed roadmap preview (passed in from the server page). The hero is
+ * static; the middle sections rise into view once on scroll.
+ */
+export default function Home({ roadmap }: { roadmap: ReactNode }) {
   return (
-    <MotionConfig reducedMotion="user">
-      <div ref={siteRef} className="site" id="top">
-        <a className="skip-link" href="#main-content">
-          Skip to main content
-        </a>
-
-        <GradualBlur
-          className="site-page-blur"
-          position="top"
-          target="page"
-          strength={2}
-          height="80px"
-          divCount={10}
-          curve="ease-out"
-          opacity={0.8}
-          zIndex={1000}
-        />
-
-        <div
-          className={`site-header-shell${isHeaderCompact ? " is-compact" : ""}`}
-        >
-          <header className="site-header">
-            <a className="brand" href="#top" aria-label="Relay home">
-              <Image
-                src="/brand/relay/lockup-accent.svg"
-                width={320}
-                height={100}
-                alt="Relay"
-                priority
-              />
-            </a>
-            <nav className="site-nav" aria-label="Main navigation">
-              <a href="#product">Product</a>
-              <a href="#pricing">Pricing</a>
-              <SpecularButton
-                className="nav-action"
-                href="https://relay-app.cc.cd/"
-              >
+    <>
+      <section className="hero" aria-labelledby="hero-title">
+        <div className="container">
+          <div className="hero-head">
+            <h1 id="hero-title">Manage editing projects.</h1>
+            <p className="hero-copy">
+              Track deadlines, collect client feedback on embedded videos, and
+              see what you&apos;re owed, all in one workspace.
+            </p>
+            <div className="hero-actions">
+              <InteractiveHoverButton href={APP_URL} size="lg">
                 Get started free
-              </SpecularButton>
-            </nav>
-          </header>
+              </InteractiveHoverButton>
+              <Button variant="outline" size="lg" asChild>
+                <Link href="/pricing">See pricing</Link>
+              </Button>
+            </div>
+            <p className="hero-note">
+              Free plan. 7-day Creator trial, no card needed.
+            </p>
+          </div>
+          <div className="product-reveal">
+            <HeroVideo />
+          </div>
         </div>
+      </section>
 
-        <main className="w-full max-w-full overflow-x-hidden" id="main-content">
-          <section className="hero" aria-labelledby="hero-title">
-            <div ref={ringsRef} className="hero-rings" aria-hidden="true">
-              {!reduceMotion && ringsInView && (
-                <MagicRings
-                  color="#c6ff00"
-                  colorTwo="#f4f4f5"
-                  ringCount={7}
-                  speed={0.58}
-                  attenuation={8}
-                  lineThickness={2.2}
-                  baseRadius={0.28}
-                  radiusStep={0.12}
-                  scaleRate={0.1}
-                  opacity={0.92}
-                  noiseAmount={0.025}
-                  rotation={-8}
-                  ringGap={1.28}
-                  fadeIn={0.6}
-                  fadeOut={0.7}
-                  followMouse={false}
-                  mouseInfluence={0}
-                  hoverScale={1}
-                  parallax={0}
-                />
-              )}
-            </div>
+      <section className="section" aria-labelledby="home-features-title">
+        <div className="container">
+          <SectionHeading
+            id="home-features-title"
+            title="Built for client work."
+            description="Projects, reviews, delivery, and payments in one workspace."
+            action={{ href: "/features", label: "All features" }}
+          />
+          <div className="feature-grid-frame">
+            <ul className="feature-grid">
+              {features.map(({ icon: Icon, title, text }, index) => (
+                <li key={title}>
+                  <Reveal delay={index * 0.05}>
+                    <span className="feature-icon">
+                      <Icon size={18} aria-hidden="true" />
+                    </span>
+                    <h3>{title}</h3>
+                    <p>{text}</p>
+                  </Reveal>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+      </section>
 
-            <div className="hero-message">
-              <div className="hero-heading">
-                <h1 id="hero-title">
-                  <span>Manage editing</span> <span>projects.</span>
-                </h1>
-              </div>
-              <div className="hero-support">
-                <p className="hero-copy">
-                  Track projects and deadlines, collect client feedback on
-                  embedded videos, and track delivery and payments in one
-                  workspace.
-                </p>
-                <p className="hero-access-note">
-                  Built for freelance editors working with creators and brands.
-                  Start with Free. No invite required.
-                </p>
-              </div>
-            </div>
+      <ClientReviewDemo />
 
-            <div className="product-reveal" id="product">
-              <div className="product-glow">
-                <div className="product-frame">
-                  <div className="dashboard-crop">
-                    <InteractiveDashboard />
-                    <p className="hero-access-note">
-                      Sample workspace with fictional projects and clients.
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </section>
+      <section
+        className="section pricing-section"
+        aria-labelledby="home-pricing-title"
+      >
+        <div className="container">
+          <SectionHeading
+            id="home-pricing-title"
+            title="Free while paid plans are in development."
+            action={{ href: "/pricing", label: "Compare plans" }}
+            align="center"
+          />
+          <PricingPlans />
+        </div>
+      </section>
 
-          <ProductStory />
-        </main>
-      </div>
-    </MotionConfig>
+      {roadmap}
+    </>
   );
 }
