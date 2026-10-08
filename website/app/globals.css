@@ -601,6 +601,13 @@ body::before {
   box-shadow: 0 32px 64px -32px rgb(0 0 0 / 30%);
 }
 
+/* Silent looping showcase: fills the frame and ignores clicks and taps. */
+.hero-video.is-showcase {
+  object-fit: cover;
+  pointer-events: none;
+  user-select: none;
+}
+
 .hero-video.is-placeholder {
   display: flex;
   flex-direction: column;
