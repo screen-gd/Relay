@@ -77,7 +77,12 @@ export default function Home({ roadmap }: { roadmap: ReactNode }) {
             <p className="hero-note">Free plan. No card needed.</p>
           </div>
           <div className="product-reveal">
-            <HeroVideo />
+            <HeroVideo
+              video={{
+                src: "/videos/relay-launch.mp4",
+                poster: "/videos/relay-launch-poster.jpg",
+              }}
+            />
           </div>
         </div>
       </section>
