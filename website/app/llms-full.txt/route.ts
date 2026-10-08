@@ -11,15 +11,27 @@ Relay helps freelance video editors and small post-production teams manage video
 - Track a project through editing, client review, revisions, approval, and delivery.
 - Keep outputs and their versions with the project. Editors can share a project-scoped client portal for review.
 - The Free plan includes client comments on embedded videos and linked video versions.
-- Track delivery and payment status. Free includes payment tracking and embedded video comments. YouTube and Vimeo support playback timestamps; Drive and Dropbox support manual timestamps. Planned paid upgrades include hosted uploads and review, custom templates, advanced reports, and team roles. Paid prices are not finalized. Workspace accounting supports multiple currencies.
+- Track delivery and payment status. Free includes payment tracking and embedded video comments. YouTube and Vimeo support playback timestamps; Drive and Dropbox support manual timestamps. Workspace accounting supports multiple currencies.
 
-## Access and availability
+## Plans and availability
 
-Relay is open to everyone on the Free plan; no invite is required. The marketing site describes Free, Creator, and Team plans. Creator and Team are marked as coming later on the pricing section. For current prices, limits, and availability, read ${origin}/#pricing rather than treating this summary as a price list.
+- Free is available to everyone. No invite is required.
+- Creator and Team are not available yet. There is no trial and no way to buy them.
+- File uploads are not available yet.
+- Paid prices are not set.
+
+For current plan details, read ${origin}/pricing rather than treating this summary as a price list.
+
+## Roadmap
+
+Upcoming and recently shipped features are listed at ${origin}/roadmap.
 
 ## Official public links
 
-- Product overview and pricing: ${origin}/
+- Product overview: ${origin}/
+- Features: ${origin}/features
+- Pricing: ${origin}/pricing
+- Roadmap: ${origin}/roadmap
 - Get started free: https://relay-app.cc.cd/
 - Contact: https://relay-app.cc.cd/contact
 - Accessibility: https://relay-app.cc.cd/accessibility

@@ -1,0 +1,165 @@
+.grid {
+  display: grid;
+  grid-template-columns: minmax(0, 5fr) minmax(0, 6fr);
+  align-items: start;
+  gap: 14px;
+  min-height: 380px;
+}
+
+.filters {
+  display: flex;
+  gap: 2px;
+}
+
+.filters button {
+  height: 26px;
+  padding: 0 8px;
+  background: transparent;
+  color: #ffffff;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.filters button:hover {
+  border-color: rgb(255 255 255 / 10%);
+}
+
+.filters button[data-active="true"] {
+  border-color: rgb(255 255 255 / 16%);
+}
+
+.filters button:focus-visible,
+.reset:focus-visible {
+  outline: 2px solid #ffffff;
+  outline-offset: 1px;
+}
+
+/* App activity list: dot, bold line, who and when. */
+.events {
+  display: grid;
+  gap: 16px;
+  margin: 0;
+  padding: 4px 16px 18px 34px;
+  list-style: none;
+}
+
+.events li {
+  position: relative;
+  display: grid;
+  gap: 1px;
+}
+
+.events li::before {
+  position: absolute;
+  top: 7px;
+  left: -16px;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #ffffff;
+  content: "";
+}
+
+.events b {
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.events span {
+  font-size: 12px;
+}
+
+.weekNav {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.weekNav button {
+  width: 28px;
+  height: 28px;
+}
+
+.weekNav > span {
+  min-width: 104px;
+  font-size: 11px;
+  text-align: center;
+}
+
+/* Dashboard Projects table columns. */
+.tableHead,
+.table li {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 80px 100px;
+  align-items: center;
+  gap: 12px;
+  padding: 0 16px;
+}
+
+.tableHead {
+  min-height: 36px;
+  border-top: 1px solid rgb(255 255 255 / 8%);
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.table {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.table li {
+  min-height: 54px;
+  border-top: 1px solid rgb(255 255 255 / 8%);
+}
+
+.due {
+  font-size: 12px;
+}
+
+.reset {
+  display: flex;
+  width: 100%;
+  min-height: 44px;
+  align-items: center;
+  gap: 6px;
+  padding: 0 16px;
+  border: 0;
+  border-top: 1px solid rgb(255 255 255 / 8%);
+  background: transparent;
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+@container (max-width: 860px) {
+  .grid {
+    grid-template-columns: minmax(0, 1fr);
+    min-height: 0;
+  }
+}
+
+@container (max-width: 480px) {
+  .filters button {
+    padding: 0 6px;
+    font-size: 11px;
+  }
+
+  .tableHead {
+    display: none;
+  }
+
+  .table li {
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 2px 12px;
+    padding-block: 10px;
+  }
+
+  .due {
+    grid-column: 2;
+    grid-row: 1;
+    text-align: right;
+  }
+}

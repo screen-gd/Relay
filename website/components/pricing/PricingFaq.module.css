@@ -1,0 +1,40 @@
+.faq {
+  color: var(--foreground);
+}
+
+.faq h2 {
+  margin: 0;
+  font-size: clamp(28px, 3vw, 36px);
+  font-weight: 600;
+  letter-spacing: -0.025em;
+  line-height: 1.15;
+  text-wrap: balance;
+}
+
+.list {
+  margin-top: 40px;
+  border-top: 1px solid var(--border);
+}
+
+/* Accordion rows: question as the trigger, answer below. */
+.trigger {
+  padding-block: 20px;
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  line-height: 1.4;
+}
+
+.answer {
+  max-width: 68ch;
+  padding-bottom: 20px;
+  color: var(--muted-foreground);
+  font-size: 15px;
+  line-height: 1.6;
+}
+
+.answer a {
+  color: var(--foreground);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}

@@ -10,9 +10,19 @@ This is the public marketing site. Product access and private workspaces are on 
 
 ## Public pages
 
-- [Home](${origin}/): Product overview, workflow, client review, delivery, and pricing.
+- [Home](${origin}/): Product overview, workflow, client review, and delivery.
+- [Features](${origin}/features): What Relay does for projects, client review, delivery, and payments.
+- [Pricing](${origin}/pricing): Free, Creator, and Team plans.
+- [Roadmap](${origin}/roadmap): Upcoming and recently shipped features.
 - [Get started free](https://relay-app.cc.cd/): Open Relay. No invite is required.
 - [Full product summary](${origin}/llms-full.txt): A text summary of public product information.
+
+## Plans
+
+- Free is available to everyone. No invite is required.
+- Creator and Team are not available yet. There is no trial and no way to buy them.
+- File uploads are not available yet.
+- Paid prices are not set.
 
 ## App information
 
