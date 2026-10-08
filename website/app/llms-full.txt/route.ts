@@ -16,9 +16,8 @@ Relay helps freelance video editors and small post-production teams manage video
 ## Plans and availability
 
 - Free is available to everyone. No invite is required.
-- Creator offers an opt-in 7-day free trial with no card. Editors start it from Plans and billing in the app.
-- File uploads are not available yet, including during the Creator trial.
-- Team is planned.
+- Creator and Team are not available yet. There is no trial and no way to buy them.
+- File uploads are not available yet.
 - Paid prices are not set.
 
 For current plan details, read ${origin}/pricing rather than treating this summary as a price list.

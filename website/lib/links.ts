@@ -1,6 +1,5 @@
 // Shared external URLs and site navigation for the marketing site.
 export const APP_URL = "https://relay-app.cc.cd/";
-export const APP_TRIAL_URL = "https://relay-app.cc.cd/subscription";
 export const APP_PRIVACY_URL = "https://relay-app.cc.cd/privacy";
 export const CONTACT_EMAIL_URL = "mailto:connect.relay@protonmail.com";
 // Source of roadmap issues for lib/roadmap.ts. Not linked from the site.

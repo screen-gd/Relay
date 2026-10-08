@@ -9,7 +9,7 @@ import styles from "./page.module.css";
 export const metadata: Metadata = {
   title: "Pricing",
   description:
-    "Relay is free while paid plans are in development. Try Creator free for 7 days.",
+    "Relay is free while paid plans are in development. Creator and Team are not available yet.",
   alternates: { canonical: "/pricing" },
   openGraph: { ...siteOpenGraph, url: "/pricing" },
 };

@@ -1,10 +1,11 @@
-import { APP_TRIAL_URL, APP_URL } from "./links";
+import { APP_URL } from "./links";
 
 /**
  * Plan data shared by the pricing cards and anywhere else plans are listed.
- * Only Free is available; Creator has an opt-in 7-day trial; Team is in
- * development. `tab` labels the card with a tab above it; `audience` fills
- * the "Who's the plan for?" block; `status` sits under the price.
+ * Only Free is available; Creator and Team are not available yet (no trial,
+ * no purchase). `tab` labels the card with a tab above it; `audience` fills
+ * the "Who's the plan for?" block; `status` sits under the price. A plan with
+ * no `cta` shows a disabled "Not available yet" button.
  */
 export const plans = [
   {
@@ -28,10 +29,10 @@ export const plans = [
   },
   {
     name: "Creator",
-    tab: "7-day free trial · No card req.",
-    price: "$0",
-    period: "for 7 days",
-    status: "Then back to Free",
+    tab: null,
+    price: "TBD",
+    period: "price not set",
+    status: "Not available yet",
     description: "Branding, templates, and reports on top of Free.",
     features: [
       "Everything in Free",
@@ -42,15 +43,15 @@ export const plans = [
     ],
     comingSoon: ["5 GB of file uploads", "Review uploaded files"],
     audience: "Editors who want their own branding and deeper reports.",
-    note: "Start the trial from Plans and billing in the app. File uploads don't work yet, and paid pricing is not set.",
-    cta: { label: "Start 7-day trial", href: APP_TRIAL_URL },
+    note: null,
+    cta: null,
   },
   {
     name: "Team",
     tab: null,
     price: "TBD",
     period: "price not set",
-    status: "In development",
+    status: "Not available yet",
     description: "One shared workspace for a small editing team.",
     features: [
       "Everything in Creator",

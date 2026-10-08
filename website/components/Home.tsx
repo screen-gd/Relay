@@ -74,9 +74,7 @@ export default function Home({ roadmap }: { roadmap: ReactNode }) {
                 <Link href="/pricing">See pricing</Link>
               </Button>
             </div>
-            <p className="hero-note">
-              Free plan. 7-day Creator trial, no card needed.
-            </p>
+            <p className="hero-note">Free plan. No card needed.</p>
           </div>
           <div className="product-reveal">
             <HeroVideo />

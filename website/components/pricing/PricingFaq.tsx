@@ -14,21 +14,16 @@ const faqs = [
     answer: "Yes. The Free plan has no time limit and no invite is required.",
   },
   {
-    question: "How does the Creator trial work?",
-    answer:
-      "Workspace owners can start a 7-day Creator trial from Plans and billing. No card is needed and you won't be charged. When it ends, your workspace returns to Free and keeps its projects.",
-  },
-  {
     question: "Can I upload files?",
     answer:
-      "Not yet. File uploads are still in development, including during the Creator trial. Link videos from YouTube, Vimeo, Drive, or Dropbox instead.",
+      "Not yet. File uploads are still in development. Link videos from YouTube, Vimeo, Drive, or Dropbox instead.",
   },
   {
-    question: "When can I buy Creator or Team?",
+    question: "When can I get Creator or Team?",
     answer: (
       <>
-        Paid plans are in development and prices are not set. Follow the{" "}
-        <Link href="/roadmap">roadmap</Link> for updates.
+        Creator and Team are not available yet, and prices are not set. Follow
+        the <Link href="/roadmap">roadmap</Link> for updates.
       </>
     ),
   },

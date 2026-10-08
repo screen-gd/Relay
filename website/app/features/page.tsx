@@ -39,9 +39,7 @@ export default function FeaturesPage() {
             <Link href="/pricing">See pricing</Link>
           </Button>
         </div>
-        <p className="hero-note">
-          Free plan. 7-day Creator trial, no card needed.
-        </p>
+        <p className="hero-note">Free plan. No card needed.</p>
       </PageHeader>
       <FeatureIndex />
       <WorkflowDemo />

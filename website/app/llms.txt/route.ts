@@ -20,9 +20,8 @@ This is the public marketing site. Product access and private workspaces are on 
 ## Plans
 
 - Free is available to everyone. No invite is required.
-- Creator offers an opt-in 7-day free trial with no card. Start it from Plans and billing in the app.
-- File uploads are not available yet, including during the Creator trial.
-- Team is planned.
+- Creator and Team are not available yet. There is no trial and no way to buy them.
+- File uploads are not available yet.
 - Paid prices are not set.
 
 ## App information
