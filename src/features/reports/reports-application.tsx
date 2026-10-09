@@ -12,6 +12,7 @@ import {
 } from "@/components/workspace-page";
 import { useData } from "@/lib/data-context";
 import { useProjectAccess } from "@/features/projects/project-access";
+import { EarningsQa } from "./earnings-qa";
 
 export function ReportsApplication() {
   const { settings, salaryBatches, updateSalaryBatchPayment, isAuthEnabled } =
@@ -23,7 +24,17 @@ export function ReportsApplication() {
     activeTeamMembers,
     workspaceSubscription,
     canManageFinance,
+    currentTeamId,
+    sample,
   } = useProjectAccess();
+  const role = teamData?.currentMember.role;
+  const earningsQa =
+    currentTeamId &&
+    !sample &&
+    canManageFinance &&
+    (role === "Owner" || role === "Editor") ? (
+      <EarningsQa workspaceId={currentTeamId} />
+    ) : null;
   const salaryPlans =
     !teamData || teamData.currentMember.role === "Owner" ? (
       <SalaryPlansPanel
@@ -47,6 +58,7 @@ export function ReportsApplication() {
         canManageFinance={canManageFinance}
         onUpdateBatchPayment={updateSalaryBatchPayment}
         salaryPlans={salaryPlans}
+        earningsQa={earningsQa}
       />
     );
   }
@@ -55,6 +67,7 @@ export function ReportsApplication() {
     <WorkspacePage family="data-index">
       <PageHeader title="Reports" description="Payments and batch payouts." />
       <PageContent>
+        {earningsQa}
         {salaryPlans}
         <ContentSection
           title="Advanced reports"
