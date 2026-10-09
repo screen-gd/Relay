@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowRight, ChevronLeft, ChevronRight } from "lucide-react";
+import { ArrowRightIcon, CaretLeftIcon, CaretRightIcon } from "@phosphor-icons/react/ssr";
 import { useState } from "react";
 import Reveal from "../site/Reveal";
 import AppWindow from "./AppWindow";
@@ -230,7 +230,7 @@ export default function ActivitySection() {
                     disabled={week === 0}
                     onClick={() => setWeek((value) => Math.max(0, value - 1))}
                   >
-                    <ChevronLeft size={14} aria-hidden="true" />
+                    <CaretLeftIcon size={14} aria-hidden="true" />
                   </button>
                   <span className={ui.mono} aria-live="polite">
                     {weeks[week].label}
@@ -244,7 +244,7 @@ export default function ActivitySection() {
                       setWeek((value) => Math.min(weeks.length - 1, value + 1))
                     }
                   >
-                    <ChevronRight size={14} aria-hidden="true" />
+                    <CaretRightIcon size={14} aria-hidden="true" />
                   </button>
                 </div>
               </div>
@@ -275,7 +275,7 @@ export default function ActivitySection() {
                   type="button"
                   onClick={() => setWeek(sampleWeek)}
                 >
-                  Back to this week <ArrowRight size={13} aria-hidden="true" />
+                  Back to this week <ArrowRightIcon size={13} aria-hidden="true" />
                 </button>
               )}
             </section>

@@ -17,7 +17,7 @@ Run `pnpm brand:build` after changing the approved SVG. Run `pnpm verify:brand-a
 | `favicon-{size}.png`            | 16, 32, or 64 px square          | Browser and shortcut icons                                | Transparent, acid lime mark        |
 | `app-icon-dark-{size}.png`      | 192, 256, 512, or 1024 px square | Dark PWA, Apple touch, install, and app-icon contexts     | Acid lime mark on true black       |
 | `app-icon-light-{size}.png`     | 192, 256, 512, or 1024 px square | Light install and app-icon contexts                       | Black mark on acid lime            |
-| `social-preview.svg` and `.png` | 1600 x 900                       | Open Graph and large social previews                      | White and acid lime on true black  |
+| `social-preview.svg` and `.png` | 1600 x 900                       | Main app Open Graph and large social previews (app only)  | White and acid lime on true black  |
 
 Keep clear space around the standalone mark and lockup equal to 10 percent of the mark's rendered width. The app icons include 14 percent inset space. Keep social-preview text and marks inside its existing 170-pixel safe area.
 

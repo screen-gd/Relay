@@ -1,19 +1,19 @@
 import {
-  Bell,
-  CalendarDays,
-  ChartNoAxesCombined,
-  CheckSquare2,
-  FileText,
-  FolderKanban,
-  Images,
-  LayoutDashboard,
-  MessageSquareText,
-  Plus,
-  Search,
-  Settings,
-  UsersRound,
-  Workflow,
-} from "lucide-react";
+  BellIcon,
+  CalendarDotsIcon,
+  ChartLineUpIcon,
+  ChatTextIcon,
+  CheckSquareIcon,
+  FileTextIcon,
+  FlowArrowIcon,
+  GearSixIcon,
+  ImagesIcon,
+  KanbanIcon,
+  MagnifyingGlassIcon,
+  PlusIcon,
+  SquaresFourIcon,
+  UsersIcon,
+} from "@phosphor-icons/react/ssr";
 import Image from "next/image";
 import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
@@ -22,21 +22,21 @@ import ui from "./app-ui.module.css";
 /** Sidebar pages, in the app's order (src/components/workspace-shell.tsx). */
 const rail = [
   [
-    { id: "dashboard", icon: LayoutDashboard },
-    { id: "calendar", icon: CalendarDays },
-    { id: "timeline", icon: Workflow },
+    { id: "dashboard", icon: SquaresFourIcon },
+    { id: "calendar", icon: CalendarDotsIcon },
+    { id: "timeline", icon: FlowArrowIcon },
   ],
   [
-    { id: "projects", icon: FolderKanban },
-    { id: "clients", icon: UsersRound },
-    { id: "reviews", icon: MessageSquareText },
-    { id: "files", icon: FileText },
-    { id: "media", icon: Images },
-    { id: "templates", icon: CheckSquare2 },
+    { id: "projects", icon: KanbanIcon },
+    { id: "clients", icon: UsersIcon },
+    { id: "reviews", icon: ChatTextIcon },
+    { id: "files", icon: FileTextIcon },
+    { id: "media", icon: ImagesIcon },
+    { id: "templates", icon: CheckSquareIcon },
   ],
   [
-    { id: "reports", icon: ChartNoAxesCombined },
-    { id: "settings", icon: Settings },
+    { id: "reports", icon: ChartLineUpIcon },
+    { id: "settings", icon: GearSixIcon },
   ],
 ] as const;
 
@@ -83,16 +83,16 @@ export default function AppWindow({
           <b>{current}</b>
         </span>
         <span className={ui.search}>
-          <Search size={13} />
+          <MagnifyingGlassIcon size={13} />
           Quick Search
           <kbd>Ctrl K</kbd>
         </span>
         <span className={ui.topActions}>
           <span className={`${ui.button} ${ui.primary}`}>
-            <Plus size={13} />
+            <PlusIcon size={13} />
             <span className={ui.quickLabel}>Quick create</span>
           </span>
-          <Bell size={15} />
+          <BellIcon size={15} />
           <span className={ui.avatar}>MC</span>
         </span>
       </div>

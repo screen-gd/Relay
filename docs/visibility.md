@@ -93,7 +93,7 @@ All timing starts after the live origin fix is verified. No ad budget is assumed
 
 Choose one distribution asset first. Proposed demo script: 0–5 seconds, open a fictional project and show its deadline; 5–10, open the linked video version; 10–15, show one timecoded review note; 15–20, show delivery and unpaid status, then “Get started free.” Keep fictional names labeled. Record only current Free functionality. This script is a draft, not a completed video.
 
-Reuse `website/public/brand/relay/social-preview.png` for the first image post. The existing logo pack is in the same folder. Do not use fictional demo activity as customer proof.
+Reuse `public/brand/relay/social-preview.png` for the first image post. The existing logo pack is in the same folder. Do not use fictional demo activity as customer proof.
 
 ### Social drafts
 

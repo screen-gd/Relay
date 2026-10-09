@@ -1,0 +1,202 @@
+{
+  "video": {
+    "codec": "h264",
+    "width": 1920,
+    "height": 1080,
+    "fps": 30,
+    "frames": 1646,
+    "duration": 54.866667
+  },
+  "audio": {
+    "codec": "aac",
+    "bpm": 104.999,
+    "phaseSeconds": 0.01186780086813144,
+    "rawOnsetEstimate": {
+      "bpm": 105.023,
+      "phaseSeconds": 0.5221950113378679
+    },
+    "sourceMatch": [
+      {
+        "seconds": 8,
+        "sourceOffsetSeconds": 4.7082993197278915,
+        "correlation": 0.9972751884856804
+      },
+      {
+        "seconds": 20,
+        "sourceOffsetSeconds": 4.7082993197278915,
+        "correlation": 0.9984102262131271
+      },
+      {
+        "seconds": 36,
+        "sourceOffsetSeconds": 4.7082993197278915,
+        "correlation": 0.9986063584579877
+      },
+      {
+        "seconds": 48,
+        "sourceOffsetSeconds": 4.7082993197278915,
+        "correlation": 0.998716584591057
+      }
+    ]
+  },
+  "maxCutErrorFrames": 0.7885238592778698,
+  "maxActionErrorFrames": 0.7965239354637532,
+  "cuts": [
+    {
+      "scene": "intro",
+      "frame": 0,
+      "errorFrames": -0.3560340260439432
+    },
+    {
+      "scene": "dashboard",
+      "frame": 206,
+      "errorFrames": -0.07227894266090829
+    },
+    {
+      "scene": "create",
+      "frame": 411,
+      "errorFrames": -0.7885238592778698
+    },
+    {
+      "scene": "board",
+      "frame": 754,
+      "errorFrames": -0.6489320536394771
+    },
+    {
+      "scene": "review",
+      "frame": 960,
+      "errorFrames": -0.36517697025644225
+    },
+    {
+      "scene": "money",
+      "frame": 1303,
+      "errorFrames": -0.22558516461799627
+    },
+    {
+      "scene": "outro",
+      "frame": 1509,
+      "errorFrames": 0.05816991876493205
+    }
+  ],
+  "actions": [
+    {
+      "scene": "dashboard",
+      "beat": 11,
+      "label": "Quick create",
+      "frame": 394,
+      "errorFrames": -0.64550344955979
+    },
+    {
+      "scene": "create",
+      "beat": 5,
+      "label": "Type project name",
+      "frame": 497,
+      "errorFrames": -0.5036259078682193
+    },
+    {
+      "scene": "create",
+      "beat": 9,
+      "label": "Open client dropdown",
+      "frame": 566,
+      "errorFrames": -0.07570754674059543
+    },
+    {
+      "scene": "create",
+      "beat": 11,
+      "label": "Choose Aperture Coffee",
+      "frame": 600,
+      "errorFrames": -0.3617483661767551
+    },
+    {
+      "scene": "create",
+      "beat": 13,
+      "label": "Open workflow dropdown",
+      "frame": 634,
+      "errorFrames": -0.6477891856129148
+    },
+    {
+      "scene": "create",
+      "beat": 15,
+      "label": "Choose workflow",
+      "frame": 669,
+      "errorFrames": 0.06616999495097531
+    },
+    {
+      "scene": "create",
+      "beat": 17,
+      "label": "Create Project",
+      "frame": 703,
+      "errorFrames": -0.21987082448518436
+    },
+    {
+      "scene": "board",
+      "beat": 6,
+      "label": "Grab Summer launch film",
+      "frame": 857,
+      "errorFrames": -0.5070545119479064
+    },
+    {
+      "scene": "board",
+      "beat": 8,
+      "label": "Drop in Client Review",
+      "frame": 891,
+      "errorFrames": -0.7930953313840661
+    },
+    {
+      "scene": "review",
+      "beat": 10,
+      "label": "Focus comment",
+      "frame": 1131,
+      "errorFrames": -0.7953810674371908
+    },
+    {
+      "scene": "review",
+      "beat": 14,
+      "label": "Add comment",
+      "frame": 1200,
+      "errorFrames": -0.367462706309567
+    },
+    {
+      "scene": "review",
+      "beat": 16,
+      "label": "Switch to editor",
+      "frame": 1234,
+      "errorFrames": -0.6535035257456201
+    },
+    {
+      "scene": "review",
+      "beat": 17,
+      "label": "Open review state",
+      "frame": 1251,
+      "errorFrames": -0.7965239354637532
+    },
+    {
+      "scene": "review",
+      "beat": 19,
+      "label": "Set Approved",
+      "frame": 1286,
+      "errorFrames": -0.08256475489986315
+    },
+    {
+      "scene": "money",
+      "beat": 6,
+      "label": "Open unpaid project",
+      "frame": 1406,
+      "errorFrames": -0.08370762292642553
+    },
+    {
+      "scene": "money",
+      "beat": 8,
+      "label": "Mark paid",
+      "frame": 1440,
+      "errorFrames": -0.3697484423626918
+    },
+    {
+      "scene": "outro",
+      "beat": 5,
+      "label": "Get started free",
+      "frame": 1594,
+      "errorFrames": -0.6569321298253072
+    }
+  ],
+  "method": "Encoded frame timestamps and authored transition starts compared with the source onset grid located by waveform correlation in four decoded MP4 audio windows; no measurable audio drift."
+}

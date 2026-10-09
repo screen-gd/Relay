@@ -8,6 +8,8 @@ import {
   brandTargets,
   faviconSizes,
   socialPreviewSource,
+  socialPreviewTarget,
+  socialPreviewViewBox,
 } from "./brand-asset-contract.mjs";
 
 const root = resolve(import.meta.dirname, "..");
@@ -40,7 +42,7 @@ const lockup = (color) =>
     "Relay"
   );
 const social = svg(
-  "0 0 1600 900",
+  socialPreviewViewBox,
   `<defs><radialGradient id="social-glow" cx="72%" cy="46%" r="66%"><stop offset="0" stop-color="${brandAccent}" stop-opacity=".98"/><stop offset=".34" stop-color="${brandAccent}" stop-opacity=".7"/><stop offset=".72" stop-color="#101400" stop-opacity=".4"/><stop offset="1" stop-color="#000" stop-opacity="0"/></radialGradient><filter id="social-blur"><feGaussianBlur stdDeviation="34"/></filter></defs><rect width="1600" height="900" fill="#000"/><rect width="1600" height="900" fill="url(#social-glow)"/><circle cx="1280" cy="420" r="390" fill="${brandAccent}" opacity=".3" filter="url(#social-blur)"/><circle cx="1280" cy="420" r="330" fill="${brandAccent}"/><g transform="translate(910 50) scale(8)" color="#000">${body}</g><style>@font-face{font-family:Geist;src:url(data:font/woff2;base64,${font})}.eyebrow{font-family:Geist,sans-serif;font-size:24px;font-weight:600;letter-spacing:5px}.name{font-family:Geist,sans-serif;font-size:126px;font-weight:600;letter-spacing:-5px}.line{font-family:Geist,sans-serif;font-size:42px;font-weight:400;letter-spacing:-1px}</style><text class="eyebrow" x="170" y="220" fill="${brandAccent}">RELAY</text><text class="name" x="170" y="520" fill="#fff">Relay</text><path d="M170 570H720" stroke="${brandAccent}"/><text class="line" x="170" y="660" fill="#fff">Video production workspace for editors.</text>`,
   "Relay. Video production workspace for editors."
 );
@@ -66,7 +68,6 @@ for (const target of targets) {
     "lockup-black.svg": lockup("#000"),
     "lockup-white.svg": lockup("#fff"),
     "lockup-accent.svg": lockup(brandAccent),
-    "social-preview.svg": social,
   };
   for (const [name, content] of Object.entries(files)) {
     await writeFile(resolve(target, name), content);
@@ -103,7 +104,10 @@ for (const target of targets) {
       resolve(target, `app-icon-light-${size}.png`)
     );
   }
-  await writeFile(resolve(target, "social-preview.png"), socialPreview);
+  if (target === resolve(root, socialPreviewTarget)) {
+    await writeFile(resolve(target, "social-preview.svg"), social);
+    await writeFile(resolve(target, "social-preview.png"), socialPreview);
+  }
 }
 
 await browser.close();

@@ -1,4 +1,4 @@
-import { Check } from "lucide-react";
+import { CheckIcon } from "@phosphor-icons/react/ssr";
 import {
   Table,
   TableBody,
@@ -45,7 +45,7 @@ function CellValue({ value }: { value: Cell }) {
   if (value === true) {
     return (
       <>
-        <Check size={18} aria-hidden="true" className={styles.check} />
+        <CheckIcon size={18} aria-hidden="true" className={styles.check} />
         <span className="sr-only">Included</span>
       </>
     );

@@ -1,10 +1,11 @@
 import type { Metadata, Viewport } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Bricolage_Grotesque, Figtree, Geist_Mono } from "next/font/google";
 import {
   siteUrl,
   siteTitle,
   siteDescription,
   siteOpenGraph,
+  siteSocialImage,
 } from "../lib/site-metadata";
 import BrandCta from "../components/site/BrandCta";
 import MotionProvider from "../components/site/MotionProvider";
@@ -13,9 +14,16 @@ import SiteFooter from "../components/site/SiteFooter";
 import SiteHeader from "../components/site/SiteHeader";
 import "./globals.css";
 
-const geist = Geist({
+// Figtree for body and UI text; Bricolage Grotesque for headings.
+const figtree = Figtree({
   subsets: ["latin"],
-  variable: "--font-geist",
+  variable: "--font-figtree",
+  display: "swap",
+});
+
+const bricolage = Bricolage_Grotesque({
+  subsets: ["latin"],
+  variable: "--font-bricolage",
   display: "swap",
 });
 
@@ -41,7 +49,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: siteTitle,
     description: siteDescription,
-    images: ["/brand/relay/social-preview.png"],
+    images: [siteSocialImage],
   },
   icons: {
     icon: [
@@ -68,13 +76,9 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
-  colorScheme: "light dark",
-  themeColor: "#ffffff",
+  colorScheme: "dark",
+  themeColor: "#121214",
 };
-
-// Applies the stored theme before hydration. Light is the default; system
-// preference is intentionally ignored so the choice is always explicit.
-const themeInit = `try{if(localStorage.getItem("relay-theme")==="dark"){document.documentElement.classList.add("dark")}}catch(e){}`;
 
 const structuredData = {
   "@context": "https://schema.org",
@@ -84,7 +88,7 @@ const structuredData = {
   description: siteDescription,
   applicationCategory: "BusinessApplication",
   operatingSystem: "Web",
-  image: new URL("/brand/relay/social-preview.png", siteUrl).href,
+  image: new URL(siteSocialImage.url, siteUrl).href,
 };
 
 export default function RootLayout({
@@ -93,9 +97,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html
+      lang="en"
+      className={`dark ${figtree.variable} ${bricolage.variable} ${geistMono.variable}`}
+    >
       <head>
-        <script dangerouslySetInnerHTML={{ __html: themeInit }} />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
@@ -103,7 +109,7 @@ export default function RootLayout({
           }}
         />
       </head>
-      <body className={`${geist.variable} ${geistMono.variable}`}>
+      <body>
         <a className="skip-link" href="#main-content">
           Skip to main content
         </a>

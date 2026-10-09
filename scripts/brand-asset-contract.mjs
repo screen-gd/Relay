@@ -14,5 +14,9 @@ export const vectorViewBoxes = {
   "lockup-black.svg": "0 0 320 100",
   "lockup-white.svg": "0 0 320 100",
   "lockup-accent.svg": "0 0 320 100",
-  "social-preview.svg": "0 0 1600 900",
 };
+// The social preview is the main app's link-preview image only. The marketing
+// site uses its own hero screenshot (website/public/social/hero.png).
+export const socialPreviewTarget = "public/brand/relay";
+export const socialPreviewViewBox = "0 0 1600 900";
+export const socialPreviewFiles = ["social-preview.svg", "social-preview.png"];
