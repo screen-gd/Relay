@@ -270,6 +270,69 @@ test("answers citing numbers or sources the tools did not return fail safely", a
   ).toThrow("without citations");
 });
 
+test("every earnings tool keeps its stored scope when model input supplies identity fields", async () => {
+  const { t, workspaceId, as, ask } = await fixture();
+  const otherWorkspaceId = await t.run((ctx) =>
+    ctx.db.insert("teamWorkspaces", {
+      ownerUserId: "outsider",
+      name: "Other studio",
+      inviteCode: "OTHER",
+      createdAt: NOW,
+    })
+  );
+  const { runId } = await ask("finance");
+  const calledTools: string[] = [];
+  vi.mocked(generateText).mockImplementation(async (options) => {
+    const toolOutputs: unknown[] = [];
+    const inputs = {
+      totals: {},
+      byClient: {},
+      byPeriod: { granularity: "month" },
+      byProject: {},
+      bySalaryBatch: {},
+    };
+    for (const [name, input] of Object.entries(inputs)) {
+      const tool = options.tools?.[name];
+      if (!tool || !("execute" in tool) || !tool.execute)
+        throw new Error("Missing tool");
+      // Bypass SDK parsing to model a future schema that permits these fields.
+      const output: unknown = await tool.execute(
+        {
+          start: "2026-08-01",
+          end: "2026-08-31",
+          ...input,
+          workspaceId: otherWorkspaceId,
+          requestedBy: "owner",
+        },
+        { toolCallId: name, messages: [], context: {} }
+      );
+      expect(output).toMatchObject({ includesSoloWork: false });
+      toolOutputs.push(output);
+      calledTools.push(name);
+    }
+    return {
+      output: { text: "Your workspace records were checked.", citations: [] },
+      steps: [{ toolResults: toolOutputs.map((output) => ({ output })) }],
+      totalUsage: { inputTokens: 1, outputTokens: 1 },
+      response: { modelId: "test-model" },
+    } as Awaited<ReturnType<typeof generateText>>;
+  });
+  await t.action(internal.earningsQaActions.run, {
+    runId,
+    inputJson: await scheduledInput(t, runId),
+  });
+  expect(calledTools).toEqual([
+    "totals",
+    "byClient",
+    "byPeriod",
+    "byProject",
+    "bySalaryBatch",
+  ]);
+  expect(
+    await as("finance").query(api.earningsQa.recent, { workspaceId })
+  ).toMatchObject([{ status: "succeeded" }]);
+});
+
 test("tools recheck Finance access when the run executes", async () => {
   const { t, workspaceId, ask } = await fixture();
   const { runId } = await ask("finance");

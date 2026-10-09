@@ -18,6 +18,15 @@ import {
 } from "./revisionItemsPrompt";
 import schema from "./schema";
 
+function revisionTimestamp(seconds: number | undefined) {
+  return seconds !== undefined &&
+    Number.isSafeInteger(seconds) &&
+    seconds >= 0 &&
+    seconds <= 604_800
+    ? seconds
+    : null;
+}
+
 async function versionAccess(
   ctx: QueryCtx | MutationCtx,
   mediaVersionId: string,
@@ -89,7 +98,7 @@ export const generate = mutation({
       ),
       comments: comments.map((comment) => ({
         text: comment.body.slice(0, 1000),
-        timestamp: comment.timestampSeconds ?? null,
+        timestamp: revisionTimestamp(comment.timestampSeconds),
       })),
     });
     return enqueueAiRun(
@@ -181,11 +190,10 @@ export const save = internalMutation({
         sourceCommentIds: sourceComments.map((comment) => comment._id),
         timestamps: [
           ...new Set(
-            sourceComments.flatMap((comment) =>
-              comment.timestampSeconds === undefined
-                ? []
-                : [comment.timestampSeconds]
-            )
+            sourceComments.flatMap((comment) => {
+              const timestamp = revisionTimestamp(comment.timestampSeconds);
+              return timestamp === null ? [] : [timestamp];
+            })
           ),
         ].sort((a, b) => a - b),
         theme: item.theme,

@@ -274,6 +274,63 @@ test("save validates sources, atomically completes once, and preserves editor de
   ).toEqual([]);
 });
 
+test.each([
+  [0, 0],
+  [604800, 604800],
+  [undefined, null],
+  [1.5, null],
+  [-1, null],
+  [604801, null],
+  [NaN, null],
+  [Infinity, null],
+  [-Infinity, null],
+])(
+  "stored timestamp %s is safe in AI input and saved revisions",
+  async (timestampSeconds, expected) => {
+    const f = await fixture();
+    await f.enable();
+    await f.t.run((ctx) => ctx.db.patch(f.commentId, { timestampSeconds }));
+    const { runId } = await f.generate();
+    const scheduled = await f.t.run(async (ctx) =>
+      (await ctx.db.system.query("_scheduled_functions").take(10)).find((row) =>
+        row.name.includes("revisionItemsActions")
+      )
+    );
+    const argument = scheduled?.args[0];
+    if (
+      !argument ||
+      typeof argument !== "object" ||
+      !("inputJson" in argument) ||
+      typeof argument.inputJson !== "string"
+    )
+      throw new Error("Missing input");
+    const input = revisionInputSchema.parse(JSON.parse(argument.inputJson));
+    expect(input.comments).toEqual([
+      { text: "Make it pop", timestamp: expected },
+    ]);
+    vi.mocked(generateObject).mockResolvedValue({
+      object: { items },
+      response: { modelId: "test-model" },
+      usage: { inputTokens: 1, outputTokens: 1 },
+    } as Awaited<ReturnType<typeof generateObject>>);
+    await f.t.action(internal.revisionItemsActions.run, {
+      runId,
+      inputJson: argument.inputJson,
+    });
+    expect(
+      await f.owner.query(api.revisionItems.list, { mediaVersionId: "v" })
+    ).toMatchObject([
+      {
+        timestamps: expected === null ? [] : [expected],
+        sourceCommentIds: [f.commentId],
+      },
+    ]);
+    expect(await f.t.run((ctx) => ctx.db.get(f.commentId))).toMatchObject({
+      body: "Make it pop",
+    });
+  }
+);
+
 test("shared runner claims once, records actual usage, and hides provider failures", async () => {
   const f = await fixture();
   await f.enable();

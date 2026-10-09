@@ -38,8 +38,8 @@ export const run = internalAction({
           inputSchema: earningsToolInputs.totals,
           execute: (args) =>
             ctx.runQuery(internal.earnings.totalsForRequester, {
-              ...scope,
               ...args,
+              ...scope,
             }),
         }),
         byClient: tool({
@@ -48,8 +48,8 @@ export const run = internalAction({
           inputSchema: earningsToolInputs.byClient,
           execute: (args) =>
             ctx.runQuery(internal.earnings.byClientForRequester, {
-              ...scope,
               ...args,
+              ...scope,
             }),
         }),
         byPeriod: tool({
@@ -58,8 +58,8 @@ export const run = internalAction({
           inputSchema: earningsToolInputs.byPeriod,
           execute: (args) =>
             ctx.runQuery(internal.earnings.byPeriodForRequester, {
-              ...scope,
               ...args,
+              ...scope,
             }),
         }),
         byProject: tool({
@@ -68,8 +68,8 @@ export const run = internalAction({
           inputSchema: earningsToolInputs.byProject,
           execute: (args) =>
             ctx.runQuery(internal.earnings.byProjectForRequester, {
-              ...scope,
               ...args,
+              ...scope,
             }),
         }),
         bySalaryBatch: tool({
@@ -78,8 +78,8 @@ export const run = internalAction({
           inputSchema: earningsToolInputs.bySalaryBatch,
           execute: (args) =>
             ctx.runQuery(internal.earnings.bySalaryBatchForRequester, {
-              ...scope,
               ...args,
+              ...scope,
             }),
         }),
       };
