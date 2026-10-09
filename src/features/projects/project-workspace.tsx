@@ -45,6 +45,7 @@ import type {
   WorkspaceMemberOption,
 } from "./project-view";
 import { ProjectSelect } from "@/features/projects/project-select";
+import { RevisionScopePanel } from "@/features/revision-scope/revision-scope-panel";
 
 const statusOptions: ProjectStatus[] = [...PROJECT_STATUS_VALUES];
 
@@ -296,6 +297,7 @@ export function ProjectWorkspace({
                         />
                       }
                     />
+                    <RevisionScopePanel projectId={project.id} />
                   </div>
                 }
                 secondary={
@@ -396,6 +398,7 @@ export function ProjectWorkspace({
                     <ProjectPortalPanel
                       project={project}
                       canEdit={canEdit && canManagePortal}
+                      canDraftUpdates={canEdit}
                       clientHubEnabled={clientHubEnabled}
                       customPortalBrandingEnabled={customPortalBrandingEnabled}
                       settings={settings}
