@@ -7,6 +7,7 @@ import { useProjectAccess } from "@/features/projects/project-access";
 import { useProjectActions } from "@/features/projects/project-actions-provider";
 import { useProjectActivity } from "@/features/projects/project-activity";
 import { projectWorkTypeOptions } from "@/features/routes/utils/work-type-utils";
+import { DeadlineRiskRadar } from "./deadline-risk-radar";
 import { useDashboardApplicationState } from "./use-dashboard-application-state";
 import { useData } from "@/lib/data-context";
 
@@ -32,6 +33,15 @@ export function DashboardApplication() {
     subscribeToProjectActivity,
   });
 
+  const member = access.teamData?.currentMember;
+  const riskRadar =
+    access.currentTeamId &&
+    !access.sample &&
+    (member?.role === "Owner" || member?.role === "Editor") &&
+    member.permissions.viewProjects ? (
+      <DeadlineRiskRadar workspaceId={access.currentTeamId} />
+    ) : null;
+
   if (access.personalProjects.length === 0 && !access.sample) {
     return (
       <FirstRunChecklist
@@ -52,6 +62,7 @@ export function DashboardApplication() {
       teamActivity={access.teamData?.activity ?? []}
       teamName={access.teamData?.workspace?.name}
       teamLoading={access.teamDataLoading}
+      riskRadar={riskRadar}
       query={dashboardState.query}
       setQuery={dashboardState.setQuery}
       statusFilter={dashboardState.statusFilter}
