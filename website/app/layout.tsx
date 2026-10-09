@@ -5,6 +5,7 @@ import {
   siteTitle,
   siteDescription,
   siteOpenGraph,
+  siteSocialImage,
 } from "../lib/site-metadata";
 import BrandCta from "../components/site/BrandCta";
 import MotionProvider from "../components/site/MotionProvider";
@@ -41,7 +42,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: siteTitle,
     description: siteDescription,
-    images: ["/brand/relay/social-preview.png"],
+    images: [siteSocialImage],
   },
   icons: {
     icon: [
@@ -84,7 +85,7 @@ const structuredData = {
   description: siteDescription,
   applicationCategory: "BusinessApplication",
   operatingSystem: "Web",
-  image: new URL("/brand/relay/social-preview.png", siteUrl).href,
+  image: new URL(siteSocialImage.url, siteUrl).href,
 };
 
 export default function RootLayout({

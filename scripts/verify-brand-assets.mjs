@@ -6,7 +6,10 @@ import {
   brandSource,
   brandTargets,
   faviconSizes,
+  socialPreviewFiles,
   socialPreviewSource,
+  socialPreviewTarget,
+  socialPreviewViewBox,
   vectorViewBoxes,
 } from "./brand-asset-contract.mjs";
 
@@ -67,18 +70,35 @@ for (const target of targets) {
         throw new Error(`${prefix}-${size}.png has invalid dimensions.`);
     }
   }
-  const socialDimensions = pngDimensions(
-    await readFile(resolve(target, "social-preview.png"))
-  );
-  const suppliedDimensions = pngDimensions(socialPreviewSourceBuffer);
-  if (
-    socialDimensions[0] !== suppliedDimensions[0] ||
-    socialDimensions[1] !== suppliedDimensions[1]
-  )
-    throw new Error("Social preview does not match the supplied source image.");
 }
 
-const appFiles = (await readdir(targets[0])).sort();
+// The social preview ships with the main app only.
+const socialTarget = resolve(root, socialPreviewTarget);
+const socialSvg = await readFile(
+  resolve(socialTarget, "social-preview.svg"),
+  "utf8"
+);
+if (!socialSvg.includes(sourceBody))
+  throw new Error(
+    "social-preview.svg does not contain the approved mark geometry."
+  );
+if (!socialSvg.includes(`viewBox="${socialPreviewViewBox}"`))
+  throw new Error(
+    `social-preview.svg does not use the expected ${socialPreviewViewBox} view box.`
+  );
+const socialDimensions = pngDimensions(
+  await readFile(resolve(socialTarget, "social-preview.png"))
+);
+const suppliedDimensions = pngDimensions(socialPreviewSourceBuffer);
+if (
+  socialDimensions[0] !== suppliedDimensions[0] ||
+  socialDimensions[1] !== suppliedDimensions[1]
+)
+  throw new Error("Social preview does not match the supplied source image.");
+
+const appFiles = (await readdir(targets[0]))
+  .filter((name) => !socialPreviewFiles.includes(name))
+  .sort();
 const marketingFiles = (await readdir(targets[1])).sort();
 if (appFiles.join("\n") !== marketingFiles.join("\n"))
   throw new Error("App and marketing brand asset file lists differ.");
