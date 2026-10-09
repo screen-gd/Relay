@@ -256,7 +256,7 @@ export default function ClientReviewDemo({ variant }: { variant?: "chapter" }) {
               <video
                 aria-label="Sample client review video"
                 ref={videoRef}
-                src="/videos/client-review-city.mp4"
+                src="/api/client-review-video"
                 preload="metadata"
                 playsInline
                 muted={muted}

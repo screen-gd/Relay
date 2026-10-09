@@ -11,7 +11,8 @@
     "upload": "opennextjs-cloudflare build && opennextjs-cloudflare upload",
     "start": "next start",
     "lint": "tsc --noEmit",
-    "test:visibility": "node --test ../scripts/check-marketing-origin.test.mjs"
+    "test:visibility": "node --test ../scripts/check-marketing-origin.test.mjs",
+    "test:video": "node --test ../scripts/check-client-review-video.test.mjs"
   },
   "dependencies": {
     "@gsap/react": "^2.1.2",
