@@ -23,6 +23,11 @@ import {
   parseReviewTimestamp,
 } from "@/features/media-version-comments/review-timestamps";
 import type { ReviewPlayer } from "@/components/review-video-player";
+import { RevisionList } from "@/features/media-version-comments/revision-list";
+import {
+  TranscriptLine,
+  TranscriptReview,
+} from "@/features/media-version-comments/transcript-review";
 
 function commentDate(value: string) {
   const date = new Date(value);
@@ -47,7 +52,10 @@ function CommentRow({
   onSeek?: (seconds: number) => void;
 }) {
   return (
-    <article className="rounded-lg bg-[var(--surface-inset)] p-3">
+    <article
+      id={`comment-${comment.id}`}
+      className="rounded-lg bg-[var(--surface-inset)] p-3"
+    >
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="flex items-center gap-2 text-sm font-medium">
           <MessageCircle
@@ -88,6 +96,7 @@ function CommentRow({
       <p className="mt-2 whitespace-pre-wrap text-sm leading-6">
         {comment.body}
       </p>
+      <TranscriptLine commentIds={[comment.id]} />
       {action ? (
         <Button
           type="button"
@@ -343,12 +352,16 @@ export function MediaVersionComments({
   onResolve,
   loading = false,
   readOnly = false,
+  revisionsEnabled = false,
+  canEditRevisions = false,
 }: {
   versions: readonly MediaVersionSummary[];
   comments: readonly MediaVersionComment[];
   onResolve?: (commentId: string, resolved: boolean) => Promise<void>;
   loading?: boolean;
   readOnly?: boolean;
+  revisionsEnabled?: boolean;
+  canEditRevisions?: boolean;
 }) {
   const [busyCommentId, setBusyCommentId] = useState("");
   const [error, setError] = useState("");
@@ -423,24 +436,36 @@ export function MediaVersionComments({
                 </span>
               </CollapsibleTrigger>
               <CollapsibleContent className="grid gap-2 pt-2">
-                {versionComments.length ? (
-                  versionComments.map((comment) => (
-                    <CommentRow
-                      key={comment.id}
-                      comment={comment}
-                      busy={busyCommentId === comment.id}
-                      action={
-                        !readOnly && onResolve
-                          ? () => update(comment)
-                          : undefined
-                      }
+                <TranscriptReview
+                  mediaVersionId={version.id}
+                  canEdit={canEditRevisions}
+                  enabled={revisionsEnabled}
+                >
+                  {revisionsEnabled ? (
+                    <RevisionList
+                      mediaVersionId={version.id}
+                      canEdit={canEditRevisions}
                     />
-                  ))
-                ) : (
-                  <p className="text-sm text-muted-foreground">
-                    No comments on this version.
-                  </p>
-                )}
+                  ) : null}
+                  {versionComments.length ? (
+                    versionComments.map((comment) => (
+                      <CommentRow
+                        key={comment.id}
+                        comment={comment}
+                        busy={busyCommentId === comment.id}
+                        action={
+                          !readOnly && onResolve
+                            ? () => update(comment)
+                            : undefined
+                        }
+                      />
+                    ))
+                  ) : (
+                    <p className="text-sm text-muted-foreground">
+                      No comments on this version.
+                    </p>
+                  )}
+                </TranscriptReview>
               </CollapsibleContent>
             </Collapsible>
           );
