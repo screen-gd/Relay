@@ -53,7 +53,7 @@ function r2Config() {
   return { endpoint, region, accessKeyId, secretAccessKey, bucket };
 }
 
-function client() {
+export function client() {
   const config = r2Config();
   return {
     config,
