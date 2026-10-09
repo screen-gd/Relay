@@ -3,6 +3,14 @@ import { v } from "convex/values";
 import { clientValidator } from "./workspaceClients";
 import { aiRunValidator } from "./aiValidators";
 import {
+  transcript,
+  transcriptSegment,
+  transcriptMatch,
+} from "./transcriptsValidators";
+import { statusDraft } from "./statusDraftsValidators";
+import { versionChangelog } from "./versionChangelogValidators";
+import { revisionItem } from "./revisionItemsValidators";
+import {
   clientPortalStageValidator,
   fileCategoryValidator,
   fileProviderValidator,
@@ -27,8 +35,46 @@ import {
   waitlistAudienceValidator,
   workflowStageValidator,
 } from "./domainValidators";
+import { deadlineRiskFindingValidator } from "./deadlineRiskRules";
+import { riskDigest } from "./riskDigestValidators";
+import { earningsQuestion } from "./earningsQaValidators";
+import { revisionScopeTables } from "./revisionScopeTables";
 
 export default defineSchema({
+  transcripts: defineTable(transcript).index("by_mediaVersionId", [
+    "mediaVersionId",
+  ]),
+  transcriptSegments: defineTable(transcriptSegment).index("by_transcriptId", [
+    "transcriptId",
+  ]),
+  transcriptMatches: defineTable(transcriptMatch)
+    .index("by_transcriptId", ["transcriptId"])
+    .index("by_transcriptId_and_commentId", ["transcriptId", "commentId"]),
+  briefUploads: defineTable({
+    workspaceId: v.id("teamWorkspaces"),
+    uploader: v.string(),
+    multipartId: v.optional(v.string()),
+    expiresAt: v.number(),
+    runId: v.optional(v.id("aiRuns")),
+    sha256: v.optional(v.string()),
+  }),
+  briefImports: defineTable({
+    runId: v.id("aiRuns"),
+    projectId: v.string(),
+  }).index("by_runId", ["runId"]),
+  statusDrafts: defineTable(statusDraft)
+    .index("by_projectId_and_requestedBy", ["projectId", "requestedBy"])
+    .index("by_runId", ["runId"]),
+  versionChangelogs: defineTable(versionChangelog)
+    .index("by_runId", ["runId"])
+    .index("by_mediaVersionId", ["mediaVersionId"])
+    .index("by_mediaVersionId_and_approvedAt", [
+      "mediaVersionId",
+      "approvedAt",
+    ]),
+  revisionItems: defineTable(revisionItem).index("by_mediaVersionId", [
+    "mediaVersionId",
+  ]),
   creatorTrials: defineTable({
     workspaceId: v.id("teamWorkspaces"),
     userId: v.string(),
@@ -42,6 +88,27 @@ export default defineSchema({
     "by_workspaceId_and_requestedBy_and_requestHash",
     ["workspaceId", "requestedBy", "requestHash"]
   ),
+  // Latest rule-based deadline-risk findings per Workspace, replaced by each scan.
+  deadlineRiskFindings: defineTable(
+    deadlineRiskFindingValidator.extend({ workspaceId: v.id("teamWorkspaces") })
+  ).index("by_workspaceId", ["workspaceId"]),
+  deadlineRiskScans: defineTable({
+    workspaceId: v.id("teamWorkspaces"),
+    /** Workspace-local day the findings were evaluated for (YYYY-MM-DD). */
+    evaluatedOn: v.string(),
+    /** When the stored findings last changed. */
+    updatedAt: v.number(),
+    findingCount: v.number(),
+    /** True when project, output or finding limits cut the scan short. */
+    truncated: v.boolean(),
+  }).index("by_workspaceId", ["workspaceId"]),
+  riskDigests: defineTable(riskDigest)
+    .index("by_workspaceId_and_requestedBy", ["workspaceId", "requestedBy"])
+    .index("by_runId", ["runId"]),
+  earningsQuestions: defineTable(earningsQuestion)
+    .index("by_workspaceId_and_requestedBy", ["workspaceId", "requestedBy"])
+    .index("by_runId", ["runId"]),
+  ...revisionScopeTables,
   clients: defineTable(
     clientValidator.extend({ ownerUserId: v.string() })
   ).index("by_ownerUserId_and_id", ["ownerUserId", "id"]),
@@ -183,6 +250,7 @@ export default defineSchema({
     resolvedAt: v.optional(v.string()),
   })
     .index("by_mediaVersionId", ["mediaVersionId"])
+    .index("by_mediaVersionId_and_resolved", ["mediaVersionId", "resolved"])
     .index("by_outputId_and_resolved", ["outputId", "resolved"]),
 
   projectGroups: defineTable({

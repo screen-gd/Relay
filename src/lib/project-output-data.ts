@@ -377,6 +377,7 @@ export function useProjectOutputs(project: WorkItem, editable: boolean) {
 
   const outputs = snapshot.outputs.filter((output) => !output.archived);
   return {
+    cloud,
     outputs,
     versions: snapshot.versions,
     loading: cloud && cloudWires === undefined,

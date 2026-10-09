@@ -1,10 +1,11 @@
 import { calculateRateLimit, RateLimiter } from "@convex-dev/rate-limiter";
 import type { FunctionReference } from "convex/server";
-import { v } from "convex/values";
+import { v, type Infer } from "convex/values";
 import { components, internal } from "./_generated/api";
 import type { Doc, Id } from "./_generated/dataModel";
 import {
   internalMutation,
+  internalQuery,
   mutation,
   query,
   type MutationCtx,
@@ -62,7 +63,7 @@ async function authenticatedMember(
   };
 }
 
-async function requireAiEditor(
+export async function requireAiEditor(
   ctx: QueryCtx | MutationCtx,
   workspaceId: Id<"teamWorkspaces">,
   userId: string,
@@ -177,6 +178,8 @@ type AiRunRequest = {
   modelTier: Doc<"aiRuns">["modelTier"];
   inputJson: string;
   sourceIds: string[];
+  // Stable content identity when input holds a temporary storage reference.
+  dedupeInputJson?: string;
 };
 
 export async function enqueueAiRun(
@@ -204,7 +207,10 @@ export async function enqueueAiRun(
     request.promptVersion.length > 80 ||
     request.sourceIds.length > 100 ||
     request.sourceIds.some((source) => !source || source.length > 200) ||
-    new TextEncoder().encode(request.inputJson).byteLength > MAX_JSON_BYTES
+    new TextEncoder().encode(request.inputJson).byteLength > MAX_JSON_BYTES ||
+    (request.dedupeInputJson !== undefined &&
+      new TextEncoder().encode(request.dedupeInputJson).byteLength >
+        MAX_JSON_BYTES)
   ) {
     throw new Error("Invalid AI request");
   }
@@ -215,7 +221,7 @@ export async function enqueueAiRun(
     request.modelTier,
     request.projectId ?? null,
     request.sourceIds,
-    request.inputJson,
+    request.dedupeInputJson ?? request.inputJson,
   ]);
   const digest = await crypto.subtle.digest(
     "SHA-256",
@@ -297,33 +303,38 @@ export const claim = internalMutation({
   },
 });
 
+export async function completeAiRun(
+  ctx: MutationCtx,
+  { runId, ...result }: Infer<typeof aiCompletionValidator>
+) {
+  const run = await ctx.db.get(runId);
+  if (!run || run.status !== "running") return false;
+  if (
+    !Number.isSafeInteger(result.inputTokens) ||
+    result.inputTokens < 0 ||
+    !Number.isSafeInteger(result.outputTokens) ||
+    result.outputTokens < 0 ||
+    (result.costUsd !== undefined &&
+      (!Number.isFinite(result.costUsd) || result.costUsd < 0)) ||
+    !result.modelId.trim() ||
+    result.modelId.length > 120 ||
+    new TextEncoder().encode(result.outputJson).byteLength > MAX_JSON_BYTES
+  ) {
+    throw new Error("Invalid AI result metadata");
+  }
+  JSON.parse(result.outputJson);
+  await ctx.db.patch(runId, {
+    ...result,
+    status: "succeeded",
+    completedAt: Date.now(),
+  });
+  return true;
+}
+
 export const complete = internalMutation({
   args: aiCompletionValidator.fields,
   returns: v.boolean(),
-  handler: async (ctx, { runId, ...result }) => {
-    const run = await ctx.db.get(runId);
-    if (!run || run.status !== "running") return false;
-    if (
-      !Number.isSafeInteger(result.inputTokens) ||
-      result.inputTokens < 0 ||
-      !Number.isSafeInteger(result.outputTokens) ||
-      result.outputTokens < 0 ||
-      (result.costUsd !== undefined &&
-        (!Number.isFinite(result.costUsd) || result.costUsd < 0)) ||
-      !result.modelId.trim() ||
-      result.modelId.length > 120 ||
-      new TextEncoder().encode(result.outputJson).byteLength > MAX_JSON_BYTES
-    ) {
-      throw new Error("Invalid AI result metadata");
-    }
-    JSON.parse(result.outputJson);
-    await ctx.db.patch(runId, {
-      ...result,
-      status: "succeeded",
-      completedAt: Date.now(),
-    });
-    return true;
-  },
+  handler: completeAiRun,
 });
 
 export const fail = internalMutation({
@@ -380,4 +391,10 @@ export const getRun = query({
     );
     return run;
   },
+});
+
+export const getExecution = internalQuery({
+  args: { runId: v.id("aiRuns") },
+  returns: v.union(v.null(), schema.doc("aiRuns")),
+  handler: async (ctx, { runId }) => ctx.db.get(runId),
 });
