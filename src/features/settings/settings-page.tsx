@@ -48,6 +48,7 @@ import { ProjectSelect } from "@/features/projects/project-select";
 import { cn } from "@/lib/utils";
 import { useSettingsController } from "./settings-controller";
 import { WorkspaceAiSettings } from "./workspace-ai-settings";
+import { RevisionScopeSettings } from "@/features/revision-scope/revision-scope-settings";
 import {
   currencyLabels,
   createDefaultSettings,
@@ -615,6 +616,11 @@ export function SettingsDesignPage({
                     </SettingsPanel>
                     <WorkspaceAiSettings
                       workspaceId={teamWorkspace?._id}
+                      notify={notify}
+                    />
+                    <RevisionScopeSettings
+                      workspaceId={teamWorkspace?._id}
+                      templates={workflowTemplateOptions}
                       notify={notify}
                     />
                     <SettingsPanel
