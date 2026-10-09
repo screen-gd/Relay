@@ -1,3 +1,4 @@
+import { approvedVersionChangelog } from "./versionChangelog";
 import { requireProjectVisibility } from "./projectAccess";
 import { v } from "convex/values";
 import type { Doc } from "./_generated/dataModel";
@@ -316,6 +317,7 @@ async function publicOutputs(
             versionNumber: current.versionNumber,
             title: current.title,
             source: current.source,
+            changelog: await approvedVersionChangelog(ctx, current._id),
           }
         : null,
     });
