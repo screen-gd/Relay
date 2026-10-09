@@ -1,0 +1,220 @@
+{
+  "file": "public/audio/close-up.mp3",
+  "duration": 95.1059410430839,
+  "bpm": 104.999,
+  "beatSeconds": 0.5714340136572693,
+  "beatPhaseSeconds": 0.14869501133786855,
+  "downbeatClass": 0,
+  "downbeatSeconds": 0.14869501133786855,
+  "accents": [
+    3.1710904785429306, 2.2567841694648836, 1.9479596298902961,
+    2.429237394310241
+  ],
+  "bars": [
+    {
+      "bar": 0,
+      "seconds": 0.148695,
+      "rmsDbfs": -18.93
+    },
+    {
+      "bar": 1,
+      "seconds": 2.434431,
+      "rmsDbfs": -19.105
+    },
+    {
+      "bar": 2,
+      "seconds": 4.720167,
+      "rmsDbfs": -19.086
+    },
+    {
+      "bar": 3,
+      "seconds": 7.005903,
+      "rmsDbfs": -19.049
+    },
+    {
+      "bar": 4,
+      "seconds": 9.291639,
+      "rmsDbfs": -19.098
+    },
+    {
+      "bar": 5,
+      "seconds": 11.577375,
+      "rmsDbfs": -19.126
+    },
+    {
+      "bar": 6,
+      "seconds": 13.863111,
+      "rmsDbfs": -19.449
+    },
+    {
+      "bar": 7,
+      "seconds": 16.148847,
+      "rmsDbfs": -16.823
+    },
+    {
+      "bar": 8,
+      "seconds": 18.434583,
+      "rmsDbfs": -18.03
+    },
+    {
+      "bar": 9,
+      "seconds": 20.72032,
+      "rmsDbfs": -17.65
+    },
+    {
+      "bar": 10,
+      "seconds": 23.006056,
+      "rmsDbfs": -16.904
+    },
+    {
+      "bar": 11,
+      "seconds": 25.291792,
+      "rmsDbfs": -16.561
+    },
+    {
+      "bar": 12,
+      "seconds": 27.577528,
+      "rmsDbfs": -17.969
+    },
+    {
+      "bar": 13,
+      "seconds": 29.863264,
+      "rmsDbfs": -17.649
+    },
+    {
+      "bar": 14,
+      "seconds": 32.149,
+      "rmsDbfs": -17.262
+    },
+    {
+      "bar": 15,
+      "seconds": 34.434736,
+      "rmsDbfs": -15.613
+    },
+    {
+      "bar": 16,
+      "seconds": 36.720472,
+      "rmsDbfs": -19.109
+    },
+    {
+      "bar": 17,
+      "seconds": 39.006208,
+      "rmsDbfs": -19.285
+    },
+    {
+      "bar": 18,
+      "seconds": 41.291944,
+      "rmsDbfs": -18.488
+    },
+    {
+      "bar": 19,
+      "seconds": 43.57768,
+      "rmsDbfs": -19.408
+    },
+    {
+      "bar": 20,
+      "seconds": 45.863416,
+      "rmsDbfs": -19.417
+    },
+    {
+      "bar": 21,
+      "seconds": 48.149152,
+      "rmsDbfs": -19.036
+    },
+    {
+      "bar": 22,
+      "seconds": 50.434888,
+      "rmsDbfs": -17.637
+    },
+    {
+      "bar": 23,
+      "seconds": 52.720624,
+      "rmsDbfs": -15.75
+    },
+    {
+      "bar": 24,
+      "seconds": 55.00636,
+      "rmsDbfs": -20.415
+    },
+    {
+      "bar": 25,
+      "seconds": 57.292096,
+      "rmsDbfs": -20.471
+    },
+    {
+      "bar": 26,
+      "seconds": 59.577832,
+      "rmsDbfs": -20.521
+    },
+    {
+      "bar": 27,
+      "seconds": 61.863568,
+      "rmsDbfs": -20.395
+    },
+    {
+      "bar": 28,
+      "seconds": 64.149305,
+      "rmsDbfs": -19.438
+    },
+    {
+      "bar": 29,
+      "seconds": 66.435041,
+      "rmsDbfs": -19.686
+    },
+    {
+      "bar": 30,
+      "seconds": 68.720777,
+      "rmsDbfs": -18.631
+    },
+    {
+      "bar": 31,
+      "seconds": 71.006513,
+      "rmsDbfs": -17.949
+    },
+    {
+      "bar": 32,
+      "seconds": 73.292249,
+      "rmsDbfs": -17.53
+    },
+    {
+      "bar": 33,
+      "seconds": 75.577985,
+      "rmsDbfs": -17.384
+    },
+    {
+      "bar": 34,
+      "seconds": 77.863721,
+      "rmsDbfs": -16.721
+    },
+    {
+      "bar": 35,
+      "seconds": 80.149457,
+      "rmsDbfs": -16.256
+    },
+    {
+      "bar": 36,
+      "seconds": 82.435193,
+      "rmsDbfs": -17.635
+    },
+    {
+      "bar": 37,
+      "seconds": 84.720929,
+      "rmsDbfs": -17.325
+    },
+    {
+      "bar": 38,
+      "seconds": 87.006665,
+      "rmsDbfs": -17.008
+    },
+    {
+      "bar": 39,
+      "seconds": 89.292401,
+      "rmsDbfs": -15.685
+    },
+    {
+      "bar": 40,
+      "seconds": 91.578137,
+      "rmsDbfs": -42.724
+    }
+  ]
+}

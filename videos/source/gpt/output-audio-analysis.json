@@ -1,0 +1,130 @@
+{
+  "file": "out/relay-launch.mp4",
+  "duration": 54.86938775510204,
+  "bpm": 105.023,
+  "beatSeconds": 0.5713034287727408,
+  "beatPhaseSeconds": 0.5221950113378679,
+  "downbeatClass": 3,
+  "downbeatSeconds": 2.2361052976560902,
+  "accents": [
+    1.0770950041383343, 1.1542391400920462, 1.200100065064702,
+    1.5019181044259324
+  ],
+  "bars": [
+    {
+      "bar": 0,
+      "seconds": 2.236105,
+      "rmsDbfs": -20.362
+    },
+    {
+      "bar": 1,
+      "seconds": 4.521319,
+      "rmsDbfs": -20.595
+    },
+    {
+      "bar": 2,
+      "seconds": 6.806533,
+      "rmsDbfs": -20.473
+    },
+    {
+      "bar": 3,
+      "seconds": 9.091746,
+      "rmsDbfs": -20.581
+    },
+    {
+      "bar": 4,
+      "seconds": 11.37696,
+      "rmsDbfs": -18.437
+    },
+    {
+      "bar": 5,
+      "seconds": 13.662174,
+      "rmsDbfs": -19.518
+    },
+    {
+      "bar": 6,
+      "seconds": 15.947388,
+      "rmsDbfs": -19.285
+    },
+    {
+      "bar": 7,
+      "seconds": 18.232601,
+      "rmsDbfs": -18.364
+    },
+    {
+      "bar": 8,
+      "seconds": 20.517815,
+      "rmsDbfs": -17.783
+    },
+    {
+      "bar": 9,
+      "seconds": 22.803029,
+      "rmsDbfs": -19.454
+    },
+    {
+      "bar": 10,
+      "seconds": 25.088242,
+      "rmsDbfs": -19.273
+    },
+    {
+      "bar": 11,
+      "seconds": 27.373456,
+      "rmsDbfs": -18.394
+    },
+    {
+      "bar": 12,
+      "seconds": 29.65867,
+      "rmsDbfs": -17.104
+    },
+    {
+      "bar": 13,
+      "seconds": 31.943884,
+      "rmsDbfs": -20.53
+    },
+    {
+      "bar": 14,
+      "seconds": 34.229097,
+      "rmsDbfs": -20.872
+    },
+    {
+      "bar": 15,
+      "seconds": 36.514311,
+      "rmsDbfs": -19.819
+    },
+    {
+      "bar": 16,
+      "seconds": 38.799525,
+      "rmsDbfs": -20.762
+    },
+    {
+      "bar": 17,
+      "seconds": 41.084738,
+      "rmsDbfs": -20.863
+    },
+    {
+      "bar": 18,
+      "seconds": 43.369952,
+      "rmsDbfs": -20.549
+    },
+    {
+      "bar": 19,
+      "seconds": 45.655166,
+      "rmsDbfs": -19.38
+    },
+    {
+      "bar": 20,
+      "seconds": 47.94038,
+      "rmsDbfs": -16.894
+    },
+    {
+      "bar": 21,
+      "seconds": 50.225593,
+      "rmsDbfs": -21.84
+    },
+    {
+      "bar": 22,
+      "seconds": 52.510807,
+      "rmsDbfs": -23.326
+    }
+  ]
+}
