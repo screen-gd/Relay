@@ -1,6 +1,6 @@
 "use client";
 
-import { Menu } from "lucide-react";
+import { ListIcon } from "@phosphor-icons/react/ssr";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -14,9 +14,8 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
-import ThemeToggle from "./ThemeToggle";
 
-/** Sticky 60px site header: brand, centered nav, theme toggle, and CTAs. */
+/** Sticky 60px site header: brand, centered nav, a plain sign-in link, and the primary CTA. */
 export default function SiteHeader() {
   const pathname = usePathname();
   const [menuOpen, setMenuOpen] = useState(false);
@@ -59,16 +58,14 @@ export default function SiteHeader() {
           ))}
         </nav>
         <div className="site-header-actions">
-          <ThemeToggle />
-          <Button variant="ghost" size="sm" asChild>
-            <a href={APP_URL}>Sign in</a>
-          </Button>
+          <a className="nav-link" href={APP_URL}>
+            Sign in
+          </a>
           <InteractiveHoverButton href={APP_URL} size="sm">
             Get started
           </InteractiveHoverButton>
         </div>
         <div className="site-header-mobile">
-          <ThemeToggle />
           <Sheet open={menuOpen} onOpenChange={setMenuOpen}>
             <SheetTrigger asChild>
               <Button
@@ -77,7 +74,7 @@ export default function SiteHeader() {
                 size="icon-sm"
                 aria-label="Open menu"
               >
-                <Menu aria-hidden="true" />
+                <ListIcon aria-hidden="true" />
               </Button>
             </SheetTrigger>
             <SheetContent side="right">
@@ -95,9 +92,9 @@ export default function SiteHeader() {
                 ))}
               </nav>
               <div className="sheet-actions">
-                <Button variant="outline" asChild>
-                  <a href={APP_URL}>Sign in</a>
-                </Button>
+                <a className="nav-link" href={APP_URL}>
+                  Sign in
+                </a>
                 <Button asChild>
                   <a href={APP_URL}>Get started</a>
                 </Button>

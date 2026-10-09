@@ -164,6 +164,9 @@ importers:
       "@opennextjs/cloudflare":
         specifier: 1.20.2
         version: 1.20.2(next@16.3.6(@playwright/test@1.62.1)(@types/node@24.13.3)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(wrangler@4.125.0(@types/node@24.13.3))
+      "@phosphor-icons/react":
+        specifier: ^2.1.10
+        version: 2.1.10(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       class-variance-authority:
         specifier: ^0.7.1
         version: 0.7.1
@@ -173,9 +176,6 @@ importers:
       gsap:
         specifier: ^3.15.0
         version: 3.15.0
-      lucide-react:
-        specifier: ^1.37.0
-        version: 1.37.0(react@19.2.8)
       motion:
         specifier: ^12.43.0
         version: 12.43.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
@@ -1589,6 +1589,16 @@ packages:
       {
         integrity: sha512-XC0QsnnhVe7sLIWmYmdPw7x5P0h4W8vUU3Nv1ySgWXtvCz8NizoAEpGXA0sOYoJQV2Rl13LgURAHQ5cI5ILCSA==,
       }
+
+  "@phosphor-icons/react@2.1.10":
+    resolution:
+      {
+        integrity: sha512-vt8Tvq8GLjheAZZYa+YG/pW7HDbov8El/MANW8pOAz4eGxrwhnbfrQZq0Cp4q8zBEu8NIhHdnr+r8thnfRSNYA==,
+      }
+    engines: { node: ">=10" }
+    peerDependencies:
+      react: ">= 16.8"
+      react-dom: ">= 16.8"
 
   "@playwright/test@1.62.1":
     resolution:
@@ -4696,14 +4706,6 @@ packages:
     peerDependencies:
       react: ^16.5.1 || ^17.0.0 || ^18.0.0 || ^19.0.0
 
-  lucide-react@1.37.0:
-    resolution:
-      {
-        integrity: sha512-LPsB4rD1TD6wZu1djKOf9vUnS1jTNaHbolXebXDgiTdb6jeA1agIJhJsIybCmjKmQClcOaal1o1OaiYahEftyQ==,
-      }
-    peerDependencies:
-      react: ^16.5.1 || ^17.0.0 || ^18.0.0 || ^19.0.0
-
   magic-string@0.30.21:
     resolution:
       {
@@ -6968,6 +6970,11 @@ snapshots:
 
   "@oxc-project/types@0.146.0": {}
 
+  "@phosphor-icons/react@2.1.10(react-dom@19.2.8(react@19.2.8))(react@19.2.8)":
+    dependencies:
+      react: 19.2.8
+      react-dom: 19.2.8(react@19.2.8)
+
   "@playwright/test@1.62.1":
     dependencies:
       playwright: 1.62.1
@@ -8905,10 +8912,6 @@ snapshots:
   lru-cache@11.5.2: {}
 
   lucide-react@1.33.0(react@19.2.8):
-    dependencies:
-      react: 19.2.8
-
-  lucide-react@1.37.0(react@19.2.8):
     dependencies:
       react: 19.2.8
 

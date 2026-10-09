@@ -1,6 +1,6 @@
 "use client";
 
-import { ChartColumn, Receipt, Repeat } from "lucide-react";
+import { ChartBarIcon, ReceiptIcon, RepeatIcon } from "@phosphor-icons/react/ssr";
 import { useState } from "react";
 import Reveal from "../site/Reveal";
 import AppWindow from "./AppWindow";
@@ -10,17 +10,17 @@ import styles from "./PaymentsSection.module.css";
 
 const facts = [
   {
-    icon: Receipt,
+    icon: ReceiptIcon,
     title: "Track each project",
     text: "Record the fee and mark payments received.",
   },
   {
-    icon: Repeat,
+    icon: RepeatIcon,
     title: "Manage recurring work",
     text: "Set payment plans for a client's project batches and track the next payout.",
   },
   {
-    icon: ChartColumn,
+    icon: ChartBarIcon,
     title: "Review your earnings",
     text: "See earned, collected, and outstanding amounts in your workspace currency.",
   },
@@ -250,15 +250,17 @@ export default function PaymentsSection() {
         </AppWindow>
       </Reveal>
 
-      <ul className="review-facts">
-        {facts.map(({ icon: Icon, title, text }) => (
-          <li key={title}>
-            <Icon size={20} aria-hidden="true" />
-            <h3>{title}</h3>
-            <p>{text}</p>
-          </li>
-        ))}
-      </ul>
+      <div className="box-grid-frame is-facts">
+        <ul className="box-grid">
+          {facts.map(({ icon: Icon, title, text }) => (
+            <li key={title}>
+              <Icon size={20} aria-hidden="true" />
+              <h3>{title}</h3>
+              <p>{text}</p>
+            </li>
+          ))}
+        </ul>
+      </div>
     </section>
   );
 }

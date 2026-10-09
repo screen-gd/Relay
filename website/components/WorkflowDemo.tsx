@@ -1,13 +1,13 @@
 "use client";
 
 import {
-  Check,
-  Copy,
-  FileText,
-  Film,
+  CheckIcon,
+  CopyIcon,
+  FileTextIcon,
+  FilmStripIcon,
   ImageIcon,
-  LockKeyhole,
-} from "lucide-react";
+  LockKeyIcon,
+} from "@phosphor-icons/react/ssr";
 import { Tabs } from "radix-ui";
 import { useState, type ReactNode } from "react";
 import AppWindow, { ProjectTabs, StageBar } from "./features/AppWindow";
@@ -201,7 +201,7 @@ function StageView({ stage }: { stage: Stage }) {
           >
             <ul className={ui.rows}>
               <Row
-                icon={<Film size={14} />}
+                icon={<FilmStripIcon size={14} />}
                 title="Summer launch v4"
                 detail="YouTube link · Added today"
               >
@@ -210,7 +210,7 @@ function StageView({ stage }: { stage: Stage }) {
                 </span>
               </Row>
               <Row
-                icon={<Film size={14} />}
+                icon={<FilmStripIcon size={14} />}
                 title="Summer launch v3"
                 detail="Vimeo link · Jul 20"
               >
@@ -225,7 +225,7 @@ function StageView({ stage }: { stage: Stage }) {
           >
             <ul className={ui.rows}>
               <Row
-                icon={<FileText size={14} />}
+                icon={<FileTextIcon size={14} />}
                 title="Brand brief.pdf"
                 detail="Google Drive"
               />
@@ -253,12 +253,12 @@ function StageView({ stage }: { stage: Stage }) {
           >
             <ul className={ui.rows}>
               <Row
-                icon={<LockKeyhole size={14} />}
+                icon={<LockKeyIcon size={14} />}
                 title="Summer launch v4"
                 detail="Password protected · No account needed"
               >
                 <span className={ui.button}>
-                  <Copy size={13} /> Copy link
+                  <CopyIcon size={13} /> Copy link
                 </span>
               </Row>
             </ul>
@@ -294,7 +294,7 @@ function StageView({ stage }: { stage: Stage }) {
           <Panel title="Project Outputs" flush>
             <ul className={ui.rows}>
               <Row
-                icon={<Film size={14} />}
+                icon={<FilmStripIcon size={14} />}
                 title="Launch film · 16:9"
                 detail="v4 · Approved by Maya Chen, Jul 23"
               >
@@ -303,7 +303,7 @@ function StageView({ stage }: { stage: Stage }) {
                 </span>
               </Row>
               <Row
-                icon={<Film size={14} />}
+                icon={<FilmStripIcon size={14} />}
                 title="Social cutdowns · 9:16"
                 detail="3 files"
               >
@@ -460,7 +460,7 @@ function StagePage({ stage: item }: { stage: Stage }) {
                     <dd>
                       {item.payment === "Paid" ? (
                         <span className={ui.status} data-tone="success">
-                          <Check size={12} aria-hidden="true" /> Paid
+                          <CheckIcon size={12} aria-hidden="true" /> Paid
                         </span>
                       ) : (
                         item.payment

@@ -2,27 +2,27 @@
 
 import Image from "next/image";
 import {
-  ArrowRight,
-  BarChart3,
-  Bell,
-  BookOpen,
-  CalendarDays,
-  CheckCircle2,
-  ClipboardCheck,
-  FileText,
-  FolderKanban,
-  Images,
-  LayoutGrid,
-  MessageSquare,
-  PanelLeftClose,
-  Plus,
-  Search,
-  Settings,
-  SlidersHorizontal,
-  Sparkles,
-  Users,
-  Workflow,
-} from "lucide-react";
+  ArrowRightIcon,
+  BellIcon,
+  BookOpenIcon,
+  CalendarDotsIcon,
+  ChartBarIcon,
+  ChatCircleIcon,
+  CheckCircleIcon,
+  ClipboardTextIcon,
+  FileTextIcon,
+  FlowArrowIcon,
+  GearSixIcon,
+  ImagesIcon,
+  KanbanIcon,
+  MagnifyingGlassIcon,
+  PlusIcon,
+  SidebarSimpleIcon,
+  SlidersHorizontalIcon,
+  SparkleIcon,
+  SquaresFourIcon,
+  UsersIcon,
+} from "@phosphor-icons/react/ssr";
 import { useMemo, useState } from "react";
 
 type ProjectStatus = "Delivered" | "Review" | "In progress";
@@ -124,22 +124,22 @@ const teamActivity = [
 
 const sidebarGroups = [
   [
-    { label: "Dashboard demo", icon: LayoutGrid },
-    { label: "Schedule", icon: CalendarDays },
-    { label: "Workflow demo", icon: Workflow },
+    { label: "Dashboard demo", icon: SquaresFourIcon },
+    { label: "Schedule", icon: CalendarDotsIcon },
+    { label: "Workflow demo", icon: FlowArrowIcon },
   ],
   [
-    { label: "Projects", icon: FolderKanban },
-    { label: "Clients", icon: Users },
-    { label: "Client feedback", icon: MessageSquare },
-    { label: "Project files", icon: FileText },
-    { label: "Media library", icon: Images },
-    { label: "Approvals", icon: ClipboardCheck },
+    { label: "Projects", icon: KanbanIcon },
+    { label: "Clients", icon: UsersIcon },
+    { label: "Client feedback", icon: ChatCircleIcon },
+    { label: "Project files", icon: FileTextIcon },
+    { label: "Media library", icon: ImagesIcon },
+    { label: "Approvals", icon: ClipboardTextIcon },
   ],
   [
-    { label: "Resources", icon: BookOpen },
-    { label: "Automation", icon: Sparkles },
-    { label: "Reports", icon: BarChart3 },
+    { label: "Resources", icon: BookOpenIcon },
+    { label: "Automation", icon: SparkleIcon },
+    { label: "Reports", icon: ChartBarIcon },
   ],
 ] as const;
 
@@ -255,7 +255,7 @@ export default function InteractiveDashboard() {
                     title={item.label}
                     onClick={() => setActiveSidebarItem(item.label)}
                   >
-                    <Icon size={15} strokeWidth={1.7} />
+                    <Icon size={15} />
                   </button>
                 );
               })}
@@ -270,10 +270,10 @@ export default function InteractiveDashboard() {
           title="Settings"
           onClick={() => setActiveSidebarItem("Settings")}
         >
-          <Settings size={15} strokeWidth={1.7} />
+          <GearSixIcon size={15} />
         </button>
         <span className="demo-sidebar-collapse" aria-hidden="true">
-          <PanelLeftClose size={14} strokeWidth={1.7} />
+          <SidebarSimpleIcon size={14} />
         </span>
       </aside>
 
@@ -285,7 +285,7 @@ export default function InteractiveDashboard() {
             <strong>Dashboard</strong>
           </div>
           <label className="demo-quick-search">
-            <Search size={14} strokeWidth={1.7} />
+            <MagnifyingGlassIcon size={14} />
             <span className="sr-only">Quick search</span>
             <input
               aria-label="Quick search"
@@ -300,10 +300,10 @@ export default function InteractiveDashboard() {
               type="button"
               aria-label="Notifications"
             >
-              <Bell size={14} />
+              <BellIcon size={14} />
             </button>
             <button type="button" onClick={createProject}>
-              <Plus size={14} />
+              <PlusIcon size={14} />
               Quick create
             </button>
           </div>
@@ -316,7 +316,7 @@ export default function InteractiveDashboard() {
             </div>
             <div className="demo-ledger-tools">
               <label>
-                <Search size={14} />
+                <MagnifyingGlassIcon size={14} />
                 <span className="sr-only">Search the project ledger</span>
                 <input
                   aria-label="Search the project ledger"
@@ -326,7 +326,7 @@ export default function InteractiveDashboard() {
                 />
               </label>
               <label className="demo-select">
-                <SlidersHorizontal size={14} />
+                <SlidersHorizontalIcon size={14} />
                 <span className="sr-only">Filter projects</span>
                 <select
                   aria-label="Filter projects"
@@ -382,7 +382,7 @@ export default function InteractiveDashboard() {
               </div>
               {activity.map((item) => (
                 <div className="demo-activity-row" key={item}>
-                  <CheckCircle2 size={14} />
+                  <CheckCircleIcon size={14} />
                   <span>
                     <b>{item}</b>
                     <small>Workspace · 4d ago</small>
@@ -474,7 +474,7 @@ export default function InteractiveDashboard() {
                   >
                     <span className="demo-project-name">
                       <i>
-                        <FolderKanban size={13} />
+                        <KanbanIcon size={13} />
                       </i>
                       <span>
                         <b>{project.name}</b>
@@ -558,7 +558,7 @@ export default function InteractiveDashboard() {
                   type="button"
                   onClick={() => setNotice("Workflow preview opened")}
                 >
-                  View workflow <ArrowRight size={14} />
+                  View workflow <ArrowRightIcon size={14} />
                 </button>
               </div>
             </aside>
