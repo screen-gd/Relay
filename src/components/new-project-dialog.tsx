@@ -34,8 +34,13 @@ import { Input } from "@/components/ui/input";
 import { Check, ChevronDown } from "lucide-react";
 import { ProjectDatePicker } from "@/features/projects/project-dialogs";
 import { useConfirm } from "@/components/confirm-dialog";
+import { BriefImport } from "@/features/projects/brief-import";
+import type { Id } from "../../convex/_generated/dataModel";
 
 type NewProjectDialogProps = {
+  briefImportEnabled?: boolean;
+  teamId?: Id<"teamWorkspaces">;
+  onBriefCreated?: (id: string) => void;
   open: boolean;
   clients: readonly Client[];
   projectGroups: readonly ProjectGroup[];
@@ -144,6 +149,9 @@ function ContextMenuSelect({
 }
 
 export function NewProjectDialog({
+  briefImportEnabled = false,
+  teamId,
+  onBriefCreated,
   open,
   clients,
   projectGroups,
@@ -171,6 +179,7 @@ export function NewProjectDialog({
     company: "",
   });
   const [clientError, setClientError] = useState("");
+  const [briefOpen, setBriefOpen] = useState(false);
   const form = useForm({
     defaultValues: defaultValues(initialTemplateId),
     validators: { onSubmit: newProjectFormSchema },
@@ -193,6 +202,7 @@ export function NewProjectDialog({
   useEffect(() => {
     if (!open) return;
     form.reset(defaultValues(initialTemplateId));
+    setBriefOpen(false);
     setCreatingClient(false);
     setClientDraft({ name: "", email: "", company: "" });
     setClientError("");
@@ -253,7 +263,20 @@ export function NewProjectDialog({
             project.
           </DialogDescription>
         </DialogHeader>
+        {briefImportEnabled && open ? (
+          <BriefImport
+            open={briefOpen}
+            onOpenChange={setBriefOpen}
+            teamId={teamId}
+            clients={clients}
+            onCreated={(id) => {
+              onClose();
+              onBriefCreated?.(id);
+            }}
+          />
+        ) : null}
         <form
+          hidden={briefOpen}
           className="grid gap-5"
           onSubmit={(event) => {
             event.preventDefault();

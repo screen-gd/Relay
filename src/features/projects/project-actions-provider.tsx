@@ -612,6 +612,9 @@ function ProjectActionsRuntime({
     <ProjectActionsContext.Provider value={actions}>
       {children}
       <NewProjectDialog
+        briefImportEnabled={!sample && isSignedIn}
+        teamId={projectStartScope === "team" ? access.currentTeamId : undefined}
+        onBriefCreated={(id) => router.push(projectHref({ projectId: id }))}
         open={newProjectOpen}
         clients={clientRecords}
         projectGroups={groups.filter(
