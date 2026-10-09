@@ -136,6 +136,10 @@ Use an approved test backend and Clerk instance for previews. Changing the host
 does not deploy Convex or migrate data. Do not add `convex deploy` to the build
 command. Keep Clerk issuer configuration on the existing Convex deployment.
 
+`src/proxy.ts` forwards `/__clerk/*` scripts and API requests through Clerk's
+built-in proxy, including on the custom app domain. Keep the matching
+`CLERK_SECRET_KEY` set in Vercel so the handler can forward those requests.
+
 Before production cutover, configure the intended domain and permitted origins
 in Clerk and Vercel, then verify sign-in and signed-in Project journeys. Production
 Clerk keys may require the configured custom domain rather than a `vercel.app`
