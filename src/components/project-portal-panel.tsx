@@ -10,6 +10,7 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 
+import { StatusDrafts } from "@/features/client-portals/internal/status-drafts";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -130,6 +131,7 @@ type ProjectPortalPanelProps = {
   project: WorkItem;
   settings: Pick<SettingsState, "weekStart" | "dateFormat">;
   canEdit: boolean;
+  canDraftUpdates?: boolean;
   clientHubEnabled?: boolean;
   customPortalBrandingEnabled?: boolean;
 };
@@ -138,6 +140,7 @@ export function ProjectPortalPanel({
   project,
   canEdit,
   settings,
+  canDraftUpdates = canEdit,
   clientHubEnabled = true,
   customPortalBrandingEnabled = true,
 }: ProjectPortalPanelProps) {
@@ -303,11 +306,16 @@ export function ProjectPortalPanel({
 
   if (!data.available && !data.loading) {
     return (
-      <ContentSection
-        titleId="project-portal-title"
-        title="Client Portal"
-        description="Requires a cloud account."
-      />
+      <>
+        <ContentSection
+          titleId="project-portal-title"
+          title="Client Portal"
+          description="Requires a cloud account with portal access."
+        />
+        {canDraftUpdates ? (
+          <StatusDrafts key={project.id} projectId={project.id} />
+        ) : null}
+      </>
     );
   }
 
@@ -593,6 +601,14 @@ export function ProjectPortalPanel({
           </CollapsibleContent>
         </Collapsible>
       </ContentSection>
+
+      {canDraftUpdates ? (
+        <StatusDrafts
+          key={project.id}
+          projectId={project.id}
+          portalId={data.portal?.id}
+        />
+      ) : null}
 
       {canEdit &&
       (clientHubEnabled ? Boolean(hubSettings?.available) : true) ? (
