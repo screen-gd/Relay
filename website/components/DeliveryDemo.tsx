@@ -1,14 +1,14 @@
 "use client";
 
 import {
-  ArrowRight,
-  Check,
-  CheckCircle2,
-  Film,
-  LockKeyhole,
-  RotateCcw,
-  Send,
-} from "lucide-react";
+  ArrowCounterClockwiseIcon,
+  ArrowRightIcon,
+  CheckCircleIcon,
+  CheckIcon,
+  FilmStripIcon,
+  LockKeyIcon,
+  PaperPlaneTiltIcon,
+} from "@phosphor-icons/react/ssr";
 import { useState } from "react";
 import AppWindow, { ProjectTabs } from "./features/AppWindow";
 import ui from "./features/app-ui.module.css";
@@ -68,17 +68,17 @@ const steps = [
 
 const facts = [
   {
-    icon: LockKeyhole,
+    icon: LockKeyIcon,
     title: "Private review links",
     text: "Password protected. Clients never make an account.",
   },
   {
-    icon: CheckCircle2,
+    icon: CheckCircleIcon,
     title: "Approval on record",
     text: "Who approved, which version, and when.",
   },
   {
-    icon: Send,
+    icon: PaperPlaneTiltIcon,
     title: "Clear handoff",
     text: "The team sees which file is ready to send.",
   },
@@ -152,7 +152,7 @@ export default function DeliveryDemo() {
                   <p>{step.detail}</p>
                   <div className={styles.file}>
                     <span className={ui.tile}>
-                      <Film size={14} aria-hidden="true" />
+                      <FilmStripIcon size={14} aria-hidden="true" />
                     </span>
                     <span className={ui.rowMain}>
                       <b>Summer launch v4</b>
@@ -173,16 +173,16 @@ export default function DeliveryDemo() {
                     }
                   >
                     {isComplete ? (
-                      <RotateCcw size={13} aria-hidden="true" />
+                      <ArrowCounterClockwiseIcon size={13} aria-hidden="true" />
                     ) : (
-                      <Check size={13} aria-hidden="true" />
+                      <CheckIcon size={13} aria-hidden="true" />
                     )}
                     {step.action}
                   </button>
                   {next ? (
                     <span className={styles.next}>
                       Next: {next.label}{" "}
-                      <ArrowRight size={12} aria-hidden="true" />
+                      <ArrowRightIcon size={12} aria-hidden="true" />
                     </span>
                   ) : null}
                 </div>
@@ -215,15 +215,17 @@ export default function DeliveryDemo() {
         </AppWindow>
       </Reveal>
 
-      <ul className="review-facts">
-        {facts.map(({ icon: Icon, title, text }) => (
-          <li key={title}>
-            <Icon size={20} aria-hidden="true" />
-            <h3>{title}</h3>
-            <p>{text}</p>
-          </li>
-        ))}
-      </ul>
+      <div className="box-grid-frame is-facts">
+        <ul className="box-grid">
+          {facts.map(({ icon: Icon, title, text }) => (
+            <li key={title}>
+              <Icon size={20} aria-hidden="true" />
+              <h3>{title}</h3>
+              <p>{text}</p>
+            </li>
+          ))}
+        </ul>
+      </div>
     </section>
   );
 }

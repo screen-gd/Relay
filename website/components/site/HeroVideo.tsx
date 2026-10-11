@@ -1,6 +1,6 @@
 "use client";
 
-import { Pause, Play } from "lucide-react";
+import { PauseIcon, PlayIcon } from "@phosphor-icons/react/ssr";
 import { useEffect, useRef, useState } from "react";
 
 export type HeroVideoSource = { src: string; poster?: string };
@@ -107,9 +107,9 @@ export default function HeroVideo({ video }: { video?: HeroVideoSource }) {
           }
         >
           {playing ? (
-            <Pause size={16} aria-hidden="true" />
+            <PauseIcon size={16} aria-hidden="true" />
           ) : (
-            <Play size={16} aria-hidden="true" />
+            <PlayIcon size={16} aria-hidden="true" />
           )}
         </button>
       </div>
@@ -123,7 +123,7 @@ export default function HeroVideo({ video }: { video?: HeroVideoSource }) {
       aria-label="Product video placeholder"
     >
       <span className="hero-video-play" aria-hidden="true">
-        <Play size={28} fill="currentColor" />
+        <PlayIcon size={28} weight="fill" />
       </span>
       <p>Product walkthrough coming soon</p>
     </div>

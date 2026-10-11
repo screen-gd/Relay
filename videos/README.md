@@ -15,7 +15,7 @@ The launch videos are 1920×1080, 30 fps, H.264 with AAC audio, built with Remot
 - `source/showcase/`: the Playwright script that records `relay-site-showcase-dark.mp4`.
 
 The Remotion sources are a standalone project with their own dependencies and
-tsconfig, so the app's root `tsconfig.json` excludes `videos/source`. Without
+tsconfig, so the app's root `tsconfig.json` excludes `videos`. Without
 that exclusion `next build` type checks them, cannot resolve `remotion` and
 `@remotion/*`, and fails the whole build.
 

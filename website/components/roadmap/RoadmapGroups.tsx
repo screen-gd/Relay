@@ -1,4 +1,4 @@
-import { ArrowUpRight } from "lucide-react";
+import { ArrowUpRightIcon } from "@phosphor-icons/react/ssr";
 import { CONTACT_EMAIL_URL } from "../../lib/links";
 import type { RoadmapResult, RoadmapStatus } from "../../lib/roadmap";
 import RoadmapList from "./RoadmapList";
@@ -49,7 +49,7 @@ export function RoadmapIdea() {
       </h2>
       <a className={styles.link} href={CONTACT_EMAIL_URL}>
         Email us a feature request
-        <ArrowUpRight size={16} aria-hidden="true" />
+        <ArrowUpRightIcon size={16} aria-hidden="true" />
       </a>
     </section>
   );

@@ -1,4 +1,4 @@
-import { ArrowDown } from "lucide-react";
+import { ArrowDownIcon } from "@phosphor-icons/react/ssr";
 import styles from "./FeatureIndex.module.css";
 
 const chapters = [
@@ -19,7 +19,7 @@ export default function FeatureIndex() {
             <a href={href}>
               <span className={styles.number}>0{index + 1}</span>
               <span>{label}</span>
-              <ArrowDown size={15} aria-hidden="true" />
+              <ArrowDownIcon size={15} aria-hidden="true" />
             </a>
           </li>
         ))}

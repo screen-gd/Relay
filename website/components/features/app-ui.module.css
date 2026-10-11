@@ -202,6 +202,8 @@
 
 .panelTitle {
   margin: 0;
+  /* Mock app chrome keeps the UI font, not the display heading font. */
+  font-family: var(--font-sans);
   font-size: 13px;
   font-weight: 600;
   letter-spacing: -0.005em;

@@ -1,9 +1,8 @@
 import Image from "next/image";
 import Link from "next/link";
 import {
-  APP_PRIVACY_URL,
   CONTACT_EMAIL_URL,
-  INSTAGRAM_URL,
+  LEGAL_LINKS,
   NAV_ITEMS,
   X_URL,
 } from "../../lib/links";
@@ -13,14 +12,8 @@ type FooterLink = { label: string; href: string; external?: boolean };
 const columns: { title: string; links: readonly FooterLink[] }[] = [
   { title: "Product", links: NAV_ITEMS },
   { title: "Contact", links: [{ label: "Email", href: CONTACT_EMAIL_URL }] },
-  {
-    title: "Social",
-    links: [
-      { label: "Instagram", href: INSTAGRAM_URL, external: true },
-      { label: "X", href: X_URL, external: true },
-    ],
-  },
-  { title: "Legal", links: [{ label: "Privacy", href: APP_PRIVACY_URL }] },
+  { title: "Social", links: [{ label: "X", href: X_URL, external: true }] },
+  { title: "Legal", links: LEGAL_LINKS },
 ];
 
 /**

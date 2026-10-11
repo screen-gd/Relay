@@ -30,8 +30,6 @@
   --mock-border: #27272a;
   /* Page frame: width of the content column between the side rails. */
   --frame: 1200px;
-  /* Pricing card cursor light (React Bits SpotlightCard). */
-  --spotlight: rgb(0 0 0 / 5%);
   /* Brand palette (docs/brand/ASSET-GUIDE.md): acid lime is reserved for
      identity, primary actions, and current status. `--brand-rgb` is the
      same color for alpha mixes. */
@@ -45,7 +43,8 @@
 /*
  * Dark: a zinc charcoal (lighter than pure black), with each surface one
  * clear step up (page, card, panel) so frames and cards separate from the
- * page. White text; acid lime primary.
+ * page. White text; acid lime primary. Dark is the site default: the root
+ * layout always renders `<html class="dark">`.
  */
 .dark {
   --background: #121214;
@@ -67,13 +66,13 @@
   --border-strong: #3a3a42;
   --input: #3a3a42;
   --ring: var(--brand);
-  --spotlight: rgb(var(--brand-rgb) / 7%);
   /* Brand surfaces sit a step above the page instead of blending into it. */
   --brand-ink: #1a1a1e;
 }
 
 @theme inline {
-  --font-sans: var(--font-geist), "Geist", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-figtree), "Figtree", ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-bricolage), "Bricolage Grotesque", var(--font-figtree), ui-sans-serif, sans-serif;
   --font-mono: var(--font-geist-mono), "Geist Mono", ui-monospace, monospace;
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -161,6 +160,7 @@
   h1,
   h2,
   h3 {
+    font-family: var(--font-display);
     font-weight: 600;
     letter-spacing: -0.025em;
     text-wrap: balance;
@@ -294,6 +294,8 @@ body::before {
 .section-head.is-centered {
   flex-direction: column;
   align-items: center;
+  gap: 16px;
+  margin-bottom: 40px;
   text-align: center;
 }
 
@@ -409,15 +411,6 @@ body::before {
   gap: 4px;
 }
 
-.theme-icon-dark,
-.dark .theme-icon-light {
-  display: none;
-}
-
-.dark .theme-icon-dark {
-  display: block;
-}
-
 .sheet-nav {
   display: grid;
   gap: 2px;
@@ -495,6 +488,8 @@ body::before {
 
 .site-footer-col a {
   width: fit-content;
+  max-width: 100%;
+  overflow-wrap: anywhere;
   color: var(--foreground);
   font-size: 15px;
   font-weight: 500;
@@ -576,13 +571,6 @@ body::before {
   margin-top: 32px;
 }
 
-.hero-note {
-  margin: 16px 0 0;
-  color: var(--muted-foreground);
-  font-size: 14px;
-  line-height: 1.5;
-}
-
 .product-reveal {
   position: relative;
   padding-top: 72px;
@@ -600,7 +588,6 @@ body::before {
   border: 1px solid var(--border);
   border-radius: 16px;
   background: var(--brand-ink);
-  box-shadow: 0 32px 64px -32px rgb(0 0 0 / 30%);
 }
 
 /* Silent looping showcase: fills the frame, and ignores clicks and taps so
@@ -777,41 +764,57 @@ body::before {
   display: block;
 }
 
-/* Home feature grid + section links */
+/* Boxed info grids + section links */
 
 /*
- * Feature grid tied into the page frame: it spans rail to rail (the rails
- * are its outer edges), its top and bottom lines run across the whole
- * screen as dashed frame lines, and a square node marks every crossing.
+ * Box grid: info cells tied into the page frame. Used by the home feature
+ * grid and every row of fact cells (client review, delivery, payments).
+ * It spans rail to rail (the rails are its outer edges), its top and bottom
+ * lines run across the whole screen as dashed frame lines, and a square
+ * node marks every crossing.
+ *
+ * Line geometry, kept identical everywhere so nodes land dead center:
+ * each cell draws its own right and bottom hairline on its last pixel
+ * (inset shadow), and the frame lines sit just outside the cell on the top
+ * (top: -1px) and on the last pixel at the bottom. The frame starts 1px
+ * inside the left rail so that rail also sits just outside the first cell.
+ * A 7px node then always starts 3px before its line: -4px from a cell's
+ * top/left edge, -3px from its right/bottom edge.
+ *
+ * Markup: `.box-grid-frame > ul.box-grid > li`. Three columns; add
+ * `.is-reflow` to step down to two columns on tablets.
  */
-.feature-grid-frame {
+.box-grid-frame {
+  --gutter: 24px;
   --node-size: 7px;
   position: relative;
-  margin-inline: -24px;
+  margin-right: calc(var(--gutter) * -1);
+  margin-left: calc(1px - var(--gutter));
 }
 
-.feature-grid-frame::before,
-.feature-grid-frame::after {
+.box-grid-frame::before,
+.box-grid-frame::after {
   position: absolute;
   left: 50%;
   width: 100vw;
+  height: 0;
   border-top: 1px dashed var(--border-strong);
   content: "";
   pointer-events: none;
   transform: translateX(-50%);
 }
 
-.feature-grid-frame::before {
-  top: 0;
+.box-grid-frame::before {
+  top: -1px;
 }
 
-.feature-grid-frame::after {
+.box-grid-frame::after {
   bottom: 0;
 }
 
-/* Cell hairlines drawn with borders (not a filled gap) so cells stay
-   transparent over the page background. */
-.feature-grid {
+/* Cells stay transparent over the page; lines are inset shadows whose
+   colors drop to transparent where a rail or frame line already is. */
+.box-grid {
   position: relative;
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -820,30 +823,31 @@ body::before {
   list-style: none;
 }
 
-.feature-grid li {
+.box-grid > li {
+  --line-r: var(--border);
+  --line-b: var(--border);
   position: relative;
   min-width: 0;
   padding: 36px 32px;
-  border-right: 1px solid var(--border);
-  border-bottom: 1px solid var(--border);
+  box-shadow:
+    inset -1px 0 0 var(--line-r),
+    inset 0 -1px 0 var(--line-b);
 }
 
-/* No line on the last column (the rail is its edge) or the last row (the
-   dashed frame line is). Breakpoints below redo this per column count. */
-.feature-grid li:nth-child(3n) {
-  border-right-color: transparent;
+.box-grid > li:nth-child(3n) {
+  --line-r: transparent;
 }
 
-.feature-grid li:nth-last-child(-n + 3) {
-  border-bottom-color: transparent;
+.box-grid > li:nth-last-child(-n + 3) {
+  --line-b: transparent;
 }
 
-/* Nodes: each cell marks its top-left and bottom-right corners; the grid
-   itself marks the two corners no cell reaches (top-right, bottom-left). */
-.feature-grid li::before,
-.feature-grid li::after,
-.feature-grid::before,
-.feature-grid::after {
+/* Nodes: every cell marks its top-left and bottom-right corners; the grid
+   marks the two corners no cell reaches (top-right, bottom-left). */
+.box-grid > li::before,
+.box-grid > li::after,
+.box-grid::before,
+.box-grid::after {
   position: absolute;
   z-index: 1;
   width: var(--node-size);
@@ -853,24 +857,48 @@ body::before {
   pointer-events: none;
 }
 
-.feature-grid li::before {
-  top: calc(var(--node-size) / -2);
-  left: calc(var(--node-size) / -2);
+.box-grid > li::before {
+  top: -4px;
+  left: -4px;
 }
 
-.feature-grid li::after {
-  right: calc(var(--node-size) / -2 - 0.5px);
-  bottom: calc(var(--node-size) / -2 - 0.5px);
+.box-grid > li::after {
+  right: -3px;
+  bottom: -3px;
 }
 
-.feature-grid::before {
-  top: calc(var(--node-size) / -2);
-  right: calc(var(--node-size) / -2);
+.box-grid::before {
+  top: -4px;
+  right: -3px;
 }
 
-.feature-grid::after {
-  bottom: calc(var(--node-size) / -2);
-  left: calc(var(--node-size) / -2);
+.box-grid::after {
+  bottom: -3px;
+  left: -4px;
+}
+
+.box-grid > li > svg,
+.box-grid > li > div > svg {
+  color: var(--foreground);
+}
+
+.box-grid h3 {
+  margin: 20px 0 0;
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.box-grid p {
+  margin: 6px 0 0;
+  color: var(--muted-foreground);
+  font-size: 15px;
+  line-height: 1.55;
+}
+
+/* Fact rows sit under a product window. */
+.box-grid-frame.is-facts {
+  margin-top: 56px;
 }
 
 .feature-icon {
@@ -882,20 +910,6 @@ body::before {
   border-radius: 8px;
   background: var(--card);
   color: var(--foreground);
-}
-
-.feature-grid h3 {
-  margin: 20px 0 0;
-  font-size: 16px;
-  font-weight: 600;
-  letter-spacing: -0.01em;
-}
-
-.feature-grid p {
-  margin: 6px 0 0;
-  color: var(--muted-foreground);
-  font-size: 15px;
-  line-height: 1.55;
 }
 
 .section-link {
@@ -1666,47 +1680,6 @@ body::before {
   align-items: center;
 }
 
-/* Client review: centered heading, full-width review window, three facts in
-   a ruled strip (hairline above, columns divided by hairlines). */
-.review-facts {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  margin: 48px 0 0;
-  padding: 0;
-  border-top: 1px solid var(--border);
-  list-style: none;
-}
-
-.review-facts li {
-  padding: 28px 28px 0;
-}
-
-.review-facts li:first-child {
-  padding-left: 0;
-}
-
-.review-facts li + li {
-  border-left: 1px solid var(--border);
-}
-
-.review-facts svg {
-  color: var(--foreground);
-}
-
-.review-facts h3 {
-  margin: 14px 0 0;
-  font-size: 16px;
-  font-weight: 600;
-  letter-spacing: -0.01em;
-}
-
-.review-facts p {
-  margin: 6px 0 0;
-  color: var(--muted-foreground);
-  font-size: 15px;
-  line-height: 1.55;
-}
-
 /* Product mockups are always dark; keep their hairlines dark in both themes. */
 .review-room,
 .proof-activity,
@@ -1724,7 +1697,6 @@ body::before {
   border: 1px solid var(--border);
   border-radius: 16px;
   background: #0c0c0e;
-  box-shadow: 0 32px 64px -32px rgb(0 0 0 / 35%);
   color: #ffffff;
 }
 
@@ -1759,9 +1731,6 @@ body::before {
 }
 
 .review-version {
-  padding: 2px 7px;
-  border: 1px solid var(--border);
-  border-radius: 6px;
   font:
     11px var(--font-geist-mono),
     monospace;
@@ -1774,26 +1743,25 @@ body::before {
   gap: 6px;
   margin-left: auto;
   padding: 0 14px;
-  border: 1px solid #3a3a42;
+  border: 0;
   border-radius: 8px;
-  background: transparent;
+  background: #1f1f24;
   color: #ffffff;
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
   transition:
     background-color 150ms ease-out,
-    border-color 150ms ease-out,
-    color 150ms ease-out;
+    color 150ms ease-out,
+    scale 150ms ease-out;
 }
 
-.review-approve:hover {
-  border-color: #5a5a64;
+.review-approve:active {
+  scale: 0.97;
 }
 
 /* Approval is the final handoff, so it takes the brand color. */
 .review-approve[aria-pressed="true"] {
-  border-color: var(--brand);
   background: var(--brand);
   color: var(--brand-foreground);
 }
@@ -1818,7 +1786,6 @@ body::before {
   aspect-ratio: 16 / 9;
   border-radius: 10px;
   background: #000000;
-  box-shadow: 0 0 0 1px rgb(255 255 255 / 6%);
   cursor: pointer;
 }
 
@@ -1856,9 +1823,9 @@ body::before {
   bottom: 16px;
   left: 16px;
   max-width: min(320px, 70%);
-  padding: 12px 14px;
-  border: 1px solid var(--brand);
+  padding: 12px 14px 12px 16px;
   border-radius: 10px;
+  box-shadow: inset 2px 0 0 var(--brand);
   background: rgb(8 8 10 / 88%);
   font-size: 13px;
   line-height: 1.45;
@@ -1899,16 +1866,16 @@ body::before {
   width: 34px;
   height: 34px;
   place-items: center;
-  border: 1px solid var(--border);
+  border: 0;
   border-radius: 8px;
-  background: #141417;
+  background: transparent;
   color: #ffffff;
   cursor: pointer;
-  transition: border-color 150ms ease-out;
+  transition: opacity 150ms ease-out;
 }
 
 .review-icon-button:hover {
-  border-color: #4a4a52;
+  opacity: 0.7;
 }
 
 /* Timeline: lime progress fill, white thumb, one marker per comment. */
@@ -1987,9 +1954,6 @@ body::before {
 }
 
 .review-comments header small {
-  padding: 2px 8px;
-  border: 1px solid var(--border);
-  border-radius: 6px;
   font:
     11px var(--font-geist-mono),
     monospace;
@@ -1999,8 +1963,8 @@ body::before {
   display: grid;
   flex: 1;
   align-content: start;
-  gap: 4px;
-  padding: 10px;
+  gap: 0 16px;
+  padding: 4px 8px;
   overflow-y: auto;
 }
 
@@ -2010,32 +1974,32 @@ body::before {
   grid-template-columns: 32px minmax(0, 1fr);
   gap: 12px;
   padding: 12px;
-  border: 1px solid transparent;
-  border-radius: 10px;
+  border: 0;
   background: transparent;
   color: #ffffff;
   text-align: left;
   cursor: pointer;
-  transition: border-color 150ms ease-out;
 }
 
-.review-comment-list button:hover {
-  border-color: var(--border);
-}
-
-.review-comment-list button.is-active {
-  border-color: rgb(var(--brand-rgb) / 55%);
+/* Comments are separated by hairlines instead of boxed outlines; the
+   current one is marked by a lime ring on its avatar and a lime time. */
+.review-comment-list > * + * button {
+  box-shadow: inset 0 1px 0 var(--border);
 }
 
 .review-avatar {
-  display: grid;
+  display: block;
   width: 32px;
   height: 32px;
-  place-items: center;
   border-radius: 50%;
   background: #1f1f24;
-  font-size: 12px;
-  font-weight: 600;
+  object-fit: cover;
+  box-shadow: 0 0 0 2px #0c0c0e, 0 0 0 3px transparent;
+  transition: box-shadow 200ms ease-out;
+}
+
+.review-comment-list button.is-active .review-avatar {
+  box-shadow: 0 0 0 2px #0c0c0e, 0 0 0 3.5px var(--brand);
 }
 
 .review-comment-meta {
@@ -2334,23 +2298,22 @@ body::before {
 }
 
 @media (max-width: 980px) {
-  .feature-grid {
+  .box-grid.is-reflow {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   /* Two columns: redo which cells drop their right and bottom lines. */
-  .feature-grid li:nth-child(3n),
-  .feature-grid li:nth-last-child(-n + 3) {
-    border-right-color: var(--border);
-    border-bottom-color: var(--border);
+  .box-grid.is-reflow > li:nth-child(n) {
+    --line-r: var(--border);
+    --line-b: var(--border);
   }
 
-  .feature-grid li:nth-child(2n) {
-    border-right-color: transparent;
+  .box-grid.is-reflow > li:nth-child(2n) {
+    --line-r: transparent;
   }
 
-  .feature-grid li:nth-last-child(-n + 2) {
-    border-bottom-color: transparent;
+  .box-grid.is-reflow > li:nth-last-child(-n + 2) {
+    --line-b: transparent;
   }
 
   .delivery-story {
@@ -2368,6 +2331,10 @@ body::before {
 
   .review-comment-list {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .review-comment-list > :nth-child(2) button {
+    box-shadow: none;
   }
 
   .proof-story {
@@ -2443,40 +2410,28 @@ body::before {
     padding-inline: 16px;
   }
 
-  .feature-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .feature-grid-frame {
-    margin-inline: -16px;
-  }
-
-  /* One column: only horizontal lines between cells. */
-  .feature-grid li,
-  .feature-grid li:nth-child(n) {
-    padding: 28px 20px;
-    border-right-color: transparent;
-    border-bottom-color: var(--border);
-  }
-
-  .feature-grid li:last-child {
-    border-bottom-color: transparent;
+  .box-grid-frame {
+    --gutter: 16px;
   }
 }
 
 @media (max-width: 700px) {
-  .review-facts {
+  .box-grid,
+  .box-grid.is-reflow {
     grid-template-columns: minmax(0, 1fr);
   }
 
-  .review-facts li,
-  .review-facts li:first-child {
-    padding: 20px 0;
+  /* One column: only horizontal lines between cells. */
+  .box-grid > li:nth-child(n),
+  .box-grid.is-reflow > li:nth-child(n) {
+    --line-r: transparent;
+    --line-b: var(--border);
+    padding: 28px 20px;
   }
 
-  .review-facts li + li {
-    border-top: 1px solid var(--border);
-    border-left: 0;
+  .box-grid > li:last-child,
+  .box-grid.is-reflow > li:last-child {
+    --line-b: transparent;
   }
 
   .review-room-title .review-version,
@@ -2500,6 +2455,10 @@ body::before {
 
   .review-comment-list {
     grid-template-columns: 1fr;
+  }
+
+  .review-comment-list > :nth-child(2) button {
+    box-shadow: inset 0 1px 0 var(--border);
   }
 
   .brand-cta {

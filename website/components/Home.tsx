@@ -1,11 +1,11 @@
 import {
-  CalendarDays,
-  CheckCircle2,
-  FolderKanban,
-  Link2,
-  MessageSquare,
-  Wallet,
-} from "lucide-react";
+  CalendarDotsIcon,
+  ChatCircleIcon,
+  CheckCircleIcon,
+  KanbanIcon,
+  LinkSimpleIcon,
+  WalletIcon,
+} from "@phosphor-icons/react/ssr";
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { APP_URL } from "../lib/links";
@@ -19,32 +19,32 @@ import SectionHeading from "./site/SectionHeading";
 
 const features = [
   {
-    icon: FolderKanban,
+    icon: KanbanIcon,
     title: "Projects and deadlines",
     text: "See every project, client, and due date in one ledger.",
   },
   {
-    icon: Link2,
+    icon: LinkSimpleIcon,
     title: "Private review links",
     text: "Clients review on a password-protected link. No account needed.",
   },
   {
-    icon: MessageSquare,
+    icon: ChatCircleIcon,
     title: "Timestamped comments",
     text: "YouTube and Vimeo comments land on the exact moment.",
   },
   {
-    icon: CheckCircle2,
+    icon: CheckCircleIcon,
     title: "Approvals and delivery",
     text: "Track which version was approved and when it shipped.",
   },
   {
-    icon: Wallet,
+    icon: WalletIcon,
     title: "Payment tracking",
     text: "Record fees, mark payments, and see what is still owed.",
   },
   {
-    icon: CalendarDays,
+    icon: CalendarDotsIcon,
     title: "Activity and calendar",
     text: "Follow project changes and upcoming deadlines.",
   },
@@ -71,10 +71,9 @@ export default function Home({ roadmap }: { roadmap: ReactNode }) {
                 Get started free
               </InteractiveHoverButton>
               <Button variant="outline" size="lg" asChild>
-                <Link href="/pricing">See pricing</Link>
+                <a href={APP_URL}>Sign in</a>
               </Button>
             </div>
-            <p className="hero-note">Free plan. No card needed.</p>
           </div>
           <div className="product-reveal">
             <HeroVideo
@@ -95,8 +94,8 @@ export default function Home({ roadmap }: { roadmap: ReactNode }) {
             description="Projects, reviews, delivery, and payments in one workspace."
             action={{ href: "/features", label: "All features" }}
           />
-          <div className="feature-grid-frame">
-            <ul className="feature-grid">
+          <div className="box-grid-frame">
+            <ul className="box-grid is-reflow">
               {features.map(({ icon: Icon, title, text }, index) => (
                 <li key={title}>
                   <Reveal delay={index * 0.05}>
