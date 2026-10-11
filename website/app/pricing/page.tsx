@@ -3,13 +3,17 @@ import PlanComparison from "../../components/pricing/PlanComparison";
 import PricingFaq from "../../components/pricing/PricingFaq";
 import PricingPlans from "../../components/pricing/PricingPlans";
 import PageHeader from "../../components/site/PageHeader";
+import {
+  CREATOR_MONTHLY_PRICE_USD,
+  TEAM_MONTHLY_PRICE_PER_SEAT_USD,
+  formatUsd,
+} from "../../lib/plans";
 import { siteOpenGraph } from "../../lib/site-metadata";
 import styles from "./page.module.css";
 
 export const metadata: Metadata = {
   title: "Pricing",
-  description:
-    "Relay is free while paid plans are in development. Creator and Team are not available yet.",
+  description: `Relay is free to start. Creator is ${formatUsd(CREATOR_MONTHLY_PRICE_USD)} per month and Team is ${formatUsd(TEAM_MONTHLY_PRICE_PER_SEAT_USD)} per member per month; both are still in development and checkout is not live.`,
   alternates: { canonical: "/pricing" },
   openGraph: { ...siteOpenGraph, url: "/pricing" },
 };
@@ -20,7 +24,7 @@ export default function PricingPage() {
     <>
       <PageHeader
         title="Pricing"
-        description="Relay is free while paid plans are in development."
+        description="Start free. Creator and Team prices are set, and checkout opens later."
       />
       <section className="section" aria-labelledby="plans-title">
         <div className="container">

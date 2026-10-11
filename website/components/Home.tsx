@@ -122,7 +122,7 @@ export default function Home({ roadmap }: { roadmap: ReactNode }) {
         <div className="container">
           <SectionHeading
             id="home-pricing-title"
-            title="Free while paid plans are in development."
+            title="Free to start. Paid plans are coming soon."
             action={{ href: "/pricing", label: "Compare plans" }}
             align="center"
           />

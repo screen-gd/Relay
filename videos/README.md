@@ -14,6 +14,11 @@ The launch videos are 1920×1080, 30 fps, H.264 with AAC audio, built with Remot
 - `source/gpt/`: code for `relay-launch-gpt.mp4`, plus its report and timing checks.
 - `source/showcase/`: the Playwright script that records `relay-site-showcase-dark.mp4`.
 
+The Remotion sources are a standalone project with their own dependencies and
+tsconfig, so the app's root `tsconfig.json` excludes `videos/source`. Without
+that exclusion `next build` type checks them, cannot resolve `remotion` and
+`@remotion/*`, and fails the whole build.
+
 The launch video sources are copies of the working Remotion project at `C:\Users\Administrator\my-video`. To render one, copy its `remotion/`, `scripts/` and `public/` folders into a Remotion project with the dependencies in `source/claude/package.json`, then run:
 
 ```bash

@@ -35,7 +35,7 @@ test.each([
     );
     vi.stubGlobal("fetch", upstream);
 
-    const { default: proxy, config } = await import("./proxy");
+    const { default: proxy, config } = await import("./middleware");
     const url = `https://relay-app.cc.cd/__clerk${path}`;
     expect(unstable_doesMiddlewareMatch({ config, nextConfig: {}, url })).toBe(
       true

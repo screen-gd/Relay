@@ -1,4 +1,9 @@
 import { siteUrl } from "../../lib/site-metadata";
+import {
+  CREATOR_MONTHLY_PRICE_USD,
+  TEAM_MONTHLY_PRICE_PER_SEAT_USD,
+  formatUsd,
+} from "../../lib/plans";
 
 export function GET() {
   const origin = siteUrl.replace(/\/$/, "");
@@ -16,9 +21,8 @@ Relay helps freelance video editors and small post-production teams manage video
 ## Plans and availability
 
 - Free is available to everyone. No invite is required.
-- Creator and Team are not available yet. There is no trial and no way to buy them.
+- Creator costs ${formatUsd(CREATOR_MONTHLY_PRICE_USD)} per month and Team costs ${formatUsd(TEAM_MONTHLY_PRICE_PER_SEAT_USD)} per member per month. Both are still in development, and checkout is not live, so neither can be bought yet.
 - File uploads are not available yet.
-- Paid prices are not set.
 
 For current plan details, read ${origin}/pricing rather than treating this summary as a price list.
 
