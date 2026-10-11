@@ -1,4 +1,5 @@
 import { CheckIcon } from "@phosphor-icons/react/ssr";
+import { plans } from "../../lib/plans";
 import {
   Table,
   TableBody,
@@ -15,6 +16,14 @@ const planNames = ["Free", "Creator", "Team"] as const;
 type Cell = boolean | string;
 
 const rows = [
+  {
+    label: "Price",
+    values: [
+      `${plans[0].price} ${plans[0].period}`,
+      `${plans[1].price} ${plans[1].period}`,
+      `${plans[2].price} ${plans[2].period}`,
+    ],
+  },
   {
     label: "Projects and clients",
     values: ["Unlimited", "Unlimited", "Unlimited"],
@@ -61,18 +70,18 @@ function CellValue({ value }: { value: Cell }) {
   return value;
 }
 
-/** Feature-by-plan comparison table for /pricing. Scrolls sideways on small screens. */
+/** Price and feature comparison table for /pricing. Scrolls sideways on small screens. */
 export default function PlanComparison() {
   return (
     <div className={styles.scroller}>
       <Table className={styles.table}>
         <caption className="sr-only">
-          Features included in each Relay plan
+          Price and features of each Relay plan
         </caption>
         <TableHeader>
           <TableRow>
             <TableHead scope="col">
-              <span className="sr-only">Feature</span>
+              <span className="sr-only">Detail</span>
             </TableHead>
             {planNames.map((name) => (
               <TableHead scope="col" key={name} className={styles.planHead}>

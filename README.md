@@ -136,9 +136,15 @@ Use an approved test backend and Clerk instance for previews. Changing the host
 does not deploy Convex or migrate data. Do not add `convex deploy` to the build
 command. Keep Clerk issuer configuration on the existing Convex deployment.
 
-`src/proxy.ts` forwards `/__clerk/*` scripts and API requests through Clerk's
-built-in proxy, including on the custom app domain. Keep the matching
+`src/middleware.ts` forwards `/__clerk/*` scripts and API requests through
+Clerk's built-in proxy, including on the custom app domain. Keep the matching
 `CLERK_SECRET_KEY` set in Vercel so the handler can forward those requests.
+
+Keep that file named `middleware.ts`. Next.js compiles the newer `proxy.ts`
+convention to the Node.js runtime, which `@opennextjs/cloudflare` refuses, so
+the Cloudflare Worker build fails with "Node.js middleware is not currently
+supported". The legacy filename compiles to Edge middleware that both hosts
+run, at the cost of a deprecation warning during `next build`.
 
 Before production cutover, configure the intended domain and permitted origins
 in Clerk and Vercel, then verify sign-in and signed-in Project journeys. Production

@@ -1,5 +1,10 @@
 import Link from "next/link";
 import {
+  CREATOR_MONTHLY_PRICE_USD,
+  TEAM_MONTHLY_PRICE_PER_SEAT_USD,
+  formatUsd,
+} from "../../lib/plans";
+import {
   Accordion,
   AccordionContent,
   AccordionItem,
@@ -22,8 +27,11 @@ const faqs = [
     question: "When can I get Creator or Team?",
     answer: (
       <>
-        Creator and Team are not available yet, and prices are not set. Follow
-        the <Link href="/roadmap">roadmap</Link> for updates.
+        Creator is {formatUsd(CREATOR_MONTHLY_PRICE_USD)} per month and Team is{" "}
+        {formatUsd(TEAM_MONTHLY_PRICE_PER_SEAT_USD)} per member per month. Both
+        are still in development, and checkout is not live, so there is no way
+        to buy either one yet. Follow the <Link href="/roadmap">roadmap</Link>{" "}
+        for updates.
       </>
     ),
   },
