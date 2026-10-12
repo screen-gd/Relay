@@ -446,7 +446,7 @@ function ProjectBoardColumn({
   return (
     <KanbanBoard
       id={`stage:${columnKey}`}
-      className="min-h-0 min-w-[280px]"
+      className="min-h-0 min-w-0"
       aria-label={`${stage.label} projects`}
     >
       <KanbanHeader
@@ -1142,7 +1142,7 @@ export function PrecisionProjects(props: PrecisionProjectsProps) {
                           <div
                             ref={boardRef}
                             data-board-wheel
-                            className="grid min-h-0 flex-1 auto-cols-[280px] grid-flow-col items-stretch gap-3 overflow-x-auto overflow-y-hidden bg-[var(--app-panel)] px-3 pb-3 pt-3"
+                            className="grid min-h-0 flex-1 auto-cols-[minmax(232px,1fr)] grid-flow-col items-stretch gap-3 overflow-x-auto overflow-y-hidden bg-[var(--app-panel)] px-3 pb-3 pt-3"
                             aria-label="Project board"
                           >
                             {board.map(
