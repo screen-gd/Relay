@@ -12,8 +12,9 @@ pnpm exec vitest run --config evals/feedback-revisions/vitest.config.mts
 ```
 
 Paid comparison requires explicit opt-in and dedicated evaluation credentials in
-`GOOGLE_GENERATIVE_AI_API_KEY` and `OPENAI_API_KEY`. Production credentials remain
-in Convex env vars. Do not use browser variables or commit keys.
+`GOOGLE_GENERATIVE_AI_API_KEY` and `OPENAI_API_KEY`. These are only for the local
+eval harness. Production uses encrypted workspace BYOK keys saved in Settings.
+Do not use browser variables or commit keys.
 
 ```powershell
 $env:RELAY_RUN_PAID_EVALS = "1"

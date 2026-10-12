@@ -7,6 +7,7 @@ import { api, internal } from "./_generated/api";
 import type { Doc, Id } from "./_generated/dataModel";
 import { riskDigestInputSchema } from "./riskDigestPrompt";
 import schema from "./schema";
+import { seedAiKeys } from "./testHelpers/aiKeys.fixture";
 
 vi.mock("ai", () => ({ generateObject: vi.fn() }));
 const modules = import.meta.glob("./**/*.ts");
@@ -15,7 +16,6 @@ const NOW = "2026-10-09T12:00:00.000Z";
 beforeEach(() => {
   vi.useFakeTimers();
   vi.setSystemTime(new Date(NOW));
-  vi.stubEnv("GOOGLE_GENERATIVE_AI_API_KEY", "test-key");
 });
 afterEach(() => {
   vi.clearAllTimers();
@@ -94,6 +94,7 @@ async function fixture() {
     return workspaceId;
   });
   await t.mutation(internal.deadlineRisk.scanWorkspace, { workspaceId });
+  await seedAiKeys(t, workspaceId);
   const as = (tokenIdentifier: string) => t.withIdentity({ tokenIdentifier });
   const generate = (user = "owner") =>
     as(user).mutation(api.riskDigest.generate, {

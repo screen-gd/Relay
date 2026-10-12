@@ -30,6 +30,7 @@ import type * as versionChangelogActions from "../versionChangelogActions.js";
 import type * as versionChangelogPrompt from "../versionChangelogPrompt.js";
 import type * as versionChangelogValidators from "../versionChangelogValidators.js";
 import type * as aiGeneration from "../aiGeneration.js";
+import type * as aiCredentials from "../aiCredentials.js";
 import type * as aiRuns from "../aiRuns.js";
 import type * as aiValidators from "../aiValidators.js";
 import type * as billingParsing from "../billingParsing.js";
@@ -110,6 +111,7 @@ declare const fullApi: ApiFromModules<{
   versionChangelogPrompt: typeof versionChangelogPrompt;
   versionChangelogValidators: typeof versionChangelogValidators;
   aiGeneration: typeof aiGeneration;
+  aiCredentials: typeof aiCredentials;
   aiRuns: typeof aiRuns;
   aiValidators: typeof aiValidators;
   billingParsing: typeof billingParsing;

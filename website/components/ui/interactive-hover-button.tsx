@@ -1,4 +1,3 @@
-import { ArrowRight } from "lucide-react";
 import Link from "next/link";
 import type { ComponentProps } from "react";
 
@@ -9,9 +8,9 @@ const roll = "inline-block transition-transform duration-300 ease-out";
 /**
  * Call-to-action link adapted from Magic UI's Interactive Hover Button
  * (https://magicui.design/docs/components/interactive-hover-button).
- * On hover or keyboard focus the label rolls up, a copy rolls in from below,
- * and the arrow nudges right. Unlike the original it keeps the site's button
- * shape and never floods the background with color. Works for internal and
+ * On hover or keyboard focus the label rolls up and a copy rolls in from
+ * below. Unlike the original it keeps the site's button shape, has no arrow,
+ * and never floods the background with color. Works for internal and
  * external URLs.
  */
 export function InteractiveHoverButton({
@@ -39,10 +38,6 @@ export function InteractiveHoverButton({
             {children}
           </span>
         </span>
-        <ArrowRight
-          aria-hidden="true"
-          className="group-hover/button:translate-x-0.5 group-focus-visible/button:translate-x-0.5"
-        />
       </Link>
     </Button>
   );

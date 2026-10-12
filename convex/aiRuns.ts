@@ -11,7 +11,11 @@ import {
   type MutationCtx,
   type QueryCtx,
 } from "./_generated/server";
-import { aiCompletionValidator, aiFailureCodeValidator } from "./aiValidators";
+import {
+  aiCompletionValidator,
+  aiFailureCodeValidator,
+  aiProviderForTier,
+} from "./aiValidators";
 import { requireProjectVisibility } from "./projectAccess";
 import schema from "./schema";
 import { resolveWorkspaceEntitlements } from "./workspaceSubscriptions";
@@ -51,7 +55,7 @@ async function workspaceMember(
   return { workspace, member };
 }
 
-async function authenticatedMember(
+export async function authenticatedMember(
   ctx: QueryCtx | MutationCtx,
   workspaceId: Id<"teamWorkspaces">
 ) {
@@ -130,6 +134,8 @@ export const getSummary = query({
   returns: v.object({
     enabled: v.boolean(),
     canManage: v.boolean(),
+    googleConfigured: v.boolean(),
+    openaiConfigured: v.boolean(),
     month: v.string(),
     limit: v.number(),
     used: v.number(),
@@ -142,9 +148,21 @@ export const getSummary = query({
       workspaceId
     );
     const usage = await monthlyUsage(ctx, workspaceId, month);
+    const [google, openai] = await Promise.all(
+      (["google", "openai"] as const).map((provider) =>
+        ctx.db
+          .query("aiProviderKeys")
+          .withIndex("by_workspaceId_and_provider", (q) =>
+            q.eq("workspaceId", workspaceId).eq("provider", provider)
+          )
+          .unique()
+      )
+    );
     return {
       enabled: workspace.aiEnabled ?? false,
       canManage: member.role === "Owner" && workspace.ownerUserId === userId,
+      googleConfigured: google !== null,
+      openaiConfigured: openai !== null,
       month,
       limit: usage.limit,
       used: usage.used,
@@ -242,6 +260,18 @@ export async function enqueueAiRun(
     .first();
   if (existing && existing.status !== "failed") {
     return { runId: existing._id, reused: true };
+  }
+  const provider = aiProviderForTier(request.modelTier);
+  const credential = await ctx.db
+    .query("aiProviderKeys")
+    .withIndex("by_workspaceId_and_provider", (q) =>
+      q.eq("workspaceId", request.workspaceId).eq("provider", provider)
+    )
+    .unique();
+  if (!credential) {
+    throw new Error(
+      `Add a ${provider === "google" ? "Gemini" : "OpenAI"} API key in Workspace Settings before running AI`
+    );
   }
   const month = new Date().toISOString().slice(0, 7);
   const usage = await monthlyUsage(ctx, request.workspaceId, month);

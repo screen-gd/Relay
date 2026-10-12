@@ -1,22 +1,29 @@
 /* Three separate cards; rows share a subgrid so panels, lists, and buttons
-   line up. Top padding leaves room for a card's label tab. */
+   line up. Top padding only appears when a card has a label tab to make
+   room for. */
 .plans {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   grid-template-rows: repeat(5, auto);
   gap: 0 16px;
-  padding-top: 32px;
   /* Contains the tab's z-index: -1 so it sits behind the (positioned) card
      but above whatever is behind the grid. */
   isolation: isolate;
 }
 
+.plans:has(.tab) {
+  padding-top: 32px;
+}
+
 .plan {
+  position: relative;
   display: grid;
   grid-row: span 5;
   grid-template-rows: subgrid;
   min-width: 0;
-  padding: 8px;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: var(--card);
   color: var(--foreground);
 }
 
@@ -38,10 +45,11 @@
   text-align: center;
 }
 
-/* Price panel at the top of the card. */
+/* Price panel flush with the card's top and sides; the radius sits just
+   inside the card's 1px border. */
 .top {
-  padding: 24px 20px;
-  border-radius: 12px;
+  padding: 28px 24px 24px;
+  border-radius: 15px 15px 0 0;
   background: var(--muted);
 }
 
@@ -91,7 +99,7 @@
   align-content: start;
   gap: 12px;
   margin: 0;
-  padding: 28px 20px 24px;
+  padding: 28px 24px 24px;
   list-style: none;
 }
 
@@ -112,11 +120,18 @@
   color: var(--muted-foreground);
 }
 
-/* "Who's the plan for?" block below a dotted rule. */
+/* "Who's the plan for?" block below a dotted rule. The dots are drawn as
+   round 2px marks on a fixed 8px rhythm; `space` spreads whole dots evenly
+   so the row starts and ends on a dot in every card. */
 .audience {
-  margin: 0 20px;
-  padding-top: 20px;
-  border-top: 2px dotted var(--border-strong);
+  margin: 0 24px;
+  padding-top: 22px;
+  background: radial-gradient(
+      circle,
+      color-mix(in srgb, var(--foreground) 28%, transparent) 1px,
+      transparent 1.5px
+    )
+    top left / 8px 2px space no-repeat;
 }
 
 .audience h4 {
@@ -133,7 +148,7 @@
 }
 
 .note {
-  margin: 16px 20px 0;
+  margin: 16px 24px 0;
   color: var(--muted-foreground);
   font-size: 13px;
   line-height: 1.5;
@@ -145,7 +160,7 @@
 
 .cta {
   align-self: end;
-  padding: 24px 12px 12px;
+  padding: 24px;
 }
 
 @media (max-width: 900px) {

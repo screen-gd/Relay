@@ -1,15 +1,13 @@
-import { CircleCheck, Clock } from "lucide-react";
+import { CheckCircleIcon, ClockIcon } from "@phosphor-icons/react/ssr";
 import { plans, type Plan } from "../../lib/plans";
 import { Button } from "@/components/ui/button";
 import { InteractiveHoverButton } from "@/components/ui/interactive-hover-button";
-import SpotlightCard from "../react-bits/SpotlightCard";
 import Reveal from "../site/Reveal";
 import styles from "./PricingPlans.module.css";
 
 /**
- * Plan showcase used on the home page and /pricing: three React Bits
- * SpotlightCards with a price panel, feature list, "who it's for" block, and
- * a full-width button. Cards share a subgrid so every row lines up. The
+ * Plan showcase used on the home page and /pricing: three plan cards with a
+ * price panel, feature list, "who it's for" block, and a full-width button. Cards share a subgrid so every row lines up. The
  * panel reveals as one block so the subgrid stays intact.
  */
 export default function PricingPlans() {
@@ -29,11 +27,7 @@ function PlanCard({ plan }: { plan: Plan }) {
   const titleId = `plan-${plan.name.toLowerCase()}`;
 
   return (
-    <SpotlightCard
-      className={styles.plan}
-      role="article"
-      aria-labelledby={titleId}
-    >
+    <article className={styles.plan} aria-labelledby={titleId}>
       {plan.tab ? <p className={styles.tab}>{plan.tab}</p> : null}
       <div className={styles.top}>
         <h3 id={titleId}>{plan.name}</h3>
@@ -47,13 +41,13 @@ function PlanCard({ plan }: { plan: Plan }) {
       <ul className={styles.features}>
         {plan.features.map((feature) => (
           <li key={feature}>
-            <CircleCheck size={18} aria-hidden="true" />
+            <CheckCircleIcon size={18} aria-hidden="true" />
             {feature}
           </li>
         ))}
         {plan.comingSoon.map((feature) => (
           <li key={feature} className={styles.soon}>
-            <Clock size={18} aria-hidden="true" />
+            <ClockIcon size={18} aria-hidden="true" />
             {feature} (coming soon)
           </li>
         ))}
@@ -74,6 +68,6 @@ function PlanCard({ plan }: { plan: Plan }) {
           </Button>
         )}
       </div>
-    </SpotlightCard>
+    </article>
   );
 }

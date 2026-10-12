@@ -1,6 +1,6 @@
 "use client";
 
-import { Play } from "lucide-react";
+import { PlayIcon } from "@phosphor-icons/react/ssr";
 import { useEffect, useRef } from "react";
 
 export type HeroVideoSource = { src: string; poster?: string };
@@ -54,7 +54,7 @@ export default function HeroVideo({ video }: { video?: HeroVideoSource }) {
       aria-label="Product video placeholder"
     >
       <span className="hero-video-play" aria-hidden="true">
-        <Play size={28} fill="currentColor" />
+        <PlayIcon size={28} weight="fill" />
       </span>
       <p>Product walkthrough coming soon</p>
     </div>

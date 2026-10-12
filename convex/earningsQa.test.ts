@@ -7,6 +7,7 @@ import { api, internal } from "./_generated/api";
 import type { Doc, Id } from "./_generated/dataModel";
 import { verifyEarningsAnswer, type EarningsAnswer } from "./earningsQaPrompt";
 import schema from "./schema";
+import { seedAiKeys } from "./testHelpers/aiKeys.fixture";
 
 vi.mock("ai", () => ({
   generateObject: vi.fn(),
@@ -21,7 +22,6 @@ const NOW = "2026-10-09T12:00:00.000Z";
 beforeEach(() => {
   vi.useFakeTimers();
   vi.setSystemTime(new Date(NOW));
-  vi.stubEnv("GOOGLE_GENERATIVE_AI_API_KEY", "test-key");
 });
 afterEach(() => {
   vi.clearAllTimers();
@@ -105,6 +105,7 @@ async function fixture() {
     );
     return workspaceId;
   });
+  await seedAiKeys(t, workspaceId);
   const as = (tokenIdentifier: string) => t.withIdentity({ tokenIdentifier });
   const ask = (user: string, question = "What did I earn in August?") =>
     as(user).mutation(api.earningsQa.ask, {

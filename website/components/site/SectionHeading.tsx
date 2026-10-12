@@ -1,4 +1,4 @@
-import { ArrowRight } from "lucide-react";
+import { ArrowRightIcon } from "@phosphor-icons/react/ssr";
 import Link from "next/link";
 import Reveal from "./Reveal";
 
@@ -34,7 +34,7 @@ export default function SectionHeading({
       </div>
       {action ? (
         <Link className="section-link" href={action.href}>
-          {action.label} <ArrowRight size={16} aria-hidden="true" />
+          {action.label} <ArrowRightIcon size={16} aria-hidden="true" />
         </Link>
       ) : null}
     </Reveal>

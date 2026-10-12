@@ -13,7 +13,14 @@ import {
   Milestone,
 } from "lucide-react";
 import { motion } from "motion/react";
-import { useMemo, useState } from "react";
+import {
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+  type KeyboardEvent,
+} from "react";
+import { calendarDateForKey } from "@/features/schedule/calendar-keyboard";
 import type { SettingsState, WorkItem } from "@/lib/types";
 import { useHydratedReducedMotion } from "@/lib/motion";
 import {
@@ -173,10 +180,19 @@ export function PrecisionCalendar({
     return new Date(today.getFullYear(), today.getMonth(), 1);
   });
   const [selectedDate, setSelectedDate] = useState(iso(todayDate()));
+  const [focusedDate, setFocusedDate] = useState(selectedDate);
+  const focusedDay = useRef<HTMLButtonElement>(null);
+  const moveFocus = useRef(false);
   const [viewMode, setViewMode] = useState<"month" | "week" | "agenda">(
     "month"
   );
   const reduceMotion = useHydratedReducedMotion();
+  useLayoutEffect(() => {
+    if (moveFocus.current) {
+      focusedDay.current?.focus();
+      moveFocus.current = false;
+    }
+  }, [focusedDate, visibleMonth, viewMode]);
   const todayKey = iso(todayDate());
   const events = useMemo(
     () =>
@@ -226,9 +242,9 @@ export function PrecisionCalendar({
         ),
     [projects, visibleMonth]
   );
-  /** The seven days of the week that contains `selectedDate`. */
+  /** Keep the focused day visible when keyboard navigation crosses a week. */
   const selectedWeekDays = useMemo(() => {
-    const selected = parseDate(selectedDate) ?? todayDate();
+    const selected = parseDate(focusedDate) ?? todayDate();
     const weekOffset =
       (selected.getDay() - weekdayIndex(settings.weekStart) + 7) % 7;
     return Array.from(
@@ -240,13 +256,39 @@ export function PrecisionCalendar({
           selected.getDate() - weekOffset + index
         )
     );
-  }, [selectedDate, settings.weekStart]);
+  }, [focusedDate, settings.weekStart]);
   const weekKeys = selectedWeekDays.map(iso);
   const weekEventCount = weekKeys.reduce(
     (count, key) => count + (eventsByDate.get(key)?.length ?? 0),
     0
   );
   const weekLabel = formatWeekRange(selectedWeekDays[0], selectedWeekDays[6]);
+  const monthFocusKey = weeks
+    .flat()
+    .some((day) => iso(day.date) === focusedDate)
+    ? focusedDate
+    : iso(visibleMonth);
+
+  function selectDay(key: string) {
+    setSelectedDate(key);
+    setFocusedDate(key);
+  }
+
+  function navigateDay(event: KeyboardEvent<HTMLButtonElement>, date: Date) {
+    if (event.altKey || event.ctrlKey || event.metaKey) return;
+    const next = calendarDateForKey(date, event.key, settings.weekStart);
+    if (!next) return;
+    event.preventDefault();
+    moveFocus.current = true;
+    setFocusedDate(iso(next));
+    setVisibleMonth(new Date(next.getFullYear(), next.getMonth(), 1));
+  }
+
+  function eventStatusLabel(dayEvents: typeof events) {
+    return dayEvents.length
+      ? `; ${dayEvents.map((event) => `${event.title}, ${projectsById.get(event.projectId)?.status ?? "Planned"}`).join("; ")}`
+      : "";
+  }
 
   /** Week view pages by week; month and agenda page by month. */
   function shiftPeriod(offset: number) {
@@ -256,13 +298,13 @@ export function PrecisionCalendar({
 
   /** Moves the selection by whole weeks, keeping the visible month in sync. */
   function shiftWeek(offset: number) {
-    const selected = parseDate(selectedDate) ?? todayDate();
+    const selected = parseDate(focusedDate) ?? todayDate();
     const next = new Date(
       selected.getFullYear(),
       selected.getMonth(),
       selected.getDate() + offset * 7
     );
-    setSelectedDate(iso(next));
+    selectDay(iso(next));
     setVisibleMonth(new Date(next.getFullYear(), next.getMonth(), 1));
   }
 
@@ -278,7 +320,7 @@ export function PrecisionCalendar({
       .map((event) => event.date)
       .sort()[0];
     setVisibleMonth(next);
-    setSelectedDate(
+    selectDay(
       inMonth(todayKey, next) ? todayKey : (firstScheduled ?? iso(next))
     );
   }
@@ -286,7 +328,7 @@ export function PrecisionCalendar({
   function jumpToToday() {
     const today = todayDate();
     setVisibleMonth(new Date(today.getFullYear(), today.getMonth(), 1));
-    setSelectedDate(iso(today));
+    selectDay(iso(today));
   }
 
   function downloadFeed() {
@@ -402,84 +444,121 @@ export function PrecisionCalendar({
                   className="h-full"
                   bodyClassName="flex min-h-0 flex-1 flex-col"
                 >
-                  <div className="grid grid-cols-7 border-b border-[var(--app-border)]">
-                    {weekdays.map((day) => (
-                      <div
-                        key={day}
-                        className="px-3 py-2 text-xs font-medium text-[var(--app-muted)]"
-                      >
-                        {day}
-                      </div>
-                    ))}
-                  </div>
                   <div
-                    className="grid min-h-0 flex-1 grid-cols-7 gap-px bg-[var(--app-border)]"
-                    style={{
-                      gridTemplateRows: `repeat(${weeks.length}, minmax(6.5rem, 1fr))`,
-                    }}
+                    role="grid"
+                    aria-label={monthLabel}
+                    className="flex min-h-0 flex-1 flex-col"
                   >
-                    {weeks.flat().map((day) => {
-                      const key = iso(day.date);
-                      const dayEvents = eventsByDate.get(key) ?? [];
-                      const isCurrentMonth =
-                        day.date.getMonth() === visibleMonth.getMonth();
-                      const isSelected = selectedDate === key;
-                      const isToday = key === todayKey;
-
-                      return (
-                        <Button
-                          key={key}
-                          type="button"
-                          variant="ghost"
-                          aria-label={`${formatDate(key, { month: "long", day: "numeric", year: "numeric" })}, ${dayEvents.length} scheduled`}
-                          aria-pressed={isSelected}
-                          aria-current={isToday ? "date" : undefined}
-                          onClick={() => setSelectedDate(key)}
-                          className={cn(
-                            "h-full min-h-0 w-full min-w-0 flex-col items-stretch justify-start gap-1.5 overflow-hidden rounded-none p-2 text-left font-normal whitespace-normal focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--app-highlight)] active:translate-y-0 active:scale-100",
-                            isSelected
-                              ? "bg-[var(--app-active)] hover:bg-[var(--app-active)] dark:hover:bg-[var(--app-active)]"
-                              : "bg-[var(--app-panel)] hover:bg-[var(--app-hover)] dark:hover:bg-[var(--app-hover)]"
-                          )}
+                    <div
+                      role="row"
+                      className="grid grid-cols-7 border-b border-[var(--app-border)]"
+                    >
+                      {weekdays.map((day) => (
+                        <div
+                          role="columnheader"
+                          key={day}
+                          className="px-3 py-2 text-xs font-medium text-[var(--app-muted)]"
                         >
-                          <span
-                            className={cn(
-                              "grid size-6 place-items-center rounded-full text-xs font-semibold tabular-nums",
-                              isToday
-                                ? "bg-foreground text-background"
-                                : isCurrentMonth
-                                  ? "text-[var(--app-ink)]"
-                                  : "text-[var(--app-muted)]"
-                            )}
-                          >
-                            {day.date.getDate()}
-                          </span>
-                          {dayEvents.slice(0, 3).map((event) => (
-                            <span
-                              key={event.id}
-                              className="flex min-w-0 items-center gap-1.5 text-xs text-[var(--app-ink)]"
-                            >
-                              <span
-                                aria-hidden="true"
-                                className="size-1.5 shrink-0 rounded-full"
-                                style={{
-                                  background: projectStatusColor(
-                                    projectsById.get(event.projectId)?.status ??
-                                      "Planned"
-                                  ),
-                                }}
-                              />
-                              <span className="truncate">{event.title}</span>
-                            </span>
-                          ))}
-                          {dayEvents.length > 3 ? (
-                            <span className="text-xs text-[var(--app-muted)]">
-                              +{dayEvents.length - 3} more
-                            </span>
-                          ) : null}
-                        </Button>
-                      );
-                    })}
+                          {day}
+                        </div>
+                      ))}
+                    </div>
+                    <div
+                      role="rowgroup"
+                      className="grid min-h-0 flex-1 gap-px bg-[var(--app-border)]"
+                      style={{
+                        gridTemplateRows: `repeat(${weeks.length}, minmax(6.5rem, 1fr))`,
+                      }}
+                    >
+                      {weeks.map((week) => (
+                        <div
+                          key={iso(week[0].date)}
+                          role="row"
+                          className="grid min-h-0 grid-cols-7 gap-px"
+                        >
+                          {week.map((day) => {
+                            const key = iso(day.date);
+                            const dayEvents = eventsByDate.get(key) ?? [];
+                            const isCurrentMonth =
+                              day.date.getMonth() === visibleMonth.getMonth();
+                            const isSelected = selectedDate === key;
+                            const isToday = key === todayKey;
+
+                            return (
+                              <div
+                                key={key}
+                                role="gridcell"
+                                aria-selected={isSelected}
+                                className="min-h-0 min-w-0"
+                              >
+                                <Button
+                                  ref={
+                                    key === monthFocusKey
+                                      ? focusedDay
+                                      : undefined
+                                  }
+                                  type="button"
+                                  variant="ghost"
+                                  aria-label={`${formatDate(key, { month: "long", day: "numeric", year: "numeric" })}, ${dayEvents.length} scheduled${eventStatusLabel(dayEvents)}`}
+                                  aria-pressed={isSelected}
+                                  aria-current={isToday ? "date" : undefined}
+                                  tabIndex={key === monthFocusKey ? 0 : -1}
+                                  onFocus={() => setFocusedDate(key)}
+                                  onKeyDown={(event) =>
+                                    navigateDay(event, day.date)
+                                  }
+                                  onClick={() => selectDay(key)}
+                                  className={cn(
+                                    "h-full min-h-0 w-full min-w-0 flex-col items-stretch justify-start gap-1.5 overflow-hidden rounded-none p-2 text-left font-normal whitespace-normal focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--app-highlight)] active:translate-y-0 active:scale-100",
+                                    isSelected
+                                      ? "bg-[var(--app-active)] hover:bg-[var(--app-active)] dark:hover:bg-[var(--app-active)]"
+                                      : "bg-[var(--app-panel)] hover:bg-[var(--app-hover)] dark:hover:bg-[var(--app-hover)]"
+                                  )}
+                                >
+                                  <span
+                                    className={cn(
+                                      "grid size-6 place-items-center rounded-full text-xs font-semibold tabular-nums",
+                                      isToday
+                                        ? "bg-foreground text-background"
+                                        : isCurrentMonth
+                                          ? "text-[var(--app-ink)]"
+                                          : "text-[var(--app-muted)]"
+                                    )}
+                                  >
+                                    {day.date.getDate()}
+                                  </span>
+                                  {dayEvents.slice(0, 3).map((event) => (
+                                    <span
+                                      key={event.id}
+                                      className="flex min-w-0 items-center gap-1.5 text-xs text-[var(--app-ink)]"
+                                    >
+                                      <span
+                                        aria-hidden="true"
+                                        className="size-1.5 shrink-0 rounded-full"
+                                        style={{
+                                          background: projectStatusColor(
+                                            projectsById.get(event.projectId)
+                                              ?.status ?? "Planned"
+                                          ),
+                                        }}
+                                      />
+                                      <span className="truncate">
+                                        {event.title}
+                                      </span>
+                                    </span>
+                                  ))}
+                                  {dayEvents.length > 3 ? (
+                                    <span className="text-xs text-[var(--app-muted)]">
+                                      +{dayEvents.length - 3} more
+                                    </span>
+                                  ) : null}
+                                </Button>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 </ContentSection>
               ) : viewMode === "week" ? (
@@ -488,84 +567,100 @@ export function PrecisionCalendar({
                   className="h-full"
                   bodyClassName="flex min-h-0 flex-1 flex-col"
                 >
-                  <div className="grid min-h-0 flex-1 grid-cols-7 gap-px bg-[var(--app-border)]">
-                    {selectedWeekDays.map((date) => {
-                      const key = iso(date);
-                      const dayEvents = eventsByDate.get(key) ?? [];
-                      const isSelected = selectedDate === key;
-                      const isToday = key === todayKey;
-                      return (
-                        <div
-                          key={key}
-                          onClick={() => setSelectedDate(key)}
-                          className={cn(
-                            "flex min-h-[18rem] min-w-0 flex-col gap-1 p-2",
-                            isSelected
-                              ? "bg-[var(--app-active)]"
-                              : "bg-[var(--app-panel)]"
-                          )}
-                        >
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            aria-label={`${formatDate(key, { weekday: "long", month: "long", day: "numeric" })}, ${dayEvents.length} scheduled`}
-                            aria-pressed={isSelected}
-                            aria-current={isToday ? "date" : undefined}
-                            onClick={() => setSelectedDate(key)}
-                            className="h-auto justify-start gap-2 px-1 py-1 font-normal hover:bg-transparent dark:hover:bg-transparent active:translate-y-0 active:scale-100"
+                  <div
+                    role="grid"
+                    aria-label={weekLabel}
+                    className="flex min-h-0 flex-1"
+                  >
+                    <div
+                      role="row"
+                      className="grid min-h-0 flex-1 grid-cols-7 gap-px bg-[var(--app-border)]"
+                    >
+                      {selectedWeekDays.map((date) => {
+                        const key = iso(date);
+                        const dayEvents = eventsByDate.get(key) ?? [];
+                        const isSelected = selectedDate === key;
+                        const isToday = key === todayKey;
+                        return (
+                          <div
+                            key={key}
+                            role="gridcell"
+                            aria-selected={isSelected}
+                            onClick={() => selectDay(key)}
+                            className={cn(
+                              "flex min-h-[18rem] min-w-0 flex-col gap-1 p-2",
+                              isSelected
+                                ? "bg-[var(--app-active)]"
+                                : "bg-[var(--app-panel)]"
+                            )}
                           >
-                            <span className="text-xs text-[var(--app-muted)]">
-                              {formatDate(key, { weekday: "short" })}
-                            </span>
-                            <span
-                              className={cn(
-                                "grid size-7 place-items-center rounded-full text-sm font-semibold tabular-nums",
-                                isToday
-                                  ? "bg-foreground text-background"
-                                  : "text-[var(--app-ink)]"
-                              )}
+                            <Button
+                              ref={key === focusedDate ? focusedDay : undefined}
+                              type="button"
+                              variant="ghost"
+                              aria-label={`${formatDate(key, { weekday: "long", month: "long", day: "numeric" })}, ${dayEvents.length} scheduled${eventStatusLabel(dayEvents)}`}
+                              aria-pressed={isSelected}
+                              aria-current={isToday ? "date" : undefined}
+                              tabIndex={key === focusedDate ? 0 : -1}
+                              onFocus={() => setFocusedDate(key)}
+                              onKeyDown={(event) => navigateDay(event, date)}
+                              onClick={() => selectDay(key)}
+                              className="h-auto justify-start gap-2 px-1 py-1 font-normal hover:bg-transparent dark:hover:bg-transparent focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--app-highlight)] active:translate-y-0 active:scale-100"
                             >
-                              {date.getDate()}
-                            </span>
-                          </Button>
-                          {dayEvents.map((event) => {
-                            const project = projectsById.get(event.projectId);
-                            return (
-                              <Button
-                                key={event.id}
-                                type="button"
-                                variant="ghost"
-                                disabled={!project}
-                                onClick={(clickEvent) => {
-                                  clickEvent.stopPropagation();
-                                  setSelectedDate(key);
-                                  if (project) onViewProject(project);
-                                }}
-                                className="h-auto w-full min-w-0 flex-col items-stretch gap-0.5 rounded-md px-2 py-1.5 text-left font-normal whitespace-normal hover:bg-[var(--app-hover)] dark:hover:bg-[var(--app-hover)] active:translate-y-0 active:scale-100"
+                              <span className="text-xs text-[var(--app-muted)]">
+                                {formatDate(key, { weekday: "short" })}
+                              </span>
+                              <span
+                                className={cn(
+                                  "grid size-7 place-items-center rounded-full text-sm font-semibold tabular-nums",
+                                  isToday
+                                    ? "bg-foreground text-background"
+                                    : "text-[var(--app-ink)]"
+                                )}
                               >
-                                <span className="flex min-w-0 items-center gap-1.5">
-                                  <span
-                                    aria-hidden="true"
-                                    className="size-1.5 shrink-0 rounded-full"
-                                    style={{
-                                      background: projectStatusColor(
-                                        project?.status ?? "Planned"
-                                      ),
-                                    }}
-                                  />
-                                  <span className="truncate text-xs font-semibold text-[var(--app-ink)]">
-                                    {event.title}
+                                {date.getDate()}
+                              </span>
+                            </Button>
+                            {dayEvents.map((event) => {
+                              const project = projectsById.get(event.projectId);
+                              return (
+                                <Button
+                                  key={event.id}
+                                  type="button"
+                                  variant="ghost"
+                                  aria-label={`${event.title}, ${project?.status ?? "Planned"}, ${event.detail ?? event.kind}`}
+                                  disabled={!project}
+                                  onClick={(clickEvent) => {
+                                    clickEvent.stopPropagation();
+                                    selectDay(key);
+                                    if (project) onViewProject(project);
+                                  }}
+                                  className="h-auto w-full min-w-0 flex-col items-stretch gap-0.5 rounded-md px-2 py-1.5 text-left font-normal whitespace-normal hover:bg-[var(--app-hover)] dark:hover:bg-[var(--app-hover)] active:translate-y-0 active:scale-100"
+                                >
+                                  <span className="flex min-w-0 items-center gap-1.5">
+                                    <span
+                                      aria-hidden="true"
+                                      className="size-1.5 shrink-0 rounded-full"
+                                      style={{
+                                        background: projectStatusColor(
+                                          project?.status ?? "Planned"
+                                        ),
+                                      }}
+                                    />
+                                    <span className="truncate text-xs font-semibold text-[var(--app-ink)]">
+                                      {event.title}
+                                    </span>
                                   </span>
-                                </span>
-                                <span className="truncate pl-3 text-[11px] text-[var(--app-muted)] capitalize">
-                                  {event.detail ?? event.kind}
-                                </span>
-                              </Button>
-                            );
-                          })}
-                        </div>
-                      );
-                    })}
+                                  <span className="truncate pl-3 text-[11px] text-[var(--app-muted)] capitalize">
+                                    {event.detail ?? event.kind}
+                                  </span>
+                                </Button>
+                              );
+                            })}
+                          </div>
+                        );
+                      })}
+                    </div>
                   </div>
                 </ContentSection>
               ) : (
@@ -581,7 +676,7 @@ export function PrecisionCalendar({
                         type="button"
                         variant="ghost"
                         onClick={() => {
-                          setSelectedDate(project.dueDate);
+                          selectDay(project.dueDate);
                           onViewProject(project);
                         }}
                         className={cn(

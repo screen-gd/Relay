@@ -2,15 +2,15 @@
 
 import Image from "next/image";
 import {
-  Check,
-  Link2,
-  LockKeyhole,
-  MessageSquare,
-  Pause,
-  Play,
-  Volume2,
-  VolumeX,
-} from "lucide-react";
+  ChatCircleIcon,
+  CheckIcon,
+  LinkSimpleIcon,
+  LockKeyIcon,
+  PauseIcon,
+  PlayIcon,
+  SpeakerHighIcon,
+  SpeakerSlashIcon,
+} from "@phosphor-icons/react/ssr";
 import { useEffect, useRef, useState, type CSSProperties } from "react";
 import chapter from "./features/chapter.module.css";
 import AnimatedList from "./react-bits/AnimatedList";
@@ -25,17 +25,17 @@ const heading = {
 
 const facts = [
   {
-    icon: LockKeyhole,
+    icon: LockKeyIcon,
     title: "Password-protected links",
     text: "Clients open the link and review. No account needed.",
   },
   {
-    icon: MessageSquare,
+    icon: ChatCircleIcon,
     title: "Timestamped comments",
     text: "YouTube and Vimeo comments land on the exact moment.",
   },
   {
-    icon: Link2,
+    icon: LinkSimpleIcon,
     title: "Drive and Dropbox",
     text: "General comments and manual timestamps on linked files.",
   },
@@ -45,6 +45,7 @@ const comments = [
   {
     id: 1,
     author: "Maya Chen",
+    avatar: "/avatars/maya-chen.jpg",
     time: "00:04",
     text: "Can we hold this shot for half a second longer?",
     seconds: 4,
@@ -52,6 +53,7 @@ const comments = [
   {
     id: 2,
     author: "Jordan Patel",
+    avatar: "/avatars/jordan-patel.jpg",
     time: "00:09",
     text: "Love the pace here.",
     seconds: 9,
@@ -59,6 +61,7 @@ const comments = [
   {
     id: 3,
     author: "Alex Rivera",
+    avatar: "/avatars/alex-rivera.jpg",
     time: "00:14",
     text: "Let's brighten the midtones just a touch.",
     seconds: 14,
@@ -66,6 +69,7 @@ const comments = [
   {
     id: 4,
     author: "Samir Khan",
+    avatar: "/avatars/samir-khan.jpg",
     time: "00:20",
     text: "Can we soften the highlights on the road?",
     seconds: 20,
@@ -86,12 +90,6 @@ const clampTime = (seconds: number, duration: number) => {
   const safeDuration = Number.isFinite(duration) && duration > 0 ? duration : 0;
   return Math.min(safeSeconds, safeDuration || safeSeconds);
 };
-
-const initials = (name: string) =>
-  name
-    .split(" ")
-    .map((part) => part[0])
-    .join("");
 
 /**
  * Interactive sample of the client review page: a 16:9 player with comment
@@ -232,7 +230,7 @@ export default function ClientReviewDemo({ variant }: { variant?: "chapter" }) {
           >
             {approved ? (
               <>
-                <Check size={15} aria-hidden="true" /> Approved
+                <CheckIcon size={15} aria-hidden="true" /> Approved
               </>
             ) : (
               "Approve v4"
@@ -299,7 +297,7 @@ export default function ClientReviewDemo({ variant }: { variant?: "chapter" }) {
               {!playing && (
                 <div className="review-play-overlay" aria-hidden="true">
                   <span>
-                    <Play size={24} fill="currentColor" />
+                    <PlayIcon size={24} weight="fill" />
                   </span>
                 </div>
               )}
@@ -326,9 +324,9 @@ export default function ClientReviewDemo({ variant }: { variant?: "chapter" }) {
                 onClick={() => void togglePlayback()}
               >
                 {playing ? (
-                  <Pause size={16} fill="currentColor" />
+                  <PauseIcon size={16} weight="fill" />
                 ) : (
-                  <Play size={16} fill="currentColor" />
+                  <PlayIcon size={16} weight="fill" />
                 )}
               </button>
               <span>{formatTime(currentTime)}</span>
@@ -364,7 +362,11 @@ export default function ClientReviewDemo({ variant }: { variant?: "chapter" }) {
                 aria-pressed={muted}
                 onClick={() => setMuted((value) => !value)}
               >
-                {muted ? <VolumeX size={16} /> : <Volume2 size={16} />}
+                {muted ? (
+                  <SpeakerSlashIcon size={16} />
+                ) : (
+                  <SpeakerHighIcon size={16} />
+                )}
               </button>
             </div>
           </div>
@@ -392,9 +394,13 @@ export default function ClientReviewDemo({ variant }: { variant?: "chapter" }) {
                   aria-current={selected ? "true" : undefined}
                   onClick={() => void selectComment(item.id, item.seconds)}
                 >
-                  <span className="review-avatar" aria-hidden="true">
-                    {initials(item.author)}
-                  </span>
+                  <Image
+                    className="review-avatar"
+                    src={item.avatar}
+                    alt=""
+                    width={32}
+                    height={32}
+                  />
                   <span>
                     <span className="review-comment-meta">
                       <b>{item.author}</b>
@@ -409,17 +415,19 @@ export default function ClientReviewDemo({ variant }: { variant?: "chapter" }) {
         </div>
       </Reveal>
 
-      <ul className="review-facts">
-        {facts.map(({ icon: Icon, title, text }, index) => (
-          <li key={title}>
-            <Reveal delay={0.15 + index * 0.05}>
-              <Icon size={20} aria-hidden="true" />
-              <h3>{title}</h3>
-              <p>{text}</p>
-            </Reveal>
-          </li>
-        ))}
-      </ul>
+      <div className="box-grid-frame is-facts">
+        <ul className="box-grid">
+          {facts.map(({ icon: Icon, title, text }, index) => (
+            <li key={title}>
+              <Reveal delay={0.15 + index * 0.05}>
+                <Icon size={20} aria-hidden="true" />
+                <h3>{title}</h3>
+                <p>{text}</p>
+              </Reveal>
+            </li>
+          ))}
+        </ul>
+      </div>
     </section>
   );
 }

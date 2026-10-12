@@ -241,20 +241,50 @@ export function workspacePageForPath(pathname: string): ShellPage {
   );
 }
 
-const starterPages = new Set<ShellPage>([
+const hubPages: ShellPage[] = [
   "dashboard",
   "projects",
-  "calendar",
-  "feedback",
+  "clients",
+  "files",
+  "reports",
+  "team",
   "settings",
-]);
-
-const mobileRoutes: RouteItem[] = [
-  allRoutes.find((route) => route.page === "dashboard")!,
-  allRoutes.find((route) => route.page === "projects")!,
-  allRoutes.find((route) => route.page === "calendar")!,
-  allRoutes.find((route) => route.page === "clients")!,
 ];
+const hubGroups = routeGroups.map((group) => ({
+  ...group,
+  items: group.items
+    .filter((item) => hubPages.includes(item.page))
+    .map((item) =>
+      item.page === "files"
+        ? { ...item, label: "Library", icon: Library }
+        : item
+    ),
+}));
+const hubRoutes = hubGroups.flatMap((group) => group.items);
+const mobileRoutes = hubRoutes.filter((item) =>
+  ["dashboard", "projects", "clients", "files"].includes(item.page)
+);
+const contextPages: Partial<Record<ShellPage, ShellPage[]>> = {
+  projects: ["projects", "calendar", "timeline", "feedback"],
+  files: ["files", "media", "templates", "resources"],
+  team: ["team", "team-chat"],
+  settings: ["settings", "integrations"],
+};
+
+function hubPageForPage(page: ShellPage): ShellPage {
+  return (
+    hubPages.find((hub) => contextPages[hub]?.includes(page)) ??
+    ([
+      "account",
+      "subscription",
+      "profile",
+      "profile-edit",
+      "organization-profile",
+    ].includes(page)
+      ? "settings"
+      : page)
+  );
+}
 
 const compactSupportLinks = [
   { label: "Contact", href: "/contact", icon: Mail },
@@ -286,14 +316,37 @@ function initials(value: string) {
 }
 
 function routeIsActive(currentPage: ShellPage, item: RouteItem) {
-  if (currentPage === item.page) return true;
-  if (item.page === "projects") return ["projects"].includes(currentPage);
-  if (item.page === "clients") return currentPage === "clients";
-  if (item.page === "media") return currentPage === "media";
-  if (item.page === "team") return currentPage === "team";
-  if (item.page === "settings")
-    return ["settings", "account"].includes(currentPage);
-  return false;
+  return hubPageForPage(currentPage) === item.page;
+}
+
+function ContextNavigation({ page }: { page: ShellPage }) {
+  const hub = hubRoutes.find((item) => item.page === hubPageForPage(page));
+  const pages = hub ? contextPages[hub.page] : undefined;
+  if (!hub || !pages) return null;
+  return (
+    <nav
+      aria-label={`${hub.label} navigation`}
+      className="flex shrink-0 flex-wrap gap-1 border-b border-[var(--app-border)] px-4 py-2"
+    >
+      {pages
+        .flatMap((page) => allRoutes.filter((item) => item.page === page))
+        .map((item) => (
+          <Link
+            key={item.page}
+            href={item.href}
+            aria-current={page === item.page ? "page" : undefined}
+            className={cn(
+              "rounded-md px-3 py-2 text-sm font-medium outline-none hover:bg-[var(--app-hover)] focus-visible:ring-2 focus-visible:ring-[var(--app-accent)]",
+              page === item.page
+                ? "bg-[var(--app-active)] text-[var(--app-ink)]"
+                : "text-[var(--app-muted)]"
+            )}
+          >
+            {item.label}
+          </Link>
+        ))}
+    </nav>
+  );
 }
 
 const BreadcrumbContext = createContext<(label: string | null) => void>(
@@ -317,8 +370,7 @@ export function WorkspaceShell({
   settings,
   onNewProject,
   canCreateProject,
-  starterNavigation = false,
-  showTeamNavigation = false,
+  pageTitle,
   notificationSlot,
   searchRecords = [],
   children,
@@ -327,8 +379,7 @@ export function WorkspaceShell({
   settings: SettingsState;
   onNewProject: () => void;
   canCreateProject: boolean;
-  starterNavigation?: boolean;
-  showTeamNavigation?: boolean;
+  pageTitle?: string;
   notificationSlot?: ReactNode;
   searchRecords?: readonly SearchRecord[];
   children: ReactNode;
@@ -394,10 +445,11 @@ export function WorkspaceShell({
 
   const title = useMemo(
     () =>
-      page === "subscription"
+      pageTitle ??
+      (page === "subscription"
         ? "Subscription"
-        : (allRoutes.find((route) => route.page === page)?.label ?? "Relay"),
-    [page]
+        : (allRoutes.find((route) => route.page === page)?.label ?? "Relay")),
+    [page, pageTitle]
   );
 
   return (
@@ -406,11 +458,7 @@ export function WorkspaceShell({
         data-testid="workspace-shell"
         className="relay-density-balanced min-h-dvh bg-[var(--app-canvas)] text-[var(--app-ink)] lg:h-dvh lg:overflow-hidden lg:bg-[var(--app-sidebar)]"
       >
-        <DesktopSidebar
-          page={page}
-          starterNavigation={starterNavigation}
-          showTeamNavigation={showTeamNavigation}
-        />
+        <DesktopSidebar page={page} />
 
         <div className="min-h-dvh lg:pl-[52px]">
           <header className="fixed inset-x-0 top-0 z-30 flex h-[54px] items-center bg-[var(--app-sidebar)] px-2.5 lg:left-[52px] lg:justify-between lg:px-3">
@@ -509,7 +557,10 @@ export function WorkspaceShell({
             tabIndex={-1}
             className="workspace-scrollbar-hidden h-[calc(100dvh_-_68px_-_env(safe-area-inset-bottom))] overflow-y-auto bg-[var(--app-canvas)] pt-12 outline-none lg:fixed lg:bottom-0 lg:right-0 lg:top-[54px] lg:left-[52px] lg:h-auto lg:min-h-0 lg:overscroll-contain lg:rounded-tl-2xl lg:border-l lg:border-t lg:border-[var(--app-border)] lg:pt-0"
           >
-            <div className="min-h-full lg:h-full">{children}</div>
+            <div className="flex min-h-full flex-col lg:h-full">
+              <ContextNavigation page={page} />
+              <div className="min-h-0 flex-1">{children}</div>
+            </div>
           </main>
         </div>
 
@@ -529,15 +580,12 @@ export function WorkspaceShell({
           page={page}
           open={moreOpen}
           onOpenChange={setMoreOpen}
-          starterNavigation={starterNavigation}
-          showTeamNavigation={showTeamNavigation}
         />
         <WorkspaceCommand
           open={commandOpen}
           onOpenChange={setCommandOpen}
           onNewProject={onNewProject}
           returnFocusRef={commandReturnFocusRef}
-          showTeamNavigation={showTeamNavigation}
           searchRecords={searchRecords}
         />
       </div>
@@ -545,38 +593,7 @@ export function WorkspaceShell({
   );
 }
 
-function DesktopSidebar({
-  page,
-  starterNavigation,
-  showTeamNavigation,
-}: {
-  page: ShellPage;
-  starterNavigation: boolean;
-  showTeamNavigation: boolean;
-}) {
-  const [showAllTools, setShowAllTools] = useState(false);
-  const availableGroups = routeGroups
-    .map((group) => ({
-      ...group,
-      items: group.items.filter(
-        (item) =>
-          showTeamNavigation ||
-          (item.page !== "team" && item.page !== "team-chat")
-      ),
-    }))
-    .filter((group) => group.items.length);
-  const visibleGroups =
-    starterNavigation && !showAllTools
-      ? availableGroups
-          .map((group) => ({
-            ...group,
-            items: group.items.filter(
-              (item) => starterPages.has(item.page) || item.page === page
-            ),
-          }))
-          .filter((group) => group.items.length)
-      : availableGroups;
-
+function DesktopSidebar({ page }: { page: ShellPage }) {
   return (
     <aside className="fixed inset-y-0 left-0 z-40 hidden w-[52px] overflow-hidden bg-[var(--app-sidebar)] lg:flex lg:flex-col">
       <div className="grid h-[54px] grid-cols-1 items-center justify-items-center bg-[var(--app-sidebar)] px-1.5">
@@ -587,7 +604,7 @@ function DesktopSidebar({
         aria-label="Primary navigation"
         className="min-h-0 flex-1 overflow-y-auto px-1 py-1"
       >
-        {visibleGroups.map((group, groupIndex) => (
+        {hubGroups.map((group, groupIndex) => (
           <div key={group.label} className="mb-2.5">
             <SidebarGroupLabel label={group.label} groupIndex={groupIndex} />
             <div className="space-y-0.5">
@@ -601,27 +618,6 @@ function DesktopSidebar({
             </div>
           </div>
         ))}
-        {starterNavigation ? (
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                type="button"
-                variant="ghost"
-                className="mt-1 flex min-h-9 w-full items-center justify-center rounded-md px-0 text-xs font-semibold text-[var(--app-muted)] outline-none hover:bg-[var(--app-hover)] hover:text-[var(--app-ink)] focus-visible:ring-2 focus-visible:ring-[var(--app-accent)]"
-                onClick={() => setShowAllTools((value) => !value)}
-                aria-expanded={showAllTools}
-                aria-label={
-                  showAllTools ? "Show starter tools" : "Show all tools"
-                }
-              >
-                <MoreHorizontal className="size-4" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent side="right">
-              {showAllTools ? "Show starter tools" : "Show all tools"}
-            </TooltipContent>
-          </Tooltip>
-        ) : null}
       </nav>
       <footer className="border-t border-[var(--app-border)] p-1.5">
         <nav aria-label="Support and legal" className="grid gap-0.5">
@@ -891,14 +887,12 @@ function WorkspaceCommand({
   onOpenChange,
   onNewProject,
   returnFocusRef,
-  showTeamNavigation,
   searchRecords,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onNewProject: () => void;
   returnFocusRef: RefObject<HTMLElement | null>;
-  showTeamNavigation: boolean;
   searchRecords: readonly SearchRecord[];
 }) {
   const reduceMotion = useHydratedReducedMotion();
@@ -970,37 +964,27 @@ function WorkspaceCommand({
                 </CommandGroup>
               ) : null}
               {searchRecords.length ? <CommandSeparator /> : null}
-              {routeGroups
-                .map((group) => ({
-                  ...group,
-                  items: group.items.filter(
-                    (item) =>
-                      showTeamNavigation ||
-                      (item.page !== "team" && item.page !== "team-chat")
-                  ),
-                }))
-                .filter((group) => group.items.length)
-                .map((group) => (
-                  <CommandGroup key={group.label} heading={group.label}>
-                    {group.items.map((item) => {
-                      const Icon = item.icon;
-                      return (
-                        <CommandItem key={item.page} asChild>
-                          <Link
-                            href={item.href}
-                            onClick={() => onOpenChange(false)}
-                          >
-                            <Icon />
-                            {item.label}
-                            {item.shortcut ? (
-                              <CommandShortcut>{item.shortcut}</CommandShortcut>
-                            ) : null}
-                          </Link>
-                        </CommandItem>
-                      );
-                    })}
-                  </CommandGroup>
-                ))}
+              {routeGroups.map((group) => (
+                <CommandGroup key={group.label} heading={group.label}>
+                  {group.items.map((item) => {
+                    const Icon = item.icon;
+                    return (
+                      <CommandItem key={item.page} asChild>
+                        <Link
+                          href={item.href}
+                          onClick={() => onOpenChange(false)}
+                        >
+                          <Icon />
+                          {item.label}
+                          {item.shortcut ? (
+                            <CommandShortcut>{item.shortcut}</CommandShortcut>
+                          ) : null}
+                        </Link>
+                      </CommandItem>
+                    );
+                  })}
+                </CommandGroup>
+              ))}
             </CommandList>
           </Command>
         </motion.div>
@@ -1013,21 +997,13 @@ function MobileNavigation({
   page,
   open,
   onOpenChange,
-  starterNavigation,
-  showTeamNavigation,
 }: {
   page: ShellPage;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  starterNavigation: boolean;
-  showTeamNavigation: boolean;
 }) {
   const reduceMotion = useHydratedReducedMotion();
-  const primaryRoutes = starterNavigation
-    ? ["dashboard", "projects", "calendar", "feedback"].map((key) =>
-        allRoutes.find((route) => route.page === key)!
-      )
-    : mobileRoutes;
+  const primaryRoutes = mobileRoutes;
 
   return (
     <nav
@@ -1086,15 +1062,10 @@ function MobileNavigation({
             <SheetTitle>Workspace</SheetTitle>
           </SheetHeader>
           <div className="mt-3 grid grid-cols-2 gap-2">
-            {allRoutes
+            {hubRoutes
               .filter(
                 (route) =>
                   !primaryRoutes.some((mobile) => mobile.page === route.page)
-              )
-              .filter(
-                (route) =>
-                  showTeamNavigation ||
-                  (route.page !== "team" && route.page !== "team-chat")
               )
               .map((item) => {
                 const Icon = item.icon;

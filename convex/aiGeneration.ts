@@ -14,6 +14,7 @@ import { internal } from "./_generated/api";
 import type { Id } from "./_generated/dataModel";
 import type { ActionCtx } from "./_generated/server";
 import { aiCompletionValidator, aiModelTierValidator } from "./aiValidators";
+import { decryptCredential } from "./aiCredentials";
 
 type ModelTier = Infer<typeof aiModelTierValidator>;
 export type AiCompletion = Infer<typeof aiCompletionValidator>;
@@ -29,18 +30,14 @@ const callSettings = {
   maxRetries: 0,
 } as const;
 
-/** Provider instance for a tier, reading only the Convex environment keys. */
-function languageModel(modelTier: ModelTier) {
+/** Provider instance for a tier using the requesting workspace's key. */
+function languageModel(modelTier: ModelTier, apiKey: string) {
   const selected = aiModels[modelTier];
-  const key =
-    selected.provider === "google"
-      ? process.env.GOOGLE_GENERATIVE_AI_API_KEY
-      : process.env.OPENAI_API_KEY;
-  if (!key) throw new Error("AI provider is not configured");
+  if (!apiKey) throw new Error("AI provider is not configured");
   const model =
     selected.provider === "google"
-      ? createGoogleGenerativeAI({ apiKey: key })(selected.modelId)
-      : createOpenAI({ apiKey: key })(selected.modelId);
+      ? createGoogleGenerativeAI({ apiKey })(selected.modelId)
+      : createOpenAI({ apiKey })(selected.modelId);
   return { selected, model };
 }
 
@@ -56,10 +53,11 @@ function recordedUsage(usage: {
 // Also used by the opt-in eval harness. Production callers use generateAiObject.
 export async function generateDraft<S extends z.ZodType>(options: {
   modelTier: ModelTier;
+  apiKey: string;
   prompt: string | ModelMessage[];
   schema: S;
 }) {
-  const { selected, model } = languageModel(options.modelTier);
+  const { selected, model } = languageModel(options.modelTier, options.apiKey);
   const result = await generateObject({
     model,
     schema: options.schema,
@@ -83,12 +81,13 @@ export async function generateDraft<S extends z.ZodType>(options: {
  */
 export async function generateToolDraft<S extends z.ZodType>(options: {
   modelTier: ModelTier;
+  apiKey: string;
   prompt: string;
   schema: S;
   tools: ToolSet;
   maxSteps: number;
 }) {
-  const { selected, model } = languageModel(options.modelTier);
+  const { selected, model } = languageModel(options.modelTier, options.apiKey);
   const result = await generateText({
     model,
     tools: options.tools,
@@ -132,15 +131,21 @@ export class AiVerificationError extends Error {
 
 /** Shared claim → produce → complete/fail lifecycle for both runners. */
 async function runClaimed<T>(
-  ctx: Pick<ActionCtx, "runMutation">,
+  ctx: Pick<ActionCtx, "runMutation" | "runQuery">,
   runId: Id<"aiRuns">,
-  produce: () => Promise<Draft<T>>,
+  modelTier: ModelTier,
+  produce: (apiKey: string) => Promise<Draft<T>>,
   save?: (output: T, completion: AiCompletion) => Promise<boolean>
 ): Promise<T | null> {
   try {
     if (!(await ctx.runMutation(internal.aiRuns.claim, { runId }))) return null;
+    const credential = await ctx.runQuery(internal.aiCredentials.getForRun, {
+      runId,
+      modelTier,
+    });
+    if (!credential) throw new Error("Workspace AI key is unavailable");
     const { output, provider, modelId, inputTokens, outputTokens } =
-      await produce();
+      await produce(await decryptCredential(credential));
     const completion = {
       runId,
       outputJson: JSON.stringify(output),
@@ -168,7 +173,7 @@ async function runClaimed<T>(
 // Claims once, validates, and completes safely. A save callback must call
 // complete the run in its save mutation so feature writes and completion are atomic.
 export async function generateAiObject<S extends z.ZodType>(
-  ctx: Pick<ActionCtx, "runMutation">,
+  ctx: Pick<ActionCtx, "runMutation" | "runQuery">,
   options: {
     runId: Id<"aiRuns">;
     modelTier: ModelTier;
@@ -180,7 +185,8 @@ export async function generateAiObject<S extends z.ZodType>(
   return runClaimed(
     ctx,
     options.runId,
-    () => generateDraft(options),
+    options.modelTier,
+    (apiKey) => generateDraft({ ...options, apiKey }),
     options.save
   );
 }
@@ -191,7 +197,7 @@ export async function generateAiObject<S extends z.ZodType>(
  * fails the run with `verification_failed` before anything is saved.
  */
 export async function generateAiObjectWithTools<S extends z.ZodType>(
-  ctx: Pick<ActionCtx, "runMutation">,
+  ctx: Pick<ActionCtx, "runMutation" | "runQuery">,
   options: {
     runId: Id<"aiRuns">;
     modelTier: ModelTier;
@@ -206,8 +212,12 @@ export async function generateAiObjectWithTools<S extends z.ZodType>(
   return runClaimed(
     ctx,
     options.runId,
-    async () => {
-      const { toolOutputs, ...draft } = await generateToolDraft(options);
+    options.modelTier,
+    async (apiKey) => {
+      const { toolOutputs, ...draft } = await generateToolDraft({
+        ...options,
+        apiKey,
+      });
       try {
         options.verify(draft.output, toolOutputs);
       } catch (error) {

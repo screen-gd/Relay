@@ -31,13 +31,13 @@ Audit records keep hashes and source IDs rather than raw input. The bounded inpu
 `convex/aiGeneration.ts` runs in the default Convex action runtime, using the AI
 SDK's `generateObject` and a Zod schema, or `generateText` with tools (below). `default` selects Gemini
 `gemini-3.8-flash`; `better` selects OpenAI `gpt-5.5`. OpenAI receives
-`store: false`. Explicit provider instances read only the Convex environment keys
-below, without gateway or browser credential fallbacks. Changing the mapping
+`store: false`. Explicit provider instances read only the encrypted workspace BYOK keys
+saved by the Workspace Owner, without deployment, gateway or browser credential fallbacks. Changing the mapping
 requires bumping each feature's prompt version to invalidate cached results.
 
 ```ts
 generateAiObject<S extends z.ZodType>(
-  ctx: Pick<ActionCtx, "runMutation">,
+  ctx: Pick<ActionCtx, "runMutation" | "runQuery">,
   options: {
     runId: Id<"aiRuns">;
     modelTier: "default" | "better";
@@ -285,8 +285,38 @@ consent and access and atomically completes the run. The Project overview shows
 the subject and message labelled `AI-drafted` with output and revision item
 links; editors edit, save and copy it. Nothing is sent.
 
-## Provider credentials and live verification
+## Workspace BYOK credentials and live verification
 
-Declare `GOOGLE_GENERATIVE_AI_API_KEY` and optional `OPENAI_API_KEY` in Convex's environment configuration. Set their values only in the intended deployment's environment variables; never in browser variables, source files, screenshots or issue bodies. Use a billing-enabled Gemini project in production, not the free tier. Configure a provider spending budget before paid verification. Default feature generation to Gemini Flash; OpenAI integrations must use `store: false`.
+AI uses workspace BYOK (bring your own key). In Settings → Workspace → AI assistance,
+the active Workspace Owner can save, replace or remove a Gemini key for default
+runs and an optional OpenAI key for better-model retries. Provider charges go to
+the owner's provider account. Existing plan-based monthly run limits remain.
 
-No Convex AI Gateway subscription is needed when using provider keys directly. A deployment, its credentials and authorization to deploy/test must be confirmed separately. This change adds an optional consent field and a new table; existing workspaces remain opted out without a backfill.
+`aiProviderKeys` isolates credentials from public Workspace documents. Keys are
+AES-256-GCM encrypted in a public action before an owner-authorized internal
+mutation stores them. Each ciphertext is authenticated against its workspace ID
+and provider. Public queries return only whether each provider has a saved key,
+never the plaintext, ciphertext or a partial key. Keys do not enter AI inputs,
+audit records or scheduled arguments. Keys are checked for bounded printable
+syntax on save; provider validity is checked by the first requested AI run.
+
+Set `AI_BYOK_ENCRYPTION_KEY` only in the intended Convex deployment's environment.
+It must be a random 32-byte secret encoded as 64 hexadecimal characters. Generate
+one locally, for example with `node -e "console.log(require('node:crypto').randomBytes(32).toString('hex'))"`.
+Keep the secret stable and backed up. Changing or losing it makes existing keys
+unreadable; owners must then re-enter them. Do not place it in browser variables,
+source files, screenshots or issue bodies.
+
+New requests without the selected provider's workspace key fail before consuming
+quota. Cached drafts remain reusable. After claiming a run, the worker reads its
+workspace's encrypted key through an internal query that rechecks the run tier,
+consent and requester access, decrypts it in the action, and passes it explicitly
+to the provider. Both object and tool generation use this path. Removing a key
+stops workers that have not retrieved it yet; it cannot cancel a provider request
+already in flight. There is no fallback to deployment-level Gemini or OpenAI keys.
+OpenAI integrations retain `store: false`. The opt-in local eval harness alone
+accepts dedicated evaluation credentials from its environment.
+
+No Convex AI Gateway subscription is needed. Deployment and paid verification
+require their own authorized target. Existing workspaces remain opted out and
+have no provider keys until configured by their Owner.
