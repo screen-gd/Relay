@@ -1,0 +1,13 @@
+
+> relay@0.1.0 test:unit C:\Users\Administrator\Documents\Github\Relay
+> vitest run --config vitest.unit.config.mts
+
+
+ RUN  v4.1.11 C:/Users/Administrator/Documents/Github/Relay
+
+
+ Test Files  24 passed (24)
+      Tests  87 passed (87)
+   Start at  15:13:48
+   Duration  1.87s (transform 4.27s, setup 0ms, import 11.09s, tests 931ms, environment 7ms)
+

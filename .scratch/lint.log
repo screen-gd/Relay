@@ -1,0 +1,7 @@
+
+> relay@0.1.0 lint C:\Users\Administrator\Documents\Github\Relay
+> tsc --noEmit ";" "node" "-e" "const t=require('fs').readFileSync('.scratch/lint.log','utf8');const l=t.split(/\\r?\\n/);console.log(l.slice(-25).join('\\n'))"
+
+'tsc' is not recognized as an internal or external command,
+operable program or batch file.
+ ELIFECYCLE  Command failed with exit code 1.

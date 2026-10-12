@@ -1,0 +1,220 @@
+diff --git a/src/components/kibo-ui/kanban/index.tsx b/src/components/kibo-ui/kanban/index.tsx
+index 7e45521..65eba0c 100644
+--- a/src/components/kibo-ui/kanban/index.tsx
++++ b/src/components/kibo-ui/kanban/index.tsx
+@@ -50,13 +50,8 @@ export function KanbanCard({
+     <Card
+       ref={drag.setNodeRef}
+       data-board-card
+-      style={{
+-        transform: drag.transform
+-          ? `translate3d(${drag.transform.x}px, ${drag.transform.y}px, 0)`
+-          : undefined,
+-      }}
+       className={cn(
+-        "relative flex flex-row items-start gap-2 rounded-md p-3 text-card-foreground shadow-none",
++        "relative flex w-full min-w-0 flex-row items-start gap-2 rounded-md p-3 text-card-foreground shadow-none",
+         drag.isDragging && "z-20 opacity-30",
+         className
+       )}
+diff --git a/src/components/precision-projects.tsx b/src/components/precision-projects.tsx
+index 5b01ff1..da7ca94 100644
+--- a/src/components/precision-projects.tsx
++++ b/src/components/precision-projects.tsx
+@@ -25,10 +25,12 @@ import {
+ } from "@tanstack/react-table";
+ import {
+   DndContext,
++  DragOverlay,
+   KeyboardSensor,
+   PointerSensor,
+   useSensor,
+   useSensors,
++  useDndContext,
+   type Announcements,
+   type DragEndEvent,
+ } from "@dnd-kit/core";
+@@ -41,6 +43,7 @@ import {
+   useState,
+   type ReactNode,
+ } from "react";
++import { createPortal } from "react-dom";
+ import type { SettingsState, WorkItem, WorkflowStage } from "@/lib/types";
+ import type { StoredTeamRole } from "@/lib/domain-values";
+ import { useHydratedReducedMotion } from "@/lib/motion";
+@@ -355,13 +358,14 @@ function ProjectBoardCard({
+         selected && "bg-[var(--app-active)]"
+       )}
+     >
+-      {({ attributes, listeners }) => (
++      {({ attributes, listeners, setActivatorNodeRef }) => (
+         <>
+           <Button
++            ref={setActivatorNodeRef}
+             type="button"
+             variant="ghost"
+             className={cn(
+-              "h-auto min-w-0 flex-1 flex-col items-start justify-start gap-0 rounded-none px-0 py-0 text-left font-normal whitespace-normal hover:bg-transparent hover:text-current dark:hover:bg-transparent focus-visible:ring-2 focus-visible:ring-[var(--app-accent)] active:translate-y-0 active:scale-100",
++              "h-auto min-w-0 flex-1 touch-none flex-col items-start justify-start gap-0 rounded-none px-0 py-0 text-left font-normal whitespace-normal hover:bg-transparent hover:text-current dark:hover:bg-transparent focus-visible:ring-2 focus-visible:ring-[var(--app-accent)] active:translate-y-0 active:scale-100",
+               !disabled && "cursor-grab active:cursor-grabbing"
+             )}
+             onClick={onSelect}
+@@ -369,11 +373,14 @@ function ProjectBoardCard({
+             {...listeners}
+             {...attributes}
+           >
+-            <span className="block truncate text-xs font-semibold">
++            <span className="block w-full truncate text-[13px] font-semibold">
+               {project.title}
+             </span>
+-            <span className="mt-1 block truncate text-[11px] text-[var(--app-muted)]">
+-              {project.client || "No client"} · {formatDate(project.dueDate)}
++            <span className="mt-1 block w-full truncate text-xs text-[var(--app-muted)]">
++              {project.client || "No client"}
++            </span>
++            <span className="mt-3 block text-xs text-[var(--app-muted)]">
++              {formatDate(project.dueDate)}
+             </span>
+           </Button>
+           <DropdownMenu>
+@@ -408,6 +415,32 @@ function ProjectBoardCard({
+   );
+ }
+ 
++function ProjectBoardDragOverlay({ projects }: { projects: WorkItem[] }) {
++  const { active } = useDndContext();
++  const project = projects.find((item) => item.id === active?.id);
++  // Render outside scroll containers so the preview can cross column boundaries.
++  return typeof document === "undefined"
++    ? null
++    : createPortal(
++        <DragOverlay dropAnimation={null}>
++          {project ? (
++            <Card className="min-w-0 gap-1 p-3 text-left cursor-grabbing">
++              <span className="truncate text-[13px] font-semibold">
++                {project.title}
++              </span>
++              <span className="truncate text-xs text-[var(--app-muted)]">
++                {project.client || "No client"}
++              </span>
++              <span className="mt-2 text-xs text-[var(--app-muted)]">
++                {formatDate(project.dueDate)}
++              </span>
++            </Card>
++          ) : null}
++        </DragOverlay>,
++        document.body
++      );
++}
++
+ function ProjectBoardColumn({
+   columnKey,
+   stage,
+@@ -437,13 +470,13 @@ function ProjectBoardColumn({
+       <div
+         className={cn(
+           "min-h-0 flex-1 overflow-y-auto overscroll-contain p-2",
+-          projects === 0 && "grid place-items-center"
++          projects === 0 && "text-center"
+         )}
+         data-board-column-body
+         data-board-wheel={projects === 0 ? true : undefined}
+       >
+         {projects === 0 ? (
+-          <span className="text-xs text-[var(--app-muted)] opacity-45">
++          <span className="mt-3 block text-xs text-[var(--app-muted)]">
+             Drop here
+           </span>
+         ) : (
+@@ -1156,6 +1189,7 @@ export function PrecisionProjects(props: PrecisionProjectsProps) {
+                               }
+                             )}
+                           </div>
++                          <ProjectBoardDragOverlay projects={projects} />
+                         </DndContext>
+                       ) : (
+                         <>
+diff --git a/src/components/precision-workspaces.tsx b/src/components/precision-workspaces.tsx
+index ce94308..e7a4766 100644
+--- a/src/components/precision-workspaces.tsx
++++ b/src/components/precision-workspaces.tsx
+@@ -1571,7 +1571,7 @@ export function PrecisionReports({
+                   ? { duration: 0 }
+                   : { ...revealTransition, delay: 0.08 }
+               }
+-              className="rounded-[6px] border border-[var(--app-border)] bg-[var(--app-panel)] p-4"
++              className="flex h-full min-w-0 flex-col rounded-[6px] border border-[var(--app-border)] bg-[var(--app-panel)] p-4"
+             >
+               <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                 <div>
+@@ -1627,7 +1627,7 @@ export function PrecisionReports({
+                   transition={
+                     reduceMotion ? { duration: 0 } : { duration: 0.2 }
+                   }
+-                  className="mt-4 h-[260px]"
++                  className="mt-4 h-[220px] shrink-0 sm:h-[260px]"
+                 >
+                   {trendData.length ? (
+                     <AreaChart
+@@ -1656,7 +1656,7 @@ export function PrecisionReports({
+                 </motion.div>
+               </div>
+               <p
+-                className="mt-3 rounded-md bg-[var(--app-soft-panel)] px-3 py-2 text-[11px] leading-4 text-[var(--app-muted)]"
++                className="mt-auto min-h-9 pt-3 text-xs leading-5 text-[var(--app-muted)]"
+                 aria-label="Earnings trend summary"
+               >
+                 {trendData.length
+@@ -1677,7 +1677,7 @@ export function PrecisionReports({
+                   ? { duration: 0 }
+                   : { ...revealTransition, delay: 0.12 }
+               }
+-              className="rounded-[6px] border border-[var(--app-border)] bg-[var(--app-panel)] p-4"
++              className="flex h-full min-w-0 flex-col rounded-[6px] border border-[var(--app-border)] bg-[var(--app-panel)] p-4"
+             >
+               <div>
+                 <h2 className="text-sm font-semibold">Work mix</h2>
+@@ -1686,7 +1686,7 @@ export function PrecisionReports({
+                 </p>
+               </div>
+               <div
+-                className="mt-3 h-[190px]"
++                className="mt-4 h-[220px] shrink-0 sm:h-[260px]"
+                 role="img"
+                 aria-label={
+                   mixData.length
+@@ -1696,6 +1696,7 @@ export function PrecisionReports({
+               >
+                 {mixData.length ? (
+                   <PieChart
++                    className="mx-auto max-w-[280px]"
+                     data={mixData}
+                     config={mixConfig}
+                     dataKey="value"
+@@ -1714,14 +1715,14 @@ export function PrecisionReports({
+                   </div>
+                 )}
+               </div>
+-              <div className="space-y-2">
++              <div className="mt-auto min-h-9 space-y-2 pt-3">
+                 {mixData.map((item, index) => (
+                   <div
+                     key={item.name}
+-                    className="flex items-center text-[11px]"
++                    className="flex items-center gap-2 text-xs leading-5"
+                   >
+                     <span
+-                      className="mr-2 size-2 rounded-full"
++                      className="size-2 shrink-0 rounded-full"
+                       style={{
+                         background: rgb(
+                           PALETTE[colors[index % colors.length]].fill
+@@ -1754,7 +1755,7 @@ export function PrecisionReports({
+               label="Avg. days to deliver"
+               value={
+                 turnaroundProjects.length
+-                  ? `${averageTurnaround} days`
++                  ? `${averageTurnaround} ${averageTurnaround === 1 ? "day" : "days"}`
+                   : "No data"
+               }
+             />

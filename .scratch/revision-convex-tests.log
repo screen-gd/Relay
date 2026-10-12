@@ -1,0 +1,13 @@
+
+> relay@0.1.0 test:convex C:\Users\Administrator\Documents\Github\Relay
+> vitest run --config vitest.config.mts
+
+
+ RUN  v4.1.11 C:/Users/Administrator/Documents/Github/Relay
+
+
+ Test Files  29 passed (29)
+      Tests  167 passed (167)
+   Start at  15:16:53
+   Duration  2.22s (transform 9.97s, setup 0ms, import 11.70s, tests 5.85s, environment 3.19s)
+

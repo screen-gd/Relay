@@ -1,0 +1,54 @@
+
+> relay@0.1.0 lint C:\Users\Administrator\Documents\Github\Relay
+> tsc --noEmit
+
+videos/source/claude/remotion.config.ts(8,24): error TS2307: Cannot find module '@remotion/cli/config' or its corresponding type declarations.
+videos/source/claude/remotion/HelloWorld.tsx(7,8): error TS2307: Cannot find module 'remotion' or its corresponding type declarations.
+videos/source/claude/remotion/index.ts(1,30): error TS2307: Cannot find module 'remotion' or its corresponding type declarations.
+videos/source/claude/remotion/launch/anim.ts(1,37): error TS2307: Cannot find module 'remotion' or its corresponding type declarations.
+videos/source/claude/remotion/launch/motion.tsx(2,33): error TS2307: Cannot find module 'remotion' or its corresponding type declarations.
+videos/source/claude/remotion/launch/primitives.tsx(1,23): error TS2307: Cannot find module '@remotion/media' or its corresponding type declarations.
+videos/source/claude/remotion/launch/primitives.tsx(8,8): error TS2307: Cannot find module 'remotion' or its corresponding type declarations.
+videos/source/claude/remotion/launch/RelayLaunch.tsx(1,23): error TS2307: Cannot find module '@remotion/media' or its corresponding type declarations.
+videos/source/claude/remotion/launch/RelayLaunch.tsx(2,34): error TS2307: Cannot find module '@remotion/transitions' or its corresponding type declarations.
+videos/source/claude/remotion/launch/RelayLaunch.tsx(8,8): error TS2307: Cannot find module 'remotion' or its corresponding type declarations.
+videos/source/claude/remotion/launch/scenes/BoardScene.tsx(2,47): error TS2307: Cannot find module 'remotion' or its corresponding type declarations.
+videos/source/claude/remotion/launch/scenes/CreateScene.tsx(11,47): error TS2307: Cannot find module 'remotion' or its corresponding type declarations.
+videos/source/claude/remotion/launch/scenes/DashboardContent.tsx(9,33): error TS2307: Cannot find module 'remotion' or its corresponding type declarations.
+videos/source/claude/remotion/launch/scenes/DashboardScene.tsx(1,47): error TS2307: Cannot find module 'remotion' or its corresponding type declarations.
+videos/source/claude/remotion/launch/scenes/IntroScene.tsx(10,47): error TS2307: Cannot find module 'remotion' or its corresponding type declarations.
+videos/source/claude/remotion/launch/scenes/MoneyScene.tsx(2,47): error TS2307: Cannot find module 'remotion' or its corresponding type declarations.
+videos/source/claude/remotion/launch/scenes/OutroScene.tsx(2,47): error TS2307: Cannot find module 'remotion' or its corresponding type declarations.
+videos/source/claude/remotion/launch/scenes/ReviewScene.tsx(11,47): error TS2307: Cannot find module 'remotion' or its corresponding type declarations.
+videos/source/claude/remotion/launch/theme.ts(1,39): error TS2307: Cannot find module '@remotion/google-fonts/Geist' or its corresponding type declarations.
+videos/source/claude/remotion/launch/theme.ts(2,43): error TS2307: Cannot find module '@remotion/google-fonts/GeistMono' or its corresponding type declarations.
+videos/source/claude/remotion/launch/transitions.tsx(5,8): error TS2307: Cannot find module '@remotion/transitions' or its corresponding type declarations.
+videos/source/claude/remotion/launch/transitions.tsx(7,30): error TS2307: Cannot find module 'remotion' or its corresponding type declarations.
+videos/source/claude/remotion/launch/transitions.tsx(80,13): error TS7053: Element implicitly has an 'any' type because expression of type 'any' can't be used to index type 'Record<TransitionKind, { exit: CSSProperties; enter: CSSProperties; }>'.
+videos/source/claude/remotion/launch/transitions.tsx(81,13): error TS7053: Element implicitly has an 'any' type because expression of type 'any' can't be used to index type 'Record<TransitionKind, { exit: CSSProperties; enter: CSSProperties; }>'.
+videos/source/claude/remotion/Root.tsx(1,37): error TS2307: Cannot find module 'remotion' or its corresponding type declarations.
+videos/source/gpt/remotion/HelloWorld.tsx(7,8): error TS2307: Cannot find module 'remotion' or its corresponding type declarations.
+videos/source/gpt/remotion/index.ts(1,30): error TS2307: Cannot find module 'remotion' or its corresponding type declarations.
+videos/source/gpt/remotion/launch/anim.ts(1,37): error TS2307: Cannot find module 'remotion' or its corresponding type declarations.
+videos/source/gpt/remotion/launch/motion.tsx(2,33): error TS2307: Cannot find module 'remotion' or its corresponding type declarations.
+videos/source/gpt/remotion/launch/primitives.tsx(1,23): error TS2307: Cannot find module '@remotion/media' or its corresponding type declarations.
+videos/source/gpt/remotion/launch/primitives.tsx(8,8): error TS2307: Cannot find module 'remotion' or its corresponding type declarations.
+videos/source/gpt/remotion/launch/RelayLaunch.tsx(1,23): error TS2307: Cannot find module '@remotion/media' or its corresponding type declarations.
+videos/source/gpt/remotion/launch/RelayLaunch.tsx(2,34): error TS2307: Cannot find module '@remotion/transitions' or its corresponding type declarations.
+videos/source/gpt/remotion/launch/RelayLaunch.tsx(8,8): error TS2307: Cannot find module 'remotion' or its corresponding type declarations.
+videos/source/gpt/remotion/launch/scenes/BoardScene.tsx(2,47): error TS2307: Cannot find module 'remotion' or its corresponding type declarations.
+videos/source/gpt/remotion/launch/scenes/CreateScene.tsx(3,63): error TS2307: Cannot find module 'remotion' or its corresponding type declarations.
+videos/source/gpt/remotion/launch/scenes/DashboardContent.tsx(8,49): error TS2307: Cannot find module 'remotion' or its corresponding type declarations.
+videos/source/gpt/remotion/launch/scenes/DashboardScene.tsx(1,47): error TS2307: Cannot find module 'remotion' or its corresponding type declarations.
+videos/source/gpt/remotion/launch/scenes/IntroScene.tsx(10,47): error TS2307: Cannot find module 'remotion' or its corresponding type declarations.
+videos/source/gpt/remotion/launch/scenes/MoneyScene.tsx(2,47): error TS2307: Cannot find module 'remotion' or its corresponding type declarations.
+videos/source/gpt/remotion/launch/scenes/OutroScene.tsx(2,47): error TS2307: Cannot find module 'remotion' or its corresponding type declarations.
+videos/source/gpt/remotion/launch/scenes/ReviewScene.tsx(11,63): error TS2307: Cannot find module 'remotion' or its corresponding type declarations.
+videos/source/gpt/remotion/launch/theme.ts(1,39): error TS2307: Cannot find module '@remotion/google-fonts/Geist' or its corresponding type declarations.
+videos/source/gpt/remotion/launch/theme.ts(2,43): error TS2307: Cannot find module '@remotion/google-fonts/GeistMono' or its corresponding type declarations.
+videos/source/gpt/remotion/launch/transitions.tsx(5,8): error TS2307: Cannot find module '@remotion/transitions' or its corresponding type declarations.
+videos/source/gpt/remotion/launch/transitions.tsx(7,30): error TS2307: Cannot find module 'remotion' or its corresponding type declarations.
+videos/source/gpt/remotion/launch/transitions.tsx(80,13): error TS7053: Element implicitly has an 'any' type because expression of type 'any' can't be used to index type 'Record<TransitionKind, { exit: CSSProperties; enter: CSSProperties; }>'.
+videos/source/gpt/remotion/launch/transitions.tsx(81,13): error TS7053: Element implicitly has an 'any' type because expression of type 'any' can't be used to index type 'Record<TransitionKind, { exit: CSSProperties; enter: CSSProperties; }>'.
+videos/source/gpt/remotion/Root.tsx(1,37): error TS2307: Cannot find module 'remotion' or its corresponding type declarations.
+ ELIFECYCLE  Command failed with exit code 2.

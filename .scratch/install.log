@@ -1,0 +1,65 @@
+Scope: all 2 workspace projects
+Lockfile is up to date, resolution step is skipped
+Packages: +569
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+   ╭───────────────────────────────────────────────╮
+   │                                               │
+   │     Update available! 10.11.1 → 12.10.1.      │
+   │     Changelog: https://pnpm.io/v/12.10.1      │
+   │   To update, run: corepack use pnpm@12.10.1   │
+   │                                               │
+   ╰───────────────────────────────────────────────╯
+
+Progress: resolved 0, reused 0, downloaded 1, added 0
+Progress: resolved 0, reused 0, downloaded 26, added 18
+Progress: resolved 0, reused 0, downloaded 43, added 33
+Progress: resolved 0, reused 0, downloaded 59, added 47
+Progress: resolved 0, reused 0, downloaded 68, added 53
+Progress: resolved 0, reused 0, downloaded 94, added 63
+Progress: resolved 0, reused 0, downloaded 104, added 65
+Progress: resolved 0, reused 0, downloaded 123, added 90
+Progress: resolved 0, reused 0, downloaded 152, added 100
+Progress: resolved 0, reused 0, downloaded 179, added 118
+Progress: resolved 0, reused 0, downloaded 202, added 119
+Progress: resolved 0, reused 0, downloaded 213, added 123
+Progress: resolved 0, reused 0, downloaded 237, added 138
+Progress: resolved 0, reused 0, downloaded 243, added 144
+Progress: resolved 0, reused 0, downloaded 252, added 157
+Progress: resolved 0, reused 0, downloaded 266, added 182
+Progress: resolved 0, reused 0, downloaded 280, added 195
+Progress: resolved 0, reused 0, downloaded 305, added 199
+Progress: resolved 0, reused 0, downloaded 331, added 210
+Progress: resolved 0, reused 0, downloaded 368, added 227
+Progress: resolved 0, reused 0, downloaded 397, added 266
+Progress: resolved 0, reused 0, downloaded 454, added 297
+Progress: resolved 0, reused 0, downloaded 460, added 300
+Progress: resolved 0, reused 0, downloaded 486, added 309
+Progress: resolved 0, reused 0, downloaded 538, added 337
+Progress: resolved 0, reused 0, downloaded 558, added 365
+Progress: resolved 0, reused 0, downloaded 560, added 374
+Progress: resolved 0, reused 0, downloaded 561, added 392
+Progress: resolved 0, reused 0, downloaded 561, added 396
+Progress: resolved 0, reused 0, downloaded 561, added 397
+Progress: resolved 0, reused 0, downloaded 564, added 490
+Progress: resolved 0, reused 0, downloaded 564, added 560
+Progress: resolved 0, reused 0, downloaded 564, added 561
+Progress: resolved 0, reused 0, downloaded 564, added 562
+Progress: resolved 0, reused 0, downloaded 564, added 563
+Progress: resolved 0, reused 0, downloaded 565, added 563
+Progress: resolved 0, reused 0, downloaded 566, added 563
+Progress: resolved 0, reused 0, downloaded 567, added 563
+Progress: resolved 0, reused 0, downloaded 567, added 564
+Progress: resolved 0, reused 0, downloaded 567, added 566
+Progress: resolved 0, reused 0, downloaded 567, added 567
+Progress: resolved 0, reused 0, downloaded 567, added 569, done
+(node:19932) [DEP0169] DeprecationWarning: `url.parse()` behavior is not standardized and prone to errors that have security implications. Use the WHATWG URL API instead. CVEs are not issued for `url.parse()` vulnerabilities.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+node_modules/esbuild postinstall$ node install.js
+node_modules/workerd postinstall$ node install.js
+node_modules/esbuild postinstall: Done
+node_modules/workerd postinstall: Done
+
+. prepare$ husky
+. prepare: Done
+Done in 1m 1.3s using pnpm v10.11.1

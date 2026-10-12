@@ -1,0 +1,50 @@
+
+[1m[30m[46m RUN [49m[39m[22m [36mv4.1.11 [39m[90mC:/Users/Administrator/Documents/Github/Relay[39m
+
+ [32m✓[39m convex/migrations.test.ts [2m([22m[2m8 tests[22m[2m)[22m[32m 210[2mms[22m[39m
+ [32m✓[39m convex/workspaceSubscriptionReconciliation.test.ts [2m([22m[2m8 tests[22m[2m)[22m[32m 280[2mms[22m[39m
+ [32m✓[39m convex/freeLaunch.test.ts [2m([22m[2m4 tests[22m[2m)[22m[33m 330[2mms[22m[39m
+ [32m✓[39m convex/transcripts.test.ts [2m([22m[2m5 tests[22m[2m)[22m[33m 338[2mms[22m[39m
+ [32m✓[39m convex/creatorTrials.test.ts [2m([22m[2m12 tests[22m[2m)[22m[33m 309[2mms[22m[39m
+ [32m✓[39m convex/mediaVersionComments.test.ts [2m([22m[2m4 tests[22m[2m)[22m[33m 391[2mms[22m[39m
+ [32m✓[39m convex/riskDigest.test.ts [2m([22m[2m5 tests[22m[2m)[22m[33m 408[2mms[22m[39m
+ [32m✓[39m convex/revisionItems.test.ts [2m([22m[2m5 tests[22m[2m)[22m[33m 427[2mms[22m[39m
+ [32m✓[39m convex/changeOrders.test.ts [2m([22m[2m6 tests[22m[2m)[22m[33m 428[2mms[22m[39m
+ [32m✓[39m convex/earningsQa.test.ts [2m([22m[2m4 tests[22m[2m)[22m[33m 481[2mms[22m[39m
+ [32m✓[39m convex/statusDrafts.test.ts [2m([22m[2m8 tests[22m[2m)[22m[33m 538[2mms[22m[39m
+ [32m✓[39m convex/aiRuns.test.ts [2m([22m[2m15 tests[22m[2m)[22m[33m 684[2mms[22m[39m
+ [32m✓[39m convex/briefImport.test.ts [2m([22m[2m7 tests[22m[2m)[22m[33m 701[2mms[22m[39m
+   [33m[2m✓[22m[39m brief extraction requires opt-in and creation/edit permissions and bounds text/PDF [33m 363[2mms[22m[39m
+ [32m✓[39m convex/projectFiles.test.ts [2m([22m[2m35 tests[22m[2m)[22m[33m 750[2mms[22m[39m
+ [32m✓[39m convex/reviewFindings.test.ts [2m([22m[2m4 tests[22m[2m)[22m[33m 866[2mms[22m[39m
+   [33m[2m✓[22m[39m pagination retains projects and salary batches beyond the former 500-record limit [33m 620[2mms[22m[39m
+ [32m✓[39m convex/salaryPlans.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 123[2mms[22m[39m
+ [32m✓[39m convex/projectFiles-rebuild.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 129[2mms[22m[39m
+ [32m✓[39m convex/team.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 120[2mms[22m[39m
+ [32m✓[39m convex/projectPortals.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 199[2mms[22m[39m
+ [32m✓[39m convex/projects.test.ts [2m([22m[2m7 tests[22m[2m)[22m[33m 618[2mms[22m[39m
+   [33m[2m✓[22m[39m create validates durable Client and Project Group ownership [33m 466[2mms[22m[39m
+ [32m✓[39m convex/waitlist.test.ts [2m([22m[2m2 tests[22m[2m)[22m[33m 378[2mms[22m[39m
+   [33m[2m✓[22m[39m waitlist endpoint validates and deduplicates email addresses [33m 374[2mms[22m[39m
+ [32m✓[39m convex/projectOutputs.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 137[2mms[22m[39m
+ [32m✓[39m convex/deadlineRisk.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 161[2mms[22m[39m
+ [32m✓[39m convex/earnings.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 169[2mms[22m[39m
+ [32m✓[39m convex/paymentAuthorization.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 72[2mms[22m[39m
+ [32m✓[39m convex/projectGroups.test.ts [2m([22m[2m1 test[22m[2m)[22m[32m 62[2mms[22m[39m
+ [32m✓[39m convex/billingOwnership.test.ts [2m([22m[2m1 test[22m[2m)[22m[32m 49[2mms[22m[39m
+ [32m✓[39m convex/teamSeats.test.ts [2m([22m[2m2 tests[22m[2m)[22m[33m 325[2mms[22m[39m
+   [33m[2m✓[22m[39m Team reserves Editor seats while Viewers stay free [33m 310[2mms[22m[39m
+ [32m✓[39m convex/workspaceSubscriptions.test.ts [2m([22m[2m12 tests[22m[2m)[22m[32m 141[2mms[22m[39m
+ [32m✓[39m convex/billingLifecycle.test.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 52[2mms[22m[39m
+ [32m✓[39m convex/deadlineRiskRules.test.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 30[2mms[22m[39m
+ [32m✓[39m convex/revisionRoundsRules.test.ts [2m([22m[2m8 tests[22m[2m)[22m[32m 8[2mms[22m[39m
+ [32m✓[39m convex/earningsLedger.test.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 16[2mms[22m[39m
+ [32m✓[39m convex/clientHub.test.ts [2m([22m[2m1 test[22m[2m)[22m[32m 18[2mms[22m[39m
+ [32m✓[39m convex/identitySubject.test.ts [2m([22m[2m1 test[22m[2m)[22m[32m 20[2mms[22m[39m
+ [32m✓[39m convex/salaryPlanAccess.test.ts [2m([22m[2m1 test[22m[2m)[22m[32m 13[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m36 passed[39m[22m[90m (36)[39m
+[2m      Tests [22m [1m[32m210 passed[39m[22m[90m (210)[39m
+[2m   Start at [22m 21:52:11
+[2m   Duration [22m 3.59s[2m (transform 15.83s, setup 0ms, import 22.73s, tests 9.98s, environment 3.62s)[22m
+
