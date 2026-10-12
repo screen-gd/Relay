@@ -70,6 +70,12 @@ importers:
       convex-helpers:
         specifier: ^0.1.123
         version: 0.1.123(@standard-schema/spec@1.1.0)(convex@1.45.0(@clerk/react@6.14.7(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react@19.2.8))(react@19.2.8)(typescript@5.9.3)(zod@4.4.3)
+      d3-scale:
+        specifier: ^4.0.2
+        version: 4.0.2
+      d3-shape:
+        specifier: ^3.2.0
+        version: 3.2.0
       geist:
         specifier: ^1.7.2
         version: 1.7.2(next@16.3.6(@playwright/test@1.62.1)(@types/node@24.13.3)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))
@@ -122,6 +128,12 @@ importers:
       "@playwright/test":
         specifier: ^1.60.0
         version: 1.62.1
+      "@types/d3-scale":
+        specifier: ^4.0.9
+        version: 4.0.9
+      "@types/d3-shape":
+        specifier: ^3.2.0
+        version: 3.2.0
       "@types/node":
         specifier: ^24.10.1
         version: 24.13.3

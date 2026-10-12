@@ -90,14 +90,19 @@ describe("Project table URL state", () => {
       ...DEFAULT_PROJECT_TABLE_STATE,
       query: "launch film",
       stage: "Delivered",
-      view: "board",
+      view: "table",
       sort: "name",
       direction: "desc",
     };
     expect(serializeProjectTableSearch(state)).toBe(
-      "q=launch+film&stage=Delivered&view=board&sort=name&dir=desc"
+      "q=launch+film&stage=Delivered&view=table&sort=name&dir=desc"
     );
     expect(serializeProjectTableSearch(DEFAULT_PROJECT_TABLE_STATE)).toBe("");
+  });
+
+  it("defaults to Kanban and preserves explicit table links", () => {
+    expect(parseProjectTableSearch("").view).toBe("board");
+    expect(parseProjectTableSearch("?view=table").view).toBe("table");
   });
 });
 
