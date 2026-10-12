@@ -59,10 +59,7 @@ export function FirstRunChecklist({
           Create a real project first. Relay will reveal the full dashboard once
           there is useful work to organize.
         </p>
-        <Button
-          className="mt-6 min-h-12 bg-[var(--app-accent)] px-5 text-white hover:bg-[var(--app-highlight)]"
-          onClick={onCreateProject}
-        >
+        <Button className="mt-6 min-h-12 px-5" onClick={onCreateProject}>
           Create first project
         </Button>
 

@@ -82,6 +82,7 @@ import {
   SplitPane,
   WorkspacePage,
 } from "@/components/workspace-page";
+import { normalizedSalaryBatchSize } from "@/features/routes/utils/work-type-utils";
 
 type DueFilter = "ALL" | "This Week" | "Overdue" | "Delivered";
 type SortKey =
@@ -436,7 +437,7 @@ export function PrecisionDashboard(props: DashboardProps) {
     };
   }, [props.projects]);
   const { overdue, dueThisWeek, waitingReviews, blockers } = projectSummary;
-  const salarySize = Math.max(1, Number(props.settings.salaryBatchSize) || 20);
+  const salarySize = normalizedSalaryBatchSize(props.settings.salaryBatchSize);
   const pendingSalaryBatch = useMemo(
     () =>
       props.salaryBatches

@@ -196,7 +196,6 @@ export function IntegrationsDesignPage({
   return (
     <WorkspacePage family="library">
       <PageHeader
-        eyebrow="Workspace / Integrations"
         title="Integrations"
         description="Save links to the tools and services you use, for the workspace or a single project."
       />

@@ -33,10 +33,7 @@ export default function NotFound() {
               tracking work.
             </p>
           </div>
-          <Button
-            asChild
-            className="min-h-11 w-fit bg-[var(--app-highlight)] text-white hover:bg-[var(--app-accent)]"
-          >
+          <Button asChild className="min-h-11 w-fit">
             <Link href="/">Back to Dashboard</Link>
           </Button>
         </div>

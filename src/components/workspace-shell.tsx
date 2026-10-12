@@ -166,7 +166,7 @@ const routeGroups: RouteGroup[] = [
       { page: "clients", label: "Clients", href: "/clients", icon: UsersRound },
       {
         page: "feedback",
-        label: "Reviews",
+        label: "Client reviews",
         href: "/feedback",
         icon: MessageSquareText,
       },
@@ -534,7 +534,7 @@ export function WorkspaceShell({
               <div className="hidden h-9 items-center sm:flex">
                 <Button
                   aria-label="Quick create project"
-                  className="h-9 bg-[var(--app-accent)] px-3 text-xs text-[var(--app-accent-foreground)] shadow-none hover:bg-[var(--app-highlight)]"
+                  className="h-9 px-3 text-xs shadow-none"
                   onClick={onNewProject}
                   disabled={!canCreateProject}
                 >
@@ -568,7 +568,7 @@ export function WorkspaceShell({
           <Button
             type="button"
             aria-label="New Project"
-            className="fixed bottom-[calc(80px+env(safe-area-inset-bottom))] right-4 z-40 flex min-h-12 items-center gap-2 rounded-md bg-[var(--app-accent)] px-4 text-sm font-semibold text-[var(--app-accent-foreground)] shadow-[var(--app-shadow-2)] outline-none hover:bg-[var(--app-highlight)] focus-visible:ring-2 focus-visible:ring-[var(--app-accent)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--app-canvas)] sm:hidden"
+            className="fixed bottom-[calc(80px+env(safe-area-inset-bottom))] right-4 z-40 flex min-h-12 items-center gap-2 rounded-md bg-[var(--app-accent)] px-4 text-sm font-semibold text-[var(--app-accent-foreground)] shadow-[var(--app-shadow-2)] outline-none hover:bg-[var(--app-accent)]/90 focus-visible:ring-2 focus-visible:ring-[var(--app-accent)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--app-canvas)] sm:hidden"
             onClick={onNewProject}
           >
             <Plus className="size-4" />
