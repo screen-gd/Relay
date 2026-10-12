@@ -50,13 +50,8 @@ export function KanbanCard({
     <Card
       ref={drag.setNodeRef}
       data-board-card
-      style={{
-        transform: drag.transform
-          ? `translate3d(${drag.transform.x}px, ${drag.transform.y}px, 0)`
-          : undefined,
-      }}
       className={cn(
-        "relative flex flex-row items-start gap-2 rounded-md p-3 text-card-foreground shadow-none",
+        "relative flex w-full min-w-0 flex-row items-start gap-2 rounded-md p-3 text-card-foreground shadow-none",
         drag.isDragging && "z-20 opacity-30",
         className
       )}
