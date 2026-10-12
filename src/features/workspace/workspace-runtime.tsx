@@ -8,6 +8,7 @@ import {
 } from "@/components/workspace-shell";
 import { SampleModeBar } from "@/components/sample-mode-bar";
 import { useData, useProjectGroups } from "@/lib/data-context";
+import { useOptionalAuth } from "@/lib/optional-auth";
 import { useClientActions } from "@/features/clients/use-client-actions";
 import {
   ProjectActionsProvider,
@@ -17,8 +18,8 @@ import { useProjectAccess } from "@/features/projects/project-access";
 import { useWorkspaceDiscovery } from "@/features/workspace-discovery/use-workspace-discovery";
 import { buildWorkspaceSearchIndex } from "@/features/workspace-discovery/workspace-discovery";
 import {
-  AppLoadingStatus,
   AppToast,
+  AuthLoadingGate,
 } from "@/features/routes/shared/app-feedback";
 import { applyRootThemeVariables } from "@/features/routes/shared/route-theme";
 import { NotificationBell } from "@/features/notifications/notification-bell";
@@ -41,7 +42,15 @@ export function WorkspaceRuntime({
 function WorkspaceFrame({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const contentRef = useRef<HTMLDivElement>(null);
-  const { settings, setSettings, isAuthLoaded, toast, setToast } = useData();
+  const {
+    settings,
+    setSettings,
+    isAuthLoaded,
+    continueLocally,
+    toast,
+    setToast,
+  } = useData();
+  const { status: clerkStatus } = useOptionalAuth();
   const { sample, projects, teamData, canCreateProjects } = useProjectAccess();
   const { openNewProject } = useProjectActions();
   const { groups } = useProjectGroups();
@@ -95,39 +104,47 @@ function WorkspaceFrame({ children }: { children: ReactNode }) {
   const standalone = pathname === "/profile";
   return (
     <>
-      {standalone ? (
-        <div className="motion-enter min-h-dvh bg-[var(--app-canvas)] text-[var(--app-ink)] transition-colors">
-          {children}
-        </div>
-      ) : (
-        <WorkspaceShell
-          page={workspacePageForPath(pathname)}
-          settings={settings}
-          onNewProject={() => openNewProject("personal")}
-          canCreateProject={canCreateProjects}
-          pageTitle={
-            sample && pathname === "/sample-studio"
-              ? "Sample studio"
-              : undefined
-          }
-          searchRecords={searchRecords}
-          notificationSlot={<NotificationBell />}
-        >
-          <div className="flex min-h-full flex-col lg:h-full">
-            {sample ? <SampleModeBar /> : null}
-            <div
-              ref={contentRef}
-              className="min-h-0 flex-1 bg-[var(--app-canvas)] text-[var(--app-ink)] transition-colors lg:overflow-y-auto"
-            >
-              {children}
-            </div>
+      {/* The covered workspace stays out of the Tab order until auth resolves. */}
+      <div className="contents" inert={!isAuthLoaded}>
+        {standalone ? (
+          <div className="motion-enter min-h-dvh bg-[var(--app-canvas)] text-[var(--app-ink)] transition-colors">
+            {children}
           </div>
-        </WorkspaceShell>
-      )}
+        ) : (
+          <WorkspaceShell
+            page={workspacePageForPath(pathname)}
+            settings={settings}
+            onNewProject={() => openNewProject("personal")}
+            canCreateProject={canCreateProjects}
+            pageTitle={
+              sample && pathname === "/sample-studio"
+                ? "Sample studio"
+                : undefined
+            }
+            searchRecords={searchRecords}
+            notificationSlot={<NotificationBell />}
+          >
+            <div className="flex min-h-full flex-col lg:h-full">
+              {sample ? <SampleModeBar /> : null}
+              <div
+                ref={contentRef}
+                className="min-h-0 flex-1 bg-[var(--app-canvas)] text-[var(--app-ink)] transition-colors lg:overflow-y-auto"
+              >
+                {children}
+              </div>
+            </div>
+          </WorkspaceShell>
+        )}
+      </div>
       {!standalone ? (
         <AppToast toast={toast} onClose={() => setToast(null)} />
       ) : null}
-      {!isAuthLoaded ? <AppLoadingStatus /> : null}
+      {!isAuthLoaded ? (
+        <AuthLoadingGate
+          clerkStatus={clerkStatus}
+          onContinueLocally={continueLocally}
+        />
+      ) : null}
       <WorkspaceOnboarding sample={sample} />
     </>
   );

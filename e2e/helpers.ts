@@ -7,8 +7,12 @@ export async function openApp(page: Page, path: string) {
     await setupClerkTestingToken({ page });
   }
   await page.goto(path);
+  // The auth gate must clear, or turn into its recovery alert, within 10s.
   await expect(
-    page.getByText("Loading workspace", { exact: true })
+    page.getByRole("status").filter({ hasText: "Loading Relay…" })
+  ).toBeHidden({ timeout: 10_000 });
+  await expect(
+    page.getByRole("alert").filter({ hasText: "Sign-in is unavailable" })
   ).toBeHidden();
 }
 

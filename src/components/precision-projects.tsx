@@ -25,10 +25,12 @@ import {
 } from "@tanstack/react-table";
 import {
   DndContext,
+  DragOverlay,
   KeyboardSensor,
   PointerSensor,
   useSensor,
   useSensors,
+  useDndContext,
   type Announcements,
   type DragEndEvent,
 } from "@dnd-kit/core";
@@ -41,6 +43,7 @@ import {
   useState,
   type ReactNode,
 } from "react";
+import { createPortal } from "react-dom";
 import type { SettingsState, WorkItem, WorkflowStage } from "@/lib/types";
 import type { StoredTeamRole } from "@/lib/domain-values";
 import { useHydratedReducedMotion } from "@/lib/motion";
@@ -238,15 +241,6 @@ function projectColor(project: WorkItem) {
   return palette[hash % palette.length];
 }
 
-function projectDuration(project: WorkItem) {
-  let hash = 0;
-  for (const char of project.title)
-    hash = (hash * 33 + char.charCodeAt(0)) >>> 0;
-  const minutes = 1 + (hash % 11);
-  const seconds = (hash >>> 3) % 60;
-  return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
-}
-
 function projectNextAction(project: WorkItem) {
   if (project.status === "Delivered")
     return "Archive final exports and confirm the payment record.";
@@ -259,7 +253,12 @@ function projectNextAction(project: WorkItem) {
   return "Confirm the brief, owner, and first production milestone.";
 }
 
-function ProjectVideoThumbnail({
+/**
+ * Decorative project swatch shown beside the project title in the table,
+ * board and inspector. Projects carry no media runtime, so it shows none and
+ * stays hidden from assistive tech; the adjacent title names the project.
+ */
+function ProjectThumbnail({
   project,
   className,
 }: {
@@ -268,10 +267,8 @@ function ProjectVideoThumbnail({
 }) {
   return (
     <span
-      role="img"
-      aria-label={`${project.title} video thumbnail`}
+      aria-hidden="true"
       data-slot="project-thumbnail"
-      data-thumbnail-kind="video"
       className={cn(
         "relative isolate flex h-[50px] w-[88px] shrink-0 overflow-hidden rounded-lg border border-white/10",
         className
@@ -282,9 +279,6 @@ function ProjectVideoThumbnail({
       <span className="absolute inset-x-2 top-2 flex items-center justify-between text-[var(--app-thumb-icon)]">
         <Film className="size-3.5" />
         <span className="size-1.5 rounded-full bg-current opacity-60" />
-      </span>
-      <span className="absolute bottom-1.5 right-1.5 rounded bg-black/60 px-1 py-0.5 text-[8px] font-medium leading-none text-white">
-        {projectDuration(project)}
       </span>
     </span>
   );
@@ -355,13 +349,14 @@ function ProjectBoardCard({
         selected && "bg-[var(--app-active)]"
       )}
     >
-      {({ attributes, listeners }) => (
+      {({ attributes, listeners, setActivatorNodeRef }) => (
         <>
           <Button
+            ref={setActivatorNodeRef}
             type="button"
             variant="ghost"
             className={cn(
-              "h-auto min-w-0 flex-1 flex-col items-start justify-start gap-0 rounded-none px-0 py-0 text-left font-normal whitespace-normal hover:bg-transparent hover:text-current dark:hover:bg-transparent focus-visible:ring-2 focus-visible:ring-[var(--app-accent)] active:translate-y-0 active:scale-100",
+              "h-auto min-w-0 flex-1 touch-none flex-col items-start justify-start gap-0 rounded-none px-0 py-0 text-left font-normal whitespace-normal hover:bg-transparent hover:text-current dark:hover:bg-transparent focus-visible:ring-2 focus-visible:ring-[var(--app-accent)] active:translate-y-0 active:scale-100",
               !disabled && "cursor-grab active:cursor-grabbing"
             )}
             onClick={onSelect}
@@ -369,11 +364,14 @@ function ProjectBoardCard({
             {...listeners}
             {...attributes}
           >
-            <span className="block truncate text-xs font-semibold">
+            <span className="block w-full truncate text-[13px] font-semibold">
               {project.title}
             </span>
-            <span className="mt-1 block truncate text-[11px] text-[var(--app-muted)]">
-              {project.client || "No client"} · {formatDate(project.dueDate)}
+            <span className="mt-1 block w-full truncate text-xs text-[var(--app-muted)]">
+              {project.client || "No client"}
+            </span>
+            <span className="mt-3 block text-xs text-[var(--app-muted)]">
+              {formatDate(project.dueDate)}
             </span>
           </Button>
           <DropdownMenu>
@@ -408,6 +406,32 @@ function ProjectBoardCard({
   );
 }
 
+function ProjectBoardDragOverlay({ projects }: { projects: WorkItem[] }) {
+  const { active } = useDndContext();
+  const project = projects.find((item) => item.id === active?.id);
+  // Render outside scroll containers so the preview can cross column boundaries.
+  return typeof document === "undefined"
+    ? null
+    : createPortal(
+        <DragOverlay dropAnimation={null}>
+          {project ? (
+            <Card className="min-w-0 gap-1 p-3 text-left cursor-grabbing">
+              <span className="truncate text-[13px] font-semibold">
+                {project.title}
+              </span>
+              <span className="truncate text-xs text-[var(--app-muted)]">
+                {project.client || "No client"}
+              </span>
+              <span className="mt-2 text-xs text-[var(--app-muted)]">
+                {formatDate(project.dueDate)}
+              </span>
+            </Card>
+          ) : null}
+        </DragOverlay>,
+        document.body
+      );
+}
+
 function ProjectBoardColumn({
   columnKey,
   stage,
@@ -422,7 +446,7 @@ function ProjectBoardColumn({
   return (
     <KanbanBoard
       id={`stage:${columnKey}`}
-      className="min-h-0 min-w-[280px]"
+      className="min-h-0 min-w-0"
       aria-label={`${stage.label} projects`}
     >
       <KanbanHeader
@@ -437,13 +461,13 @@ function ProjectBoardColumn({
       <div
         className={cn(
           "min-h-0 flex-1 overflow-y-auto overscroll-contain p-2",
-          projects === 0 && "grid place-items-center"
+          projects === 0 && "text-center"
         )}
         data-board-column-body
         data-board-wheel={projects === 0 ? true : undefined}
       >
         {projects === 0 ? (
-          <span className="text-xs text-[var(--app-muted)] opacity-45">
+          <span className="mt-3 block text-xs text-[var(--app-muted)]">
             Drop here
           </span>
         ) : (
@@ -564,7 +588,7 @@ export function PrecisionProjects(props: PrecisionProjectsProps) {
         header: "Name",
         cell: ({ row }) => (
           <div className="flex min-w-0 items-center gap-3">
-            <ProjectVideoThumbnail project={row.original} />
+            <ProjectThumbnail project={row.original} />
             <div className="min-w-0">
               <p className="truncate text-[13px] font-semibold">
                 {row.original.title}
@@ -1118,7 +1142,7 @@ export function PrecisionProjects(props: PrecisionProjectsProps) {
                           <div
                             ref={boardRef}
                             data-board-wheel
-                            className="grid min-h-0 flex-1 auto-cols-[280px] grid-flow-col items-stretch gap-3 overflow-x-auto overflow-y-hidden bg-[var(--app-panel)] px-3 pb-3 pt-3"
+                            className="grid min-h-0 flex-1 auto-cols-[minmax(232px,1fr)] grid-flow-col items-stretch gap-3 overflow-x-auto overflow-y-hidden bg-[var(--app-panel)] px-3 pb-3 pt-3"
                             aria-label="Project board"
                           >
                             {board.map(
@@ -1156,6 +1180,7 @@ export function PrecisionProjects(props: PrecisionProjectsProps) {
                               }
                             )}
                           </div>
+                          <ProjectBoardDragOverlay projects={projects} />
                         </DndContext>
                       ) : (
                         <>
@@ -1182,7 +1207,7 @@ export function PrecisionProjects(props: PrecisionProjectsProps) {
                                   setMobileInspectorOpen(true);
                                 }}
                               >
-                                <ProjectVideoThumbnail
+                                <ProjectThumbnail
                                   project={row.original}
                                   className="h-12 w-16"
                                 />
@@ -1498,7 +1523,7 @@ function ProjectInspector({
     >
       <ScrollArea className="h-full min-h-0 flex-1 rounded-[inherit] [&_[data-slot=scroll-area-viewport]]:overscroll-contain [&_[data-slot=scroll-area-scrollbar]]:hidden">
         <div className="p-4">
-          <ProjectVideoThumbnail
+          <ProjectThumbnail
             project={project}
             className="mb-3 aspect-video h-auto w-full"
           />

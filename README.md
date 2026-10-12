@@ -107,6 +107,10 @@ pnpm install
 pnpm dev
 ```
 
+Without `.env.local`, the app runs in Local Mode. Do not copy
+`.env.production` into `.env.local`: its live Clerk key only loads on the
+production domain. Use a Clerk development instance for local account testing.
+
 Useful commands:
 
 ```bash

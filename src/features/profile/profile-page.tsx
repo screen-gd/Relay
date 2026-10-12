@@ -111,7 +111,6 @@ export function OrganizationProfilePage({
   return (
     <WorkspacePage family="administration">
       <PageHeader
-        eyebrow="Workspace / Organization"
         title="Organization Profile"
         description="Your team, its projects, and active work."
       />
@@ -581,7 +580,6 @@ export function ProfileEditPage({
   return (
     <WorkspacePage family="administration">
       <PageHeader
-        eyebrow="Workspace / Profile"
         title="Edit Profile"
         description="Update the identity shown on your public profile."
       />
@@ -819,7 +817,7 @@ export function ProfileEditPage({
                       <OwnedToggleGroupItem
                         key={day}
                         value={day}
-                        className="h-9 w-full min-w-0 border border-input bg-background px-2 text-xs text-foreground shadow-xs hover:bg-accent hover:text-accent-foreground data-[state=on]:border-transparent data-[state=on]:bg-primary data-[state=on]:text-primary-foreground data-[state=on]:hover:bg-primary/90 dark:bg-input/30 dark:hover:bg-input/50"
+                        className="h-9 w-full min-w-0 border border-input bg-background px-2 text-xs text-foreground shadow-xs hover:bg-accent hover:text-accent-foreground focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--app-canvas)] data-[state=on]:border-transparent data-[state=on]:bg-primary data-[state=on]:text-primary-foreground data-[state=on]:hover:bg-primary/90 dark:data-[state=off]:bg-input/30 dark:data-[state=off]:hover:bg-input/50"
                       >
                         {day}
                       </OwnedToggleGroupItem>

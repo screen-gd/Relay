@@ -24,7 +24,6 @@ export function AccountSettingsPage() {
       className="[&_[data-slot=content-section]]:shadow-[var(--app-shadow-1)]"
     >
       <PageHeader
-        eyebrow="Workspace / Account"
         title="Account Settings"
         description="Manage your private login details separately from your public Relay profile."
         actions={

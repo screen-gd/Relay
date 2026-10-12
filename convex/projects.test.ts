@@ -163,6 +163,12 @@ test("stage transitions resist spoofing and settled Salary Batches stay immutabl
     progress: 1,
     batchCreated: false,
   });
+  // The dashboard counts delivered, unbatched salary Projects, so the stored
+  // state must read back as the same 1/2 the delivery reported.
+  expect(
+    (await owner.query(api.projects.list, {})).find(({ id }) => id === "first")
+  ).toMatchObject({ status: "Delivered", workType: "Salary" });
+  expect(await owner.query(api.projects.listSalaryBatches, {})).toEqual([]);
   expect(
     await owner.query(api.projects.previewStage, {
       projectId: "second",

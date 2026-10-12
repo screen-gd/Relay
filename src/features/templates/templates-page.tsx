@@ -268,7 +268,6 @@ export function TemplatesDesignPage({
   return (
     <WorkspacePage family="library">
       <PageHeader
-        eyebrow="Workspace / Templates"
         title="Templates"
         description="Start with a practical editing workflow, or save your own recurring setup for the next project."
         actions={
