@@ -25,10 +25,12 @@ import {
 } from "@tanstack/react-table";
 import {
   DndContext,
+  DragOverlay,
   KeyboardSensor,
   PointerSensor,
   useSensor,
   useSensors,
+  useDndContext,
   type Announcements,
   type DragEndEvent,
 } from "@dnd-kit/core";
@@ -41,6 +43,7 @@ import {
   useState,
   type ReactNode,
 } from "react";
+import { createPortal } from "react-dom";
 import type { SettingsState, WorkItem, WorkflowStage } from "@/lib/types";
 import type { StoredTeamRole } from "@/lib/domain-values";
 import { useHydratedReducedMotion } from "@/lib/motion";
@@ -355,13 +358,14 @@ function ProjectBoardCard({
         selected && "bg-[var(--app-active)]"
       )}
     >
-      {({ attributes, listeners }) => (
+      {({ attributes, listeners, setActivatorNodeRef }) => (
         <>
           <Button
+            ref={setActivatorNodeRef}
             type="button"
             variant="ghost"
             className={cn(
-              "h-auto min-w-0 flex-1 flex-col items-start justify-start gap-0 rounded-none px-0 py-0 text-left font-normal whitespace-normal hover:bg-transparent hover:text-current dark:hover:bg-transparent focus-visible:ring-2 focus-visible:ring-[var(--app-accent)] active:translate-y-0 active:scale-100",
+              "h-auto min-w-0 flex-1 touch-none flex-col items-start justify-start gap-0 rounded-none px-0 py-0 text-left font-normal whitespace-normal hover:bg-transparent hover:text-current dark:hover:bg-transparent focus-visible:ring-2 focus-visible:ring-[var(--app-accent)] active:translate-y-0 active:scale-100",
               !disabled && "cursor-grab active:cursor-grabbing"
             )}
             onClick={onSelect}
@@ -369,11 +373,14 @@ function ProjectBoardCard({
             {...listeners}
             {...attributes}
           >
-            <span className="block truncate text-xs font-semibold">
+            <span className="block w-full truncate text-[13px] font-semibold">
               {project.title}
             </span>
-            <span className="mt-1 block truncate text-[11px] text-[var(--app-muted)]">
-              {project.client || "No client"} · {formatDate(project.dueDate)}
+            <span className="mt-1 block w-full truncate text-xs text-[var(--app-muted)]">
+              {project.client || "No client"}
+            </span>
+            <span className="mt-3 block text-xs text-[var(--app-muted)]">
+              {formatDate(project.dueDate)}
             </span>
           </Button>
           <DropdownMenu>
@@ -408,6 +415,32 @@ function ProjectBoardCard({
   );
 }
 
+function ProjectBoardDragOverlay({ projects }: { projects: WorkItem[] }) {
+  const { active } = useDndContext();
+  const project = projects.find((item) => item.id === active?.id);
+  // Render outside scroll containers so the preview can cross column boundaries.
+  return typeof document === "undefined"
+    ? null
+    : createPortal(
+        <DragOverlay dropAnimation={null}>
+          {project ? (
+            <Card className="min-w-0 gap-1 p-3 text-left cursor-grabbing">
+              <span className="truncate text-[13px] font-semibold">
+                {project.title}
+              </span>
+              <span className="truncate text-xs text-[var(--app-muted)]">
+                {project.client || "No client"}
+              </span>
+              <span className="mt-2 text-xs text-[var(--app-muted)]">
+                {formatDate(project.dueDate)}
+              </span>
+            </Card>
+          ) : null}
+        </DragOverlay>,
+        document.body
+      );
+}
+
 function ProjectBoardColumn({
   columnKey,
   stage,
@@ -437,13 +470,13 @@ function ProjectBoardColumn({
       <div
         className={cn(
           "min-h-0 flex-1 overflow-y-auto overscroll-contain p-2",
-          projects === 0 && "grid place-items-center"
+          projects === 0 && "text-center"
         )}
         data-board-column-body
         data-board-wheel={projects === 0 ? true : undefined}
       >
         {projects === 0 ? (
-          <span className="text-xs text-[var(--app-muted)] opacity-45">
+          <span className="mt-3 block text-xs text-[var(--app-muted)]">
             Drop here
           </span>
         ) : (
@@ -1156,6 +1189,7 @@ export function PrecisionProjects(props: PrecisionProjectsProps) {
                               }
                             )}
                           </div>
+                          <ProjectBoardDragOverlay projects={projects} />
                         </DndContext>
                       ) : (
                         <>
