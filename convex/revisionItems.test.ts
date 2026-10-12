@@ -5,13 +5,13 @@ import { afterEach, beforeEach, expect, test, vi } from "vitest";
 import { generateObject } from "ai";
 import { api, internal } from "./_generated/api";
 import schema from "./schema";
+import { seedAiKeys } from "./testHelpers/aiKeys.fixture";
 import { revisionInputSchema } from "./revisionItemsPrompt";
 
 vi.mock("ai", () => ({ generateObject: vi.fn() }));
 const modules = import.meta.glob("./**/*.ts");
 beforeEach(() => {
   vi.useFakeTimers();
-  vi.stubEnv("GOOGLE_GENERATIVE_AI_API_KEY", "test-key");
 });
 afterEach(() => {
   vi.clearAllTimers();
@@ -104,6 +104,7 @@ async function fixture() {
     });
     return { workspaceId, versionId, outputId, commentId };
   });
+  await seedAiKeys(t, seeded.workspaceId);
   const enable = () =>
     owner.mutation(api.aiRuns.setEnabled, {
       workspaceId: seeded.workspaceId,
@@ -357,7 +358,6 @@ test("shared runner claims once, records actual usage, and hides provider failur
     mediaVersionId: "v",
     modelTier: "better",
   });
-  vi.stubEnv("OPENAI_API_KEY", "test-key");
   vi.mocked(generateObject).mockRejectedValue(
     new Error("Secret provider details")
   );

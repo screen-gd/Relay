@@ -49,12 +49,12 @@ export function FirstRunChecklist({
         <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[var(--app-highlight)]">
           Your first production
         </p>
-        <h1
+        <h2
           id="first-run-title"
           className="mt-2 max-w-2xl text-2xl font-semibold tracking-[-0.025em] sm:text-3xl"
         >
           Turn one active edit into a clear production plan
-        </h1>
+        </h2>
         <p className="mt-3 max-w-2xl text-sm leading-6 text-[var(--app-muted)]">
           Create a real project first. Relay will reveal the full dashboard once
           there is useful work to organize.

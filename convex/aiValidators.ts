@@ -1,5 +1,14 @@
 import { v } from "convex/values";
 
+export const aiProviderValidator = v.union(
+  v.literal("google"),
+  v.literal("openai")
+);
+
+export function aiProviderForTier(tier: "default" | "better") {
+  return tier === "default" ? "google" : "openai";
+}
+
 export const aiModelTierValidator = v.union(
   v.literal("default"),
   v.literal("better")

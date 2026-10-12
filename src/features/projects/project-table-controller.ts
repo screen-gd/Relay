@@ -46,8 +46,8 @@ export function useProjectTableController(
     const rememberedView = window.localStorage.getItem("relay-project-view");
     const hasUrlView = new URLSearchParams(window.location.search).has("view");
     setState(
-      !hasUrlView && rememberedView === "board"
-        ? { ...parsed, view: "board" }
+      !hasUrlView && (rememberedView === "board" || rememberedView === "table")
+        ? { ...parsed, view: rememberedView }
         : parsed
     );
     setReady(true);
