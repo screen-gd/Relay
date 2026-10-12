@@ -5,13 +5,13 @@ import { afterEach, beforeEach, expect, test, vi } from "vitest";
 import { generateObject } from "ai";
 import { api, internal } from "./_generated/api";
 import schema from "./schema";
+import { seedAiKeys } from "./testHelpers/aiKeys.fixture";
 import { changeOrderInputSchema } from "./changeOrdersPrompt";
 
 vi.mock("ai", () => ({ generateObject: vi.fn() }));
 const modules = import.meta.glob("./**/*.ts");
 beforeEach(() => {
   vi.useFakeTimers();
-  vi.stubEnv("GOOGLE_GENERATIVE_AI_API_KEY", "test-key");
 });
 afterEach(() => {
   vi.clearAllTimers();
@@ -154,6 +154,7 @@ async function fixture() {
       extraHourRate: 80,
       templateLimits: [],
     });
+  await seedAiKeys(t, seeded.workspaceId);
   const enable = () =>
     owner.mutation(api.aiRuns.setEnabled, {
       workspaceId: seeded.workspaceId,

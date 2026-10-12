@@ -42,58 +42,61 @@ export function DashboardApplication() {
       <DeadlineRiskRadar workspaceId={access.currentTeamId} />
     ) : null;
 
-  if (access.personalProjects.length === 0 && !access.sample) {
-    return (
-      <FirstRunChecklist
-        mode={isSignedIn ? "account" : "local"}
-        onCreateProject={() => actions.openNewProject("personal")}
-      />
-    );
-  }
-
   return (
-    <PrecisionDashboard
-      settings={settings}
-      stats={dashboardState.stats}
-      projects={access.personalProjects}
-      visibleProjects={dashboardState.visibleProjects}
-      salaryBatches={salaryBatches}
-      sessionActivity={dashboardState.sessionActivity}
-      teamActivity={access.teamData?.activity ?? []}
-      teamName={access.teamData?.workspace?.name}
-      teamLoading={access.teamDataLoading}
-      riskRadar={riskRadar}
-      query={dashboardState.query}
-      setQuery={dashboardState.setQuery}
-      statusFilter={dashboardState.statusFilter}
-      setStatusFilter={dashboardState.setStatusFilter}
-      kindFilter={dashboardState.kindFilter}
-      setKindFilter={dashboardState.setKindFilter}
-      clientFilter={dashboardState.clientFilter}
-      setClientFilter={dashboardState.setClientFilter}
-      clientOptions={dashboardState.clientOptions}
-      projectTagOptions={dashboardState.projectTagOptions}
-      dueFilter={dashboardState.dueFilter}
-      setDueFilter={dashboardState.setDueFilter}
-      billingFilter={dashboardState.billingFilter}
-      setBillingFilter={dashboardState.setBillingFilter}
-      sortKey={dashboardState.sortKey}
-      setSortKey={dashboardState.setSortKey}
-      onNewProject={() => actions.openNewProject("personal")}
-      onViewProject={actions.openProjectDetails}
-      onEditProject={actions.openEditProject}
-      onDeleteProject={actions.requestDeleteProject}
-      onMarkSalaryPayment={(batchId) => {
-        updateSalaryBatchPayment(batchId, true);
-        if (!access.sample)
-          setToast({
-            message: "Salary payment marked as received.",
-            tone: "success",
-          });
-      }}
-      canCreateProjects={access.canCreateProjects}
-      canEditProjects={access.canEditProjects}
-      canDeleteProject={actions.canDeleteProject}
-    />
+    <>
+      <h1 className="sr-only">
+        {access.sample ? "Sample studio" : "Dashboard"}
+      </h1>
+      {access.personalProjects.length === 0 && !access.sample ? (
+        <FirstRunChecklist
+          mode={isSignedIn ? "account" : "local"}
+          onCreateProject={() => actions.openNewProject("personal")}
+        />
+      ) : (
+        <PrecisionDashboard
+          settings={settings}
+          stats={dashboardState.stats}
+          projects={access.personalProjects}
+          visibleProjects={dashboardState.visibleProjects}
+          salaryBatches={salaryBatches}
+          sessionActivity={dashboardState.sessionActivity}
+          teamActivity={access.teamData?.activity ?? []}
+          teamName={access.teamData?.workspace?.name}
+          teamLoading={access.teamDataLoading}
+          riskRadar={riskRadar}
+          query={dashboardState.query}
+          setQuery={dashboardState.setQuery}
+          statusFilter={dashboardState.statusFilter}
+          setStatusFilter={dashboardState.setStatusFilter}
+          kindFilter={dashboardState.kindFilter}
+          setKindFilter={dashboardState.setKindFilter}
+          clientFilter={dashboardState.clientFilter}
+          setClientFilter={dashboardState.setClientFilter}
+          clientOptions={dashboardState.clientOptions}
+          projectTagOptions={dashboardState.projectTagOptions}
+          dueFilter={dashboardState.dueFilter}
+          setDueFilter={dashboardState.setDueFilter}
+          billingFilter={dashboardState.billingFilter}
+          setBillingFilter={dashboardState.setBillingFilter}
+          sortKey={dashboardState.sortKey}
+          setSortKey={dashboardState.setSortKey}
+          onNewProject={() => actions.openNewProject("personal")}
+          onViewProject={actions.openProjectDetails}
+          onEditProject={actions.openEditProject}
+          onDeleteProject={actions.requestDeleteProject}
+          onMarkSalaryPayment={(batchId) => {
+            updateSalaryBatchPayment(batchId, true);
+            if (!access.sample)
+              setToast({
+                message: "Salary payment marked as received.",
+                tone: "success",
+              });
+          }}
+          canCreateProjects={access.canCreateProjects}
+          canEditProjects={access.canEditProjects}
+          canDeleteProject={actions.canDeleteProject}
+        />
+      )}
+    </>
   );
 }

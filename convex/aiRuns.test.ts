@@ -11,6 +11,7 @@ import type { Doc } from "./_generated/dataModel";
 import { internalAction } from "./_generated/server";
 import { enqueueAiRun } from "./aiRuns";
 import schema from "./schema";
+import { seedAiKeys } from "./testHelpers/aiKeys.fixture";
 
 const worker = internalAction({
   args: { runId: v.id("aiRuns"), inputJson: v.string() },
@@ -103,6 +104,7 @@ async function fixture(plan: Doc<"workspaceSubscriptions">["plan"] = "free") {
     });
     return subscription._id;
   });
+  await seedAiKeys(t, workspaceId);
   const request = {
     workspaceId,
     feature: "status_update",
@@ -158,6 +160,19 @@ test("legacy workspaces default to off and only the Owner controls consent", asy
     enabled: false,
   });
   expect(await f.summary()).toMatchObject({ enabled: false, used: 0 });
+});
+
+test("missing workspace keys reject new runs before quota is consumed", async () => {
+  const f = await fixture();
+  await f.enable();
+  vi.stubEnv("GOOGLE_GENERATIVE_AI_API_KEY", "relay-key-must-not-be-used");
+  await f.owner.mutation(api.aiCredentials.remove, {
+    workspaceId: f.workspaceId,
+    provider: "google",
+  });
+  await expect(f.enqueue()).rejects.toThrow("Add a Gemini API key");
+  expect(await f.summary()).toMatchObject({ googleConfigured: false, used: 0 });
+  vi.unstubAllEnvs();
 });
 
 test("unauthenticated users, outsiders and Viewers cannot request runs", async () => {

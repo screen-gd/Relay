@@ -6,6 +6,7 @@ import { createHash } from "node:crypto";
 import { generateObject } from "ai";
 import { api, internal } from "./_generated/api";
 import schema from "./schema";
+import { seedAiKeys } from "./testHelpers/aiKeys.fixture";
 import {
   briefDraftSchema,
   cleanBriefDraft,
@@ -97,6 +98,7 @@ async function fixture() {
   const workspace = await t.run(async (ctx) =>
     ctx.db.normalizeId("teamWorkspaces", workspaceId)!
   );
+  await seedAiKeys(t, workspace);
   const generate = (
     inputJson = JSON.stringify({
       kind: "text",
@@ -308,7 +310,6 @@ test("durable drafts remove common contact details and reject invalid dates or o
 
 test("PDF goes to the model as a native file part; the runner never creates a project", async () => {
   const f = await fixture();
-  vi.stubEnv("GOOGLE_GENERATIVE_AI_API_KEY", "test-key");
   await f.owner.mutation(api.aiRuns.setEnabled, {
     workspaceId: f.workspace,
     enabled: true,

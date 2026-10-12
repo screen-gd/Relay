@@ -14,6 +14,7 @@ vi.mock("convex/react", () => ({
   useConvexAuth: () => ({ isAuthenticated: state.isAuthenticated }),
   useQuery: () => state.summary,
   useMutation: () => vi.fn(),
+  useAction: () => vi.fn(),
 }));
 
 beforeEach(() => {
@@ -39,6 +40,8 @@ test("the Owner sees persisted consent and shared quota usage", () => {
   state.summary = {
     enabled: true,
     canManage: true,
+    googleConfigured: true,
+    openaiConfigured: false,
     month: "2026-10",
     limit: 900,
     used: 25,
@@ -47,7 +50,11 @@ test("the Owner sees persisted consent and shared quota usage", () => {
   };
   const html = render();
   expect(html).toContain('aria-checked="true"');
-  expect(html).not.toContain('disabled=""');
+  expect(html).toContain("Gemini API key");
+  expect(html).toContain("OpenAI API key");
+  expect(html).toContain('type="password"');
+  expect(html).toContain("Enter a replacement key");
+  expect(html).toContain("Remove key");
   expect(html).toContain("25 of 900 runs used this month. 875 remaining.");
   expect(html).toContain("UTC");
 });
@@ -56,6 +63,8 @@ test("non-owners see the allowance but cannot change consent", () => {
   state.summary = {
     enabled: true,
     canManage: false,
+    googleConfigured: true,
+    openaiConfigured: false,
     month: "2026-10",
     limit: 300,
     used: 300,
@@ -66,4 +75,6 @@ test("non-owners see the allowance but cannot change consent", () => {
   expect(html).toContain('disabled=""');
   expect(html).toContain("Only the Workspace Owner can change this setting.");
   expect(html).toContain("0 remaining.");
+  expect(html).not.toContain('type="password"');
+  expect(html).not.toContain("Remove key");
 });

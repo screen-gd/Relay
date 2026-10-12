@@ -4,12 +4,14 @@ import rateLimiterComponent from "@convex-dev/rate-limiter/test";
 import { afterEach, expect, test, vi } from "vitest";
 import { api, internal } from "./_generated/api";
 import schema from "./schema";
+import { seedAiKeys } from "./testHelpers/aiKeys.fixture";
 import { validateTranscriptMatches } from "./transcriptsValidators";
 
 const modules = import.meta.glob("./**/*.ts");
 afterEach(() => {
   vi.clearAllTimers();
   vi.useRealTimers();
+  vi.unstubAllEnvs();
 });
 const text =
   "1\n00:00:00,000 --> 00:00:03,000\nWelcome to Relay\n\n2\n00:00:06,000 --> 00:00:09,000\nSee you next time";
@@ -116,6 +118,7 @@ async function fixture() {
       mediaVersionId: "v",
       modelTier: "default",
     });
+  await seedAiKeys(t, seeded.workspaceId);
   const enable = () =>
     owner.mutation(api.aiRuns.setEnabled, {
       workspaceId: seeded.workspaceId,

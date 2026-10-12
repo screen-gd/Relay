@@ -7,6 +7,7 @@ import { GeistSans } from "geist/font/sans";
 import { GeistMono } from "geist/font/mono";
 import { siteUrl } from "@/lib/site";
 import { Providers } from "./providers";
+import { themeBootScript } from "@/features/routes/shared/route-theme";
 import "./globals.css";
 
 const siteTitle = "Relay | Video Production Workspace for Editors";
@@ -84,22 +85,6 @@ export const viewport: Viewport = {
     { media: "(prefers-color-scheme: dark)", color: "#090C0D" },
   ],
 };
-
-const themeBootScript = `
-(function () {
-  try {
-    var raw = window.localStorage.getItem("video-editing-work-tracker:settings:v1");
-    var settings = raw ? JSON.parse(raw) : {};
-    var theme = ["Light", "Dark", "System"].indexOf(settings.theme) >= 0 ? settings.theme : "Dark";
-    var prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
-    var isDark = theme === "Dark" || (theme === "System" && prefersDark);
-    var root = document.documentElement;
-    root.style.colorScheme = isDark ? "dark" : "light";
-    root.dataset.theme = isDark ? "dark" : "light";
-    root.classList.toggle("dark", isDark);
-  } catch {}
-})();
-`;
 
 const clerkModalCenteringCss = `
 [class*="cl-modalBackdrop"] {

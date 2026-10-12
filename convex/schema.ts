@@ -1,7 +1,7 @@
 import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
 import { clientValidator } from "./workspaceClients";
-import { aiRunValidator } from "./aiValidators";
+import { aiProviderValidator, aiRunValidator } from "./aiValidators";
 import {
   transcript,
   transcriptSegment,
@@ -41,6 +41,12 @@ import { earningsQuestion } from "./earningsQaValidators";
 import { revisionScopeTables } from "./revisionScopeTables";
 
 export default defineSchema({
+  aiProviderKeys: defineTable({
+    workspaceId: v.id("teamWorkspaces"),
+    provider: aiProviderValidator,
+    ciphertext: v.bytes(),
+    iv: v.bytes(),
+  }).index("by_workspaceId_and_provider", ["workspaceId", "provider"]),
   transcripts: defineTable(transcript).index("by_mediaVersionId", [
     "mediaVersionId",
   ]),

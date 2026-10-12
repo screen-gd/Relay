@@ -362,7 +362,11 @@ export default function ClientReviewDemo({ variant }: { variant?: "chapter" }) {
                 aria-pressed={muted}
                 onClick={() => setMuted((value) => !value)}
               >
-                {muted ? <SpeakerSlashIcon size={16} /> : <SpeakerHighIcon size={16} />}
+                {muted ? (
+                  <SpeakerSlashIcon size={16} />
+                ) : (
+                  <SpeakerHighIcon size={16} />
+                )}
               </button>
             </div>
           </div>

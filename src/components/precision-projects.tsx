@@ -27,8 +27,6 @@ import {
   DndContext,
   KeyboardSensor,
   PointerSensor,
-  useDraggable,
-  useDroppable,
   useSensor,
   useSensors,
   type Announcements,
@@ -57,6 +55,11 @@ import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import {
+  KanbanBoard,
+  KanbanCard,
+  KanbanHeader,
+} from "@/components/kibo-ui/kanban";
 import { Empty, EmptyHeader, EmptyMedia } from "@/components/ui/empty";
 import { Progress } from "@/components/ui/progress";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -343,68 +346,65 @@ function ProjectBoardCard({
   onOpen: () => void;
   onUpdateProjectStatus: PrecisionProjectsProps["onUpdateProjectStatus"];
 }) {
-  const { attributes, listeners, setNodeRef, transform, isDragging } =
-    useDraggable({ id: project.id, disabled });
-
   return (
-    <article
-      ref={setNodeRef}
-      data-board-card
-      style={{
-        transform: transform
-          ? `translate3d(${transform.x}px, ${transform.y}px, 0)`
-          : undefined,
-      }}
+    <KanbanCard
+      id={project.id}
+      disabled={disabled}
       className={cn(
-        "relative flex items-start gap-2 rounded-lg border border-[var(--panel-edge)] bg-card p-2.5 text-card-foreground",
-        selected && "bg-[var(--app-active)]",
-        isDragging && "z-20 opacity-60"
+        "border-0 border-b border-[var(--panel-edge)] rounded-none",
+        selected && "bg-[var(--app-active)]"
       )}
     >
-      <Button
-        type="button"
-        variant="ghost"
-        className={cn(
-          "h-auto min-w-0 flex-1 flex-col items-start justify-start gap-0 rounded-none px-0 py-0 text-left font-normal whitespace-normal hover:bg-transparent hover:text-current dark:hover:bg-transparent focus-visible:ring-2 focus-visible:ring-[var(--app-accent)] active:translate-y-0 active:scale-100",
-          !disabled && "cursor-grab active:cursor-grabbing"
-        )}
-        onClick={onSelect}
-        onDoubleClick={onOpen}
-        {...listeners}
-        {...attributes}
-      >
-        <span className="block truncate text-xs font-semibold">
-          {project.title}
-        </span>
-        <span className="mt-1 block truncate text-[11px] text-[var(--app-muted)]">
-          {project.client || "No client"} · {formatDate(project.dueDate)}
-        </span>
-      </Button>
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
+      {({ attributes, listeners }) => (
+        <>
           <Button
+            type="button"
             variant="ghost"
-            size="icon-sm"
-            className="shrink-0 !bg-transparent text-[var(--app-muted)]"
-            aria-label={`Change stage for ${project.title}`}
+            className={cn(
+              "h-auto min-w-0 flex-1 flex-col items-start justify-start gap-0 rounded-none px-0 py-0 text-left font-normal whitespace-normal hover:bg-transparent hover:text-current dark:hover:bg-transparent focus-visible:ring-2 focus-visible:ring-[var(--app-accent)] active:translate-y-0 active:scale-100",
+              !disabled && "cursor-grab active:cursor-grabbing"
+            )}
+            onClick={onSelect}
+            onDoubleClick={onOpen}
+            {...listeners}
+            {...attributes}
           >
-            <MoreHorizontal />
+            <span className="block truncate text-xs font-semibold">
+              {project.title}
+            </span>
+            <span className="mt-1 block truncate text-[11px] text-[var(--app-muted)]">
+              {project.client || "No client"} · {formatDate(project.dueDate)}
+            </span>
           </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end">
-          {stageChoices.map((choice) => (
-            <DropdownMenuItem
-              key={choice.stage.id}
-              aria-label={choice.ariaLabel}
-              disabled={choice.disabled}
-              onSelect={() => onUpdateProjectStatus(project, choice.stage.id)}
-            >
-              {choice.label}
-            </DropdownMenuItem>
-          ))}
-        </DropdownMenuContent>
-      </DropdownMenu>
-    </article>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon-sm"
+                className="shrink-0 !bg-transparent text-[var(--app-muted)]"
+                aria-label={`Change stage for ${project.title}`}
+              >
+                <MoreHorizontal />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              {stageChoices.map((choice) => (
+                <DropdownMenuItem
+                  key={choice.stage.id}
+                  aria-label={choice.ariaLabel}
+                  disabled={choice.disabled}
+                  onSelect={() =>
+                    onUpdateProjectStatus(project, choice.stage.id)
+                  }
+                >
+                  {choice.label}
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </>
+      )}
+    </KanbanCard>
   );
 }
 
@@ -419,17 +419,13 @@ function ProjectBoardColumn({
   projects: number;
   children: ReactNode;
 }) {
-  const { setNodeRef, isOver } = useDroppable({ id: `stage:${columnKey}` });
   return (
-    <section
-      ref={setNodeRef}
-      className={cn(
-        "flex h-full min-h-0 min-w-[280px] flex-col rounded-lg bg-[var(--surface-inset)]",
-        isOver && "bg-[var(--app-hover)]"
-      )}
+    <KanbanBoard
+      id={`stage:${columnKey}`}
+      className="min-h-0 min-w-[280px]"
       aria-label={`${stage.label} projects`}
     >
-      <h3
+      <KanbanHeader
         data-board-wheel
         className="flex shrink-0 items-center justify-between px-3 py-3 text-sm font-medium text-[var(--app-ink)]"
       >
@@ -437,7 +433,7 @@ function ProjectBoardColumn({
         <span className="text-[11px] font-normal tabular-nums text-[var(--app-muted)]">
           {projects}
         </span>
-      </h3>
+      </KanbanHeader>
       <div
         className={cn(
           "min-h-0 flex-1 overflow-y-auto overscroll-contain p-2",
@@ -454,7 +450,7 @@ function ProjectBoardColumn({
           <div className="grid gap-2">{children}</div>
         )}
       </div>
-    </section>
+    </KanbanBoard>
   );
 }
 

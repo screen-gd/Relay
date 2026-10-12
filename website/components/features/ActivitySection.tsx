@@ -1,6 +1,10 @@
 "use client";
 
-import { ArrowRightIcon, CaretLeftIcon, CaretRightIcon } from "@phosphor-icons/react/ssr";
+import {
+  ArrowRightIcon,
+  CaretLeftIcon,
+  CaretRightIcon,
+} from "@phosphor-icons/react/ssr";
 import { useState } from "react";
 import Reveal from "../site/Reveal";
 import AppWindow from "./AppWindow";
@@ -275,7 +279,8 @@ export default function ActivitySection() {
                   type="button"
                   onClick={() => setWeek(sampleWeek)}
                 >
-                  Back to this week <ArrowRightIcon size={13} aria-hidden="true" />
+                  Back to this week{" "}
+                  <ArrowRightIcon size={13} aria-hidden="true" />
                 </button>
               )}
             </section>

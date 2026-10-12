@@ -46,6 +46,10 @@ for (const modelTier of ["default", "better"] as const) {
       try {
         const result = await generateDraft({
           modelTier,
+          apiKey:
+            (modelTier === "default"
+              ? process.env.GOOGLE_GENERATIVE_AI_API_KEY
+              : process.env.OPENAI_API_KEY) ?? "",
           prompt: revisionPrompt(fixture.input),
           schema: revisionOutputSchema,
         });
