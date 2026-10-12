@@ -44,6 +44,7 @@ type PublicSource = {
   url: string;
 };
 type PublicVersion = {
+  changelog?: string;
   id: string;
   label: string;
   createdAt?: string;
@@ -262,6 +263,7 @@ function readVersion(
             : "Link";
   return {
     id: text(value.id) ?? fallbackId,
+    changelog: text(value.changelog),
     label: text(value.label) ?? text(value.title) ?? "Current version",
     createdAt: text(value.createdAt),
     source: { provider, url },
@@ -979,6 +981,17 @@ export function PublicOutputRow({
           No version shared yet
         </span>
       )}
+      {currentVersion?.changelog ? (
+        <section
+          aria-label="What changed"
+          className="sm:col-span-2 dark:bg-black dark:text-white"
+        >
+          <h4 className="text-sm font-semibold">What changed</h4>
+          <p className="mt-2 whitespace-pre-wrap text-sm">
+            {currentVersion.changelog}
+          </p>
+        </section>
+      ) : null}
       {embedUrl && currentVersion ? (
         <ReviewVideoPlayer
           url={embedUrl}

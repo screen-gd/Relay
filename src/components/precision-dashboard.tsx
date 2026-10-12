@@ -30,7 +30,14 @@ import {
 } from "@tanstack/react-table";
 import { AnimatePresence, animate, motion } from "motion/react";
 import Link from "next/link";
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import {
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
 import type { SalaryBatch, WorkItem, SettingsState } from "@/lib/types";
 import type { ProjectStatus } from "@/lib/domain-values";
 import { useHydratedReducedMotion } from "@/lib/motion";
@@ -119,6 +126,8 @@ type DashboardProps = {
   }>;
   teamName?: string;
   teamLoading: boolean;
+  /** Workspace deadline-risk panel, shown below Needs attention when provided. */
+  riskRadar?: ReactNode;
   query: string;
   setQuery: (value: string) => void;
   statusFilter: ProjectStatus | "All";
@@ -1011,6 +1020,10 @@ export function PrecisionDashboard(props: DashboardProps) {
               )}
             </ContentSection>
           </motion.div>
+
+          {props.riskRadar ? (
+            <div className="order-2">{props.riskRadar}</div>
+          ) : null}
 
           <motion.div
             className="order-3"

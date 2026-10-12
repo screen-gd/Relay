@@ -126,3 +126,47 @@ describe("client hub video playback", () => {
     expect(html).toContain("No version shared yet");
   });
 });
+
+it("renders the approved changelog beside its version and ignores private draft fields", () => {
+  const access = readPublicPortalAccess({
+    access: "active",
+    project: { title: "Launch film" },
+    outputs: [
+      {
+        id: "main",
+        title: "Main film",
+        currentVersion: {
+          id: "v2",
+          title: "Version 2",
+          source: { url: "https://example.com/cut" },
+          changelog: "Contrast improved. <script>bad</script>",
+          text: "Private draft",
+          clarifyingQuestion: "Internal question",
+          possibleNewScope: true,
+        },
+      },
+    ],
+  });
+  if (access.kind !== "active") throw new Error("Expected active portal");
+  const markup = renderToStaticMarkup(
+    createElement(PublicOutputRow, {
+      output: access.portal.outputs[0],
+      comments: [],
+      commentsLoading: false,
+      displayName: "",
+      onDisplayNameChange: () => {},
+      onClearDisplayName: () => {},
+      onAddComment: async () => {},
+      onReopenComment: async () => {},
+      busy: false,
+      busyCommentId: "",
+    })
+  );
+  expect(markup).toContain("What changed");
+  expect(markup).toContain(
+    "Contrast improved. &lt;script&gt;bad&lt;/script&gt;"
+  );
+  expect(markup).not.toMatch(
+    /Private draft|Internal question|possibleNewScope|<script>/
+  );
+});

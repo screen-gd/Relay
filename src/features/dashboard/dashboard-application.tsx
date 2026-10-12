@@ -32,6 +32,15 @@ export function DashboardApplication() {
     subscribeToProjectActivity,
   });
 
+  const member = access.teamData?.currentMember;
+  const riskRadar =
+    access.currentTeamId &&
+    !access.sample &&
+    (member?.role === "Owner" || member?.role === "Editor") &&
+    member.permissions.viewProjects ? (
+      <DeadlineRiskRadar workspaceId={access.currentTeamId} />
+    ) : null;
+
   return (
     <>
       <h1 className="sr-only">
@@ -53,6 +62,7 @@ export function DashboardApplication() {
           teamActivity={access.teamData?.activity ?? []}
           teamName={access.teamData?.workspace?.name}
           teamLoading={access.teamDataLoading}
+          riskRadar={riskRadar}
           query={dashboardState.query}
           setQuery={dashboardState.setQuery}
           statusFilter={dashboardState.statusFilter}
