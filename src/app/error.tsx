@@ -45,10 +45,7 @@ export default function GlobalError({
             </p>
           </div>
           <div className="flex flex-col gap-2 sm:flex-row">
-            <Button
-              onClick={reset}
-              className="min-h-11 bg-[var(--app-highlight)] text-white hover:bg-[var(--app-accent)]"
-            >
+            <Button onClick={reset} className="min-h-11">
               Try Again
             </Button>
             <Button
