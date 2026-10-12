@@ -1201,6 +1201,7 @@ export function PrecisionReports({
   canManageFinance,
   onUpdateBatchPayment,
   salaryPlans,
+  earningsQa,
 }: {
   advancedReports?: boolean;
   projects: WorkItem[];
@@ -1212,6 +1213,8 @@ export function PrecisionReports({
   onUpdateBatchPayment: (batchId: string, paid: boolean) => void;
   /** Owner-only salary plan panel, rendered above the batch ledger. */
   salaryPlans?: ReactNode;
+  /** AI earnings Q&A panel, rendered after client totals. */
+  earningsQa?: ReactNode;
 }) {
   const [trendRange, setTrendRange] = useState<3 | 6 | "all">(6);
   const [period, setPeriod] = useState<PayoutPeriod>("all");
@@ -1812,6 +1815,7 @@ export function PrecisionReports({
           </ContentSection>
         ) : null}
 
+        {earningsQa}
         {salaryPlans}
         <ContentSection
           title="Payment batches"

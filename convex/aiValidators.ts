@@ -1,5 +1,14 @@
 import { v } from "convex/values";
 
+export const aiProviderValidator = v.union(
+  v.literal("google"),
+  v.literal("openai")
+);
+
+export function aiProviderForTier(tier: "default" | "better") {
+  return tier === "default" ? "google" : "openai";
+}
+
 export const aiModelTierValidator = v.union(
   v.literal("default"),
   v.literal("better")
@@ -7,6 +16,8 @@ export const aiModelTierValidator = v.union(
 
 export const aiFailureCodeValidator = v.union(
   v.literal("provider_error"),
+  /** The model's output failed the feature's `verify` check (e.g. numbers). */
+  v.literal("verification_failed"),
   v.literal("disabled"),
   v.literal("access_revoked"),
   v.literal("timed_out")

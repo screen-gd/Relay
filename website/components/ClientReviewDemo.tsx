@@ -256,7 +256,7 @@ export default function ClientReviewDemo({ variant }: { variant?: "chapter" }) {
               <video
                 aria-label="Sample client review video"
                 ref={videoRef}
-                src="/videos/client-review-city.mp4"
+                src="/api/client-review-video"
                 preload="metadata"
                 playsInline
                 muted={muted}
@@ -362,7 +362,11 @@ export default function ClientReviewDemo({ variant }: { variant?: "chapter" }) {
                 aria-pressed={muted}
                 onClick={() => setMuted((value) => !value)}
               >
-                {muted ? <SpeakerSlashIcon size={16} /> : <SpeakerHighIcon size={16} />}
+                {muted ? (
+                  <SpeakerSlashIcon size={16} />
+                ) : (
+                  <SpeakerHighIcon size={16} />
+                )}
               </button>
             </div>
           </div>

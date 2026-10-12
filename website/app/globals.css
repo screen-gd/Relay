@@ -71,8 +71,11 @@
 }
 
 @theme inline {
-  --font-sans: var(--font-figtree), "Figtree", ui-sans-serif, system-ui, sans-serif;
-  --font-display: var(--font-bricolage), "Bricolage Grotesque", var(--font-figtree), ui-sans-serif, sans-serif;
+  --font-sans:
+    var(--font-figtree), "Figtree", ui-sans-serif, system-ui, sans-serif;
+  --font-display:
+    var(--font-bricolage), "Bricolage Grotesque", var(--font-figtree),
+    ui-sans-serif, sans-serif;
   --font-mono: var(--font-geist-mono), "Geist Mono", ui-monospace, monospace;
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -1994,12 +1997,16 @@ body::before {
   border-radius: 50%;
   background: #1f1f24;
   object-fit: cover;
-  box-shadow: 0 0 0 2px #0c0c0e, 0 0 0 3px transparent;
+  box-shadow:
+    0 0 0 2px #0c0c0e,
+    0 0 0 3px transparent;
   transition: box-shadow 200ms ease-out;
 }
 
 .review-comment-list button.is-active .review-avatar {
-  box-shadow: 0 0 0 2px #0c0c0e, 0 0 0 3.5px var(--brand);
+  box-shadow:
+    0 0 0 2px #0c0c0e,
+    0 0 0 3.5px var(--brand);
 }
 
 .review-comment-meta {

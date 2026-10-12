@@ -1,6 +1,10 @@
 "use client";
 
-import { ChartBarIcon, ReceiptIcon, RepeatIcon } from "@phosphor-icons/react/ssr";
+import {
+  ChartBarIcon,
+  ReceiptIcon,
+  RepeatIcon,
+} from "@phosphor-icons/react/ssr";
 import { useState } from "react";
 import Reveal from "../site/Reveal";
 import AppWindow from "./AppWindow";

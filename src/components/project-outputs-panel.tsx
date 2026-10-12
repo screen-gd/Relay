@@ -237,7 +237,7 @@ export function ProjectOutputsPanel({
               const current = data.currentVersion(output);
               const unresolvedOld = data.unresolvedOldComments(output);
               return (
-                <article key={output.id}>
+                <article key={output.id} id={`output-${output.id}`}>
                   <div className="flex flex-col justify-between gap-4 lg:flex-row lg:items-start">
                     <div className="min-w-0">
                       <div className="flex flex-wrap items-center gap-2">
@@ -422,6 +422,8 @@ export function ProjectOutputsPanel({
                         (comment) => comment.outputId === output.id
                       )}
                       loading={reviews.loading}
+                      revisionsEnabled={data.cloud}
+                      canEditRevisions={canEdit}
                       onResolve={
                         canResolveComments
                           ? async (commentId, resolved) => {

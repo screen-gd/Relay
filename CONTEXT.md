@@ -30,6 +30,16 @@ One linked or uploaded version of a Project Output. A Project Output has one cur
 **Review**:
 A feedback cycle for a Media Version. A Comment is one note within a Review.
 
+**Revision Round**:
+One client feedback cycle on a Project Output, closed when the editor delivers the next Media Version. A version closes a round only if the previous version received at least one client Comment first. Comment counts and uploads without feedback do not add rounds. Editors can correct the count.
+_Avoid_: Revision (for a round), counting Comments as rounds
+
+**Included Rounds**:
+The Revision Rounds covered by the agreed price, either per Project Output or shared by the whole Project (the round basis). A Project limit overrides its Workflow Template limit, which overrides the Workspace default; a Project's basis overrides the Workspace basis, which defaults to per output. Rounds beyond it are extra and can be billed through a Change Order. Only the Workspace Owner sets the Workspace defaults and rates.
+
+**Change Order**:
+An editor-reviewed message asking the Client to approve extra rounds or extra work at the Workspace's saved rates. Relay computes the counts and amounts; AI may draft the wording. It is never sent automatically.
+
 **Workflow Template**:
 A reusable Project setup containing workflow stages, starter Project Outputs, relative deadlines, roles, and Client Portal defaults. Relay copies it into a new Project.
 _Avoid_: Template
