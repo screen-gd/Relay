@@ -45,7 +45,7 @@ export const DEFAULT_PROJECT_TABLE_STATE: ProjectTableState = {
   payment: "all",
   salary: "all",
   assigneeUserId: "",
-  view: "table",
+  view: "board",
   sort: "due",
   direction: "asc",
   archive: "active",
@@ -99,7 +99,7 @@ function parseSalary(value: string | null): ProjectTableSalary {
 }
 
 function parseView(value: string | null): ProjectTableView {
-  return value === "board" ? "board" : "table";
+  return value === "table" ? "table" : "board";
 }
 
 function parseSort(value: string | null): ProjectTableSort {

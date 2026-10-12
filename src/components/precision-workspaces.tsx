@@ -19,18 +19,19 @@ import { AnimatePresence, motion } from "motion/react";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
+import { AreaChart } from "@/components/dither-kit/area-chart";
+import { Area } from "@/components/dither-kit/area";
+import { Grid } from "@/components/dither-kit/grid";
+import { PieChart } from "@/components/dither-kit/pie-chart";
+import { Pie } from "@/components/dither-kit/pie";
+import { Tooltip as ChartTooltip } from "@/components/dither-kit/tooltip";
+import { XAxis } from "@/components/dither-kit/x-axis";
+import { YAxis } from "@/components/dither-kit/y-axis";
 import {
-  Area,
-  AreaChart,
-  CartesianGrid,
-  Cell,
-  Pie,
-  PieChart,
-  ResponsiveContainer,
-  Tooltip as ChartTooltip,
-  XAxis,
-  YAxis,
-} from "recharts";
+  PALETTE,
+  rgb,
+  type DitherColor,
+} from "@/components/dither-kit/palette";
 import type { Client, SalaryBatch, SettingsState, WorkItem } from "@/lib/types";
 import { useHydratedReducedMotion } from "@/lib/motion";
 import {
@@ -1192,6 +1193,7 @@ export function PrecisionFeedback({
 }
 
 export function PrecisionReports({
+  advancedReports = false,
   projects,
   salaryBatches,
   settings,
@@ -1201,6 +1203,7 @@ export function PrecisionReports({
   onUpdateBatchPayment,
   salaryPlans,
 }: {
+  advancedReports?: boolean;
   projects: WorkItem[];
   salaryBatches: SalaryBatch[];
   settings: SettingsState;
@@ -1387,12 +1390,18 @@ export function PrecisionReports({
       .slice(0, 5);
   }, [report.deliveredProjects]);
   const colors = [
-    "var(--chart-1)",
-    "var(--chart-2)",
-    "var(--chart-3)",
-    "var(--chart-4)",
-    "var(--chart-5)",
-  ];
+    "blue",
+    "purple",
+    "green",
+    "orange",
+    "pink",
+  ] satisfies DitherColor[];
+  const mixConfig = Object.fromEntries(
+    mixData.map((item, index) => [
+      item.name,
+      { label: item.name, color: colors[index % colors.length] },
+    ])
+  );
   const editorSummary = report.editors.length
     ? report.editors.map((editor) => ({
         userId: editor.id,
@@ -1464,15 +1473,17 @@ export function PrecisionReports({
                 <SelectItem value="all">All time</SelectItem>
               </SelectContent>
             </Select>
-            <Button
-              variant="outline"
-              size="sm"
-              className="h-8"
-              onClick={exportReport}
-              disabled={!canManageFinance}
-            >
-              <Download /> Export CSV
-            </Button>
+            {advancedReports ? (
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-8"
+                onClick={exportReport}
+                disabled={!canManageFinance}
+              >
+                <Download /> Export CSV
+              </Button>
+            ) : null}
           </div>
         }
       />
@@ -1616,65 +1627,24 @@ export function PrecisionReports({
                   className="mt-4 h-[260px]"
                 >
                   {trendData.length ? (
-                    <ResponsiveContainer width="100%" height="100%">
-                      <AreaChart
-                        data={trendData}
-                        margin={{ top: 8, right: 8, left: -18, bottom: 0 }}
-                      >
-                        <defs>
-                          <linearGradient
-                            id="report-earned"
-                            x1="0"
-                            y1="0"
-                            x2="0"
-                            y2="1"
-                          >
-                            <stop
-                              offset="0%"
-                              stopColor="var(--chart-1)"
-                              stopOpacity={0.24}
-                            />
-                            <stop
-                              offset="100%"
-                              stopColor="var(--chart-1)"
-                              stopOpacity={0}
-                            />
-                          </linearGradient>
-                        </defs>
-                        <CartesianGrid
-                          stroke="var(--app-chart-grid)"
-                          vertical={false}
-                        />
-                        <XAxis
-                          dataKey="label"
-                          tick={{ fill: "var(--app-muted)", fontSize: 10 }}
-                          axisLine={false}
-                          tickLine={false}
-                        />
-                        <YAxis
-                          tick={{ fill: "var(--app-muted)", fontSize: 10 }}
-                          axisLine={false}
-                          tickLine={false}
-                        />
-                        <ChartTooltip
-                          contentStyle={{
-                            background: "var(--app-panel)",
-                            border: "1px solid var(--app-border)",
-                            borderRadius: 8,
-                            fontSize: 11,
-                          }}
-                        />
-                        <Area
-                          type="monotone"
-                          dataKey="earned"
-                          stroke="var(--chart-1)"
-                          strokeWidth={2}
-                          fill="url(#report-earned)"
-                          isAnimationActive={!reduceMotion}
-                          animationDuration={420}
-                        />
-                      </AreaChart>
-                    </ResponsiveContainer>
+                    <AreaChart
+                      data={trendData}
+                      config={{ earned: { label: "Earned", color: "blue" } }}
+                      animate={!reduceMotion}
+                      animationDuration={420}
+                      bloom="off"
+                    >
+                      <Grid />
+                      <XAxis dataKey="label" />
+                      <YAxis />
+                      <ChartTooltip
+                        labelKey="label"
+                        valueFormatter={(value) =>
+                          money(value, settings.currencyCode)
+                        }
+                      />
+                      <Area dataKey="earned" variant="gradient" />
+                    </AreaChart>
                   ) : (
                     <div className="grid h-full place-items-center text-xs text-[var(--app-muted)]">
                       Delivered projects will create the earnings trend.
@@ -1722,35 +1692,19 @@ export function PrecisionReports({
                 }
               >
                 {mixData.length ? (
-                  <ResponsiveContainer width="100%" height="100%">
-                    <PieChart>
-                      <Pie
-                        data={mixData}
-                        dataKey="value"
-                        nameKey="name"
-                        innerRadius={48}
-                        outerRadius={74}
-                        paddingAngle={2}
-                        isAnimationActive={!reduceMotion}
-                        animationDuration={420}
-                      >
-                        {mixData.map((entry, index) => (
-                          <Cell
-                            key={entry.name}
-                            fill={colors[index % colors.length]}
-                          />
-                        ))}
-                      </Pie>
-                      <ChartTooltip
-                        contentStyle={{
-                          background: "var(--app-panel)",
-                          border: "1px solid var(--app-border)",
-                          borderRadius: 8,
-                          fontSize: 11,
-                        }}
-                      />
-                    </PieChart>
-                  </ResponsiveContainer>
+                  <PieChart
+                    data={mixData}
+                    config={mixConfig}
+                    dataKey="value"
+                    nameKey="name"
+                    innerRadius={0.65}
+                    animate={!reduceMotion}
+                    animationDuration={420}
+                    bloom="off"
+                  >
+                    <Pie variant="gradient" />
+                    <ChartTooltip labelKey="name" />
+                  </PieChart>
                 ) : (
                   <div className="grid h-full place-items-center rounded-md border border-dashed border-[var(--app-border)] px-4 text-center text-xs text-[var(--app-muted)]">
                     Delivered projects will build this breakdown.
@@ -1765,7 +1719,11 @@ export function PrecisionReports({
                   >
                     <span
                       className="mr-2 size-2 rounded-full"
-                      style={{ background: colors[index % colors.length] }}
+                      style={{
+                        background: rgb(
+                          PALETTE[colors[index % colors.length]].fill
+                        ),
+                      }}
                     />
                     <span className="truncate">{item.name}</span>
                     <span className="ml-auto font-semibold">{item.value}</span>
@@ -1804,53 +1762,55 @@ export function PrecisionReports({
           </dl>
         </ContentSection>
 
-        <ContentSection
-          title="Client totals"
-          description="Delivered value per client, paid and unpaid."
-          bodyMode="flush"
-        >
-          <div className="divide-y divide-[var(--app-border)] border-t border-[var(--app-border)]">
-            {report.clients.length ? (
-              <div
-                className={cn(
-                  clientTotalsGrid,
-                  "h-8 items-center bg-[var(--app-soft-panel)] text-[11px] font-medium text-[var(--app-muted)]"
-                )}
-              >
-                <span>Client</span>
-                <span className="text-right">Projects</span>
-                <span className="text-right">Paid</span>
-                <span className="text-right">Unpaid</span>
-              </div>
-            ) : null}
-            {report.clients.map((client) => (
-              <div
-                key={client.id}
-                className={cn(clientTotalsGrid, "py-3 text-xs")}
-              >
-                <span className="truncate font-semibold">{client.name}</span>
-                <span className="text-right tabular-nums">
-                  {client.deliveredProjects}
-                </span>
-                <span className="text-right font-mono tabular-nums">
-                  {canManageFinance
-                    ? money(client.collected, settings.currencyCode)
-                    : "Restricted"}
-                </span>
-                <span className="text-right font-mono tabular-nums">
-                  {canManageFinance
-                    ? money(client.outstanding, settings.currencyCode)
-                    : "Restricted"}
-                </span>
-              </div>
-            ))}
-            {!report.clients.length ? (
-              <div className="grid min-h-24 place-items-center text-xs text-[var(--app-muted)]">
-                No client totals for this period.
-              </div>
-            ) : null}
-          </div>
-        </ContentSection>
+        {advancedReports ? (
+          <ContentSection
+            title="Client totals"
+            description="Delivered value per client, paid and unpaid."
+            bodyMode="flush"
+          >
+            <div className="divide-y divide-[var(--app-border)] border-t border-[var(--app-border)]">
+              {report.clients.length ? (
+                <div
+                  className={cn(
+                    clientTotalsGrid,
+                    "h-8 items-center bg-[var(--app-soft-panel)] text-[11px] font-medium text-[var(--app-muted)]"
+                  )}
+                >
+                  <span>Client</span>
+                  <span className="text-right">Projects</span>
+                  <span className="text-right">Paid</span>
+                  <span className="text-right">Unpaid</span>
+                </div>
+              ) : null}
+              {report.clients.map((client) => (
+                <div
+                  key={client.id}
+                  className={cn(clientTotalsGrid, "py-3 text-xs")}
+                >
+                  <span className="truncate font-semibold">{client.name}</span>
+                  <span className="text-right tabular-nums">
+                    {client.deliveredProjects}
+                  </span>
+                  <span className="text-right font-mono tabular-nums">
+                    {canManageFinance
+                      ? money(client.collected, settings.currencyCode)
+                      : "Restricted"}
+                  </span>
+                  <span className="text-right font-mono tabular-nums">
+                    {canManageFinance
+                      ? money(client.outstanding, settings.currencyCode)
+                      : "Restricted"}
+                  </span>
+                </div>
+              ))}
+              {!report.clients.length ? (
+                <div className="grid min-h-24 place-items-center text-xs text-[var(--app-muted)]">
+                  No client totals for this period.
+                </div>
+              ) : null}
+            </div>
+          </ContentSection>
+        ) : null}
 
         {salaryPlans}
         <ContentSection
@@ -1910,6 +1870,7 @@ export function PrecisionReports({
                         size="sm"
                         className="h-7 text-xs"
                         aria-label={`${batch.paid ? "Mark unpaid" : "Mark paid"} for batch ${batch.number}`}
+                        disabled={!canManageFinance}
                         onClick={() =>
                           onUpdateBatchPayment(batch.id, !batch.paid)
                         }
@@ -1934,157 +1895,161 @@ export function PrecisionReports({
           </div>
         </ContentSection>
 
-        <ContentSection
-          title="Invoice drafts"
-          description="CSV invoice drafts for delivered client projects. Relay doesn't collect payments."
-          bodyMode="flush"
-          actions={
-            <Button
-              variant="outline"
-              size="sm"
-              className="h-8"
-              onClick={exportInvoiceDrafts}
-              disabled={!invoiceDrafts.length}
-            >
-              <Download /> Export invoices
-            </Button>
-          }
-        >
-          <div className="overflow-x-auto border-t border-[var(--app-border)]">
-            <Table className="w-full min-w-[760px] border-collapse">
-              <TableHeader>
-                <TableRow className="bg-[var(--app-soft-panel)] text-left text-[10px] font-semibold uppercase text-[var(--app-subtle)]">
-                  <TableHead className="h-8 px-4">Draft</TableHead>
-                  <TableHead className="px-4">Client</TableHead>
-                  <TableHead className="px-4">Projects</TableHead>
-                  <TableHead className="px-4">Due</TableHead>
-                  <TableHead className="px-4 text-right">Total</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody className="divide-y divide-[var(--app-border)]">
-                {invoiceDrafts.map((draft) => (
-                  <TableRow
-                    key={draft.id}
-                    className="h-12 text-xs transition-colors hover:bg-[var(--app-hover)]"
-                  >
-                    <TableCell className="px-4 font-semibold">
-                      {draft.invoiceNumber}
-                    </TableCell>
-                    <TableCell className="px-4 text-[var(--app-muted)]">
-                      {draft.client}
-                    </TableCell>
-                    <TableCell className="px-4">
-                      {draft.lineItems.length}
-                    </TableCell>
-                    <TableCell className="px-4 text-[var(--app-muted)]">
-                      {formatDate(draft.dueDate)}
-                    </TableCell>
-                    <TableCell className="px-4 text-right font-semibold">
-                      {money(draft.total, settings.currencyCode)}
-                    </TableCell>
+        {advancedReports ? (
+          <ContentSection
+            title="Invoice drafts"
+            description="CSV invoice drafts for delivered client projects. Relay doesn't collect payments."
+            bodyMode="flush"
+            actions={
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-8"
+                onClick={exportInvoiceDrafts}
+                disabled={!invoiceDrafts.length}
+              >
+                <Download /> Export invoices
+              </Button>
+            }
+          >
+            <div className="overflow-x-auto border-t border-[var(--app-border)]">
+              <Table className="w-full min-w-[760px] border-collapse">
+                <TableHeader>
+                  <TableRow className="bg-[var(--app-soft-panel)] text-left text-[10px] font-semibold uppercase text-[var(--app-subtle)]">
+                    <TableHead className="h-8 px-4">Draft</TableHead>
+                    <TableHead className="px-4">Client</TableHead>
+                    <TableHead className="px-4">Projects</TableHead>
+                    <TableHead className="px-4">Due</TableHead>
+                    <TableHead className="px-4 text-right">Total</TableHead>
                   </TableRow>
-                ))}
-                {!invoiceDrafts.length ? (
-                  <TableRow>
-                    <TableCell
-                      colSpan={5}
-                      className="h-28 text-center text-xs text-[var(--app-muted)]"
+                </TableHeader>
+                <TableBody className="divide-y divide-[var(--app-border)]">
+                  {invoiceDrafts.map((draft) => (
+                    <TableRow
+                      key={draft.id}
+                      className="h-12 text-xs transition-colors hover:bg-[var(--app-hover)]"
                     >
-                      Delivered freelance projects with client names and
-                      positive earnings will appear here.
-                    </TableCell>
-                  </TableRow>
-                ) : null}
-              </TableBody>
-            </Table>
-          </div>
-        </ContentSection>
-        <SplitPane
-          ratio="balanced"
-          primary={
-            <ContentSection
-              title="Editor Summary"
-              description="Delivered work attributed to workspace editors."
-              metadata={
-                <span className="text-[11px] text-muted-foreground">
-                  {editorSummary.length} editors
-                </span>
-              }
-              bodyMode="flush"
-            >
-              <div className="divide-y divide-[var(--app-border)] border-t border-[var(--app-border)]">
-                {editorSummary.map((editor) => (
-                  <div
-                    key={editor.userId}
-                    className="flex items-center gap-3 px-4 py-3"
-                  >
-                    <span className="grid size-8 place-items-center rounded-full bg-[var(--app-active)] text-[10px] font-semibold text-[var(--app-highlight)]">
-                      {editor.name
-                        .split(/\s+/)
-                        .slice(0, 2)
-                        .map((part) => part[0]?.toUpperCase())
-                        .join("")}
-                    </span>
-                    <span className="min-w-0 flex-1">
-                      <span className="block truncate text-xs font-semibold">
-                        {editor.name}
+                      <TableCell className="px-4 font-semibold">
+                        {draft.invoiceNumber}
+                      </TableCell>
+                      <TableCell className="px-4 text-[var(--app-muted)]">
+                        {draft.client}
+                      </TableCell>
+                      <TableCell className="px-4">
+                        {draft.lineItems.length}
+                      </TableCell>
+                      <TableCell className="px-4 text-[var(--app-muted)]">
+                        {formatDate(draft.dueDate)}
+                      </TableCell>
+                      <TableCell className="px-4 text-right font-semibold">
+                        {money(draft.total, settings.currencyCode)}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                  {!invoiceDrafts.length ? (
+                    <TableRow>
+                      <TableCell
+                        colSpan={5}
+                        className="h-28 text-center text-xs text-[var(--app-muted)]"
+                      >
+                        Delivered freelance projects with client names and
+                        positive earnings will appear here.
+                      </TableCell>
+                    </TableRow>
+                  ) : null}
+                </TableBody>
+              </Table>
+            </div>
+          </ContentSection>
+        ) : null}
+        {advancedReports ? (
+          <SplitPane
+            ratio="balanced"
+            primary={
+              <ContentSection
+                title="Editor Summary"
+                description="Delivered work attributed to workspace editors."
+                metadata={
+                  <span className="text-[11px] text-muted-foreground">
+                    {editorSummary.length} editors
+                  </span>
+                }
+                bodyMode="flush"
+              >
+                <div className="divide-y divide-[var(--app-border)] border-t border-[var(--app-border)]">
+                  {editorSummary.map((editor) => (
+                    <div
+                      key={editor.userId}
+                      className="flex items-center gap-3 px-4 py-3"
+                    >
+                      <span className="grid size-8 place-items-center rounded-full bg-[var(--app-active)] text-[10px] font-semibold text-[var(--app-highlight)]">
+                        {editor.name
+                          .split(/\s+/)
+                          .slice(0, 2)
+                          .map((part) => part[0]?.toUpperCase())
+                          .join("")}
                       </span>
-                      <span className="mt-0.5 block text-[10px] text-[var(--app-muted)]">
-                        {editor.delivered} delivered edits
+                      <span className="min-w-0 flex-1">
+                        <span className="block truncate text-xs font-semibold">
+                          {editor.name}
+                        </span>
+                        <span className="mt-0.5 block text-[10px] text-[var(--app-muted)]">
+                          {editor.delivered} delivered edits
+                        </span>
                       </span>
-                    </span>
-                    <span className="text-xs font-semibold">
-                      {money(editor.value, settings.currencyCode)}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </ContentSection>
-          }
-          secondary={
-            <ContentSection
-              title="Delivered Projects"
-              description="Most recently completed editing work."
-              metadata={
-                <span className="text-[11px] text-muted-foreground">
-                  {report.deliveredProjects.length} projects
-                </span>
-              }
-              bodyMode="flush"
-            >
-              <div className="divide-y divide-[var(--app-border)] border-t border-[var(--app-border)]">
-                {report.deliveredProjects.slice(0, 6).map((project) => (
-                  <div
-                    key={project.id}
-                    className="grid grid-cols-[minmax(0,1fr)_100px_auto] items-center gap-3 px-4 py-3"
-                  >
-                    <span className="min-w-0">
-                      <span className="block truncate text-xs font-semibold">
-                        {project.title}
+                      <span className="text-xs font-semibold">
+                        {money(editor.value, settings.currencyCode)}
                       </span>
-                      <span className="mt-0.5 block truncate text-[10px] text-[var(--app-muted)]">
-                        {project.editorName} · {project.workType}
+                    </div>
+                  ))}
+                </div>
+              </ContentSection>
+            }
+            secondary={
+              <ContentSection
+                title="Delivered Projects"
+                description="Most recently completed editing work."
+                metadata={
+                  <span className="text-[11px] text-muted-foreground">
+                    {report.deliveredProjects.length} projects
+                  </span>
+                }
+                bodyMode="flush"
+              >
+                <div className="divide-y divide-[var(--app-border)] border-t border-[var(--app-border)]">
+                  {report.deliveredProjects.slice(0, 6).map((project) => (
+                    <div
+                      key={project.id}
+                      className="grid grid-cols-[minmax(0,1fr)_100px_auto] items-center gap-3 px-4 py-3"
+                    >
+                      <span className="min-w-0">
+                        <span className="block truncate text-xs font-semibold">
+                          {project.title}
+                        </span>
+                        <span className="mt-0.5 block truncate text-[10px] text-[var(--app-muted)]">
+                          {project.editorName} · {project.workType}
+                        </span>
                       </span>
-                    </span>
-                    <span className="text-[10px] text-[var(--app-muted)]">
-                      {formatDate(project.date)}
-                    </span>
-                    <span className="text-xs font-semibold">
-                      {project.isSalaryEdit
-                        ? "Batch"
-                        : money(project.amount, settings.currencyCode)}
-                    </span>
-                  </div>
-                ))}
-                {!report.deliveredProjects.length ? (
-                  <div className="grid min-h-28 place-items-center text-xs text-[var(--app-muted)]">
-                    Delivered projects will appear here.
-                  </div>
-                ) : null}
-              </div>
-            </ContentSection>
-          }
-        />
+                      <span className="text-[10px] text-[var(--app-muted)]">
+                        {formatDate(project.date)}
+                      </span>
+                      <span className="text-xs font-semibold">
+                        {project.isSalaryEdit
+                          ? "Batch"
+                          : money(project.amount, settings.currencyCode)}
+                      </span>
+                    </div>
+                  ))}
+                  {!report.deliveredProjects.length ? (
+                    <div className="grid min-h-28 place-items-center text-xs text-[var(--app-muted)]">
+                      Delivered projects will appear here.
+                    </div>
+                  ) : null}
+                </div>
+              </ContentSection>
+            }
+          />
+        ) : null}
       </PageContent>
     </WorkspacePage>
   );
