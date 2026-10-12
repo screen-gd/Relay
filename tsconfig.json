@@ -31,5 +31,5 @@
     ".next/types/**/*.ts",
     ".next/dev/types/**/*.ts"
   ],
-  "exclude": ["node_modules", "website"]
+  "exclude": ["node_modules", "website", "videos"]
 }
