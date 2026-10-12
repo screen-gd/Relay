@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import { useHydratedReducedMotion } from "@/lib/motion";
 import { Button as OwnedButton } from "@/components/ui/button";
@@ -82,13 +83,89 @@ export function AppToast({
   );
 }
 
-export function AppLoadingStatus() {
+/** How long account sign-in may load before the gate offers a way out. */
+export const AUTH_LOADING_DEADLINE_MS = 8000;
+
+type ClerkLoadStatus = "degraded" | "error" | "loading" | "ready";
+
+/**
+ * Covers the workspace while account sign-in loads. Mount it only while auth
+ * is unresolved: a late load unmounts it, so slow sign-in never gets blocked.
+ * After the deadline, or as soon as Clerk reports an error, it becomes an
+ * alert with Retry and a Local Mode path for this device's projects.
+ */
+export function AuthLoadingGate({
+  clerkStatus,
+  onContinueLocally,
+}: {
+  clerkStatus: ClerkLoadStatus;
+  onContinueLocally: () => void;
+}) {
+  const [deadlinePassed, setDeadlinePassed] = useState(false);
+  const retryRef = useRef<HTMLButtonElement>(null);
+  const failed = clerkStatus === "error" || deadlinePassed;
+
+  useEffect(() => {
+    const timer = window.setTimeout(
+      () => setDeadlinePassed(true),
+      AUTH_LOADING_DEADLINE_MS
+    );
+    return () => window.clearTimeout(timer);
+  }, []);
+
+  useEffect(() => {
+    if (failed) retryRef.current?.focus();
+  }, [failed]);
+
+  if (!failed) {
+    return (
+      <div
+        role="status"
+        className="fixed inset-0 z-[1450] grid place-items-center bg-[var(--app-canvas)] text-sm text-[var(--app-muted)]"
+      >
+        Loading Relay…
+      </div>
+    );
+  }
+
   return (
-    <div
-      role="status"
-      className="fixed inset-0 z-[1450] grid place-items-center bg-[var(--app-canvas)] text-sm text-[var(--app-muted)]"
-    >
-      Loading Relay…
+    <div className="fixed inset-0 z-[1450] grid place-items-center bg-[var(--app-canvas)] p-6">
+      <div
+        role="alert"
+        aria-labelledby="auth-gate-title"
+        className="grid max-w-md gap-4"
+      >
+        <h2
+          id="auth-gate-title"
+          className="text-lg font-semibold text-[var(--app-ink)]"
+        >
+          Sign-in is unavailable
+        </h2>
+        <p className="text-sm leading-6 text-[var(--app-muted)]">
+          {clerkStatus === "error"
+            ? "Relay could not start account sign-in."
+            : "Account sign-in is taking too long."}{" "}
+          Retry, or open Local Mode to use projects saved on this device.
+        </p>
+        <div className="flex flex-wrap gap-2">
+          <OwnedButton
+            ref={retryRef}
+            type="button"
+            className="min-h-11"
+            onClick={() => window.location.reload()}
+          >
+            Retry
+          </OwnedButton>
+          <OwnedButton
+            type="button"
+            variant="outline"
+            className="min-h-11"
+            onClick={onContinueLocally}
+          >
+            Use Local Mode
+          </OwnedButton>
+        </div>
+      </div>
     </div>
   );
 }

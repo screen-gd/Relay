@@ -185,7 +185,6 @@ export function ResourcesDesignPage({
   return (
     <WorkspacePage family="library">
       <PageHeader
-        eyebrow="Workspace / Resources"
         title="Resources"
         description="Save asset folders, references, review pages, and delivery links."
         actions={

@@ -241,15 +241,6 @@ function projectColor(project: WorkItem) {
   return palette[hash % palette.length];
 }
 
-function projectDuration(project: WorkItem) {
-  let hash = 0;
-  for (const char of project.title)
-    hash = (hash * 33 + char.charCodeAt(0)) >>> 0;
-  const minutes = 1 + (hash % 11);
-  const seconds = (hash >>> 3) % 60;
-  return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
-}
-
 function projectNextAction(project: WorkItem) {
   if (project.status === "Delivered")
     return "Archive final exports and confirm the payment record.";
@@ -262,7 +253,12 @@ function projectNextAction(project: WorkItem) {
   return "Confirm the brief, owner, and first production milestone.";
 }
 
-function ProjectVideoThumbnail({
+/**
+ * Decorative project swatch shown beside the project title in the table,
+ * board and inspector. Projects carry no media runtime, so it shows none and
+ * stays hidden from assistive tech; the adjacent title names the project.
+ */
+function ProjectThumbnail({
   project,
   className,
 }: {
@@ -271,10 +267,8 @@ function ProjectVideoThumbnail({
 }) {
   return (
     <span
-      role="img"
-      aria-label={`${project.title} video thumbnail`}
+      aria-hidden="true"
       data-slot="project-thumbnail"
-      data-thumbnail-kind="video"
       className={cn(
         "relative isolate flex h-[50px] w-[88px] shrink-0 overflow-hidden rounded-lg border border-white/10",
         className
@@ -285,9 +279,6 @@ function ProjectVideoThumbnail({
       <span className="absolute inset-x-2 top-2 flex items-center justify-between text-[var(--app-thumb-icon)]">
         <Film className="size-3.5" />
         <span className="size-1.5 rounded-full bg-current opacity-60" />
-      </span>
-      <span className="absolute bottom-1.5 right-1.5 rounded bg-black/60 px-1 py-0.5 text-[8px] font-medium leading-none text-white">
-        {projectDuration(project)}
       </span>
     </span>
   );
@@ -455,7 +446,7 @@ function ProjectBoardColumn({
   return (
     <KanbanBoard
       id={`stage:${columnKey}`}
-      className="min-h-0 min-w-[280px]"
+      className="min-h-0 min-w-0"
       aria-label={`${stage.label} projects`}
     >
       <KanbanHeader
@@ -597,7 +588,7 @@ export function PrecisionProjects(props: PrecisionProjectsProps) {
         header: "Name",
         cell: ({ row }) => (
           <div className="flex min-w-0 items-center gap-3">
-            <ProjectVideoThumbnail project={row.original} />
+            <ProjectThumbnail project={row.original} />
             <div className="min-w-0">
               <p className="truncate text-[13px] font-semibold">
                 {row.original.title}
@@ -1151,7 +1142,7 @@ export function PrecisionProjects(props: PrecisionProjectsProps) {
                           <div
                             ref={boardRef}
                             data-board-wheel
-                            className="grid min-h-0 flex-1 auto-cols-[280px] grid-flow-col items-stretch gap-3 overflow-x-auto overflow-y-hidden bg-[var(--app-panel)] px-3 pb-3 pt-3"
+                            className="grid min-h-0 flex-1 auto-cols-[minmax(232px,1fr)] grid-flow-col items-stretch gap-3 overflow-x-auto overflow-y-hidden bg-[var(--app-panel)] px-3 pb-3 pt-3"
                             aria-label="Project board"
                           >
                             {board.map(
@@ -1216,7 +1207,7 @@ export function PrecisionProjects(props: PrecisionProjectsProps) {
                                   setMobileInspectorOpen(true);
                                 }}
                               >
-                                <ProjectVideoThumbnail
+                                <ProjectThumbnail
                                   project={row.original}
                                   className="h-12 w-16"
                                 />
@@ -1532,7 +1523,7 @@ function ProjectInspector({
     >
       <ScrollArea className="h-full min-h-0 flex-1 rounded-[inherit] [&_[data-slot=scroll-area-viewport]]:overscroll-contain [&_[data-slot=scroll-area-scrollbar]]:hidden">
         <div className="p-4">
-          <ProjectVideoThumbnail
+          <ProjectThumbnail
             project={project}
             className="mb-3 aspect-video h-auto w-full"
           />

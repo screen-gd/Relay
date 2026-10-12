@@ -33,7 +33,6 @@ export function SubscriptionPage() {
       className="[&_[data-slot=content-section]]:shadow-[var(--app-shadow-1)]"
     >
       <PageHeader
-        eyebrow="Workspace / Subscription"
         title="Plans and billing"
         description="Start with Free. Paid plans are coming later."
         actions={

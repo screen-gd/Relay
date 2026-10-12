@@ -20,7 +20,6 @@ export function TeamChatPage() {
   const {
     isSignedIn,
     isUserLoaded,
-    openSignIn,
     isConvexAuthenticated,
     isConvexAuthLoading,
     teamData,
@@ -192,22 +191,17 @@ export function TeamChatPage() {
               </div>
             </OwnedCard>
           ) : !isSignedIn ? (
-            <OwnedCard className="p-6 shadow-[var(--app-shadow-1)]">
-              <h2 className="text-xl font-semibold">
-                Sign in to open Team Chat
-              </h2>
-              <p className="mt-2 text-sm text-muted-foreground">
-                Chat is tied to your authenticated team workspace and is not
-                available in local mode.
-              </p>
-              <OwnedButton
-                type="button"
-                className="mt-5"
-                onClick={() => openSignIn()}
-              >
-                Sign In
-              </OwnedButton>
-            </OwnedCard>
+            <div className="grid h-full min-h-72 place-items-center p-6 text-center">
+              <div>
+                <MessageSquare
+                  className="mx-auto size-8 text-muted-foreground"
+                  aria-hidden="true"
+                />
+                <h2 className="mt-4 text-lg font-semibold">
+                  Team chat is coming later
+                </h2>
+              </div>
+            </div>
           ) : isConvexAuthLoading ? (
             <OwnedCard className="p-6 shadow-[var(--app-shadow-1)]">
               <div

@@ -903,8 +903,7 @@ export function PrecisionFeedback({
   return (
     <WorkspacePage family="master-detail">
       <PageHeader
-        eyebrow="Client review"
-        title="Feedback"
+        title="Client reviews"
         description="Review notes, revisions, and approvals for each project."
       />
       <PageContent>
