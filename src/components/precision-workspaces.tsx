@@ -1568,7 +1568,7 @@ export function PrecisionReports({
                   ? { duration: 0 }
                   : { ...revealTransition, delay: 0.08 }
               }
-              className="rounded-[6px] border border-[var(--app-border)] bg-[var(--app-panel)] p-4"
+              className="flex h-full min-w-0 flex-col rounded-[6px] border border-[var(--app-border)] bg-[var(--app-panel)] p-4"
             >
               <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                 <div>
@@ -1624,7 +1624,7 @@ export function PrecisionReports({
                   transition={
                     reduceMotion ? { duration: 0 } : { duration: 0.2 }
                   }
-                  className="mt-4 h-[260px]"
+                  className="mt-4 h-[220px] shrink-0 sm:h-[260px]"
                 >
                   {trendData.length ? (
                     <AreaChart
@@ -1653,7 +1653,7 @@ export function PrecisionReports({
                 </motion.div>
               </div>
               <p
-                className="mt-3 rounded-md bg-[var(--app-soft-panel)] px-3 py-2 text-[11px] leading-4 text-[var(--app-muted)]"
+                className="mt-auto min-h-9 pt-3 text-xs leading-5 text-[var(--app-muted)]"
                 aria-label="Earnings trend summary"
               >
                 {trendData.length
@@ -1674,7 +1674,7 @@ export function PrecisionReports({
                   ? { duration: 0 }
                   : { ...revealTransition, delay: 0.12 }
               }
-              className="rounded-[6px] border border-[var(--app-border)] bg-[var(--app-panel)] p-4"
+              className="flex h-full min-w-0 flex-col rounded-[6px] border border-[var(--app-border)] bg-[var(--app-panel)] p-4"
             >
               <div>
                 <h2 className="text-sm font-semibold">Work mix</h2>
@@ -1683,7 +1683,7 @@ export function PrecisionReports({
                 </p>
               </div>
               <div
-                className="mt-3 h-[190px]"
+                className="mt-4 h-[220px] shrink-0 sm:h-[260px]"
                 role="img"
                 aria-label={
                   mixData.length
@@ -1693,6 +1693,7 @@ export function PrecisionReports({
               >
                 {mixData.length ? (
                   <PieChart
+                    className="mx-auto max-w-[280px]"
                     data={mixData}
                     config={mixConfig}
                     dataKey="value"
@@ -1711,14 +1712,14 @@ export function PrecisionReports({
                   </div>
                 )}
               </div>
-              <div className="space-y-2">
+              <div className="mt-auto min-h-9 space-y-2 pt-3">
                 {mixData.map((item, index) => (
                   <div
                     key={item.name}
-                    className="flex items-center text-[11px]"
+                    className="flex items-center gap-2 text-xs leading-5"
                   >
                     <span
-                      className="mr-2 size-2 rounded-full"
+                      className="size-2 shrink-0 rounded-full"
                       style={{
                         background: rgb(
                           PALETTE[colors[index % colors.length]].fill
@@ -1751,7 +1752,7 @@ export function PrecisionReports({
               label="Avg. days to deliver"
               value={
                 turnaroundProjects.length
-                  ? `${averageTurnaround} days`
+                  ? `${averageTurnaround} ${averageTurnaround === 1 ? "day" : "days"}`
                   : "No data"
               }
             />
