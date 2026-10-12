@@ -75,7 +75,7 @@ function FieldLayout({
       data-slot="field-layout"
       data-disabled={isDisabled || undefined}
       data-invalid={hasError || undefined}
-      className={cn("group grid gap-2", className)}
+      className={cn("group grid min-w-0 max-w-full grid-cols-1 gap-2 [&>*]:min-w-0 [&>*]:max-w-full", className)}
       {...props}
     >
       <Label htmlFor={resolvedControlId} data-disabled={isDisabled || undefined}>

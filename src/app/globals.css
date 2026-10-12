@@ -104,7 +104,7 @@
   --app-hover: rgb(24 24 27 / 0.05);
   --app-ink: var(--text-primary);
   --app-muted: var(--text-muted);
-  --app-subtle: var(--text-disabled);
+  --app-subtle: var(--text-muted);
   --app-border: #e4e4e7;
   --app-strong-border: #d4d4d8;
   --app-control: var(--surface-panel);
@@ -121,7 +121,7 @@
   --app-warning-bg: var(--status-warning-bg);
   --app-danger-bg: var(--status-danger-bg);
   --app-progress-track: var(--app-border);
-  --app-chart-grid: var(--app-border);
+  --app-chart-grid: #85858e;
   --app-avatar-surface: var(--surface-sunken);
   --app-thumb-icon: rgb(24 24 27 / 0.36);
   /* Keeps the switch thumb crisp white on light panels. */
@@ -136,6 +136,7 @@
 }
 
 .dark {
+  --app-chart-grid: #71717a;
   --app-accent: #ffffff;
   --app-accent-foreground: #000000;
   --app-highlight: #ffffff;

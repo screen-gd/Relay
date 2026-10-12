@@ -42,14 +42,7 @@ function WorkspaceFrame({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const contentRef = useRef<HTMLDivElement>(null);
   const { settings, setSettings, isAuthLoaded, toast, setToast } = useData();
-  const {
-    sample,
-    projects,
-    personalProjects,
-    activeTeamMembers,
-    teamData,
-    canCreateProjects,
-  } = useProjectAccess();
+  const { sample, projects, teamData, canCreateProjects } = useProjectAccess();
   const { openNewProject } = useProjectActions();
   const { groups } = useProjectGroups();
   const { clientRecords } = useClientActions();
@@ -112,13 +105,10 @@ function WorkspaceFrame({ children }: { children: ReactNode }) {
           settings={settings}
           onNewProject={() => openNewProject("personal")}
           canCreateProject={canCreateProjects}
-          starterNavigation={!sample && personalProjects.length === 0}
-          showTeamNavigation={
-            activeTeamMembers.length > 1 ||
-            Boolean(
-              teamData?.members.some((member) => member.status === "invited")
-            ) ||
-            settings.teamMembers.length > 0
+          pageTitle={
+            sample && pathname === "/sample-studio"
+              ? "Sample studio"
+              : undefined
           }
           searchRecords={searchRecords}
           notificationSlot={<NotificationBell />}

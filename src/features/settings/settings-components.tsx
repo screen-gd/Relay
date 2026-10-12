@@ -19,6 +19,7 @@ export function SettingsPanel({
   const reduceMotion = useHydratedReducedMotion();
   return (
     <motion.div
+      className="min-w-0"
       initial={reduceMotion ? false : { opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{
@@ -31,7 +32,7 @@ export function SettingsPanel({
         title={title}
         description={subtitle}
         className="scroll-mt-[76px] border-0 shadow-none"
-        bodyClassName="grid min-w-0 gap-3.5 p-4 sm:p-5"
+        bodyClassName="grid min-w-0 grid-cols-1 gap-3.5 p-4 sm:p-5"
       >
         {children}
       </ContentSection>
