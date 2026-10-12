@@ -77,3 +77,10 @@ code. If you believe a clause is wrong, say so on the ticket rather than editing
 | `11-missing-h1.md`                          | MEDIUM   | `/` and `/sample-studio` have no h1                                 |
 | `12-calendar-grid-semantics.md`             | MEDIUM   | No grid semantics, no arrow keys, 35 tab stops                      |
 | `13-judgement-calls.md`                     | LOW      | Four opinions, no clause breached                                   |
+
+---
+
+**Paths inside this repository.** The ticket text refers to evidence as `renders/RELA-14/<file>.png`.
+In this repository those files live at `docs/fixes/ui-audit-2026-10/renders/RELA-14/<file>.png`, so
+prefix the references accordingly. The full 131-shot audit set stays in the Capy drive; only the
+screenshots cited by a ticket are here.
