@@ -200,7 +200,6 @@ export function TeamDesignPage({
   return (
     <WorkspacePage family="administration">
       <PageHeader
-        eyebrow="Workspace / Team"
         title="Team"
         description="Manage members, shared project comments, notifications, and workspace activity."
       />

@@ -166,7 +166,7 @@ const routeGroups: RouteGroup[] = [
       { page: "clients", label: "Clients", href: "/clients", icon: UsersRound },
       {
         page: "feedback",
-        label: "Reviews",
+        label: "Client reviews",
         href: "/feedback",
         icon: MessageSquareText,
       },

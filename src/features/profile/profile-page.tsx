@@ -111,7 +111,6 @@ export function OrganizationProfilePage({
   return (
     <WorkspacePage family="administration">
       <PageHeader
-        eyebrow="Workspace / Organization"
         title="Organization Profile"
         description="Your team, its projects, and active work."
       />
@@ -581,7 +580,6 @@ export function ProfileEditPage({
   return (
     <WorkspacePage family="administration">
       <PageHeader
-        eyebrow="Workspace / Profile"
         title="Edit Profile"
         description="Update the identity shown on your public profile."
       />

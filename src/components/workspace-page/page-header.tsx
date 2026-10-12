@@ -3,14 +3,12 @@ import type { ComponentPropsWithoutRef, ReactNode } from "react";
 import { cn } from "@/lib/utils";
 
 type PageHeaderProps = Omit<ComponentPropsWithoutRef<"header">, "title"> & {
-  eyebrow?: ReactNode;
   title: ReactNode;
   description?: ReactNode;
   actions?: ReactNode;
 };
 
 export function PageHeader({
-  eyebrow,
   title,
   description,
   actions,
@@ -27,11 +25,6 @@ export function PageHeader({
       {...props}
     >
       <div className="min-w-0">
-        {eyebrow ? (
-          <div className="mb-1 text-[13px] text-muted-foreground">
-            {eyebrow}
-          </div>
-        ) : null}
         <h1 className="text-2xl font-semibold leading-tight tracking-[-0.03em] text-foreground">
           {title}
         </h1>
