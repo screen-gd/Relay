@@ -6,7 +6,6 @@ import { dueBucket } from "@/features/routes/utils/project-utils";
 import {
   isSalaryWorkType,
   normalizedSalaryBatchAmount,
-  normalizedSalaryBatchSize,
 } from "@/features/routes/utils/work-type-utils";
 import { createdTime, daysBetween } from "@/features/routes/utils/date-utils";
 import {
@@ -16,6 +15,7 @@ import {
 import { isDoneStatus } from "@/features/routes/utils/status-utils";
 import { safeMoneyValue } from "@/features/routes/utils/number-utils";
 import { buildPayoutReport } from "@/lib/payout-reporting";
+import { salaryBatchProgress } from "@/features/projects/local-stage-transition";
 import type { ProjectStatus } from "@/lib/domain-values";
 import type { SalaryBatch, SettingsState, WorkItem } from "@/lib/types";
 import type {
@@ -156,16 +156,9 @@ export function useDashboardApplicationState({
     });
     const unpaid = projects.filter(isProjectUnpaid).length;
     const active = projects.filter((item) => !isDoneStatus(item.status)).length;
-    const salaryBatchSize = normalizedSalaryBatchSize(settings.salaryBatchSize);
     const deliveredSalaryProjects = projects.filter(
       (item) =>
         isSalaryWorkType(item.workType, settings) && isDoneStatus(item.status)
-    );
-    const settledProjectIds = new Set(
-      salaryBatches.flatMap((batch) => batch.projectIds ?? [])
-    );
-    const unsettledSalaryProjects = deliveredSalaryProjects.filter(
-      (project) => !settledProjectIds.has(project.id)
     );
     const delivered = projects.filter((item) => isDoneStatus(item.status));
     const avgTurnaroundDays = delivered.length
@@ -184,7 +177,11 @@ export function useDashboardApplicationState({
       collected: moneyReport.collected,
       outstanding: moneyReport.outstanding,
       salaryEdits: deliveredSalaryProjects.length,
-      salaryBatchProgress: unsettledSalaryProjects.length % salaryBatchSize,
+      salaryBatchProgress: salaryBatchProgress(
+        projects,
+        salaryBatches,
+        settings
+      ).progress,
       delivered: delivered.length,
       avgTurnaroundDays,
     };

@@ -1,6 +1,14 @@
 "use client";
 
-import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+  type ReactNode,
+} from "react";
 import { useClerk, useUser } from "@clerk/nextjs";
 
 type UserState = ReturnType<typeof useUser>;
@@ -9,6 +17,8 @@ type AuthAction = () => void;
 
 type OptionalAuthValue = {
   isLoaded: UserState["isLoaded"];
+  /** Clerk's load status; "error" means sign-in cannot start on this page. */
+  status: ClerkState["status"];
   isSignedIn: UserState["isSignedIn"];
   user: UserState["user"];
   openSignIn: AuthAction;
@@ -22,11 +32,12 @@ const localSignOut: ClerkState["signOut"] = async () => undefined;
 
 const localAuth: OptionalAuthValue = {
   isLoaded: true,
+  status: "ready",
   isSignedIn: false,
   user: null,
   openSignIn: localOpenSignIn,
   openSignUp: localOpenSignUp,
-  signOut: localSignOut
+  signOut: localSignOut,
 };
 
 const OptionalAuthContext = createContext<OptionalAuthValue>(localAuth);
@@ -37,8 +48,11 @@ export function ClerkAuthBridge({ children }: { children: ReactNode }) {
     openSignIn: clerkOpenSignIn,
     openSignUp: clerkOpenSignUp,
     signOut,
+    status,
   } = useClerk();
-  const [pendingAuthAction, setPendingAuthAction] = useState<"sign-in" | "sign-up" | null>(null);
+  const [pendingAuthAction, setPendingAuthAction] = useState<
+    "sign-in" | "sign-up" | null
+  >(null);
 
   const openSignIn = useCallback<AuthAction>(() => {
     if (!isLoaded) {
@@ -59,19 +73,29 @@ export function ClerkAuthBridge({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (!isLoaded || !pendingAuthAction) return;
     setPendingAuthAction(null);
-    void (pendingAuthAction === "sign-in" ? clerkOpenSignIn() : clerkOpenSignUp());
+    void (pendingAuthAction === "sign-in"
+      ? clerkOpenSignIn()
+      : clerkOpenSignUp());
   }, [clerkOpenSignIn, clerkOpenSignUp, isLoaded, pendingAuthAction]);
 
-  const value = useMemo<OptionalAuthValue>(() => ({
-    isLoaded,
-    isSignedIn,
-    user,
-    openSignIn,
-    openSignUp,
-    signOut
-  }), [isLoaded, isSignedIn, openSignIn, openSignUp, signOut, user]);
+  const value = useMemo<OptionalAuthValue>(
+    () => ({
+      isLoaded,
+      status,
+      isSignedIn,
+      user,
+      openSignIn,
+      openSignUp,
+      signOut,
+    }),
+    [isLoaded, isSignedIn, openSignIn, openSignUp, signOut, status, user]
+  );
 
-  return <OptionalAuthContext.Provider value={value}>{children}</OptionalAuthContext.Provider>;
+  return (
+    <OptionalAuthContext.Provider value={value}>
+      {children}
+    </OptionalAuthContext.Provider>
+  );
 }
 
 export function useOptionalAuth() {
