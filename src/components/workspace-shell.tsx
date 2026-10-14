@@ -45,6 +45,7 @@ import { useOptionalAuth } from "@/lib/optional-auth";
 import type { SettingsState } from "@/lib/types";
 import type { FileRouteTypes } from "@/routeTree.gen";
 import type { SearchRecord } from "@/features/workspace-discovery/workspace-discovery";
+import { FeedbackButton } from "@/features/feedback/feedback-button";
 import { useHydratedReducedMotion } from "@/lib/motion";
 import { cn } from "@/lib/utils";
 import { RelayBrand } from "@/app/relay-brand";
@@ -556,6 +557,7 @@ export function WorkspaceShell({
                   <Bell className="size-[18px]" />
                 </Button>
               )}
+              <FeedbackButton />
               <ProfileMenu settings={settings} compact page={page} />
             </div>
           </header>
