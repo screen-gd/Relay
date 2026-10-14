@@ -19,6 +19,12 @@ vi.mock("@/lib/data-context", () => ({
     isSignedIn: state.isSignedIn,
     setToast: vi.fn(),
     updateSalaryBatchPayment: vi.fn(),
+    sampleWorkspace: {
+      canLoad: false,
+      loaded: false,
+      load: vi.fn(),
+      clear: vi.fn(),
+    },
   }),
 }));
 vi.mock("@/features/projects/project-access", () => ({

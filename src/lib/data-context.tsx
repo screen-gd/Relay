@@ -25,6 +25,7 @@ import type {
   SavedProjectTemplate,
   ProjectGroup,
   WorkflowStage,
+  Client,
 } from "./types";
 import { WORKFLOW_STAGE_PURPOSE_VALUES } from "./types";
 import { normalizeIntegrationLinks } from "./integrations";
@@ -67,9 +68,15 @@ import type {
 } from "@/features/projects/project-workflow-port";
 import { DEFAULT_WORKFLOW_STAGES } from "./workflow-templates";
 import {
+  isSampleRecordId,
   sampleStudioProjects,
   sampleStudioResources,
   sampleStudioSettings,
+  sampleWorkspaceClientsFor,
+  sampleWorkspaceProjectsFor,
+  sampleWorkspaceResources,
+  withSampleRecords,
+  withoutSampleRecords,
 } from "./sample-studio";
 
 const cloudSettingsInput = (settings: SettingsState) => ({
@@ -1157,6 +1164,8 @@ interface DataContextValue {
     resources: number;
     salaryBatches: number;
   }>;
+  /** Demo records a new workspace can load in one action and clear again. */
+  sampleWorkspace: SampleWorkspacePort;
   isAuthEnabled: boolean;
   isSignedIn: boolean;
   isAuthLoaded: boolean;
@@ -1167,6 +1176,87 @@ interface DataContextValue {
   continueLocally: () => void;
   toast: ToastState | null;
   setToast: React.Dispatch<React.SetStateAction<ToastState | null>>;
+}
+
+type SampleWorkspacePort = {
+  /** True while the workspace holds no projects and no clients. */
+  canLoad: boolean;
+  /** True while seeded sample records are in the workspace. */
+  loaded: boolean;
+  load: () => void;
+  clear: () => void;
+};
+
+const SAMPLE_WORKSPACE_UNAVAILABLE: SampleWorkspacePort = {
+  canLoad: false,
+  loaded: false,
+  load: () => undefined,
+  clear: () => undefined,
+};
+
+/**
+ * Seeds the sample records through the same setters every other workspace edit
+ * uses, so local mode writes browser storage and account mode syncs through the
+ * workspace.
+ *
+ * Account mode creates its projects with `projects.create`, which starts every
+ * project at its first workflow stage and unpaid. The fixture stage, delivery,
+ * and payment states would need the account stage transition to run after the
+ * create, the way `transitionProjectStage` runs it.
+ */
+function useSampleWorkspacePort({
+  ready,
+  items,
+  clients,
+  resourceLinks,
+  setItems,
+  setSettings,
+  setResourceLinks,
+}: {
+  ready: boolean;
+  items: WorkItem[];
+  clients: readonly Client[];
+  resourceLinks: readonly ResourceLink[];
+  setItems: React.Dispatch<React.SetStateAction<WorkItem[]>>;
+  setSettings: React.Dispatch<React.SetStateAction<SettingsState>>;
+  setResourceLinks: React.Dispatch<React.SetStateAction<ResourceLink[]>>;
+}): SampleWorkspacePort {
+  const activeClients = clients.filter((client) => !client.archived);
+  const canLoad = ready && items.length === 0 && activeClients.length === 0;
+  const loaded =
+    items.some((item) => isSampleRecordId(item.id)) ||
+    activeClients.some((client) => isSampleRecordId(client.id)) ||
+    resourceLinks.some((resource) => isSampleRecordId(resource.id));
+
+  const load = useCallback(() => {
+    setSettings((current) => ({
+      ...current,
+      clients: withSampleRecords(
+        current.clients,
+        sampleWorkspaceClientsFor(current.clients)
+      ),
+    }));
+    setItems((current) =>
+      withSampleRecords(current, sampleWorkspaceProjectsFor(clients))
+    );
+    setResourceLinks((current) =>
+      withSampleRecords(current, sampleWorkspaceResources)
+    );
+  }, [clients, setItems, setResourceLinks, setSettings]);
+
+  const clear = useCallback(() => {
+    setSettings((current) => ({
+      ...current,
+      clients: withoutSampleRecords(current.clients),
+    }));
+    setItems((current) => withoutSampleRecords(current));
+    setResourceLinks((current) => withoutSampleRecords(current));
+  }, [setItems, setResourceLinks, setSettings]);
+
+  return useMemo(
+    () => ({ canLoad, loaded, load, clear }),
+    [canLoad, clear, load, loaded]
+  );
 }
 
 const DataContext = createContext<DataContextValue | null>(null);
@@ -1259,6 +1349,7 @@ function SampleDataProvider({ children }: { children: React.ReactNode }) {
     isSignedIn: false,
     isAuthLoaded: true,
     continueLocally: () => undefined,
+    sampleWorkspace: SAMPLE_WORKSPACE_UNAVAILABLE,
     toast,
     setToast,
   };
@@ -1300,6 +1391,7 @@ function LocalDataProvider({
   const [salaryBatches, setSalaryBatches] = useState<SalaryBatch[]>([]);
   const [salaryPlans] = useState<SalaryPlan[]>([]);
   const [toast, setToast] = useState<ToastState | null>(null);
+  const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
     setItemsState(readInitialItems());
@@ -1311,6 +1403,7 @@ function LocalDataProvider({
       normalizeSalaryState(readJson(SALARY_STORAGE_KEY, { batches: [] }))
         .batches
     );
+    setHydrated(true);
   }, []);
 
   useEffect(() => {
@@ -1525,6 +1618,15 @@ function LocalDataProvider({
       })),
     [items, settings.clients]
   );
+  const sampleWorkspace = useSampleWorkspacePort({
+    ready: hydrated,
+    items,
+    clients: settings.clients,
+    resourceLinks,
+    setItems,
+    setSettings,
+    setResourceLinks,
+  });
   const value: DataContextValue = {
     items: resolvedItems,
     setItems,
@@ -1544,6 +1646,7 @@ function LocalDataProvider({
     isSignedIn: authEnabled && Boolean(isSignedIn),
     isAuthLoaded: authEnabled ? isLoaded : true,
     continueLocally: () => undefined,
+    sampleWorkspace,
     toast,
     setToast,
   };
@@ -2427,6 +2530,15 @@ function CloudDataProvider({ children }: { children: React.ReactNode }) {
       })),
     [items, settings.clients]
   );
+  const sampleWorkspace = useSampleWorkspacePort({
+    ready,
+    items,
+    clients: settings.clients,
+    resourceLinks,
+    setItems,
+    setSettings,
+    setResourceLinks,
+  });
   const value: DataContextValue = {
     items: resolvedItems,
     setItems,
@@ -2446,6 +2558,7 @@ function CloudDataProvider({ children }: { children: React.ReactNode }) {
     isSignedIn: !!isSignedIn,
     isAuthLoaded: clerkLoaded && ready && (!isSignedIn || !convexAuthLoading),
     continueLocally: () => setLocalFallback(true),
+    sampleWorkspace,
     toast,
     setToast,
   };
