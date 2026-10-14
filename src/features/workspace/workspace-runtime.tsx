@@ -1,7 +1,5 @@
-"use client";
-
 import { useEffect, useMemo, useRef, type ReactNode } from "react";
-import { usePathname } from "next/navigation";
+import { useLocation } from "@tanstack/react-router";
 import {
   WorkspaceShell,
   workspacePageForPath,
@@ -40,7 +38,7 @@ export function WorkspaceRuntime({
 }
 
 function WorkspaceFrame({ children }: { children: ReactNode }) {
-  const pathname = usePathname();
+  const pathname = useLocation({ select: (location) => location.pathname });
   const contentRef = useRef<HTMLDivElement>(null);
   const {
     settings,

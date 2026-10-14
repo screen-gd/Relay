@@ -1,9 +1,9 @@
-import { renderToStaticMarkup } from "react-dom/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   sampleStudioProjects,
   sampleStudioSettings,
 } from "@/lib/sample-studio";
+import { renderWithRouter } from "@/test/render-with-router";
 import { DashboardApplication } from "./dashboard-application";
 
 const state = vi.hoisted(() => ({
@@ -62,9 +62,9 @@ describe("Dashboard route headings", () => {
     [true, false, false, "Sample studio"],
   ])(
     "has one route h1 (sample=%s, populated=%s, signed in=%s)",
-    (sample, populated, isSignedIn, title) => {
+    async (sample, populated, isSignedIn, title) => {
       Object.assign(state, { sample, populated, isSignedIn });
-      const html = renderToStaticMarkup(<DashboardApplication />);
+      const html = await renderWithRouter(<DashboardApplication />);
       expect(
         [...html.matchAll(/<h1(?:\s[^>]*)?>(.*?)<\/h1>/g)].map(
           (match) => match[1]

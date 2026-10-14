@@ -49,19 +49,11 @@ let browser;
 try {
   const port = await getOpenPort();
   const baseUrl = `http://127.0.0.1:${port}`;
-  server = spawn(
-    process.execPath,
-    [
-      join("node_modules", "next", "dist", "bin", "next"),
-      "start",
-      "-p",
-      String(port),
-    ],
-    {
-      env: { ...process.env, PORT: String(port) },
-      stdio: ["ignore", "pipe", "pipe"],
-    }
-  );
+  // Runs the Nitro server that `pnpm build` writes to .output.
+  server = spawn(process.execPath, [join(".output", "server", "index.mjs")], {
+    env: { ...process.env, PORT: String(port) },
+    stdio: ["ignore", "pipe", "pipe"],
+  });
   let output = "";
   server.stdout.on("data", (chunk) => {
     output += chunk.toString();

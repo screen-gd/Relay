@@ -1,23 +1,17 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import nextConfig from "../next.config.mjs";
+import { securityHeaders } from "../security-headers.mjs";
 
-test("Clerk checkout can load Stripe", async () => {
-  const [{ headers }] = await nextConfig.headers();
-  const csp = headers.find(
-    ({ key }) => key === "Content-Security-Policy"
-  )?.value;
+test("Clerk checkout can load Stripe", () => {
+  const csp = securityHeaders()["Content-Security-Policy"];
 
   assert.match(csp, /script-src[^;]*https:\/\/js\.stripe\.com/);
   assert.match(csp, /frame-src[^;]*https:\/\/js\.stripe\.com/);
   assert.match(csp, /connect-src[^;]*https:\/\/api\.stripe\.com/);
 });
 
-test("client hubs allow supported video players without allowing arbitrary frames", async () => {
-  const [{ headers }] = await nextConfig.headers();
-  const csp = headers.find(
-    ({ key }) => key === "Content-Security-Policy"
-  )?.value;
+test("client hubs allow supported video players without allowing arbitrary frames", () => {
+  const csp = securityHeaders()["Content-Security-Policy"];
   const frameSources = csp
     .split("; ")
     .find((directive) => directive.startsWith("frame-src "))

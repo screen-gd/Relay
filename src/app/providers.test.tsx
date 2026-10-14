@@ -2,7 +2,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, test, vi } from "vitest";
 import { Providers } from "./providers";
 
-vi.mock("@clerk/nextjs", () => ({
+vi.mock("@clerk/tanstack-react-start", () => ({
   ClerkProvider: ({
     children,
     localization,

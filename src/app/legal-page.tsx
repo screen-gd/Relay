@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { Link } from "@tanstack/react-router";
 import type { ReactNode } from "react";
 import { RelayBrand } from "./relay-brand";
 import styles from "./legal-page.module.css";
@@ -23,10 +23,10 @@ export function LegalPage({
         <header className={styles.header}>
           <RelayBrand compact className={styles.brand} />
           <nav aria-label="Support and legal pages" className={styles.nav}>
-            <Link href="/privacy">Privacy</Link>
-            <Link href="/terms">Terms</Link>
-            <Link href="/accessibility">Accessibility</Link>
-            <Link href="/contact">Contact</Link>
+            <Link to="/privacy">Privacy</Link>
+            <Link to="/terms">Terms</Link>
+            <Link to="/accessibility">Accessibility</Link>
+            <Link to="/contact">Contact</Link>
           </nav>
         </header>
 
@@ -51,7 +51,7 @@ export function LegalPage({
 
         <footer className={styles.footer}>
           <span>© {new Date().getFullYear()} Relay</span>
-          <Link href="/">Back to Relay</Link>
+          <Link to="/">Back to Relay</Link>
         </footer>
       </div>
     </main>

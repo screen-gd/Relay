@@ -71,7 +71,7 @@ Clerk and object-storage providers are true external dependencies. Their details
 Any accepted design must satisfy these invariants:
 
 - shadcn and Tailwind modules never import Convex or Clerk;
-- domain modules never import React, Next.js, shadcn, Tailwind, Convex, or Clerk;
+- domain modules never import React, TanStack Start, shadcn, Tailwind, Convex, or Clerk;
 - application modules never return React elements or CSS classes;
 - screens never call generated Convex functions;
 - screens never mutate shared arrays or settings through generic setters;
@@ -241,7 +241,7 @@ This gives ordinary callers a small interface while concentrating persistence an
 
 ```mermaid
 flowchart TD
-  Route["Next.js route"]
+  Route["TanStack Router route"]
   Feature["Feature composition module"]
   Controller["Application controller"]
   Domain["Domain module"]
@@ -606,7 +606,7 @@ Add repository checks during migration:
 
 - generated Convex imports are allowed only in Convex adapters and composition modules;
 - `components/ui` and visual patterns cannot import from features, Convex, Clerk, or application providers;
-- domain modules cannot import React, Next.js, UI modules, Convex, or Clerk;
+- domain modules cannot import React, TanStack Start, UI modules, Convex, or Clerk;
 - screens cannot import Convex adapters;
 - new code cannot expose `React.Dispatch` across the application seam;
 - MUI and Emotion imports remain forbidden after migration.

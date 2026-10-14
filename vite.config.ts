@@ -19,6 +19,10 @@ export default defineConfig(({ command, mode }) => ({
     tanstackStart(),
     nitro({
       preset: mode === "cloudflare" ? "cloudflare_module" : undefined,
+      // Rolldown's chunk optimizer can place the `__exportAll` helper in a
+      // circular chunk, which makes every SSR request fail at module load
+      // ("__exportAll is not a function"). Remove once Rolldown fixes it.
+      rolldownConfig: { experimental: { chunkOptimization: false } },
       routeRules: {
         "/**": {
           headers: securityHeaders({ development: command === "serve" }),

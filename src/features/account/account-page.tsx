@@ -1,7 +1,5 @@
-"use client";
-
-import { UserProfile } from "@clerk/nextjs";
-import Link from "next/link";
+import { UserProfile } from "@clerk/tanstack-react-start";
+import { Link } from "@tanstack/react-router";
 import { LoaderCircle, Pencil } from "lucide-react";
 import {
   ContentSection,
@@ -36,7 +34,7 @@ export function AccountSettingsPage() {
             secondary={
               isSignedIn ? (
                 <OwnedButton asChild variant="outline">
-                  <Link href="/profile/edit">
+                  <Link to="/profile/edit">
                     <Pencil aria-hidden="true" />
                     Edit public profile
                   </Link>
@@ -144,7 +142,7 @@ export function AccountSettingsPage() {
             </div>
             {isSignedIn ? (
               <OwnedButton asChild variant="outline" className="shrink-0">
-                <Link href="/profile/edit">
+                <Link to="/profile/edit">
                   <Pencil aria-hidden="true" />
                   Edit public profile
                 </Link>

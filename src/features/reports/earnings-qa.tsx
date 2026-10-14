@@ -1,6 +1,4 @@
-"use client";
-
-import Link from "next/link";
+import { Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { useMutation, useQuery } from "convex/react";
 import type { FunctionReturnType } from "convex/server";
@@ -9,7 +7,7 @@ import type { Id } from "../../../convex/_generated/dataModel";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ContentSection } from "@/components/workspace-page";
-import { projectHref } from "@/features/projects/project-view";
+import { projectLink } from "@/features/projects/project-view";
 
 type Question = FunctionReturnType<typeof api.earningsQa.recent>[number];
 
@@ -68,7 +66,7 @@ function AnswerRow({
                   {citation.projectIds.map((projectId, sourceIndex) => (
                     <Link
                       key={projectId}
-                      href={projectHref({ projectId })}
+                      {...projectLink({ projectId })}
                       className="underline underline-offset-4"
                     >
                       Project {sourceIndex + 1}

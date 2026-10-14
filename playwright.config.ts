@@ -30,7 +30,7 @@ export default defineConfig({
   ],
   globalSetup: "./e2e/global-setup.ts",
   webServer: {
-    command: "pnpm dev:next",
+    command: "pnpm dev:web",
     url: "http://localhost:3100",
     reuseExistingServer: !process.env.CI,
     timeout: 120_000,

@@ -1,4 +1,4 @@
-import { createClerkClient } from "@clerk/nextjs/server";
+import { createClerkClient } from "@clerk/backend";
 import { clerkSetup } from "@clerk/testing/playwright";
 import { cloudE2EAvailable, loadE2EEnvironment } from "./env";
 
@@ -7,7 +7,7 @@ export default async function globalSetup() {
   if (!cloudE2EAvailable()) return;
 
   await clerkSetup({
-    publishableKey: process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY!,
+    publishableKey: process.env.VITE_CLERK_PUBLISHABLE_KEY!,
   });
 
   const email = process.env.E2E_CLERK_USER_EMAIL!;

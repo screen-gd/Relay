@@ -10,16 +10,227 @@
 
 import { Route as rootRouteImport } from "./routes/__root";
 import { Route as WorkspaceRouteImport } from "./routes/_workspace";
+import { Route as AccessibilityRouteImport } from "./routes/accessibility";
+import { Route as ClientHubRouteImport } from "./routes/client-hub";
+import { Route as ClientPortalRouteRouteImport } from "./routes/client-portal/route";
+import { Route as ContactRouteImport } from "./routes/contact";
+import { Route as LlmsDottxtRouteImport } from "./routes/llms[.]txt";
+import { Route as OrganizationProfileRouteImport } from "./routes/organization-profile";
+import { Route as PrivacyRouteImport } from "./routes/privacy";
+import { Route as PrivacyPolicyRouteImport } from "./routes/privacy-policy";
+import { Route as RobotsDottxtRouteImport } from "./routes/robots[.]txt";
+import { Route as SampleStudioRouteRouteImport } from "./routes/sample-studio/route";
+import { Route as SitemapDotxmlRouteImport } from "./routes/sitemap[.]xml";
+import { Route as TermsRouteImport } from "./routes/terms";
 import { Route as WorkspaceIndexRouteImport } from "./routes/_workspace/index";
+import { Route as WorkspaceAccountRouteImport } from "./routes/_workspace/account";
+import { Route as WorkspaceCalendarRouteImport } from "./routes/_workspace/calendar";
+import { Route as WorkspaceClientsRouteImport } from "./routes/_workspace/clients";
+import { Route as WorkspaceFeedbackRouteImport } from "./routes/_workspace/feedback";
+import { Route as WorkspaceFilesRouteImport } from "./routes/_workspace/files";
+import { Route as WorkspaceIntegrationsRouteImport } from "./routes/_workspace/integrations";
+import { Route as WorkspaceMediaRouteImport } from "./routes/_workspace/media";
+import { Route as WorkspaceOrganizationRouteImport } from "./routes/_workspace/organization";
+import { Route as WorkspaceReportsRouteImport } from "./routes/_workspace/reports";
+import { Route as WorkspaceResourcesRouteImport } from "./routes/_workspace/resources";
+import { Route as WorkspaceSettingsRouteImport } from "./routes/_workspace/settings";
+import { Route as WorkspaceSubscriptionRouteImport } from "./routes/_workspace/subscription";
+import { Route as WorkspaceTeamRouteImport } from "./routes/_workspace/team";
+import { Route as WorkspaceTeamChatRouteImport } from "./routes/_workspace/team-chat";
+import { Route as WorkspaceTemplatesRouteImport } from "./routes/_workspace/templates";
+import { Route as WorkspaceTimelineRouteImport } from "./routes/_workspace/timeline";
+import { Route as ClientPortalIndexRouteImport } from "./routes/client-portal/index";
+import { Route as ClientPortalTokenRouteImport } from "./routes/client-portal/$token";
+import { Route as SampleStudioIndexRouteImport } from "./routes/sample-studio/index";
+import { Route as USlugRouteImport } from "./routes/u/$slug";
+import { Route as WorkspaceProfileIndexRouteImport } from "./routes/_workspace/profile/index";
+import { Route as WorkspaceProfileEditRouteImport } from "./routes/_workspace/profile/edit";
+import { Route as WorkspaceProjectsIndexRouteImport } from "./routes/_workspace/projects/index";
 import { Route as WorkspaceProjectsProjectIdRouteImport } from "./routes/_workspace/projects/$projectId";
+import { Route as SampleStudioProjectsProjectIdRouteImport } from "./routes/sample-studio/projects/$projectId";
 
 const WorkspaceRoute = WorkspaceRouteImport.update({
   id: "/_workspace",
   getParentRoute: () => rootRouteImport,
 } as any);
+const AccessibilityRoute = AccessibilityRouteImport.update({
+  id: "/accessibility",
+  path: "/accessibility",
+  getParentRoute: () => rootRouteImport,
+} as any);
+const ClientHubRoute = ClientHubRouteImport.update({
+  id: "/client-hub",
+  path: "/client-hub",
+  getParentRoute: () => rootRouteImport,
+} as any);
+const ClientPortalRouteRoute = ClientPortalRouteRouteImport.update({
+  id: "/client-portal",
+  path: "/client-portal",
+  getParentRoute: () => rootRouteImport,
+} as any);
+const ContactRoute = ContactRouteImport.update({
+  id: "/contact",
+  path: "/contact",
+  getParentRoute: () => rootRouteImport,
+} as any);
+const LlmsDottxtRoute = LlmsDottxtRouteImport.update({
+  id: "/llms.txt",
+  path: "/llms.txt",
+  getParentRoute: () => rootRouteImport,
+} as any);
+const OrganizationProfileRoute = OrganizationProfileRouteImport.update({
+  id: "/organization-profile",
+  path: "/organization-profile",
+  getParentRoute: () => rootRouteImport,
+} as any);
+const PrivacyRoute = PrivacyRouteImport.update({
+  id: "/privacy",
+  path: "/privacy",
+  getParentRoute: () => rootRouteImport,
+} as any);
+const PrivacyPolicyRoute = PrivacyPolicyRouteImport.update({
+  id: "/privacy-policy",
+  path: "/privacy-policy",
+  getParentRoute: () => rootRouteImport,
+} as any);
+const RobotsDottxtRoute = RobotsDottxtRouteImport.update({
+  id: "/robots.txt",
+  path: "/robots.txt",
+  getParentRoute: () => rootRouteImport,
+} as any);
+const SampleStudioRouteRoute = SampleStudioRouteRouteImport.update({
+  id: "/sample-studio",
+  path: "/sample-studio",
+  getParentRoute: () => rootRouteImport,
+} as any);
+const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
+  id: "/sitemap.xml",
+  path: "/sitemap.xml",
+  getParentRoute: () => rootRouteImport,
+} as any);
+const TermsRoute = TermsRouteImport.update({
+  id: "/terms",
+  path: "/terms",
+  getParentRoute: () => rootRouteImport,
+} as any);
 const WorkspaceIndexRoute = WorkspaceIndexRouteImport.update({
   id: "/",
   path: "/",
+  getParentRoute: () => WorkspaceRoute,
+} as any);
+const WorkspaceAccountRoute = WorkspaceAccountRouteImport.update({
+  id: "/account",
+  path: "/account",
+  getParentRoute: () => WorkspaceRoute,
+} as any);
+const WorkspaceCalendarRoute = WorkspaceCalendarRouteImport.update({
+  id: "/calendar",
+  path: "/calendar",
+  getParentRoute: () => WorkspaceRoute,
+} as any);
+const WorkspaceClientsRoute = WorkspaceClientsRouteImport.update({
+  id: "/clients",
+  path: "/clients",
+  getParentRoute: () => WorkspaceRoute,
+} as any);
+const WorkspaceFeedbackRoute = WorkspaceFeedbackRouteImport.update({
+  id: "/feedback",
+  path: "/feedback",
+  getParentRoute: () => WorkspaceRoute,
+} as any);
+const WorkspaceFilesRoute = WorkspaceFilesRouteImport.update({
+  id: "/files",
+  path: "/files",
+  getParentRoute: () => WorkspaceRoute,
+} as any);
+const WorkspaceIntegrationsRoute = WorkspaceIntegrationsRouteImport.update({
+  id: "/integrations",
+  path: "/integrations",
+  getParentRoute: () => WorkspaceRoute,
+} as any);
+const WorkspaceMediaRoute = WorkspaceMediaRouteImport.update({
+  id: "/media",
+  path: "/media",
+  getParentRoute: () => WorkspaceRoute,
+} as any);
+const WorkspaceOrganizationRoute = WorkspaceOrganizationRouteImport.update({
+  id: "/organization",
+  path: "/organization",
+  getParentRoute: () => WorkspaceRoute,
+} as any);
+const WorkspaceReportsRoute = WorkspaceReportsRouteImport.update({
+  id: "/reports",
+  path: "/reports",
+  getParentRoute: () => WorkspaceRoute,
+} as any);
+const WorkspaceResourcesRoute = WorkspaceResourcesRouteImport.update({
+  id: "/resources",
+  path: "/resources",
+  getParentRoute: () => WorkspaceRoute,
+} as any);
+const WorkspaceSettingsRoute = WorkspaceSettingsRouteImport.update({
+  id: "/settings",
+  path: "/settings",
+  getParentRoute: () => WorkspaceRoute,
+} as any);
+const WorkspaceSubscriptionRoute = WorkspaceSubscriptionRouteImport.update({
+  id: "/subscription",
+  path: "/subscription",
+  getParentRoute: () => WorkspaceRoute,
+} as any);
+const WorkspaceTeamRoute = WorkspaceTeamRouteImport.update({
+  id: "/team",
+  path: "/team",
+  getParentRoute: () => WorkspaceRoute,
+} as any);
+const WorkspaceTeamChatRoute = WorkspaceTeamChatRouteImport.update({
+  id: "/team-chat",
+  path: "/team-chat",
+  getParentRoute: () => WorkspaceRoute,
+} as any);
+const WorkspaceTemplatesRoute = WorkspaceTemplatesRouteImport.update({
+  id: "/templates",
+  path: "/templates",
+  getParentRoute: () => WorkspaceRoute,
+} as any);
+const WorkspaceTimelineRoute = WorkspaceTimelineRouteImport.update({
+  id: "/timeline",
+  path: "/timeline",
+  getParentRoute: () => WorkspaceRoute,
+} as any);
+const ClientPortalIndexRoute = ClientPortalIndexRouteImport.update({
+  id: "/",
+  path: "/",
+  getParentRoute: () => ClientPortalRouteRoute,
+} as any);
+const ClientPortalTokenRoute = ClientPortalTokenRouteImport.update({
+  id: "/$token",
+  path: "/$token",
+  getParentRoute: () => ClientPortalRouteRoute,
+} as any);
+const SampleStudioIndexRoute = SampleStudioIndexRouteImport.update({
+  id: "/",
+  path: "/",
+  getParentRoute: () => SampleStudioRouteRoute,
+} as any);
+const USlugRoute = USlugRouteImport.update({
+  id: "/u/$slug",
+  path: "/u/$slug",
+  getParentRoute: () => rootRouteImport,
+} as any);
+const WorkspaceProfileIndexRoute = WorkspaceProfileIndexRouteImport.update({
+  id: "/profile/",
+  path: "/profile/",
+  getParentRoute: () => WorkspaceRoute,
+} as any);
+const WorkspaceProfileEditRoute = WorkspaceProfileEditRouteImport.update({
+  id: "/profile/edit",
+  path: "/profile/edit",
+  getParentRoute: () => WorkspaceRoute,
+} as any);
+const WorkspaceProjectsIndexRoute = WorkspaceProjectsIndexRouteImport.update({
+  id: "/projects/",
+  path: "/projects/",
   getParentRoute: () => WorkspaceRoute,
 } as any);
 const WorkspaceProjectsProjectIdRoute =
@@ -28,35 +239,270 @@ const WorkspaceProjectsProjectIdRoute =
     path: "/projects/$projectId",
     getParentRoute: () => WorkspaceRoute,
   } as any);
+const SampleStudioProjectsProjectIdRoute =
+  SampleStudioProjectsProjectIdRouteImport.update({
+    id: "/projects/$projectId",
+    path: "/projects/$projectId",
+    getParentRoute: () => SampleStudioRouteRoute,
+  } as any);
 
 export interface FileRoutesByFullPath {
+  "/client-portal": typeof ClientPortalRouteRouteWithChildren;
+  "/sample-studio": typeof SampleStudioRouteRouteWithChildren;
   "/": typeof WorkspaceIndexRoute;
+  "/accessibility": typeof AccessibilityRoute;
+  "/client-hub": typeof ClientHubRoute;
+  "/contact": typeof ContactRoute;
+  "/llms.txt": typeof LlmsDottxtRoute;
+  "/organization-profile": typeof OrganizationProfileRoute;
+  "/privacy": typeof PrivacyRoute;
+  "/privacy-policy": typeof PrivacyPolicyRoute;
+  "/robots.txt": typeof RobotsDottxtRoute;
+  "/sitemap.xml": typeof SitemapDotxmlRoute;
+  "/terms": typeof TermsRoute;
+  "/account": typeof WorkspaceAccountRoute;
+  "/calendar": typeof WorkspaceCalendarRoute;
+  "/clients": typeof WorkspaceClientsRoute;
+  "/feedback": typeof WorkspaceFeedbackRoute;
+  "/files": typeof WorkspaceFilesRoute;
+  "/integrations": typeof WorkspaceIntegrationsRoute;
+  "/media": typeof WorkspaceMediaRoute;
+  "/organization": typeof WorkspaceOrganizationRoute;
+  "/reports": typeof WorkspaceReportsRoute;
+  "/resources": typeof WorkspaceResourcesRoute;
+  "/settings": typeof WorkspaceSettingsRoute;
+  "/subscription": typeof WorkspaceSubscriptionRoute;
+  "/team": typeof WorkspaceTeamRoute;
+  "/team-chat": typeof WorkspaceTeamChatRoute;
+  "/templates": typeof WorkspaceTemplatesRoute;
+  "/timeline": typeof WorkspaceTimelineRoute;
+  "/client-portal/$token": typeof ClientPortalTokenRoute;
+  "/u/$slug": typeof USlugRoute;
+  "/client-portal/": typeof ClientPortalIndexRoute;
+  "/sample-studio/": typeof SampleStudioIndexRoute;
+  "/profile/edit": typeof WorkspaceProfileEditRoute;
   "/projects/$projectId": typeof WorkspaceProjectsProjectIdRoute;
+  "/sample-studio/projects/$projectId": typeof SampleStudioProjectsProjectIdRoute;
+  "/profile/": typeof WorkspaceProfileIndexRoute;
+  "/projects/": typeof WorkspaceProjectsIndexRoute;
 }
 export interface FileRoutesByTo {
+  "/accessibility": typeof AccessibilityRoute;
+  "/client-hub": typeof ClientHubRoute;
+  "/contact": typeof ContactRoute;
+  "/llms.txt": typeof LlmsDottxtRoute;
+  "/organization-profile": typeof OrganizationProfileRoute;
+  "/privacy": typeof PrivacyRoute;
+  "/privacy-policy": typeof PrivacyPolicyRoute;
+  "/robots.txt": typeof RobotsDottxtRoute;
+  "/sitemap.xml": typeof SitemapDotxmlRoute;
+  "/terms": typeof TermsRoute;
+  "/account": typeof WorkspaceAccountRoute;
+  "/calendar": typeof WorkspaceCalendarRoute;
+  "/clients": typeof WorkspaceClientsRoute;
+  "/feedback": typeof WorkspaceFeedbackRoute;
+  "/files": typeof WorkspaceFilesRoute;
+  "/integrations": typeof WorkspaceIntegrationsRoute;
+  "/media": typeof WorkspaceMediaRoute;
+  "/organization": typeof WorkspaceOrganizationRoute;
+  "/reports": typeof WorkspaceReportsRoute;
+  "/resources": typeof WorkspaceResourcesRoute;
+  "/settings": typeof WorkspaceSettingsRoute;
+  "/subscription": typeof WorkspaceSubscriptionRoute;
+  "/team": typeof WorkspaceTeamRoute;
+  "/team-chat": typeof WorkspaceTeamChatRoute;
+  "/templates": typeof WorkspaceTemplatesRoute;
+  "/timeline": typeof WorkspaceTimelineRoute;
+  "/client-portal/$token": typeof ClientPortalTokenRoute;
+  "/u/$slug": typeof USlugRoute;
   "/": typeof WorkspaceIndexRoute;
+  "/client-portal": typeof ClientPortalIndexRoute;
+  "/sample-studio": typeof SampleStudioIndexRoute;
+  "/profile/edit": typeof WorkspaceProfileEditRoute;
   "/projects/$projectId": typeof WorkspaceProjectsProjectIdRoute;
+  "/sample-studio/projects/$projectId": typeof SampleStudioProjectsProjectIdRoute;
+  "/profile": typeof WorkspaceProfileIndexRoute;
+  "/projects": typeof WorkspaceProjectsIndexRoute;
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport;
+  "/client-portal": typeof ClientPortalRouteRouteWithChildren;
+  "/sample-studio": typeof SampleStudioRouteRouteWithChildren;
   "/_workspace": typeof WorkspaceRouteWithChildren;
+  "/accessibility": typeof AccessibilityRoute;
+  "/client-hub": typeof ClientHubRoute;
+  "/contact": typeof ContactRoute;
+  "/llms.txt": typeof LlmsDottxtRoute;
+  "/organization-profile": typeof OrganizationProfileRoute;
+  "/privacy": typeof PrivacyRoute;
+  "/privacy-policy": typeof PrivacyPolicyRoute;
+  "/robots.txt": typeof RobotsDottxtRoute;
+  "/sitemap.xml": typeof SitemapDotxmlRoute;
+  "/terms": typeof TermsRoute;
+  "/_workspace/account": typeof WorkspaceAccountRoute;
+  "/_workspace/calendar": typeof WorkspaceCalendarRoute;
+  "/_workspace/clients": typeof WorkspaceClientsRoute;
+  "/_workspace/feedback": typeof WorkspaceFeedbackRoute;
+  "/_workspace/files": typeof WorkspaceFilesRoute;
+  "/_workspace/integrations": typeof WorkspaceIntegrationsRoute;
+  "/_workspace/media": typeof WorkspaceMediaRoute;
+  "/_workspace/organization": typeof WorkspaceOrganizationRoute;
+  "/_workspace/reports": typeof WorkspaceReportsRoute;
+  "/_workspace/resources": typeof WorkspaceResourcesRoute;
+  "/_workspace/settings": typeof WorkspaceSettingsRoute;
+  "/_workspace/subscription": typeof WorkspaceSubscriptionRoute;
+  "/_workspace/team": typeof WorkspaceTeamRoute;
+  "/_workspace/team-chat": typeof WorkspaceTeamChatRoute;
+  "/_workspace/templates": typeof WorkspaceTemplatesRoute;
+  "/_workspace/timeline": typeof WorkspaceTimelineRoute;
+  "/client-portal/$token": typeof ClientPortalTokenRoute;
+  "/u/$slug": typeof USlugRoute;
   "/_workspace/": typeof WorkspaceIndexRoute;
+  "/client-portal/": typeof ClientPortalIndexRoute;
+  "/sample-studio/": typeof SampleStudioIndexRoute;
+  "/_workspace/profile/edit": typeof WorkspaceProfileEditRoute;
   "/_workspace/projects/$projectId": typeof WorkspaceProjectsProjectIdRoute;
+  "/sample-studio/projects/$projectId": typeof SampleStudioProjectsProjectIdRoute;
+  "/_workspace/profile/": typeof WorkspaceProfileIndexRoute;
+  "/_workspace/projects/": typeof WorkspaceProjectsIndexRoute;
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath;
-  fullPaths: "/" | "/projects/$projectId";
+  fullPaths:
+    | "/client-portal"
+    | "/sample-studio"
+    | "/"
+    | "/accessibility"
+    | "/client-hub"
+    | "/contact"
+    | "/llms.txt"
+    | "/organization-profile"
+    | "/privacy"
+    | "/privacy-policy"
+    | "/robots.txt"
+    | "/sitemap.xml"
+    | "/terms"
+    | "/account"
+    | "/calendar"
+    | "/clients"
+    | "/feedback"
+    | "/files"
+    | "/integrations"
+    | "/media"
+    | "/organization"
+    | "/reports"
+    | "/resources"
+    | "/settings"
+    | "/subscription"
+    | "/team"
+    | "/team-chat"
+    | "/templates"
+    | "/timeline"
+    | "/client-portal/$token"
+    | "/u/$slug"
+    | "/client-portal/"
+    | "/sample-studio/"
+    | "/profile/edit"
+    | "/projects/$projectId"
+    | "/sample-studio/projects/$projectId"
+    | "/profile/"
+    | "/projects/";
   fileRoutesByTo: FileRoutesByTo;
-  to: "/" | "/projects/$projectId";
+  to:
+    | "/accessibility"
+    | "/client-hub"
+    | "/contact"
+    | "/llms.txt"
+    | "/organization-profile"
+    | "/privacy"
+    | "/privacy-policy"
+    | "/robots.txt"
+    | "/sitemap.xml"
+    | "/terms"
+    | "/account"
+    | "/calendar"
+    | "/clients"
+    | "/feedback"
+    | "/files"
+    | "/integrations"
+    | "/media"
+    | "/organization"
+    | "/reports"
+    | "/resources"
+    | "/settings"
+    | "/subscription"
+    | "/team"
+    | "/team-chat"
+    | "/templates"
+    | "/timeline"
+    | "/client-portal/$token"
+    | "/u/$slug"
+    | "/"
+    | "/client-portal"
+    | "/sample-studio"
+    | "/profile/edit"
+    | "/projects/$projectId"
+    | "/sample-studio/projects/$projectId"
+    | "/profile"
+    | "/projects";
   id:
     | "__root__"
+    | "/client-portal"
+    | "/sample-studio"
     | "/_workspace"
+    | "/accessibility"
+    | "/client-hub"
+    | "/contact"
+    | "/llms.txt"
+    | "/organization-profile"
+    | "/privacy"
+    | "/privacy-policy"
+    | "/robots.txt"
+    | "/sitemap.xml"
+    | "/terms"
+    | "/_workspace/account"
+    | "/_workspace/calendar"
+    | "/_workspace/clients"
+    | "/_workspace/feedback"
+    | "/_workspace/files"
+    | "/_workspace/integrations"
+    | "/_workspace/media"
+    | "/_workspace/organization"
+    | "/_workspace/reports"
+    | "/_workspace/resources"
+    | "/_workspace/settings"
+    | "/_workspace/subscription"
+    | "/_workspace/team"
+    | "/_workspace/team-chat"
+    | "/_workspace/templates"
+    | "/_workspace/timeline"
+    | "/client-portal/$token"
+    | "/u/$slug"
     | "/_workspace/"
-    | "/_workspace/projects/$projectId";
+    | "/client-portal/"
+    | "/sample-studio/"
+    | "/_workspace/profile/edit"
+    | "/_workspace/projects/$projectId"
+    | "/sample-studio/projects/$projectId"
+    | "/_workspace/profile/"
+    | "/_workspace/projects/";
   fileRoutesById: FileRoutesById;
 }
 export interface RootRouteChildren {
+  ClientPortalRouteRoute: typeof ClientPortalRouteRouteWithChildren;
+  SampleStudioRouteRoute: typeof SampleStudioRouteRouteWithChildren;
   WorkspaceRoute: typeof WorkspaceRouteWithChildren;
+  AccessibilityRoute: typeof AccessibilityRoute;
+  ClientHubRoute: typeof ClientHubRoute;
+  ContactRoute: typeof ContactRoute;
+  LlmsDottxtRoute: typeof LlmsDottxtRoute;
+  OrganizationProfileRoute: typeof OrganizationProfileRoute;
+  PrivacyRoute: typeof PrivacyRoute;
+  PrivacyPolicyRoute: typeof PrivacyPolicyRoute;
+  RobotsDottxtRoute: typeof RobotsDottxtRoute;
+  SitemapDotxmlRoute: typeof SitemapDotxmlRoute;
+  TermsRoute: typeof TermsRoute;
+  USlugRoute: typeof USlugRoute;
 }
 
 declare module "@tanstack/react-router" {
@@ -68,11 +514,256 @@ declare module "@tanstack/react-router" {
       preLoaderRoute: typeof WorkspaceRouteImport;
       parentRoute: typeof rootRouteImport;
     };
+    "/accessibility": {
+      id: "/accessibility";
+      path: "/accessibility";
+      fullPath: "/accessibility";
+      preLoaderRoute: typeof AccessibilityRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
+    "/client-hub": {
+      id: "/client-hub";
+      path: "/client-hub";
+      fullPath: "/client-hub";
+      preLoaderRoute: typeof ClientHubRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
+    "/client-portal": {
+      id: "/client-portal";
+      path: "/client-portal";
+      fullPath: "/client-portal";
+      preLoaderRoute: typeof ClientPortalRouteRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
+    "/contact": {
+      id: "/contact";
+      path: "/contact";
+      fullPath: "/contact";
+      preLoaderRoute: typeof ContactRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
+    "/llms.txt": {
+      id: "/llms.txt";
+      path: "/llms.txt";
+      fullPath: "/llms.txt";
+      preLoaderRoute: typeof LlmsDottxtRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
+    "/organization-profile": {
+      id: "/organization-profile";
+      path: "/organization-profile";
+      fullPath: "/organization-profile";
+      preLoaderRoute: typeof OrganizationProfileRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
+    "/privacy": {
+      id: "/privacy";
+      path: "/privacy";
+      fullPath: "/privacy";
+      preLoaderRoute: typeof PrivacyRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
+    "/privacy-policy": {
+      id: "/privacy-policy";
+      path: "/privacy-policy";
+      fullPath: "/privacy-policy";
+      preLoaderRoute: typeof PrivacyPolicyRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
+    "/robots.txt": {
+      id: "/robots.txt";
+      path: "/robots.txt";
+      fullPath: "/robots.txt";
+      preLoaderRoute: typeof RobotsDottxtRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
+    "/sample-studio": {
+      id: "/sample-studio";
+      path: "/sample-studio";
+      fullPath: "/sample-studio";
+      preLoaderRoute: typeof SampleStudioRouteRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
+    "/sitemap.xml": {
+      id: "/sitemap.xml";
+      path: "/sitemap.xml";
+      fullPath: "/sitemap.xml";
+      preLoaderRoute: typeof SitemapDotxmlRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
+    "/terms": {
+      id: "/terms";
+      path: "/terms";
+      fullPath: "/terms";
+      preLoaderRoute: typeof TermsRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
     "/_workspace/": {
       id: "/_workspace/";
       path: "/";
       fullPath: "/";
       preLoaderRoute: typeof WorkspaceIndexRouteImport;
+      parentRoute: typeof WorkspaceRoute;
+    };
+    "/_workspace/account": {
+      id: "/_workspace/account";
+      path: "/account";
+      fullPath: "/account";
+      preLoaderRoute: typeof WorkspaceAccountRouteImport;
+      parentRoute: typeof WorkspaceRoute;
+    };
+    "/_workspace/calendar": {
+      id: "/_workspace/calendar";
+      path: "/calendar";
+      fullPath: "/calendar";
+      preLoaderRoute: typeof WorkspaceCalendarRouteImport;
+      parentRoute: typeof WorkspaceRoute;
+    };
+    "/_workspace/clients": {
+      id: "/_workspace/clients";
+      path: "/clients";
+      fullPath: "/clients";
+      preLoaderRoute: typeof WorkspaceClientsRouteImport;
+      parentRoute: typeof WorkspaceRoute;
+    };
+    "/_workspace/feedback": {
+      id: "/_workspace/feedback";
+      path: "/feedback";
+      fullPath: "/feedback";
+      preLoaderRoute: typeof WorkspaceFeedbackRouteImport;
+      parentRoute: typeof WorkspaceRoute;
+    };
+    "/_workspace/files": {
+      id: "/_workspace/files";
+      path: "/files";
+      fullPath: "/files";
+      preLoaderRoute: typeof WorkspaceFilesRouteImport;
+      parentRoute: typeof WorkspaceRoute;
+    };
+    "/_workspace/integrations": {
+      id: "/_workspace/integrations";
+      path: "/integrations";
+      fullPath: "/integrations";
+      preLoaderRoute: typeof WorkspaceIntegrationsRouteImport;
+      parentRoute: typeof WorkspaceRoute;
+    };
+    "/_workspace/media": {
+      id: "/_workspace/media";
+      path: "/media";
+      fullPath: "/media";
+      preLoaderRoute: typeof WorkspaceMediaRouteImport;
+      parentRoute: typeof WorkspaceRoute;
+    };
+    "/_workspace/organization": {
+      id: "/_workspace/organization";
+      path: "/organization";
+      fullPath: "/organization";
+      preLoaderRoute: typeof WorkspaceOrganizationRouteImport;
+      parentRoute: typeof WorkspaceRoute;
+    };
+    "/_workspace/reports": {
+      id: "/_workspace/reports";
+      path: "/reports";
+      fullPath: "/reports";
+      preLoaderRoute: typeof WorkspaceReportsRouteImport;
+      parentRoute: typeof WorkspaceRoute;
+    };
+    "/_workspace/resources": {
+      id: "/_workspace/resources";
+      path: "/resources";
+      fullPath: "/resources";
+      preLoaderRoute: typeof WorkspaceResourcesRouteImport;
+      parentRoute: typeof WorkspaceRoute;
+    };
+    "/_workspace/settings": {
+      id: "/_workspace/settings";
+      path: "/settings";
+      fullPath: "/settings";
+      preLoaderRoute: typeof WorkspaceSettingsRouteImport;
+      parentRoute: typeof WorkspaceRoute;
+    };
+    "/_workspace/subscription": {
+      id: "/_workspace/subscription";
+      path: "/subscription";
+      fullPath: "/subscription";
+      preLoaderRoute: typeof WorkspaceSubscriptionRouteImport;
+      parentRoute: typeof WorkspaceRoute;
+    };
+    "/_workspace/team": {
+      id: "/_workspace/team";
+      path: "/team";
+      fullPath: "/team";
+      preLoaderRoute: typeof WorkspaceTeamRouteImport;
+      parentRoute: typeof WorkspaceRoute;
+    };
+    "/_workspace/team-chat": {
+      id: "/_workspace/team-chat";
+      path: "/team-chat";
+      fullPath: "/team-chat";
+      preLoaderRoute: typeof WorkspaceTeamChatRouteImport;
+      parentRoute: typeof WorkspaceRoute;
+    };
+    "/_workspace/templates": {
+      id: "/_workspace/templates";
+      path: "/templates";
+      fullPath: "/templates";
+      preLoaderRoute: typeof WorkspaceTemplatesRouteImport;
+      parentRoute: typeof WorkspaceRoute;
+    };
+    "/_workspace/timeline": {
+      id: "/_workspace/timeline";
+      path: "/timeline";
+      fullPath: "/timeline";
+      preLoaderRoute: typeof WorkspaceTimelineRouteImport;
+      parentRoute: typeof WorkspaceRoute;
+    };
+    "/client-portal/": {
+      id: "/client-portal/";
+      path: "/";
+      fullPath: "/client-portal/";
+      preLoaderRoute: typeof ClientPortalIndexRouteImport;
+      parentRoute: typeof ClientPortalRouteRoute;
+    };
+    "/client-portal/$token": {
+      id: "/client-portal/$token";
+      path: "/$token";
+      fullPath: "/client-portal/$token";
+      preLoaderRoute: typeof ClientPortalTokenRouteImport;
+      parentRoute: typeof ClientPortalRouteRoute;
+    };
+    "/sample-studio/": {
+      id: "/sample-studio/";
+      path: "/";
+      fullPath: "/sample-studio/";
+      preLoaderRoute: typeof SampleStudioIndexRouteImport;
+      parentRoute: typeof SampleStudioRouteRoute;
+    };
+    "/u/$slug": {
+      id: "/u/$slug";
+      path: "/u/$slug";
+      fullPath: "/u/$slug";
+      preLoaderRoute: typeof USlugRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
+    "/_workspace/profile/": {
+      id: "/_workspace/profile/";
+      path: "/profile";
+      fullPath: "/profile/";
+      preLoaderRoute: typeof WorkspaceProfileIndexRouteImport;
+      parentRoute: typeof WorkspaceRoute;
+    };
+    "/_workspace/profile/edit": {
+      id: "/_workspace/profile/edit";
+      path: "/profile/edit";
+      fullPath: "/profile/edit";
+      preLoaderRoute: typeof WorkspaceProfileEditRouteImport;
+      parentRoute: typeof WorkspaceRoute;
+    };
+    "/_workspace/projects/": {
+      id: "/_workspace/projects/";
+      path: "/projects";
+      fullPath: "/projects/";
+      preLoaderRoute: typeof WorkspaceProjectsIndexRouteImport;
       parentRoute: typeof WorkspaceRoute;
     };
     "/_workspace/projects/$projectId": {
@@ -82,17 +773,88 @@ declare module "@tanstack/react-router" {
       preLoaderRoute: typeof WorkspaceProjectsProjectIdRouteImport;
       parentRoute: typeof WorkspaceRoute;
     };
+    "/sample-studio/projects/$projectId": {
+      id: "/sample-studio/projects/$projectId";
+      path: "/projects/$projectId";
+      fullPath: "/sample-studio/projects/$projectId";
+      preLoaderRoute: typeof SampleStudioProjectsProjectIdRouteImport;
+      parentRoute: typeof SampleStudioRouteRoute;
+    };
   }
 }
 
+interface ClientPortalRouteRouteChildren {
+  ClientPortalTokenRoute: typeof ClientPortalTokenRoute;
+  ClientPortalIndexRoute: typeof ClientPortalIndexRoute;
+}
+
+const ClientPortalRouteRouteChildren: ClientPortalRouteRouteChildren = {
+  ClientPortalTokenRoute: ClientPortalTokenRoute,
+  ClientPortalIndexRoute: ClientPortalIndexRoute,
+};
+
+const ClientPortalRouteRouteWithChildren =
+  ClientPortalRouteRoute._addFileChildren(ClientPortalRouteRouteChildren);
+
+interface SampleStudioRouteRouteChildren {
+  SampleStudioIndexRoute: typeof SampleStudioIndexRoute;
+  SampleStudioProjectsProjectIdRoute: typeof SampleStudioProjectsProjectIdRoute;
+}
+
+const SampleStudioRouteRouteChildren: SampleStudioRouteRouteChildren = {
+  SampleStudioIndexRoute: SampleStudioIndexRoute,
+  SampleStudioProjectsProjectIdRoute: SampleStudioProjectsProjectIdRoute,
+};
+
+const SampleStudioRouteRouteWithChildren =
+  SampleStudioRouteRoute._addFileChildren(SampleStudioRouteRouteChildren);
+
 interface WorkspaceRouteChildren {
+  WorkspaceAccountRoute: typeof WorkspaceAccountRoute;
+  WorkspaceCalendarRoute: typeof WorkspaceCalendarRoute;
+  WorkspaceClientsRoute: typeof WorkspaceClientsRoute;
+  WorkspaceFeedbackRoute: typeof WorkspaceFeedbackRoute;
+  WorkspaceFilesRoute: typeof WorkspaceFilesRoute;
+  WorkspaceIntegrationsRoute: typeof WorkspaceIntegrationsRoute;
+  WorkspaceMediaRoute: typeof WorkspaceMediaRoute;
+  WorkspaceOrganizationRoute: typeof WorkspaceOrganizationRoute;
+  WorkspaceReportsRoute: typeof WorkspaceReportsRoute;
+  WorkspaceResourcesRoute: typeof WorkspaceResourcesRoute;
+  WorkspaceSettingsRoute: typeof WorkspaceSettingsRoute;
+  WorkspaceSubscriptionRoute: typeof WorkspaceSubscriptionRoute;
+  WorkspaceTeamRoute: typeof WorkspaceTeamRoute;
+  WorkspaceTeamChatRoute: typeof WorkspaceTeamChatRoute;
+  WorkspaceTemplatesRoute: typeof WorkspaceTemplatesRoute;
+  WorkspaceTimelineRoute: typeof WorkspaceTimelineRoute;
   WorkspaceIndexRoute: typeof WorkspaceIndexRoute;
+  WorkspaceProfileEditRoute: typeof WorkspaceProfileEditRoute;
   WorkspaceProjectsProjectIdRoute: typeof WorkspaceProjectsProjectIdRoute;
+  WorkspaceProfileIndexRoute: typeof WorkspaceProfileIndexRoute;
+  WorkspaceProjectsIndexRoute: typeof WorkspaceProjectsIndexRoute;
 }
 
 const WorkspaceRouteChildren: WorkspaceRouteChildren = {
+  WorkspaceAccountRoute: WorkspaceAccountRoute,
+  WorkspaceCalendarRoute: WorkspaceCalendarRoute,
+  WorkspaceClientsRoute: WorkspaceClientsRoute,
+  WorkspaceFeedbackRoute: WorkspaceFeedbackRoute,
+  WorkspaceFilesRoute: WorkspaceFilesRoute,
+  WorkspaceIntegrationsRoute: WorkspaceIntegrationsRoute,
+  WorkspaceMediaRoute: WorkspaceMediaRoute,
+  WorkspaceOrganizationRoute: WorkspaceOrganizationRoute,
+  WorkspaceReportsRoute: WorkspaceReportsRoute,
+  WorkspaceResourcesRoute: WorkspaceResourcesRoute,
+  WorkspaceSettingsRoute: WorkspaceSettingsRoute,
+  WorkspaceSubscriptionRoute: WorkspaceSubscriptionRoute,
+  WorkspaceTeamRoute: WorkspaceTeamRoute,
+  WorkspaceTeamChatRoute: WorkspaceTeamChatRoute,
+  WorkspaceTemplatesRoute: WorkspaceTemplatesRoute,
+  WorkspaceTimelineRoute: WorkspaceTimelineRoute,
   WorkspaceIndexRoute: WorkspaceIndexRoute,
+  WorkspaceProfileEditRoute: WorkspaceProfileEditRoute,
   WorkspaceProjectsProjectIdRoute: WorkspaceProjectsProjectIdRoute,
+  WorkspaceProfileIndexRoute: WorkspaceProfileIndexRoute,
+  WorkspaceProjectsIndexRoute: WorkspaceProjectsIndexRoute,
 };
 
 const WorkspaceRouteWithChildren = WorkspaceRoute._addFileChildren(
@@ -100,7 +862,20 @@ const WorkspaceRouteWithChildren = WorkspaceRoute._addFileChildren(
 );
 
 const rootRouteChildren: RootRouteChildren = {
+  ClientPortalRouteRoute: ClientPortalRouteRouteWithChildren,
+  SampleStudioRouteRoute: SampleStudioRouteRouteWithChildren,
   WorkspaceRoute: WorkspaceRouteWithChildren,
+  AccessibilityRoute: AccessibilityRoute,
+  ClientHubRoute: ClientHubRoute,
+  ContactRoute: ContactRoute,
+  LlmsDottxtRoute: LlmsDottxtRoute,
+  OrganizationProfileRoute: OrganizationProfileRoute,
+  PrivacyRoute: PrivacyRoute,
+  PrivacyPolicyRoute: PrivacyPolicyRoute,
+  RobotsDottxtRoute: RobotsDottxtRoute,
+  SitemapDotxmlRoute: SitemapDotxmlRoute,
+  TermsRoute: TermsRoute,
+  USlugRoute: USlugRoute,
 };
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

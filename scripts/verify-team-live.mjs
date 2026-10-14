@@ -19,9 +19,9 @@ if (existsSync(envPath)) {
 }
 
 const requiredEnv = [
-  "NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY",
+  "VITE_CLERK_PUBLISHABLE_KEY",
   "CLERK_SECRET_KEY",
-  "NEXT_PUBLIC_CONVEX_URL",
+  "VITE_CONVEX_URL",
 ];
 
 const missing = requiredEnv.filter(

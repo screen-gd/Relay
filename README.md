@@ -3,7 +3,7 @@
 **A video-workflow workspace for freelance video editors and small post-production teams.**
 
 [![CI](https://github.com/zaid-gd/Relay/actions/workflows/ci.yml/badge.svg)](https://github.com/zaid-gd/Relay/actions/workflows/ci.yml)
-![Next.js 16](https://img.shields.io/badge/Next.js-16-black?logo=nextdotjs)
+![TanStack Start](https://img.shields.io/badge/TanStack-Start-black)
 ![React 19](https://img.shields.io/badge/React-19-149eca?logo=react&logoColor=white)
 ![TypeScript 5.9](https://img.shields.io/badge/TypeScript-5.9-3178c6?logo=typescript&logoColor=white)
 ![Convex](https://img.shields.io/badge/Convex-realtime%20backend-ee342f)
@@ -88,7 +88,7 @@ Local work can be imported once into a new empty cloud account. Existing cloud w
 
 | Layer         | Choice                                               |
 | ------------- | ---------------------------------------------------- |
-| App framework | Next.js App Router                                   |
+| App framework | TanStack Start on Vite, served by Nitro              |
 | Interface     | React 19, owned Radix-based primitives, Tailwind CSS |
 | Language      | TypeScript                                           |
 | Auth          | Clerk                                                |
@@ -96,7 +96,7 @@ Local work can be imported once into a new empty cloud account. Existing cloud w
 | Tables        | TanStack Table                                       |
 | Board         | dnd-kit with a keyboard-accessible stage menu        |
 | Tests         | Vitest, convex-test, Playwright                      |
-| Hosting       | OpenNext on Cloudflare Workers                       |
+| Hosting       | Vercel                                               |
 
 ## Development
 
@@ -106,6 +106,9 @@ Requires Node.js 22+ and pnpm 10.11.1.
 pnpm install
 pnpm dev
 ```
+
+`pnpm dev` runs the Convex development deployment and the Vite dev server on
+`http://localhost:3100`. Use `pnpm dev:web` to run only the app.
 
 Without `.env.local`, the app runs in Local Mode. Do not copy
 `.env.production` into `.env.local`: its live Clerk key only loads on the
@@ -123,32 +126,38 @@ pnpm verify        # Built-app route and responsive browser smoke checks
 ## Vercel Deployment
 
 Import this repository into Vercel with the root directory set to the repository
-root, not `website`. Use the Next.js framework preset, Node.js 22 or 24, and the
-default pnpm install command. `vercel.json` uses `pnpm build` (`next build`);
-Vercel does not need the Cloudflare OpenNext bundle or a custom output directory.
+root, not `website`. Use the TanStack Start framework preset, Node.js 22 or 24,
+and the default pnpm install command. `vercel.json` uses `pnpm build`
+(`vite build`). Nitro detects Vercel during the build and writes the Vercel
+output itself, so the project needs no custom output directory.
 
-Configure these environment variables before building:
+Configure these environment variables before building. Vite inlines `VITE_*`
+values into the build, so changing one requires a new deployment:
 
-- `NEXT_PUBLIC_CONVEX_URL`: the existing approved Convex deployment URL.
-- `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`: the matching Clerk instance's public key.
+- `VITE_CONVEX_URL`: the existing approved Convex deployment URL.
+- `VITE_CLERK_PUBLISHABLE_KEY`: the matching Clerk instance's public key.
 - `CLERK_SECRET_KEY`: the matching server secret, stored only in Vercel settings.
-- `NEXT_PUBLIC_SITE_URL`: the public app origin for metadata and sitemap links.
-- `NEXT_PUBLIC_BILLING_PURCHASES_ENABLED=false`.
-- `NEXT_PUBLIC_FILE_STORAGE_PROVIDER=convex`.
+- `VITE_SITE_URL`: the public app origin for metadata and sitemap links.
+- `VITE_BILLING_PURCHASES_ENABLED=false`.
+- `VITE_FILE_STORAGE_PROVIDER=convex`.
+
+The app used to read `NEXT_PUBLIC_*` names. If the Vercel project still has
+them, add the `VITE_*` names with the same values for every environment
+(Production, Preview, Development) and remove the old names after the first
+successful deployment.
 
 Use an approved test backend and Clerk instance for previews. Changing the host
 does not deploy Convex or migrate data. Do not add `convex deploy` to the build
 command. Keep Clerk issuer configuration on the existing Convex deployment.
 
-`src/middleware.ts` forwards `/__clerk/*` scripts and API requests through
-Clerk's built-in proxy, including on the custom app domain. Keep the matching
-`CLERK_SECRET_KEY` set in Vercel so the handler can forward those requests.
+The request middleware in `src/start.ts` forwards `/__clerk/*` scripts and API
+requests through Clerk's Frontend API proxy, including on the custom app
+domain. Keep the matching `CLERK_SECRET_KEY` set in Vercel so the handler can
+forward those requests. No other request runs Clerk on the server.
 
-Keep that file named `middleware.ts`. Next.js compiles the newer `proxy.ts`
-convention to the Node.js runtime, which `@opennextjs/cloudflare` refuses, so
-the Cloudflare Worker build fails with "Node.js middleware is not currently
-supported". The legacy filename compiles to Edge middleware that both hosts
-run, at the cost of a deprecation warning during `next build`.
+Security headers, including the Content-Security-Policy, live in
+`security-headers.mjs` and apply to every response through Nitro route rules
+in `vite.config.ts`.
 
 Before production cutover, configure the intended domain and permitted origins
 in Clerk and Vercel, then verify sign-in and signed-in Project journeys. Production
@@ -161,37 +170,43 @@ is a separate hosting setting; configure its audience in Vercel if enabled.
 
 ## Cloudflare Deployment (optional)
 
-The existing Cloudflare alternative uses OpenNext; it is not a static upload.
-These commands are not used by Vercel.
+The app can also run as a Cloudflare Worker. `pnpm build:cloudflare` runs
+`vite build --mode cloudflare`, which switches Nitro to its `cloudflare_module`
+preset and writes the Worker to `.output`. `wrangler.jsonc` deploys that
+output. These commands are not used by Vercel.
 
 For a local Worker preview:
 
 ```bash
-pnpm preview
+pnpm build:cloudflare
+pnpm exec wrangler dev
 ```
+
+`pnpm preview` serves the regular Node build, not the Worker.
 
 To deploy from a machine authenticated with Wrangler:
 
 ```bash
-pnpm deploy
+pnpm deploy:cloudflare
 ```
 
-Cloudflare Workers Builds must run `pnpm exec opennextjs-cloudflare build` as the build command and `pnpm exec wrangler deploy` as the deploy command. Do not run `next build` alone; that skips the Worker bundle.
-
-Create two Workers Builds projects from this repository:
+Create two Workers Builds projects from this repository. The marketing site in
+`website/` is a separate Next.js app and keeps its OpenNext build:
 
 | Worker      | Root directory | Build command                           | Deploy command              |
 | ----------- | -------------- | --------------------------------------- | --------------------------- |
-| `relay`     | `/`            | `pnpm exec opennextjs-cloudflare build` | `pnpm exec wrangler deploy` |
+| `relay`     | `/`            | `pnpm build:cloudflare`                 | `pnpm exec wrangler deploy` |
 | `relay-web` | `/website`     | `pnpm exec opennextjs-cloudflare build` | `pnpm exec wrangler deploy` |
 
-Set these in the Worker environment:
+Set these in the `relay` build environment, plus `CLERK_SECRET_KEY` as a
+Worker secret. Vite inlines `VITE_*` values at build time, so Worker runtime
+variables alone do not change them:
 
-- `NEXT_PUBLIC_CONVEX_URL`
-- `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`
-- `NEXT_PUBLIC_SITE_URL`
+- `VITE_CONVEX_URL`
+- `VITE_CLERK_PUBLISHABLE_KEY`
+- `VITE_SITE_URL`
 
-Clerk issuer variables belong in the Convex deployment environment, not the Worker. Set `NEXT_PUBLIC_SITE_URL` to the production domain so metadata, canonical links, robots.txt, and sitemap.xml use the deployed address.
+Clerk issuer variables belong in the Convex deployment environment, not the Worker. Set `VITE_SITE_URL` to the production domain so metadata, canonical links, robots.txt, and sitemap.xml use the deployed address.
 
 ## Quality Gates
 

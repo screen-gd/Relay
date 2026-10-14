@@ -1,5 +1,3 @@
-"use client";
-
 import { getProjectProgress } from "@/features/projects/project-domain";
 
 import {
@@ -29,7 +27,7 @@ import {
   useReactTable,
 } from "@tanstack/react-table";
 import { AnimatePresence, animate, motion } from "motion/react";
-import Link from "next/link";
+import { Link } from "@tanstack/react-router";
 import {
   useEffect,
   useLayoutEffect,
@@ -1064,7 +1062,7 @@ export function PrecisionDashboard(props: DashboardProps) {
                           size="sm"
                           className="h-8 px-2 text-xs text-[var(--app-muted)] hover:text-[var(--app-ink)]"
                         >
-                          <Link href="/projects">
+                          <Link to="/projects">
                             View all projects
                             <ArrowRight
                               className="size-3.5"

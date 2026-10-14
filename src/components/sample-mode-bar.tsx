@@ -1,7 +1,5 @@
-"use client";
-
 import { ArrowLeft, FlaskConical } from "lucide-react";
-import Link from "next/link";
+import { Link } from "@tanstack/react-router";
 import { trackOnboardingEvent } from "@/lib/onboarding";
 
 export function SampleModeBar() {
@@ -20,7 +18,8 @@ export function SampleModeBar() {
       <div className="flex items-center gap-4">
         <Link
           className="font-semibold text-[var(--app-highlight)] hover:underline"
-          href="/?onboarding=v2"
+          to="/"
+          search={{ onboarding: "v2" }}
           onClick={() =>
             trackOnboardingEvent("sample_studio_exited", {
               variant: "v2",
@@ -32,7 +31,8 @@ export function SampleModeBar() {
         </Link>
         <Link
           className="flex items-center gap-1.5 text-[var(--app-muted)] hover:text-[var(--app-ink)]"
-          href="/?onboarding=v2"
+          to="/"
+          search={{ onboarding: "v2" }}
           onClick={() =>
             trackOnboardingEvent("sample_studio_exited", {
               variant: "v2",

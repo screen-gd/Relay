@@ -31,9 +31,6 @@ importers:
       "@clerk/backend":
         specifier: ^3.16.12
         version: 3.16.12(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
-      "@clerk/nextjs":
-        specifier: ^7.8.1
-        version: 7.8.2(next@16.3.6(@babel/core@7.29.7)(@playwright/test@1.62.1)(@types/node@24.13.3)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       "@clerk/tanstack-react-start":
         specifier: 1.6.5
         version: 1.6.5(@tanstack/react-router@1.170.41(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(@tanstack/react-start@1.168.60(crossws@0.4.15(srvx@1.0.5))(esbuild@0.28.1)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(rolldown@1.2.14)(vite@8.2.2(@types/node@24.13.3)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.16.9)(yaml@2.9.0)))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
@@ -52,9 +49,6 @@ importers:
       "@fontsource-variable/geist-mono":
         specifier: 5.3.0
         version: 5.3.0
-      "@opennextjs/cloudflare":
-        specifier: ^1.20.2
-        version: 1.20.2(next@16.3.6(@babel/core@7.29.7)(@playwright/test@1.62.1)(@types/node@24.13.3)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(wrangler@4.148.0(@types/node@24.13.3))
       "@tanstack/react-form":
         specifier: ^1.33.5
         version: 1.33.5(@tanstack/react-start@1.168.60(crossws@0.4.15(srvx@1.0.5))(esbuild@0.28.1)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(rolldown@1.2.14)(vite@8.2.2(@types/node@24.13.3)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.16.9)(yaml@2.9.0)))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
@@ -97,18 +91,12 @@ importers:
       d3-shape:
         specifier: ^3.2.0
         version: 3.2.0
-      geist:
-        specifier: ^1.7.2
-        version: 1.7.2(next@16.3.6(@babel/core@7.29.7)(@playwright/test@1.62.1)(@types/node@24.13.3)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))
       lucide-react:
         specifier: ^1.18.0
         version: 1.33.0(react@19.2.8)
       motion:
         specifier: ^12.40.0
         version: 12.43.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
-      next:
-        specifier: ^16.3.6
-        version: 16.3.6(@babel/core@7.29.7)(@playwright/test@1.62.1)(@types/node@24.13.3)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       nitro:
         specifier: 3.0.260903-beta
         version: 3.0.260903-beta
@@ -146,9 +134,6 @@ importers:
       "@edge-runtime/vm":
         specifier: ^5.0.0
         version: 5.0.0
-      "@next/env":
-        specifier: ^16.3.2
-        version: 16.3.2
       "@playwright/test":
         specifier: ^1.60.0
         version: 1.62.1
@@ -869,27 +854,6 @@ packages:
         integrity: sha512-QW2qJPY7xQyn5SrNWJ+xO7o6va60X9/v4nX8y5zq8OJFS10X7GlEz8s5PDKTgo6W6SWb8L3APhrZH+LTp7yuNw==,
       }
     engines: { node: ">=20.9.0" }
-
-  "@clerk/nextjs@7.8.2":
-    resolution:
-      {
-        integrity: sha512-EmUq8lkJLpaqI/D5XEK0pNYKxSoNdD7TZWvXfKxyeM86fQrJFr6I9cVEFTPksbx6Y+cRiHW/6Q4KrhgpqBGnjg==,
-      }
-    engines: { node: ">=20.9.0" }
-    peerDependencies:
-      next: ^15.2.8 || ^15.3.8 || ^15.4.10 || ^15.5.9 || ^15.6.0-0 || ^16.0.10 || ^16.1.0-0
-      react: ^18.0.0 || ~19.0.3 || ~19.1.4 || ~19.2.3 || ~19.3.0-0
-      react-dom: ^18.0.0 || ~19.0.3 || ~19.1.4 || ~19.2.3 || ~19.3.0-0
-
-  "@clerk/react@6.14.7":
-    resolution:
-      {
-        integrity: sha512-+d+VqD4nZR3vBn5UU++H96zloHFDe+Ll0sGwMmLXnHtoIs9oMx91GaGXzXo9rU83kl660EfAmgeWcsLMfWnOYg==,
-      }
-    engines: { node: ">=20.9.0" }
-    peerDependencies:
-      react: ^18.0.0 || ~19.0.3 || ~19.1.4 || ~19.2.3 || ~19.3.0-0
-      react-dom: ^18.0.0 || ~19.0.3 || ~19.1.4 || ~19.2.3 || ~19.3.0-0
 
   "@clerk/react@6.17.8":
     resolution:
@@ -1746,12 +1710,6 @@ packages:
     resolution:
       {
         integrity: sha512-3Belt6tdc8bPgAtbcmdtNJlirVoTmEb5e2gC94PnkwEW9jI6CAHUeoG85tjWP5WquqfavoMtMwiG4P926ZKKuQ==,
-      }
-
-  "@next/env@16.3.2":
-    resolution:
-      {
-        integrity: sha512-8k4YoG8cM7LWlkfzGNYCRBbFNlernLiMw4s0btVl+CmmWqn3VpYypA72/5Feb1UWdxe6tHqr5KHP4p4Y4m9luA==,
       }
 
   "@next/env@16.3.6":
@@ -5193,14 +5151,6 @@ packages:
         integrity: sha512-7XHNxH7qX9xG5mIwxkhumTox/MIRNcOgDrxWsMt2pAr23WHp6MrRlN7FBSFpCpr+oVO0F744iUgR82nJMfG2SA==,
       }
 
-  geist@1.7.2:
-    resolution:
-      {
-        integrity: sha512-Gu5lDFa3pLRyoBlBPf0QIFHVdWAnpco7fS1bJm41jyLPFoguBgiubseUN2oLXMgqZ7uxAxDoXcHMhCY/fOTTgg==,
-      }
-    peerDependencies:
-      next: ">=13.2.0"
-
   gensync@1.0.0-beta.2:
     resolution:
       {
@@ -6446,12 +6396,6 @@ packages:
         integrity: sha512-xRXBn0pPqQTVQiC8wyQrKs2MOlX24zQ0POGaj0kultvoOCstBQM5yvOhAVSUwOMjQtTvsPWoNCHfPGwaaQJhTw==,
       }
     engines: { node: ">= 18" }
-
-  server-only@0.0.1:
-    resolution:
-      {
-        integrity: sha512-qepMx2JxAa5jjfzxG79yPPq+8BuFToHd1hm7kI+Z4zAq1ftQiP7HcxMhDDItrbtwVeLg/cY2JnKnrcFkmiswNA==,
-      }
 
   setprototypeof@1.2.0:
     resolution:
@@ -7961,24 +7905,6 @@ snapshots:
       - react
       - react-dom
 
-  "@clerk/nextjs@7.8.2(next@16.3.6(@babel/core@7.29.7)(@playwright/test@1.62.1)(@types/node@24.13.3)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)":
-    dependencies:
-      "@clerk/backend": 3.16.12(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
-      "@clerk/react": 6.14.7(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
-      "@clerk/shared": 4.30.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
-      next: 16.3.6(@babel/core@7.29.7)(@playwright/test@1.62.1)(@types/node@24.13.3)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
-      react: 19.2.8
-      react-dom: 19.2.8(react@19.2.8)
-      server-only: 0.0.1
-      tslib: 2.8.1
-
-  "@clerk/react@6.14.7(react-dom@19.2.8(react@19.2.8))(react@19.2.8)":
-    dependencies:
-      "@clerk/shared": 4.30.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
-      react: 19.2.8
-      react-dom: 19.2.8(react@19.2.8)
-      tslib: 2.8.1
-
   "@clerk/react@6.17.8(react-dom@19.2.8(react@19.2.8))(react@19.2.8)":
     dependencies:
       "@clerk/shared": 4.40.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
@@ -8385,8 +8311,6 @@ snapshots:
       "@jridgewell/resolve-uri": 3.1.2
       "@jridgewell/sourcemap-codec": 1.5.5
 
-  "@next/env@16.3.2": {}
-
   "@next/env@16.3.6": {}
 
   "@next/swc-darwin-arm64@16.3.6":
@@ -8489,24 +8413,6 @@ snapshots:
       next: 16.3.6(@babel/core@7.29.7)(@playwright/test@1.62.1)(@types/node@24.13.3)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       ts-tqdm: 0.8.6
       wrangler: 4.125.0(@types/node@24.13.3)
-      yargs: 18.1.0
-    transitivePeerDependencies:
-      - encoding
-      - supports-color
-
-  "@opennextjs/cloudflare@1.20.2(next@16.3.6(@babel/core@7.29.7)(@playwright/test@1.62.1)(@types/node@24.13.3)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(wrangler@4.148.0(@types/node@24.13.3))":
-    dependencies:
-      "@ast-grep/napi": 0.40.5
-      "@dotenvx/dotenvx": 1.31.0
-      "@opennextjs/aws": 4.1.0(next@16.3.6(@babel/core@7.29.7)(@playwright/test@1.62.1)(@types/node@24.13.3)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))
-      ci-info: 4.4.0
-      cloudflare: 4.5.0
-      comment-json: 4.6.2
-      enquirer: 2.4.1
-      glob: 12.0.0
-      next: 16.3.6(@babel/core@7.29.7)(@playwright/test@1.62.1)(@types/node@24.13.3)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
-      ts-tqdm: 0.8.6
-      wrangler: 4.148.0(@types/node@24.13.3)
       yargs: 18.1.0
     transitivePeerDependencies:
       - encoding
@@ -10639,10 +10545,6 @@ snapshots:
 
   function-bind@1.1.2: {}
 
-  geist@1.7.2(next@16.3.6(@babel/core@7.29.7)(@playwright/test@1.62.1)(@types/node@24.13.3)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)):
-    dependencies:
-      next: 16.3.6(@babel/core@7.29.7)(@playwright/test@1.62.1)(@types/node@24.13.3)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
-
   gensync@1.0.0-beta.2: {}
 
   get-caller-file@2.0.5: {}
@@ -11381,8 +11283,6 @@ snapshots:
       send: 1.2.1
     transitivePeerDependencies:
       - supports-color
-
-  server-only@0.0.1: {}
 
   setprototypeof@1.2.0: {}
 

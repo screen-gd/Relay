@@ -1,6 +1,4 @@
-"use client";
-
-import Link from "next/link";
+import { Link } from "@tanstack/react-router";
 import { RelayBrand } from "@/app/relay-brand";
 import { Button as OwnedButton } from "@/components/ui/button";
 import {
@@ -92,7 +90,7 @@ export function WelcomeChoiceDialog({
               data.
             </p>
             <OwnedButton asChild variant="outline" className="mt-4 w-full">
-              <Link href="/sample-studio">Open Sample Workspace</Link>
+              <Link to="/sample-studio">Open Sample Workspace</Link>
             </OwnedButton>
           </section>
         </div>
@@ -105,11 +103,11 @@ export function WelcomeChoiceDialog({
         <p className="text-xs leading-relaxed text-muted-foreground">
           Account sync covers supported workspace records. Integrations store
           links and settings only. Read the{" "}
-          <Link href="/privacy" className="underline underline-offset-2">
+          <Link to="/privacy" className="underline underline-offset-2">
             Privacy Policy
           </Link>{" "}
           and{" "}
-          <Link href="/terms" className="underline underline-offset-2">
+          <Link to="/terms" className="underline underline-offset-2">
             Terms
           </Link>
           .

@@ -429,7 +429,7 @@ The `website/` directory is a separate Next.js application. It is not the authen
 - Waitlist API route.
 - Public links to privacy, social accounts, and contact email.
 
-The marketing app deploys separately from the main Relay Worker through OpenNext on Cloudflare. Related repo tasks also show that its build and responsive layout are maintained separately from the main app.
+The marketing app deploys separately from the main Relay app through OpenNext on Cloudflare. Related repo tasks also show that its build and responsive layout are maintained separately from the main app.
 
 ## Security and privacy behavior
 
@@ -458,7 +458,7 @@ Relay currently does not:
 
 ## Technical shape
 
-- Next.js App Router 16.
+- TanStack Start and TanStack Router on Vite, served by Nitro.
 - React 19 and TypeScript.
 - Clerk authentication.
 - Convex reactive backend and database.
@@ -466,7 +466,7 @@ Relay currently does not:
 - Convex Storage for current hosted Project files.
 - Tailwind CSS, owned Radix-based UI primitives, Lucide icons, Motion, TanStack Table, Recharts, and Sonner.
 - dnd-kit for keyboard-accessible stage interaction.
-- OpenNext and Cloudflare Workers for deployment.
+- Vercel for deployment, with an optional Cloudflare Worker build.
 - Vitest, `convex-test`, and Playwright for tests.
 
 ## Related implementation context
