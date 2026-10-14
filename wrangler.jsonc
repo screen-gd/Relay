@@ -7,15 +7,11 @@
   "keep_vars": true,
   "workers_dev": true,
   "vars": {
-    "VITE_CLERK_PUBLISHABLE_KEY": "pk_live_Y2xlcmsucmVsYXktYXBwLmNjLmNkJA",
-    "VITE_BILLING_PURCHASES_ENABLED": "false",
-    "VITE_CONVEX_URL": "https://spotted-pheasant-146.convex.cloud",
-    "VITE_FILE_STORAGE_PROVIDER": "convex",
-    "VITE_SITE_URL": "https://relay-app.cc.cd",
+    // Public VITE_* settings are inlined at build time from .env.production.
   },
   "assets": {
     "directory": ".output/public",
-    "binding": "ASSETS",
+    "binding": "ASSETS"
   },
   "observability": {
     "enabled": true,
@@ -24,12 +20,12 @@
       "enabled": true,
       "head_sampling_rate": 1,
       "persist": true,
-      "invocation_logs": true,
+      "invocation_logs": true
     },
     "traces": {
       "enabled": false,
       "persist": true,
-      "head_sampling_rate": 1,
-    },
-  },
+      "head_sampling_rate": 1
+    }
+  }
 }

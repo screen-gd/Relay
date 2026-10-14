@@ -10,6 +10,6 @@ export const relay = {
     warning: "#FBBF24",
   },
   font: {
-    heading: "var(--font-geist-sans), Geist, sans-serif",
+    heading: 'var(--font-geist-sans), "Geist Variable", sans-serif',
   },
 } as const;

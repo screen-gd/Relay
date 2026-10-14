@@ -58,16 +58,6 @@ export const Route = createRootRoute({
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
       { name: "color-scheme", content: "light dark" },
-      {
-        name: "theme-color",
-        media: "(prefers-color-scheme: light)",
-        content: "#F1F4F2",
-      },
-      {
-        name: "theme-color",
-        media: "(prefers-color-scheme: dark)",
-        content: "#090C0D",
-      },
       { title: siteTitle },
       { name: "description", content: siteDescription },
       { name: "application-name", content: "Relay" },
@@ -145,6 +135,17 @@ function RootDocument({ children }: { children: ReactNode }) {
     <html lang="en" suppressHydrationWarning>
       <head>
         <HeadContent />
+        {/* Rendered here because HeadContent keeps one meta tag per name. */}
+        <meta
+          name="theme-color"
+          media="(prefers-color-scheme: light)"
+          content="#F1F4F2"
+        />
+        <meta
+          name="theme-color"
+          media="(prefers-color-scheme: dark)"
+          content="#090C0D"
+        />
       </head>
       <body
         className="antialiased"
