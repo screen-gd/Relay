@@ -114,6 +114,10 @@ Without `.env.local`, the app runs in Local Mode. Do not copy
 `.env.production` into `.env.local`: its live Clerk key only loads on the
 production domain. Use a Clerk development instance for local account testing.
 
+If your `.env.local` predates the TanStack Start move, rename each
+`NEXT_PUBLIC_*` variable to `VITE_*`. The app ignores the old names and falls
+back to Local Mode.
+
 Useful commands:
 
 ```bash
@@ -140,6 +144,9 @@ values into the build, so changing one requires a new deployment:
 - `VITE_SITE_URL`: the public app origin for metadata and sitemap links.
 - `VITE_BILLING_PURCHASES_ENABLED=false`.
 - `VITE_FILE_STORAGE_PROVIDER=convex`.
+- Optional: `VITE_ONBOARDING_V2`, `VITE_RELAY_ANALYTICS_ENDPOINT` and
+  `VITE_RELAY_ERROR_ENDPOINT`, if they were set under their `NEXT_PUBLIC_*`
+  names. Telemetry stops without an error if they are not renamed.
 
 The app used to read `NEXT_PUBLIC_*` names. If the Vercel project still has
 them, add the `VITE_*` names with the same values for every environment

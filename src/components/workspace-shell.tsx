@@ -836,6 +836,7 @@ function ProfileMenu({
         <DropdownMenuItem asChild>
           <Link
             to="/profile"
+            activeOptions={{ exact: true }}
             aria-current={page === "profile" ? "page" : undefined}
             className={cn(page === "profile" && "bg-accent")}
           >

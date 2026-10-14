@@ -16,10 +16,14 @@ export function pageMeta(title: string, description: string) {
   return [{ title }, { name: "description", content: description }];
 }
 
-/** `?view=` on project routes. Repeated values keep the first one. */
+/**
+ * `?view=` on project routes. Repeated values keep the first one. Search
+ * values are JSON-parsed, so anything that is not text (`?view=123`) is
+ * dropped and the page falls back to its default tab.
+ */
 export const projectViewSearch = z.object({
-  view: z
-    .union([z.string(), z.array(z.string())])
-    .optional()
-    .transform((value) => (Array.isArray(value) ? value[0] : value)),
+  view: z.unknown().transform((value) => {
+    const first = Array.isArray(value) ? value[0] : value;
+    return typeof first === "string" ? first : undefined;
+  }),
 });
