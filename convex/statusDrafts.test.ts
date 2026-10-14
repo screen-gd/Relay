@@ -201,6 +201,34 @@ for (const feature of ["status", "changelog"] as const) {
   });
 }
 
+test.each([
+  [0, 0],
+  [604800, 604800],
+  [undefined, null],
+  [1.5, null],
+  [-1, null],
+  [604801, null],
+  [NaN, null],
+  [Infinity, null],
+  [-Infinity, null],
+])(
+  "stored timestamp %s never breaks a status draft",
+  async (timestampSeconds, expected) => {
+    const f = await fixture();
+    await f.enable();
+    await f.t.run((ctx) => ctx.db.patch(f.commentId, { timestampSeconds }));
+    await f.owner.mutation(api.statusDrafts.generate, {
+      projectId: "p",
+      channel: "portal",
+      modelTier: "default",
+    });
+    const input = statusInputSchema.parse(
+      JSON.parse(await inputFor(f, "statusDraftsActions"))
+    );
+    expect(input.comments[0].timestamp).toBe(expected);
+  }
+);
+
 test("status input is bounded and excludes private fields; all channels save without publishing", async () => {
   const f = await fixture();
   await f.enable();
