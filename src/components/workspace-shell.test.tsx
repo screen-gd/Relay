@@ -66,14 +66,24 @@ describe("Workspace hub navigation", () => {
       "Dashboard",
       "Projects",
       "Clients",
-      "Library",
-      "Reports",
+      "Reviews",
+      "Payments",
       "Team",
       "Settings",
     ]) {
       expect(rail).toContain(`aria-label="${label}"`);
     }
     expect(rail).toContain('href="/team"');
+    for (const href of [
+      "/files",
+      "/media",
+      "/templates",
+      "/resources",
+      "/integrations",
+      "/calendar",
+      "/timeline",
+    ])
+      expect(rail).not.toContain(`href="${href}"`);
     const support = navigation(html, "Support and legal");
     for (const href of ["/contact", "/privacy", "/terms", "/accessibility"])
       expect(support).toContain(`href="${href}"`);
@@ -82,13 +92,14 @@ describe("Workspace hub navigation", () => {
       "/",
       "/projects",
       "/clients",
-      "/files",
+      "/feedback",
       "/reports",
       "/team",
       "/settings",
     ])
       expect(mobile).toContain(`href="${href}"`);
     expect(mobile).not.toContain('href="/calendar"');
+    expect(mobile).not.toContain('href="/files"');
   });
 
   it.each([
@@ -96,51 +107,44 @@ describe("Workspace hub navigation", () => {
       "/projects/example",
       "Projects",
       "/projects",
-      ["/projects", "/calendar", "/timeline", "/feedback"],
+      ["/projects", "/calendar", "/timeline", "/files", "/media"],
     ],
     [
       "/calendar",
       "Projects",
       "/projects",
-      ["/projects", "/calendar", "/timeline", "/feedback"],
-    ],
-    [
-      "/timeline",
-      "Projects",
-      "/projects",
-      ["/projects", "/calendar", "/timeline", "/feedback"],
-    ],
-    [
-      "/feedback",
-      "Projects",
-      "/projects",
-      ["/projects", "/calendar", "/timeline", "/feedback"],
+      ["/projects", "/calendar", "/timeline", "/files", "/media"],
     ],
     [
       "/files",
-      "Library",
-      "/files",
-      ["/files", "/media", "/templates", "/resources"],
+      "Projects",
+      "/projects",
+      ["/projects", "/calendar", "/timeline", "/files", "/media"],
     ],
     [
       "/media",
-      "Library",
-      "/files",
-      ["/files", "/media", "/templates", "/resources"],
+      "Projects",
+      "/projects",
+      ["/projects", "/calendar", "/timeline", "/files", "/media"],
+    ],
+    [
+      "/integrations",
+      "Settings",
+      "/settings",
+      ["/settings", "/integrations", "/templates", "/resources"],
     ],
     [
       "/templates",
-      "Library",
-      "/files",
-      ["/files", "/media", "/templates", "/resources"],
+      "Settings",
+      "/settings",
+      ["/settings", "/integrations", "/templates", "/resources"],
     ],
     [
       "/resources",
-      "Library",
-      "/files",
-      ["/files", "/media", "/templates", "/resources"],
+      "Settings",
+      "/settings",
+      ["/settings", "/integrations", "/templates", "/resources"],
     ],
-    ["/integrations", "Settings", "/settings", ["/settings", "/integrations"]],
     ["/team-chat", "Team", "/team", ["/team", "/team-chat"]],
   ])(
     "keeps %s reachable under its active hub",
@@ -158,6 +162,16 @@ describe("Workspace hub navigation", () => {
       const command = html.slice(html.indexOf('data-test="command-dialog"'));
       for (const href of destinations)
         expect(command).toContain(`href="${href}"`);
+    }
+  );
+
+  it.each(["/", "/clients", "/feedback", "/reports"])(
+    "marks %s as the active top-level hub",
+    async (pathname) => {
+      const html = await shell(pathname);
+      expect(currentLinks(navigation(html, "Primary navigation"))).toEqual([
+        pathname,
+      ]);
     }
   );
 
