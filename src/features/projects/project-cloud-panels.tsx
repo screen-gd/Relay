@@ -229,8 +229,7 @@ export function ProjectFileManager({
   const [error, setError] = useState("");
   const uploadControllerRef = useRef<AbortController | null>(null);
   const useR2Storage =
-    R2_STORAGE_ENABLED &&
-    process.env.NEXT_PUBLIC_FILE_STORAGE_PROVIDER === "r2";
+    R2_STORAGE_ENABLED && import.meta.env.VITE_FILE_STORAGE_PROVIDER === "r2";
   const canUploadFiles = subscription?.capabilities.fileUploads ?? false;
   const hasUploadCapacity =
     canUploadFiles &&

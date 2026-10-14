@@ -4,6 +4,9 @@ node_modules/
 out/
 dist/
 .open-next/
+.output/
+.nitro/
+.tanstack/
 .wrangler/
 .vercel/
 .dev.vars

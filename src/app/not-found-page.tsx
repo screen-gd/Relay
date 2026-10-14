@@ -1,12 +1,11 @@
-"use client";
-
-import Link from "next/link";
+import { Link } from "@tanstack/react-router";
 
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { RelayBrand } from "./relay-brand";
 
-export default function NotFound() {
+/** Root route not-found screen. */
+export function NotFound() {
   return (
     <main
       id="main-content"
@@ -34,7 +33,7 @@ export default function NotFound() {
             </p>
           </div>
           <Button asChild className="min-h-11 w-fit">
-            <Link href="/">Back to Dashboard</Link>
+            <Link to="/">Back to Dashboard</Link>
           </Button>
         </div>
       </Card>

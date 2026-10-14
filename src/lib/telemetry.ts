@@ -156,8 +156,8 @@ function safeProperties(value: Record<string, string | number | boolean>) {
 function endpoint(channel: TelemetryEnvelope["channel"]) {
   const configured =
     channel === "analytics"
-      ? process.env.NEXT_PUBLIC_RELAY_ANALYTICS_ENDPOINT
-      : process.env.NEXT_PUBLIC_RELAY_ERROR_ENDPOINT;
+      ? import.meta.env.VITE_RELAY_ANALYTICS_ENDPOINT
+      : import.meta.env.VITE_RELAY_ERROR_ENDPOINT;
   if (!configured) return null;
   try {
     const url = new URL(configured);
