@@ -25,7 +25,7 @@ try {
   await Promise.race([
     unavailable.waitFor({ state: "visible", timeout: 10_000 }).then(() => {
       throw new Error(
-        "Cloudflare account sign-in is disabled by incomplete public runtime configuration."
+        "Cloudflare account sign-in is disabled because the build is missing VITE_CLERK_PUBLISHABLE_KEY or VITE_CONVEX_URL."
       );
     }),
     clerkModal.waitFor({ state: "visible", timeout: 10_000 }),

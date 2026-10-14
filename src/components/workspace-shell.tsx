@@ -1,5 +1,3 @@
-"use client";
-
 import {
   Accessibility,
   Bell,
@@ -31,8 +29,7 @@ import {
   Workflow,
 } from "lucide-react";
 import { motion } from "motion/react";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { Link, useNavigate } from "@tanstack/react-router";
 import {
   createContext,
   useContext,
@@ -40,12 +37,14 @@ import {
   useMemo,
   useRef,
   useState,
+  type ComponentProps,
   type ReactNode,
   type RefObject,
 } from "react";
 import { useData } from "@/lib/data-context";
 import { useOptionalAuth } from "@/lib/optional-auth";
 import type { SettingsState } from "@/lib/types";
+import type { FileRouteTypes } from "@/routeTree.gen";
 import type { SearchRecord } from "@/features/workspace-discovery/workspace-discovery";
 import { useHydratedReducedMotion } from "@/lib/motion";
 import { cn } from "@/lib/utils";
@@ -114,10 +113,13 @@ export type ShellPage =
   | "profile-edit"
   | "organization-profile";
 
+/** Registered routes without path params, safe to link to with `to` alone. */
+type StaticPath = Exclude<FileRouteTypes["to"], `${string}$${string}`>;
+
 type RouteItem = {
   page: ShellPage;
   label: string;
-  href: string;
+  href: StaticPath;
   icon: typeof LayoutDashboard;
   shortcut?: string;
 };
@@ -298,7 +300,7 @@ const shellTransition = {
   ease: [0.22, 1, 0.36, 1] as const,
 };
 
-const quickRouteShortcuts: Record<string, string> = {
+const quickRouteShortcuts: Partial<Record<string, StaticPath>> = {
   d: "/",
   c: "/calendar",
   p: "/projects",
@@ -333,7 +335,7 @@ function ContextNavigation({ page }: { page: ShellPage }) {
         .map((item) => (
           <Link
             key={item.page}
-            href={item.href}
+            to={item.href}
             aria-current={page === item.page ? "page" : undefined}
             className={cn(
               "rounded-md px-3 py-2 text-sm font-medium outline-none hover:bg-[var(--app-hover)] focus-visible:ring-2 focus-visible:ring-[var(--app-accent)]",
@@ -391,7 +393,7 @@ export function WorkspaceShell({
   const goChordTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const commandReturnFocusRef = useRef<HTMLElement | null>(null);
   const reduceMotion = useHydratedReducedMotion();
-  const router = useRouter();
+  const navigate = useNavigate();
   const openCommand = () => {
     if (document.activeElement instanceof HTMLElement) {
       commandReturnFocusRef.current = document.activeElement;
@@ -424,7 +426,7 @@ export function WorkspaceShell({
         const href = quickRouteShortcuts[key];
         if (href) {
           event.preventDefault();
-          router.push(href);
+          void navigate({ to: href });
         }
         return;
       }
@@ -441,7 +443,7 @@ export function WorkspaceShell({
       window.removeEventListener("keydown", handler);
       if (goChordTimerRef.current) clearTimeout(goChordTimerRef.current);
     };
-  }, [commandOpen, router]);
+  }, [commandOpen, navigate]);
 
   const title = useMemo(
     () =>
@@ -625,7 +627,7 @@ function DesktopSidebar({ page }: { page: ShellPage }) {
             <Tooltip key={label}>
               <TooltipTrigger asChild>
                 <Link
-                  href={href}
+                  to={href}
                   aria-label={label}
                   className="flex h-8 w-full items-center justify-center rounded-md text-[var(--app-muted)] outline-none transition-[background-color,color] duration-150 hover:bg-[var(--app-hover)] hover:text-[var(--app-ink)] focus-visible:ring-2 focus-visible:ring-[var(--app-accent)] focus-visible:ring-inset"
                 >
@@ -674,7 +676,7 @@ function SidebarRoute({ item, active }: { item: RouteItem; active: boolean }) {
 
   const link = (
     <Link
-      href={item.href}
+      to={item.href}
       aria-label={item.label}
       aria-current={active ? "page" : undefined}
       className={cn(
@@ -823,7 +825,7 @@ function ProfileMenu({
         {isSignedIn ? (
           <DropdownMenuItem asChild>
             <Link
-              href="/subscription"
+              to="/subscription"
               aria-current={page === "subscription" ? "page" : undefined}
               className={cn(page === "subscription" && "bg-accent")}
             >
@@ -833,7 +835,7 @@ function ProfileMenu({
         ) : null}
         <DropdownMenuItem asChild>
           <Link
-            href="/profile"
+            to="/profile"
             aria-current={page === "profile" ? "page" : undefined}
             className={cn(page === "profile" && "bg-accent")}
           >
@@ -842,7 +844,7 @@ function ProfileMenu({
         </DropdownMenuItem>
         <DropdownMenuItem asChild>
           <Link
-            href="/organization"
+            to="/organization"
             aria-current={page === "organization-profile" ? "page" : undefined}
             className={cn(page === "organization-profile" && "bg-accent")}
           >
@@ -851,7 +853,7 @@ function ProfileMenu({
         </DropdownMenuItem>
         <DropdownMenuItem asChild>
           <Link
-            href="/profile/edit"
+            to="/profile/edit"
             aria-current={page === "profile-edit" ? "page" : undefined}
             className={cn(page === "profile-edit" && "bg-accent")}
           >
@@ -860,7 +862,7 @@ function ProfileMenu({
         </DropdownMenuItem>
         <DropdownMenuItem asChild>
           <Link
-            href="/account"
+            to="/account"
             aria-current={page === "account" ? "page" : undefined}
             className={cn(page === "account" && "bg-accent")}
           >
@@ -947,7 +949,7 @@ function WorkspaceCommand({
                         asChild
                         value={`${record.title} ${record.detail} ${record.keywords ?? ""}`}
                       >
-                        <Link
+                        <HrefLink
                           href={record.href ?? "/"}
                           onClick={() => onOpenChange(false)}
                         >
@@ -958,7 +960,7 @@ function WorkspaceCommand({
                           <span className="text-xs text-muted-foreground">
                             {record.detail}
                           </span>
-                        </Link>
+                        </HrefLink>
                       </CommandItem>
                     ))}
                 </CommandGroup>
@@ -971,7 +973,7 @@ function WorkspaceCommand({
                     return (
                       <CommandItem key={item.page} asChild>
                         <Link
-                          href={item.href}
+                          to={item.href}
                           onClick={() => onOpenChange(false)}
                         >
                           <Icon />
@@ -990,6 +992,39 @@ function WorkspaceCommand({
         </motion.div>
       </DialogContent>
     </Dialog>
+  );
+}
+
+/**
+ * Anchor for prebuilt href strings, such as search records with query
+ * strings, that `Link` cannot type. Plain left clicks navigate in the app;
+ * modified clicks keep normal anchor behavior.
+ */
+function HrefLink({
+  href,
+  onClick,
+  ...props
+}: ComponentProps<"a"> & { href: string }) {
+  const navigate = useNavigate();
+  return (
+    <a
+      {...props}
+      href={href}
+      onClick={(event) => {
+        onClick?.(event);
+        if (
+          event.defaultPrevented ||
+          event.button !== 0 ||
+          event.metaKey ||
+          event.ctrlKey ||
+          event.shiftKey ||
+          event.altKey
+        )
+          return;
+        event.preventDefault();
+        void navigate({ href });
+      }}
+    />
   );
 }
 
@@ -1016,7 +1051,7 @@ function MobileNavigation({
         return (
           <Link
             key={item.page}
-            href={item.href}
+            to={item.href}
             aria-current={active ? "page" : undefined}
             className={cn(
               "relative flex flex-col items-center justify-center gap-1 rounded-md text-[10px] font-medium outline-none focus-visible:ring-2 focus-visible:ring-[var(--app-accent)] focus-visible:ring-inset",
@@ -1072,7 +1107,7 @@ function MobileNavigation({
                 return (
                   <Link
                     key={item.page}
-                    href={item.href}
+                    to={item.href}
                     onClick={() => onOpenChange(false)}
                     aria-current={
                       routeIsActive(page, item) ? "page" : undefined
@@ -1094,28 +1129,28 @@ function MobileNavigation({
             <div className="mt-2 grid grid-cols-2 gap-2 text-sm">
               <Link
                 className="min-h-12 rounded-md border border-[var(--app-border)] p-3"
-                href="/contact"
+                to="/contact"
                 onClick={() => onOpenChange(false)}
               >
                 Contact
               </Link>
               <Link
                 className="min-h-12 rounded-md border border-[var(--app-border)] p-3"
-                href="/privacy"
+                to="/privacy"
                 onClick={() => onOpenChange(false)}
               >
                 Privacy
               </Link>
               <Link
                 className="min-h-12 rounded-md border border-[var(--app-border)] p-3"
-                href="/terms"
+                to="/terms"
                 onClick={() => onOpenChange(false)}
               >
                 Terms
               </Link>
               <Link
                 className="min-h-12 rounded-md border border-[var(--app-border)] p-3"
-                href="/accessibility"
+                to="/accessibility"
                 onClick={() => onOpenChange(false)}
               >
                 Accessibility

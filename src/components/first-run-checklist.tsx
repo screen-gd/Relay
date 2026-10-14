@@ -1,5 +1,3 @@
-"use client";
-
 import {
   CalendarClock,
   Check,
@@ -7,7 +5,7 @@ import {
   Link2,
   LockKeyhole,
 } from "lucide-react";
-import Link from "next/link";
+import { Link } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 
@@ -97,7 +95,7 @@ export function FirstRunChecklist({
           </p>
           <Link
             className="font-semibold text-[var(--app-highlight)] hover:underline"
-            href="/sample-studio"
+            to="/sample-studio"
           >
             Explore the sample studio
           </Link>

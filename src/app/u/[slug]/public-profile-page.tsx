@@ -1,6 +1,3 @@
-"use client";
-
-import { useParams } from "next/navigation";
 import { useQuery } from "convex/react";
 import {
   CheckCircle2,
@@ -21,9 +18,7 @@ import { emptyStateAssets } from "../../brand-assets";
 const panelClass =
   "rounded-[6px] border border-[var(--app-border)] bg-[var(--app-panel)]";
 
-export function PublicProfilePage() {
-  const params = useParams<{ slug: string }>();
-  const slug = typeof params.slug === "string" ? params.slug : "";
+export function PublicProfilePage({ slug }: { slug: string }) {
   const profile = useQuery(
     api.publicProfiles.getBySlug,
     slug ? { slug } : "skip"

@@ -1,7 +1,5 @@
-"use client";
-
 import { useState } from "react";
-import Link from "next/link";
+import { Link } from "@tanstack/react-router";
 import { useNotificationController } from "./notification-controller";
 import { Button as OwnedButton } from "@/components/ui/button";
 import {
@@ -144,7 +142,7 @@ export function NotificationBell() {
                   </OwnedButton>
                 ) : null}
                 <Link
-                  href="/team"
+                  to="/team"
                   onClick={() => {
                     setNotificationOpen(false);
                     if (!notification.read) {
@@ -174,7 +172,7 @@ export function NotificationBell() {
         )}
         <div className="mx-0.5 my-1 h-px bg-[var(--app-border)]" />
         <Link
-          href="/settings"
+          to="/settings"
           onClick={() => setNotificationOpen(false)}
           className="flex h-9 items-center gap-2 rounded-lg px-2.5 text-xs font-medium outline-none transition-colors hover:bg-[var(--app-hover)] focus-visible:bg-[var(--app-hover)]"
         >

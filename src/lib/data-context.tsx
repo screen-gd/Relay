@@ -1,5 +1,3 @@
-"use client";
-
 import React, {
   createContext,
   useContext,
@@ -9,7 +7,7 @@ import React, {
   useCallback,
   useMemo,
 } from "react";
-import { useAuth, useUser } from "@clerk/nextjs";
+import { useAuth, useUser } from "@clerk/tanstack-react-start";
 import { useConvex, useConvexAuth, useMutation, useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import type { Id } from "../../convex/_generated/dataModel";

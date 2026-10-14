@@ -3,15 +3,12 @@
 @import "@fontsource-variable/geist";
 @import "@fontsource-variable/geist-mono";
 
-/* Self-hosted Geist. These names replace the variables next/font used to set. */
-:root {
-  --font-geist-sans: "Geist Variable";
-  --font-geist-mono: "Geist Mono Variable";
-}
-
 @custom-variant dark (&:is(.dark *));
 
 :root {
+  /* Self-hosted Geist from Fontsource. */
+  --font-geist-sans: "Geist Variable";
+  --font-geist-mono: "Geist Mono Variable";
   --background: var(--app-canvas);
   --foreground: var(--app-ink);
   --card: var(--app-panel);

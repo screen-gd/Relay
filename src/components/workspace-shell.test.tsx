@@ -1,11 +1,10 @@
-import { renderToStaticMarkup } from "react-dom/server";
 import type { ReactNode } from "react";
 import { describe, expect, it, vi } from "vitest";
+import { renderWithRouter } from "@/test/render-with-router";
 import { sampleStudioSettings } from "@/lib/sample-studio";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { WorkspaceShell, workspacePageForPath } from "./workspace-shell";
 
-vi.mock("next/navigation", () => ({ useRouter: () => ({ push: vi.fn() }) }));
 vi.mock("@/lib/data-context", () => ({
   useData: () => ({ isAuthEnabled: false }),
 }));
@@ -25,8 +24,10 @@ vi.mock("@/components/ui/dialog", async (importOriginal) => ({
   ),
 }));
 
+// Renders the shell inside a memory router opened at `pathname`, so links
+// resolve and mark themselves active the same way they do in the app.
 function shell(pathname: string) {
-  return renderToStaticMarkup(
+  return renderWithRouter(
     <TooltipProvider>
       <WorkspaceShell
         page={workspacePageForPath(pathname)}
@@ -37,7 +38,8 @@ function shell(pathname: string) {
       >
         <p>Route content</p>
       </WorkspaceShell>
-    </TooltipProvider>
+    </TooltipProvider>,
+    pathname
   );
 }
 
@@ -56,8 +58,8 @@ function currentLinks(html: string) {
 }
 
 describe("Workspace hub navigation", () => {
-  it("shows seven named primary hubs for a solo workspace and preserves support links", () => {
-    const html = shell("/");
+  it("shows seven named primary hubs for a solo workspace and preserves support links", async () => {
+    const html = await shell("/");
     const rail = navigation(html, "Primary navigation");
     expect([...rail.matchAll(/<a /g)]).toHaveLength(7);
     for (const label of [
@@ -142,8 +144,8 @@ describe("Workspace hub navigation", () => {
     ["/team-chat", "Team", "/team", ["/team", "/team-chat"]],
   ])(
     "keeps %s reachable under its active hub",
-    (pathname, hub, hubHref, destinations) => {
-      const html = shell(pathname);
+    async (pathname, hub, hubHref, destinations) => {
+      const html = await shell(pathname);
       expect(currentLinks(navigation(html, "Primary navigation"))).toEqual([
         hubHref,
       ]);
@@ -159,8 +161,8 @@ describe("Workspace hub navigation", () => {
     }
   );
 
-  it("keeps all product routes and existing G chords in command search", () => {
-    const html = shell("/");
+  it("keeps all product routes and existing G chords in command search", async () => {
+    const html = await shell("/");
     const command = html.slice(html.indexOf('data-test="command-dialog"'));
     for (const href of [
       "/",
@@ -185,8 +187,8 @@ describe("Workspace hub navigation", () => {
       expect(command).toContain(chord);
   });
 
-  it("names the sample studio consistently without altering its active dashboard hub", () => {
-    const html = shell("/sample-studio");
+  it("names the sample studio consistently without altering its active dashboard hub", async () => {
+    const html = await shell("/sample-studio");
     expect(html).toContain("Current location: Sample studio");
     expect(currentLinks(navigation(html, "Primary navigation"))).toEqual(["/"]);
     expect(workspacePageForPath("/sample-studio/projects/demo")).toBe(
