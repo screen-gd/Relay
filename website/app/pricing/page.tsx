@@ -13,7 +13,7 @@ import styles from "./page.module.css";
 
 export const metadata: Metadata = {
   title: "Pricing",
-  description: `Relay is free to start. Creator is ${formatUsd(CREATOR_MONTHLY_PRICE_USD)} per month and Team is ${formatUsd(TEAM_MONTHLY_PRICE_PER_SEAT_USD)} per member per month; both are still in development and checkout is not live.`,
+  description: `Relay is free to start. Creator is ${formatUsd(CREATOR_MONTHLY_PRICE_USD)} per month and Team is ${formatUsd(TEAM_MONTHLY_PRICE_PER_SEAT_USD)} per member per month; both are still in development and checkout is not live. Prices are subject to change.`,
   alternates: { canonical: "/pricing" },
   openGraph: { ...siteOpenGraph, url: "/pricing" },
 };
@@ -24,7 +24,7 @@ export default function PricingPage() {
     <>
       <PageHeader
         title="Pricing"
-        description="Start free. Creator and Team prices are set, and checkout opens later."
+        description="Start free. Paid plans are coming later. Prices are subject to change."
       />
       <section className="section" aria-labelledby="plans-title">
         <div className="container">

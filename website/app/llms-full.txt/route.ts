@@ -21,7 +21,7 @@ Relay helps freelance video editors and small post-production teams manage video
 ## Plans and availability
 
 - Free is available to everyone. No invite is required.
-- Creator costs ${formatUsd(CREATOR_MONTHLY_PRICE_USD)} per month and Team costs ${formatUsd(TEAM_MONTHLY_PRICE_PER_SEAT_USD)} per member per month. Both are still in development, and checkout is not live, so neither can be bought yet.
+- Creator costs ${formatUsd(CREATOR_MONTHLY_PRICE_USD)} per month and Team costs ${formatUsd(TEAM_MONTHLY_PRICE_PER_SEAT_USD)} per member per month. Prices are subject to change. Both are still in development, and checkout is not live, so neither can be bought yet.
 - File uploads are not available yet.
 
 For current plan details, read ${origin}/pricing rather than treating this summary as a price list.

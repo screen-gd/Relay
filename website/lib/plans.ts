@@ -5,22 +5,23 @@ import { APP_URL } from "./links";
  * reprice Creator everywhere: the pricing cards, the comparison table, the FAQ,
  * the /pricing metadata, and both llms summaries all format this constant.
  */
-export const CREATOR_MONTHLY_PRICE_USD = 6.99;
+export const CREATOR_MONTHLY_PRICE_USD = 10;
 
 /** Monthly price of one Team editor seat in US dollars. */
-export const TEAM_MONTHLY_PRICE_PER_SEAT_USD = 9.99;
+export const TEAM_MONTHLY_PRICE_PER_SEAT_USD = 14;
 
-/** Formats a US dollar amount the way the pricing UI shows it: 6.99 -> "$6.99". */
+/** Formats a US dollar amount the way the pricing UI shows it: 10 -> "$10.00". */
 export function formatUsd(amount: number) {
   return `$${amount.toFixed(2)}`;
 }
 
 /** What every paid plan card says about checkout while billing is off. */
-const NOT_LIVE_YET_NOTE = "Planned launch price. Checkout is not live yet.";
+const NOT_LIVE_YET_NOTE =
+  "Prices are subject to change. Checkout is not live yet.";
 
 /**
  * Plan data shared by the pricing cards and anywhere else plans are listed.
- * Free is available now. Creator and Team show their real launch prices but
+ * Free is available now. Creator and Team show their planned launch prices but
  * cannot be bought yet, because checkout is not live: their `cta` is null, so
  * the card shows a disabled button instead of a link that would charge a card.
  * `tab` labels the card with a tab above it; `audience` fills the "Who's the
