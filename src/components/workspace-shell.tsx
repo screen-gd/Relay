@@ -6,9 +6,11 @@ import {
   ChevronDown,
   CircleUserRound,
   CreditCard,
+  Database,
   FileText,
   FolderKanban,
   Images,
+  Info,
   LayoutDashboard,
   Library,
   LogIn,
@@ -41,6 +43,7 @@ import {
   type RefObject,
 } from "react";
 import { useData } from "@/lib/data-context";
+import { marketingSiteUrl } from "@/lib/site";
 import { useOptionalAuth } from "@/lib/optional-auth";
 import type { SettingsState } from "@/lib/types";
 import type { FileRouteTypes } from "@/routeTree.gen";
@@ -295,12 +298,28 @@ function hubPageForPage(page: ShellPage): ShellPage {
   );
 }
 
-const compactSupportLinks = [
+type SupportLink =
+  | { label: string; href: StaticPath; icon: typeof Mail; external?: false }
+  | { label: string; href: string; icon: typeof Mail; external: true };
+
+const compactSupportLinks: readonly SupportLink[] = [
   { label: "Contact", href: "/contact", icon: Mail },
   { label: "Privacy", href: "/privacy", icon: ShieldCheck },
   { label: "Terms", href: "/terms", icon: ScrollText },
   { label: "Accessibility", href: "/accessibility", icon: Accessibility },
-] as const;
+  {
+    label: "About",
+    href: `${marketingSiteUrl}/about`,
+    icon: Info,
+    external: true,
+  },
+  {
+    label: "Privacy & Data",
+    href: `${marketingSiteUrl}/privacy-and-data`,
+    icon: Database,
+    external: true,
+  },
+];
 
 const shellTransition = {
   duration: 0.22,
@@ -630,20 +649,37 @@ function DesktopSidebar({ page }: { page: ShellPage }) {
       </nav>
       <footer className="border-t border-[var(--app-border)] p-1.5">
         <nav aria-label="Support and legal" className="grid gap-0.5">
-          {compactSupportLinks.map(({ label, href, icon: Icon }) => (
-            <Tooltip key={label}>
-              <TooltipTrigger asChild>
-                <Link
-                  to={href}
-                  aria-label={label}
-                  className="flex h-8 w-full items-center justify-center rounded-md text-[var(--app-muted)] outline-none transition-[background-color,color] duration-150 hover:bg-[var(--app-hover)] hover:text-[var(--app-ink)] focus-visible:ring-2 focus-visible:ring-[var(--app-accent)] focus-visible:ring-inset"
-                >
-                  <Icon className="size-4" strokeWidth={1.8} />
-                </Link>
-              </TooltipTrigger>
-              <TooltipContent side="right">{label}</TooltipContent>
-            </Tooltip>
-          ))}
+          {compactSupportLinks.map((link) => {
+            const Icon = link.icon;
+            const className =
+              "flex h-8 w-full items-center justify-center rounded-md text-[var(--app-muted)] outline-none transition-[background-color,color] duration-150 hover:bg-[var(--app-hover)] hover:text-[var(--app-ink)] focus-visible:ring-2 focus-visible:ring-[var(--app-accent)] focus-visible:ring-inset";
+            return (
+              <Tooltip key={link.label}>
+                <TooltipTrigger asChild>
+                  {link.external ? (
+                    <a
+                      href={link.href}
+                      aria-label={link.label}
+                      target="_blank"
+                      rel="noreferrer"
+                      className={className}
+                    >
+                      <Icon className="size-4" strokeWidth={1.8} />
+                    </a>
+                  ) : (
+                    <Link
+                      to={link.href}
+                      aria-label={link.label}
+                      className={className}
+                    >
+                      <Icon className="size-4" strokeWidth={1.8} />
+                    </Link>
+                  )}
+                </TooltipTrigger>
+                <TooltipContent side="right">{link.label}</TooltipContent>
+              </Tooltip>
+            );
+          })}
         </nav>
       </footer>
     </aside>

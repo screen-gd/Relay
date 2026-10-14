@@ -87,6 +87,11 @@ describe("Workspace hub navigation", () => {
     const support = navigation(html, "Support and legal");
     for (const href of ["/contact", "/privacy", "/terms", "/accessibility"])
       expect(support).toContain(`href="${href}"`);
+    for (const href of [
+      "https://web.relay-app.cc.cd/about",
+      "https://web.relay-app.cc.cd/privacy-and-data",
+    ])
+      expect(support).toContain(`href="${href}"`);
     const mobile = navigation(html, "Mobile navigation");
     for (const href of [
       "/",
