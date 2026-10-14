@@ -1,6 +1,4 @@
-"use client";
-
-import Link from "next/link";
+import { Link, type ErrorComponentProps } from "@tanstack/react-router";
 import { useEffect } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -8,13 +6,8 @@ import { Card } from "@/components/ui/card";
 import { reportEssentialError } from "@/lib/telemetry";
 import { RelayBrand } from "./relay-brand";
 
-export default function GlobalError({
-  error,
-  reset,
-}: {
-  error: Error & { digest?: string };
-  reset: () => void;
-}) {
+/** Root route error boundary. `reset` retries the failed route. */
+export function RouteError({ error, reset }: ErrorComponentProps) {
   useEffect(() => {
     reportEssentialError(error);
   }, [error]);
@@ -53,7 +46,7 @@ export default function GlobalError({
               variant="outline"
               className="min-h-11 border-[var(--app-border)] text-[var(--app-highlight)]"
             >
-              <Link href="/">Back to Dashboard</Link>
+              <Link to="/">Back to Dashboard</Link>
             </Button>
           </div>
         </div>

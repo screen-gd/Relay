@@ -1,5 +1,13 @@
 @import "tailwindcss";
 @import "tw-animate-css";
+@import "@fontsource-variable/geist";
+@import "@fontsource-variable/geist-mono";
+
+/* Self-hosted Geist. These names replace the variables next/font used to set. */
+:root {
+  --font-geist-sans: "Geist Variable";
+  --font-geist-mono: "Geist Mono Variable";
+}
 
 @custom-variant dark (&:is(.dark *));
 
@@ -182,8 +190,12 @@
 }
 
 @theme inline {
-  --font-sans: "Geist", "Geist Fallback", ui-sans-serif, system-ui, sans-serif;
-  --font-mono: "Geist Mono", "Geist Mono Fallback", ui-monospace, monospace;
+  --font-sans:
+    "Geist Variable", "Geist", "Geist Fallback", ui-sans-serif, system-ui,
+    sans-serif;
+  --font-mono:
+    "Geist Mono Variable", "Geist Mono", "Geist Mono Fallback", ui-monospace,
+    monospace;
   --font-display:
     "Geist", "Geist Fallback", ui-sans-serif, system-ui, sans-serif;
   --color-background: var(--background);

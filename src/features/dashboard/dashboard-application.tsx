@@ -7,6 +7,7 @@ import { useProjectAccess } from "@/features/projects/project-access";
 import { useProjectActions } from "@/features/projects/project-actions-provider";
 import { useProjectActivity } from "@/features/projects/project-activity";
 import { projectWorkTypeOptions } from "@/features/routes/utils/work-type-utils";
+import { DeadlineRiskRadar } from "./deadline-risk-radar";
 import { useDashboardApplicationState } from "./use-dashboard-application-state";
 import { useData } from "@/lib/data-context";
 

@@ -20,7 +20,7 @@ export function resolveOnboardingVariant(): OnboardingVariant {
   if (override === "control" || override === "v2") return override;
   const stored = window.localStorage.getItem(variantKey);
   if (stored === "control" || stored === "v2") return stored;
-  const enabled = process.env.NEXT_PUBLIC_ONBOARDING_V2 !== "false";
+  const enabled = import.meta.env.VITE_ONBOARDING_V2 !== "false";
   const variant: OnboardingVariant = enabled ? "v2" : "control";
   window.localStorage.setItem(variantKey, variant);
   return variant;
