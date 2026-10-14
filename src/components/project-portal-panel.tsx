@@ -58,6 +58,16 @@ function PortalSettingRow({
   );
 }
 
+/** Blank means no limit; anything else must be a whole number of requests. */
+function readMaxRevisions(value: string) {
+  const trimmed = value.trim();
+  if (!trimmed) return null;
+  const parsed = Number(trimmed);
+  if (!Number.isInteger(parsed) || parsed < 0)
+    throw new Error("Enter a whole number of revisions, or leave it blank.");
+  return parsed;
+}
+
 /** Half-hour steps plus end of day, as `HH:mm`. */
 const EXPIRY_TIMES = [
   ...Array.from({ length: 48 }, (_, index) => {
@@ -156,6 +166,14 @@ export function ProjectPortalPanel({
     [outputData]
   );
   const data = useProjectPortal(project.id, canEdit);
+  const revisionLimit = useQuery(
+    api.clientPortals.getProjectRevisionLimit,
+    canEdit && data.available ? { projectId: project.id } : "skip"
+  );
+  const setProjectRevisionLimit = useMutation(
+    api.clientPortals.setProjectRevisionLimit
+  );
+  const [maxRevisions, setMaxRevisions] = useState("");
   const hubSettings = useQuery(api.clientHub.getOwnerSettings, {
     projectId: project.id,
   });
@@ -174,6 +192,15 @@ export function ProjectPortalPanel({
   useEffect(() => {
     if (!data.loading) setDraft(data.initialDraft);
   }, [data.initialDraft, data.loading]);
+
+  useEffect(() => {
+    if (revisionLimit === undefined) return;
+    setMaxRevisions(
+      revisionLimit.maxRevisions === null
+        ? ""
+        : String(revisionLimit.maxRevisions)
+    );
+  }, [revisionLimit?.maxRevisions]);
 
   useEffect(() => {
     if (!hubSettings) return;
@@ -203,10 +230,25 @@ export function ProjectPortalPanel({
       setFormError("Enter a PIN before protecting this portal.");
       return;
     }
+    let revisions: number | null;
+    try {
+      revisions = readMaxRevisions(maxRevisions);
+    } catch (caught) {
+      setFormError(
+        caught instanceof Error
+          ? caught.message
+          : "Enter a whole number of revisions, or leave it blank."
+      );
+      return;
+    }
     setBusy("save");
     setFormError("");
     try {
       await data.save(draft);
+      await setProjectRevisionLimit({
+        projectId: project.id,
+        maxRevisions: revisions,
+      });
       setDraft((current) => ({ ...current, pin: "" }));
     } catch (caught) {
       setFormError(
@@ -527,6 +569,26 @@ export function ProjectPortalPanel({
                 No outputs to share.
               </p>
             )}
+          </PortalSettingRow>
+          <PortalSettingRow
+            label="Max revisions"
+            hint={
+              revisionLimit?.maxRevisions == null
+                ? "Blank means no limit."
+                : `${revisionLimit.revisionsUsed} of ${revisionLimit.maxRevisions} used`
+            }
+          >
+            <Input
+              type="number"
+              min={0}
+              max={20}
+              inputMode="numeric"
+              placeholder="No limit"
+              aria-label="Max revisions"
+              value={maxRevisions}
+              onChange={(event) => setMaxRevisions(event.target.value)}
+              disabled={!canEdit}
+            />
           </PortalSettingRow>
           <PortalSettingRow label="Expiry" hint="Optional. Uses local time.">
             <ExpiryPicker

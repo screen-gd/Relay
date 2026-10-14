@@ -140,6 +140,8 @@ export default defineSchema({
     paidDate: v.optional(v.string()),
     completedAt: v.optional(v.string()),
     notes: v.string(),
+    /** Revision requests the Project's Client Portals allow. Unset means no limit. */
+    maxRevisions: v.optional(v.number()),
     templateId: v.optional(v.string()),
     templateProjectType: v.optional(v.string()),
     createdAt: v.string(),
@@ -289,7 +291,8 @@ export default defineSchema({
     clientSummary: v.string(),
     clientNotes: v.string(),
     estimatedCompletion: v.string(),
-    revisionLimit: v.number(),
+    /** Portal's own limit. Unset means the Project's Max revisions applies. */
+    revisionLimit: v.optional(v.number()),
     published: v.boolean(),
     enabled: v.boolean(),
     expiresAt: v.optional(v.string()),
