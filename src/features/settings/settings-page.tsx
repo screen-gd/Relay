@@ -1,9 +1,10 @@
 "use client";
 
 import { Fragment, useEffect, useRef, useState } from "react";
-import type { SettingsState } from "@/lib/types";
+import type { SalaryBatch, SettingsState, WorkItem } from "@/lib/types";
 import { PROJECT_TEMPLATES } from "@/lib/project-templates";
 import { getAnalyticsConsent, setAnalyticsConsent } from "@/lib/telemetry";
+import { downloadWorkspaceCsv, type CsvDataset } from "@/lib/export-csv";
 import { relay } from "@/app/design-system";
 import {
   FillViewport,
@@ -90,6 +91,9 @@ export function SettingsDesignPage({
   notify,
   teamWorkspace,
   canManageWorkspace = false,
+  projects,
+  salaryBatches,
+  canManageFinance,
 }: {
   settings: SettingsState;
   setSettings: (
@@ -98,6 +102,9 @@ export function SettingsDesignPage({
   notify: (message: string, tone?: ToastState["tone"]) => void;
   teamWorkspace?: TeamWorkspaceContract;
   canManageWorkspace?: boolean;
+  projects: readonly WorkItem[];
+  salaryBatches: readonly SalaryBatch[];
+  canManageFinance: boolean;
 }) {
   const {
     exportBackup,
@@ -329,6 +336,16 @@ export function SettingsDesignPage({
     link.download = `relay-backup-${new Date().toISOString().slice(0, 10)}.json`;
     link.click();
     URL.revokeObjectURL(url);
+  }
+
+  function exportCsv(dataset: CsvDataset) {
+    downloadWorkspaceCsv(dataset, {
+      projects,
+      clients: settings.clients,
+      salaryBatches,
+      currencyCode: settings.currencyCode,
+      includeMoney: canManageFinance,
+    });
   }
 
   async function restoreBackup(file: File) {
@@ -660,6 +677,35 @@ export function SettingsDesignPage({
                         when the Workspace has no projects, files, or Salary
                         Batches.
                       </p>
+                    </SettingsPanel>
+                    <SettingsPanel
+                      id="workspace-csv-export"
+                      title="Export CSV"
+                      subtitle="Spreadsheet files for projects, clients, and payments, ready to open in Excel or Sheets."
+                    >
+                      <div className="flex flex-wrap gap-2">
+                        <OwnedButton
+                          type="button"
+                          variant="outline"
+                          onClick={() => exportCsv("projects")}
+                        >
+                          <Download aria-hidden="true" /> Export projects CSV
+                        </OwnedButton>
+                        <OwnedButton
+                          type="button"
+                          variant="outline"
+                          onClick={() => exportCsv("clients")}
+                        >
+                          <Download aria-hidden="true" /> Export clients CSV
+                        </OwnedButton>
+                        <OwnedButton
+                          type="button"
+                          variant="outline"
+                          onClick={() => exportCsv("payments")}
+                        >
+                          <Download aria-hidden="true" /> Export payments CSV
+                        </OwnedButton>
+                      </div>
                     </SettingsPanel>
                     <SettingsPanel
                       id="project-rules"

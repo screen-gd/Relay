@@ -1,4 +1,5 @@
 import { normalizeStoredProjectStatus } from "./domain-values";
+import { toCsv } from "./export-csv";
 import type { SalaryBatch, WorkItem } from "./types";
 
 export const PAYOUT_PERIODS = [
@@ -376,11 +377,6 @@ export function buildPayoutReport({
   };
 }
 
-function csvCell(value: string | number) {
-  const text = String(value);
-  return /[",\r\n]/.test(text) ? `"${text.replaceAll('"', '""')}"` : text;
-}
-
 export function payoutReportToCsv(report: PayoutReport, currencyCode: string) {
   const rows: Array<Array<string | number>> = [
     [
@@ -411,5 +407,5 @@ export function payoutReportToCsv(report: PayoutReport, currencyCode: string) {
       currencyCode,
     ]),
   ];
-  return rows.map((row) => row.map(csvCell).join(",")).join("\r\n");
+  return toCsv(rows);
 }

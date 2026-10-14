@@ -1,6 +1,11 @@
 import { normalizeStoredProjectStatus } from "./domain-values";
+import { toCsv } from "./export-csv";
 import type { WorkItem } from "./types";
-import { payoutPeriodRange, type PayoutDateRange, type PayoutPeriod } from "./payout-reporting";
+import {
+  payoutPeriodRange,
+  type PayoutDateRange,
+  type PayoutPeriod,
+} from "./payout-reporting";
 
 export type InvoiceLineItem = {
   projectId: string;
@@ -54,23 +59,14 @@ function safeAmount(value: number) {
 }
 
 function invoiceSlug(value: string) {
-  return value
-    .trim()
-    .toUpperCase()
-    .replace(/[^A-Z0-9]+/g, "-")
-    .replace(/^-|-$/g, "")
-    .slice(0, 18) || "CLIENT";
-}
-
-function csvCell(value: string | number) {
-  const text = String(value);
-  const needsQuoting = /[",\r\n]/.test(text);
-  const startsWithFormula = /^[=+\-@]/.test(text);
-  const escaped = text.replaceAll('"', '""');
-  if (startsWithFormula) {
-    return `"'${escaped}"`;
-  }
-  return needsQuoting ? `"${escaped}"` : text;
+  return (
+    value
+      .trim()
+      .toUpperCase()
+      .replace(/[^A-Z0-9]+/g, "-")
+      .replace(/^-|-$/g, "")
+      .slice(0, 18) || "CLIENT"
+  );
 }
 
 export function buildInvoiceDrafts({
@@ -109,8 +105,13 @@ export function buildInvoiceDrafts({
 
   return [...groups.entries()]
     .map(([client, lineItems], index): InvoiceDraft => {
-      const sortedItems = lineItems.sort((a, b) => a.date.localeCompare(b.date) || a.title.localeCompare(b.title));
-      const subtotal = sortedItems.reduce((total, item) => total + item.amount, 0);
+      const sortedItems = lineItems.sort(
+        (a, b) => a.date.localeCompare(b.date) || a.title.localeCompare(b.title)
+      );
+      const subtotal = sortedItems.reduce(
+        (total, item) => total + item.amount,
+        0
+      );
       return {
         id: `${invoiceSlug(client).toLowerCase()}-${index + 1}`,
         invoiceNumber: `DRAFT-${issueDate.replaceAll("-", "")}-${invoiceSlug(client)}`,
@@ -127,17 +128,19 @@ export function buildInvoiceDrafts({
 }
 
 export function invoiceDraftsToCsv(drafts: InvoiceDraft[]) {
-  const rows: Array<Array<string | number>> = [[
-    "Invoice number",
-    "Client",
-    "Issue date",
-    "Due date",
-    "Project date",
-    "Project",
-    "Work type",
-    "Amount",
-    "Currency",
-  ]];
+  const rows: Array<Array<string | number>> = [
+    [
+      "Invoice number",
+      "Client",
+      "Issue date",
+      "Due date",
+      "Project date",
+      "Project",
+      "Work type",
+      "Amount",
+      "Currency",
+    ],
+  ];
   for (const draft of drafts) {
     for (const item of draft.lineItems) {
       rows.push([
@@ -153,5 +156,5 @@ export function invoiceDraftsToCsv(drafts: InvoiceDraft[]) {
       ]);
     }
   }
-  return rows.map((row) => row.map(csvCell).join(",")).join("\r\n");
+  return toCsv(rows);
 }
