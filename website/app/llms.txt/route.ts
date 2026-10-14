@@ -25,7 +25,7 @@ This is the public marketing site. Product access and private workspaces are on 
 ## Plans
 
 - Free is available to everyone. No invite is required.
-- Creator costs ${formatUsd(CREATOR_MONTHLY_PRICE_USD)} per month and Team costs ${formatUsd(TEAM_MONTHLY_PRICE_PER_SEAT_USD)} per member per month. Both are still in development, and checkout is not live, so neither can be bought yet.
+- Creator costs ${formatUsd(CREATOR_MONTHLY_PRICE_USD)} per month and Team costs ${formatUsd(TEAM_MONTHLY_PRICE_PER_SEAT_USD)} per member per month. Prices are subject to change. Both are still in development, and checkout is not live, so neither can be bought yet.
 - File uploads are not available yet.
 
 ## App information

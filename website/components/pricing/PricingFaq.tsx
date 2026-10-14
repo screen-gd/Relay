@@ -28,10 +28,10 @@ const faqs = [
     answer: (
       <>
         Creator is {formatUsd(CREATOR_MONTHLY_PRICE_USD)} per month and Team is{" "}
-        {formatUsd(TEAM_MONTHLY_PRICE_PER_SEAT_USD)} per member per month. Both
-        are still in development, and checkout is not live, so there is no way
-        to buy either one yet. Follow the <Link href="/roadmap">roadmap</Link>{" "}
-        for updates.
+        {formatUsd(TEAM_MONTHLY_PRICE_PER_SEAT_USD)} per member per month.
+        Prices are subject to change. Both are still in development, and
+        checkout is not live, so there is no way to buy either one yet. Follow
+        the <Link href="/roadmap">roadmap</Link> for updates.
       </>
     ),
   },
