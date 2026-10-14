@@ -1,0 +1,76 @@
+.sections {
+  display: grid;
+  gap: 64px;
+}
+
+.section {
+  display: grid;
+  gap: 20px;
+  max-width: 760px;
+}
+
+.heading {
+  margin: 0;
+  color: var(--foreground);
+  font-size: clamp(22px, 2.6vw, 28px);
+  font-weight: 600;
+  letter-spacing: -0.025em;
+  line-height: 1.15;
+}
+
+.prose {
+  margin: 0;
+  max-width: 68ch;
+  color: var(--muted-foreground);
+  font-size: 17px;
+  line-height: 1.6;
+}
+
+.prose a {
+  color: var(--foreground);
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+.prose a:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+
+/* Term and value rows: hairline separated, no card frames. */
+.facts {
+  display: grid;
+  margin: 0;
+  border-top: 1px solid var(--border);
+}
+
+.fact {
+  display: grid;
+  grid-template-columns: 160px minmax(0, 1fr);
+  gap: 6px 32px;
+  padding-block: 24px;
+  border-bottom: 1px solid var(--border);
+}
+
+.term {
+  margin: 0;
+  color: var(--foreground);
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+}
+
+.value {
+  margin: 0;
+  color: var(--muted-foreground);
+  font-size: 16px;
+  line-height: 1.6;
+}
+
+@media (max-width: 640px) {
+  .fact {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 6px;
+  }
+}

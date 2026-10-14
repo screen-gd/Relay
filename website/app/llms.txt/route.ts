@@ -19,6 +19,8 @@ This is the public marketing site. Product access and private workspaces are on 
 - [Features](${origin}/features): What Relay does for projects, client review, delivery, and payments.
 - [Pricing](${origin}/pricing): Free, Creator, and Team plans.
 - [Roadmap](${origin}/roadmap): Upcoming and recently shipped features.
+- [About](${origin}/about): What Relay is, who builds it, and where the product stands.
+- [Privacy & Data](${origin}/privacy-and-data): Where Relay keeps your work, and how to export or delete it.
 - [Get started free](https://relay-app.cc.cd/): Open Relay. No invite is required.
 - [Full product summary](${origin}/llms-full.txt): A text summary of public product information.
 
