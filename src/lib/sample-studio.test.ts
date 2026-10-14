@@ -1,13 +1,12 @@
 import { describe, expect, it } from "vitest";
-import type { Client, ResourceLink, WorkItem } from "./types";
+import type { Client, ResourceLink, SettingsState, WorkItem } from "./types";
 import {
+  clearSampleWorkspace,
   isSampleRecordId,
+  sampleStudioSettings,
   sampleWorkspaceClients,
-  sampleWorkspaceClientsFor,
-  sampleWorkspaceProjectsFor,
   sampleWorkspaceResources,
-  withSampleRecords,
-  withoutSampleRecords,
+  seedSampleWorkspace,
 } from "./sample-studio";
 
 type Workspace = {
@@ -59,32 +58,52 @@ const ownWorkspace: Workspace = {
   resources: [ownResource],
 };
 
-const loadSample = (workspace: Workspace): Workspace => ({
-  projects: withSampleRecords(
-    workspace.projects,
-    sampleWorkspaceProjectsFor(workspace.clients)
-  ),
-  clients: withSampleRecords(
-    workspace.clients,
-    sampleWorkspaceClientsFor(workspace.clients)
-  ),
-  resources: withSampleRecords(workspace.resources, sampleWorkspaceResources),
-});
+/** Drives the shipped seed and clear helpers, reading back a plain workspace. */
+function sampleWrites(workspace: Workspace) {
+  let next = workspace;
+  return {
+    read: () => next,
+    ports: {
+      clients: workspace.clients,
+      setSettings: (updater: (current: SettingsState) => SettingsState) => {
+        next = {
+          ...next,
+          clients: updater({ ...sampleStudioSettings, clients: next.clients })
+            .clients,
+        };
+      },
+      setItems: (updater: (current: WorkItem[]) => WorkItem[]) => {
+        next = { ...next, projects: updater(next.projects) };
+      },
+      setResourceLinks: (
+        updater: (current: ResourceLink[]) => ResourceLink[]
+      ) => {
+        next = { ...next, resources: updater(next.resources) };
+      },
+    },
+  };
+}
 
-const clearSample = (workspace: Workspace): Workspace => ({
-  projects: withoutSampleRecords(workspace.projects),
-  clients: withoutSampleRecords(workspace.clients),
-  resources: withoutSampleRecords(workspace.resources),
-});
+const loadSample = async (workspace: Workspace): Promise<Workspace> => {
+  const { read, ports } = sampleWrites(workspace);
+  await seedSampleWorkspace(ports);
+  return read();
+};
+
+const clearSample = (workspace: Workspace): Workspace => {
+  const { read, ports } = sampleWrites(workspace);
+  clearSampleWorkspace(ports);
+  return read();
+};
 
 describe("sample workspace", () => {
-  it("leaves the workspace as it was after seeding and clearing", () => {
-    expect(clearSample(loadSample(ownWorkspace))).toEqual(ownWorkspace);
+  it("leaves the workspace as it was after seeding and clearing", async () => {
+    expect(clearSample(await loadSample(ownWorkspace))).toEqual(ownWorkspace);
   });
 
-  it("fills an empty workspace and empties it again", () => {
+  it("fills an empty workspace and empties it again", async () => {
     const empty: Workspace = { projects: [], clients: [], resources: [] };
-    const seeded = loadSample(empty);
+    const seeded = await loadSample(empty);
 
     expect(seeded.clients).toHaveLength(sampleWorkspaceClients.length);
     expect(seeded.projects.length).toBeGreaterThan(1);
@@ -92,13 +111,13 @@ describe("sample workspace", () => {
     expect(clearSample(seeded)).toEqual(empty);
   });
 
-  it("reuses a client the workspace already holds under the same name", () => {
+  it("reuses a client the workspace already holds under the same name", async () => {
     const workspace: Workspace = {
       projects: [],
       clients: [ownClient],
       resources: [],
     };
-    const seeded = loadSample(workspace);
+    const seeded = await loadSample(workspace);
     const aperture = seeded.clients.filter(
       (client) => client.name === "Aperture Coffee"
     );
@@ -112,17 +131,21 @@ describe("sample workspace", () => {
     expect(clearSample(seeded).clients).toEqual([ownClient]);
   });
 
-  it("seeds the same records when loaded twice", () => {
-    const once = loadSample(ownWorkspace);
-    const twice = loadSample(once);
+  it("seeds the same records when loaded twice", async () => {
+    const once = await loadSample(ownWorkspace);
+    const twice = await loadSample(once);
 
     expect(twice.projects).toHaveLength(once.projects.length);
     expect(twice.clients).toHaveLength(once.clients.length);
     expect(twice.resources).toHaveLength(once.resources.length);
   });
 
-  it("marks every seeded record and links projects to the seeded clients", () => {
-    const seeded = loadSample({ projects: [], clients: [], resources: [] });
+  it("marks every seeded record and links projects to the seeded clients", async () => {
+    const seeded = await loadSample({
+      projects: [],
+      clients: [],
+      resources: [],
+    });
     const clientIds = new Set(seeded.clients.map((client) => client.id));
 
     for (const record of [
@@ -136,5 +159,40 @@ describe("sample workspace", () => {
       expect(project.clientId && clientIds.has(project.clientId)).toBe(true);
       expect(project.templateDeliverables?.length ?? 0).toBeGreaterThan(0);
     }
+  });
+
+  it("saves the sample clients before creating projects that reference them", async () => {
+    let savedClients: Client[] = [];
+    let serverClientIds = new Set<string>();
+    let projects: WorkItem[] = [];
+    // The server rejects a Project whose Client it does not hold yet.
+    let unknownClientIds: string[] = [];
+
+    await seedSampleWorkspace({
+      clients: [],
+      // Stands in for the settings write reaching the server: only ids that
+      // have landed there may be referenced by a project created after it.
+      awaitSettings: async () => {
+        await Promise.resolve();
+        serverClientIds = new Set(savedClients.map((client) => client.id));
+      },
+      setSettings: (updater) => {
+        savedClients = updater({
+          ...sampleStudioSettings,
+          clients: [],
+        }).clients;
+      },
+      setItems: (updater) => {
+        projects = updater([]);
+        unknownClientIds = projects
+          .map((project) => project.clientId ?? "")
+          .filter((clientId) => !serverClientIds.has(clientId));
+      },
+      setResourceLinks: () => undefined,
+    });
+
+    expect(savedClients.length).toBeGreaterThan(0);
+    expect(projects.length).toBeGreaterThan(0);
+    expect(unknownClientIds).toEqual([]);
   });
 });

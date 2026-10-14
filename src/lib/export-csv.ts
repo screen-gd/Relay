@@ -10,9 +10,13 @@ export type CsvDataset = "projects" | "clients" | "payments";
  * treats it as text instead of a formula.
  */
 export function csvCell(value: CsvValue) {
+  // A number stays a number: quoting it makes a spreadsheet read it as text.
+  if (typeof value === "number") return String(value);
   const text = value === null || value === undefined ? "" : String(value);
   const escaped = text.replaceAll('"', '""');
-  if (/^[=+\-@]/.test(text)) return `"'${escaped}"`;
+  // A spreadsheet can strip a leading tab or space and then run the rest as a
+  // formula, so the guard looks past leading whitespace.
+  if (/^[=+\-@]/.test(text.trimStart())) return `"'${escaped}"`;
   return /[",\r\n]/.test(text) ? `"${escaped}"` : text;
 }
 
@@ -105,8 +109,9 @@ export function clientsToCsv(clients: readonly Client[]) {
 }
 
 /**
- * The payment records a workspace has: one row per Salary Batch, one per
- * project earning, with the paid flag and date each one carries.
+ * The payment records a workspace has: one row per Salary Batch, and one per
+ * delivered or paid project earning. Work that is still in progress is not a
+ * payment yet, and its due date is not a completion date.
  */
 export function paymentsToCsv(
   projects: readonly WorkItem[],
@@ -132,14 +137,18 @@ export function paymentsToCsv(
       isoDay(batch.completedDate),
       ...moneyCells(batch.amount, batch.paid, batch.paidDate, money),
     ]),
-    ...projects.map((project) => [
-      "Project earnings",
-      project.title,
-      projectClient(project),
-      project.workType,
-      isoDay(project.completedAt ?? project.dueDate),
-      ...moneyCells(project.earnings, project.paid, project.paidDate, money),
-    ]),
+    ...projects
+      .filter(
+        (project) => Boolean(project.completedAt) || Boolean(project.paid)
+      )
+      .map((project) => [
+        "Project earnings",
+        project.title,
+        projectClient(project),
+        project.workType,
+        isoDay(project.completedAt),
+        ...moneyCells(project.earnings, project.paid, project.paidDate, money),
+      ]),
   ]);
 }
 

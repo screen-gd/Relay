@@ -68,15 +68,12 @@ import type {
 } from "@/features/projects/project-workflow-port";
 import { DEFAULT_WORKFLOW_STAGES } from "./workflow-templates";
 import {
+  clearSampleWorkspace,
   isSampleRecordId,
   sampleStudioProjects,
   sampleStudioResources,
   sampleStudioSettings,
-  sampleWorkspaceClientsFor,
-  sampleWorkspaceProjectsFor,
-  sampleWorkspaceResources,
-  withSampleRecords,
-  withoutSampleRecords,
+  seedSampleWorkspace,
 } from "./sample-studio";
 
 const cloudSettingsInput = (settings: SettingsState) => ({
@@ -1183,14 +1180,14 @@ type SampleWorkspacePort = {
   canLoad: boolean;
   /** True while seeded sample records are in the workspace. */
   loaded: boolean;
-  load: () => void;
+  load: () => Promise<void>;
   clear: () => void;
 };
 
 const SAMPLE_WORKSPACE_UNAVAILABLE: SampleWorkspacePort = {
   canLoad: false,
   loaded: false,
-  load: () => undefined,
+  load: async () => undefined,
   clear: () => undefined,
 };
 
@@ -1209,6 +1206,7 @@ function useSampleWorkspacePort({
   items,
   clients,
   resourceLinks,
+  awaitSettings,
   setItems,
   setSettings,
   setResourceLinks,
@@ -1217,41 +1215,34 @@ function useSampleWorkspacePort({
   items: WorkItem[];
   clients: readonly Client[];
   resourceLinks: readonly ResourceLink[];
+  /** Resolves once a pending settings write has reached the server. */
+  awaitSettings?: () => Promise<void>;
   setItems: React.Dispatch<React.SetStateAction<WorkItem[]>>;
   setSettings: React.Dispatch<React.SetStateAction<SettingsState>>;
   setResourceLinks: React.Dispatch<React.SetStateAction<ResourceLink[]>>;
 }): SampleWorkspacePort {
-  const activeClients = clients.filter((client) => !client.archived);
-  const canLoad = ready && items.length === 0 && activeClients.length === 0;
+  const canLoad = ready && items.length === 0 && clients.length === 0;
   const loaded =
     items.some((item) => isSampleRecordId(item.id)) ||
-    activeClients.some((client) => isSampleRecordId(client.id)) ||
+    clients.some((client) => isSampleRecordId(client.id)) ||
     resourceLinks.some((resource) => isSampleRecordId(resource.id));
 
-  const load = useCallback(() => {
-    setSettings((current) => ({
-      ...current,
-      clients: withSampleRecords(
-        current.clients,
-        sampleWorkspaceClientsFor(current.clients)
-      ),
-    }));
-    setItems((current) =>
-      withSampleRecords(current, sampleWorkspaceProjectsFor(clients))
-    );
-    setResourceLinks((current) =>
-      withSampleRecords(current, sampleWorkspaceResources)
-    );
-  }, [clients, setItems, setResourceLinks, setSettings]);
+  const load = useCallback(
+    () =>
+      seedSampleWorkspace({
+        clients,
+        awaitSettings,
+        setItems,
+        setSettings,
+        setResourceLinks,
+      }),
+    [awaitSettings, clients, setItems, setResourceLinks, setSettings]
+  );
 
-  const clear = useCallback(() => {
-    setSettings((current) => ({
-      ...current,
-      clients: withoutSampleRecords(current.clients),
-    }));
-    setItems((current) => withoutSampleRecords(current));
-    setResourceLinks((current) => withoutSampleRecords(current));
-  }, [setItems, setResourceLinks, setSettings]);
+  const clear = useCallback(
+    () => clearSampleWorkspace({ setItems, setSettings, setResourceLinks }),
+    [setItems, setResourceLinks, setSettings]
+  );
 
   return useMemo(
     () => ({ canLoad, loaded, load, clear }),
@@ -1727,27 +1718,34 @@ function CloudDataProvider({ children }: { children: React.ReactNode }) {
   const settingsRef = useRef(settings);
   settingsRef.current = settings;
   const pendingSettings = useRef<Array<ReturnType<typeof settingsPatch>>>([]);
-  const savingSettings = useRef(false);
-  const retrySettingsSave = useCallback(async () => {
-    if (savingSettings.current || !pendingSettings.current.length) return;
-    const edits = pendingSettings.current;
-    savingSettings.current = true;
-    setSettingsSaveState("saving");
-    try {
-      while (edits === pendingSettings.current && edits.length) {
-        await patchSettings(edits[0]);
-        edits.shift();
+  const settingsSaveRef = useRef<Promise<void> | null>(null);
+  const retrySettingsSave = useCallback((): Promise<void> => {
+    if (settingsSaveRef.current) return settingsSaveRef.current;
+    if (!pendingSettings.current.length) return Promise.resolve();
+    const save = (async () => {
+      const edits = pendingSettings.current;
+      setSettingsSaveState("saving");
+      try {
+        while (edits === pendingSettings.current && edits.length) {
+          await patchSettings(edits[0]);
+          edits.shift();
+        }
+        if (edits !== pendingSettings.current) return;
+        setSettingsSaveState("saved");
+        removeKey(SETTINGS_STORAGE_KEY);
+      } catch {
+        if (edits !== pendingSettings.current) return;
+        setSettingsSaveState("error");
+        writeJson(
+          SETTINGS_STORAGE_KEY,
+          omitLegacySettings(settingsRef.current)
+        );
+      } finally {
+        settingsSaveRef.current = null;
       }
-      if (edits !== pendingSettings.current) return;
-      setSettingsSaveState("saved");
-      removeKey(SETTINGS_STORAGE_KEY);
-    } catch {
-      if (edits !== pendingSettings.current) return;
-      setSettingsSaveState("error");
-      writeJson(SETTINGS_STORAGE_KEY, omitLegacySettings(settingsRef.current));
-    } finally {
-      if (edits === pendingSettings.current) savingSettings.current = false;
-    }
+    })();
+    settingsSaveRef.current = save;
+    return save;
   }, [patchSettings]);
 
   const setProjectSalaryBatchPaid = useMutation(
@@ -1764,7 +1762,7 @@ function CloudDataProvider({ children }: { children: React.ReactNode }) {
     if (previousAuthMode.current === authMode) return;
     previousAuthMode.current = authMode;
     pendingSettings.current = [];
-    savingSettings.current = false;
+    settingsSaveRef.current = null;
     setSettingsSaveState("saved");
     initializationToken.current += 1;
     setReady(false);
@@ -2535,6 +2533,7 @@ function CloudDataProvider({ children }: { children: React.ReactNode }) {
     items,
     clients: settings.clients,
     resourceLinks,
+    awaitSettings: retrySettingsSave,
     setItems,
     setSettings,
     setResourceLinks,

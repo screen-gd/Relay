@@ -57,7 +57,7 @@ export function WorkspaceSampleBar({ onClear }: { onClear: () => void }) {
         <FlaskConical className="size-4 text-[var(--app-highlight)]" />
         Sample data{" "}
         <span className="font-normal text-[var(--app-muted)]">
-          Demo client, projects, and payments
+          Demo client and projects
         </span>
       </p>
       <Button variant="outline" size="sm" onClick={onClear}>

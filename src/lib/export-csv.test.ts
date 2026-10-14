@@ -60,7 +60,10 @@ test("a cell gets quotes for commas and quotes, and a formula opener is defused"
   expect(csvCell("Acme, Inc.")).toBe('"Acme, Inc."');
   expect(csvCell('Logo, "final"')).toBe('"Logo, ""final"""');
   expect(csvCell("=1+1")).toBe(`"'=1+1"`);
+  expect(csvCell("\t=1+1")).toBe(`"'\t=1+1"`);
+  expect(csvCell("   =SUM(A1)")).toBe(`"'   =SUM(A1)"`);
   expect(csvCell(1200)).toBe("1200");
+  expect(csvCell(-42)).toBe("-42");
   expect(csvCell(undefined)).toBe("");
 });
 
@@ -117,6 +120,20 @@ test("the payments CSV holds salary batches and project earnings", () => {
   );
   expect(lines[2]).toBe(
     "Project earnings,Spring campaign,Acme,channel,2026-03-08,1200,USD,No,"
+  );
+});
+
+test("unfinished work is not a payment record, and a paid project is", () => {
+  const unfinished = paymentsToCsv([project()], [], money);
+  expect(unfinished).not.toContain("Project earnings");
+
+  const paidEarly = paymentsToCsv(
+    [project({ paid: true, paidDate: "2026-03-04T09:00:00.000Z" })],
+    [],
+    money
+  );
+  expect(paidEarly.split("\r\n")[1]).toBe(
+    "Project earnings,Spring campaign,Acme,channel,,1200,USD,Yes,2026-03-04"
   );
 });
 
