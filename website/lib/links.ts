@@ -5,7 +5,7 @@ export const CONTACT_EMAIL_URL = `mailto:${CONTACT_EMAIL}`;
 // Legal pages are served by the app. About and Privacy & Data are pages of
 // this site, and Privacy & Data links to the app's policy for the binding text.
 export const LEGAL_LINKS = [
-  { label: "Privacy", href: new URL("privacy", APP_URL).href },
+  { label: "Privacy policy", href: new URL("privacy", APP_URL).href },
   { label: "Terms", href: new URL("terms", APP_URL).href },
   { label: "Accessibility", href: new URL("accessibility", APP_URL).href },
 ] as const;
