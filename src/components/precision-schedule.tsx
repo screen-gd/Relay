@@ -4,7 +4,6 @@ import { getProjectProgress } from "@/features/projects/project-domain";
 
 import {
   ArrowRight,
-  CalendarDays,
   ChevronLeft,
   ChevronRight,
   CheckCircle2,
@@ -41,6 +40,7 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   ContentSection,
   FillViewport,
+  PageActions,
   PageContent,
   PageHeader,
   PageToolbar,
@@ -350,19 +350,18 @@ export function PrecisionCalendar({
         title="Calendar"
         description="A delivery-date calendar for planned, active, and delivered work."
         actions={
-          <div className="flex gap-2">
-            <Button
-              variant="outline"
-              onClick={downloadFeed}
-              disabled={!events.length}
-            >
-              <Download className="size-4" /> Export calendar
-            </Button>
-            <Button variant="outline" onClick={jumpToToday}>
-              <CalendarDays className="size-4" />
-              Today
-            </Button>
-          </div>
+          <PageActions
+            primary={
+              <Button
+                variant="outline"
+                onClick={downloadFeed}
+                disabled={!events.length}
+              >
+                <Download className="size-4" /> Export calendar
+              </Button>
+            }
+            more={[{ label: "Go to today", onSelect: jumpToToday }]}
+          />
         }
       />
 
@@ -713,7 +712,8 @@ export function PrecisionCalendar({
                     ))}
                     {!visibleMonthProjects.length ? (
                       <p className="px-3 py-2 text-sm text-[var(--app-muted)]">
-                        Nothing due this month.
+                        Nothing due this month. Give a project a due date to
+                        schedule it.
                       </p>
                     ) : null}
                   </div>
@@ -775,7 +775,8 @@ export function PrecisionCalendar({
                   </div>
                 ) : (
                   <p className="px-4 pb-4 text-sm text-[var(--app-muted)]">
-                    Nothing due.
+                    Nothing due on this day. Pick another day, or give a project
+                    this due date.
                   </p>
                 )}
               </ContentSection>
@@ -854,6 +855,22 @@ export function PrecisionTimeline({
     ["Review", "Revision", "Client Review"].includes(project.status)
   ).length;
   const delivered = projects.filter(isDelivered).length;
+  const emptyTimeline =
+    filter === "All"
+      ? {
+          title: "No timeline milestones yet",
+          description: "Give a project a due date to place its milestone here.",
+        }
+      : {
+          title: `No ${filter.toLowerCase()} milestones`,
+          description: `${
+            filter === "Delivered"
+              ? "Deliver a project"
+              : filter === "Review"
+                ? "Request review on a project"
+                : "Start a project"
+          } to see it here, or switch back to All.`,
+        };
 
   return (
     <WorkspacePage family="data-index">
@@ -1041,8 +1058,8 @@ export function PrecisionTimeline({
           <ContentSection className="mt-6">
             <PageEmptyState
               icon={<Milestone className="size-5" />}
-              title="No timeline milestones yet"
-              description="Projects with due dates will appear here."
+              title={emptyTimeline.title}
+              description={emptyTimeline.description}
             />
           </ContentSection>
         )}

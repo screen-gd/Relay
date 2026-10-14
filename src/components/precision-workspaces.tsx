@@ -89,7 +89,9 @@ import {
   MasterDetail,
   MetricItem,
   MetricStrip,
+  PageActions,
   PageContent,
+  PageEmptyState,
   PageHeader,
   SplitPane,
   WorkspacePage,
@@ -362,19 +364,20 @@ export function PrecisionClients({
         title="Clients"
         description="Each client's projects and delivery history."
         actions={
-          <div className="flex gap-2">
-            <Button
-              variant="outline"
-              className="h-9"
-              aria-pressed={showArchived}
-              onClick={() => setShowArchived((value) => !value)}
-            >
-              Archived
-            </Button>
-            <Button className="h-9" onClick={() => setAddOpen(true)}>
-              <Plus /> New Client
-            </Button>
-          </div>
+          <PageActions
+            primary={
+              <Button className="h-9" onClick={() => setAddOpen(true)}>
+                <Plus /> New Client
+              </Button>
+            }
+            more={[
+              {
+                label: "Show archived",
+                onSelect: () => setShowArchived((value) => !value),
+                checked: showArchived,
+              },
+            ]}
+          />
         }
       />
 
@@ -491,7 +494,11 @@ export function PrecisionClients({
                   ))}
                   {!clients.length ? (
                     <Empty className="flex-none gap-0 rounded-none border-0 p-6 text-center text-xs text-[var(--app-muted)] [text-wrap:wrap] md:p-6">
-                      No clients match this view.
+                      {query.trim()
+                        ? `No clients match "${query.trim()}". Clear the search to see them all.`
+                        : showArchived
+                          ? "No clients yet. Create your first client to group projects and payment history."
+                          : "No clients yet. Create your first client, or show archived clients from More."}
                     </Empty>
                   ) : null}
                 </div>
@@ -697,23 +704,20 @@ export function PrecisionClients({
                   </main>
                 ) : (
                   <main className="grid h-full min-h-[420px] place-items-center rounded-xl border border-[var(--app-border)] bg-[var(--app-panel)] p-6 text-center">
-                    <div>
-                      <UsersRound className="mx-auto size-7 text-[var(--app-muted)]" />
-                      <p className="mt-2 text-sm font-semibold">
-                        Add your first client
-                      </p>
-                      <p className="mt-1 text-xs text-[var(--app-muted)]">
-                        Client records organize project history and delivery
-                        context.
-                      </p>
-                      <Button
-                        className="mt-3 h-8"
-                        size="sm"
-                        onClick={() => setAddOpen(true)}
-                      >
-                        <Plus /> New Client
-                      </Button>
-                    </div>
+                    <PageEmptyState
+                      icon={<UsersRound className="size-5" />}
+                      title="Add your first client"
+                      description="Create your first client to group projects, deliverables, and payment history."
+                      action={
+                        <Button
+                          className="h-8"
+                          size="sm"
+                          onClick={() => setAddOpen(true)}
+                        >
+                          <Plus /> New Client
+                        </Button>
+                      }
+                    />
                   </main>
                 )}
               </div>
@@ -1071,8 +1075,11 @@ export function PrecisionFeedback({
                             : `No ${filter.toLowerCase()} items`}
                         </p>
                         <p className="mt-1 text-xs text-[var(--app-muted)]">
-                          Projects waiting for feedback or revision will appear
-                          here.
+                          {filter === "All"
+                            ? "Nothing is waiting on feedback. Request review on a project to start a new thread."
+                            : filter === "Revision"
+                              ? "Mark a project for revision to see it here."
+                              : "Request client review on a project to fill this queue."}
                         </p>
                       </div>
                     </MotionEmpty>
@@ -1178,7 +1185,8 @@ export function PrecisionFeedback({
                       Select a review item
                     </p>
                     <p className="mt-1 text-xs text-[var(--app-muted)]">
-                      Revision notes and project context will appear here.
+                      Open a queue item to read its notes and jump into the
+                      project.
                     </p>
                   </div>
                 </div>
@@ -1476,15 +1484,19 @@ export function PrecisionReports({
               </SelectContent>
             </Select>
             {advancedReports ? (
-              <Button
-                variant="outline"
-                size="sm"
-                className="h-8"
-                onClick={exportReport}
-                disabled={!canManageFinance}
-              >
-                <Download /> Export CSV
-              </Button>
+              <PageActions
+                primary={
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-8"
+                    onClick={exportReport}
+                    disabled={!canManageFinance}
+                  >
+                    <Download /> Export CSV
+                  </Button>
+                }
+              />
             ) : null}
           </div>
         }
@@ -1649,7 +1661,7 @@ export function PrecisionReports({
                     </AreaChart>
                   ) : (
                     <div className="grid h-full place-items-center text-xs text-[var(--app-muted)]">
-                      Delivered projects will create the earnings trend.
+                      Mark a project as delivered to start the earnings trend.
                     </div>
                   )}
                 </motion.div>
@@ -1663,7 +1675,7 @@ export function PrecisionReports({
                       trendData.reduce((sum, item) => sum + item.earned, 0),
                       settings.currencyCode
                     )} across ${trendData.length} month${trendData.length === 1 ? "" : "s"}.`
-                  : "No delivery data is available for this period yet."}
+                  : "No deliveries in this period yet."}
               </p>
             </motion.section>
           }
@@ -1710,7 +1722,7 @@ export function PrecisionReports({
                   </PieChart>
                 ) : (
                   <div className="grid h-full place-items-center rounded-md border border-dashed border-[var(--app-border)] px-4 text-center text-xs text-[var(--app-muted)]">
-                    Delivered projects will build this breakdown.
+                    Deliver projects to see how your work splits across types.
                   </div>
                 )}
               </div>
@@ -1808,7 +1820,7 @@ export function PrecisionReports({
               ))}
               {!report.clients.length ? (
                 <div className="grid min-h-24 place-items-center text-xs text-[var(--app-muted)]">
-                  No client totals for this period.
+                  Deliver a client project in this period to see its totals.
                 </div>
               ) : null}
             </div>
@@ -1890,7 +1902,7 @@ export function PrecisionReports({
                       colSpan={6}
                       className="h-32 text-center text-xs text-[var(--app-muted)]"
                     >
-                      Completed payment batches will appear here automatically.
+                      Finish the next salary batch to record its payment here.
                     </TableCell>
                   </TableRow>
                 ) : null}
@@ -1956,8 +1968,8 @@ export function PrecisionReports({
                         colSpan={5}
                         className="h-28 text-center text-xs text-[var(--app-muted)]"
                       >
-                        Delivered freelance projects with client names and
-                        positive earnings will appear here.
+                        Deliver a freelance project for a named client to draft
+                        its invoice.
                       </TableCell>
                     </TableRow>
                   ) : null}
@@ -2046,7 +2058,7 @@ export function PrecisionReports({
                   ))}
                   {!report.deliveredProjects.length ? (
                     <div className="grid min-h-28 place-items-center text-xs text-[var(--app-muted)]">
-                      Delivered projects will appear here.
+                      Deliver a project to list it here.
                     </div>
                   ) : null}
                 </div>

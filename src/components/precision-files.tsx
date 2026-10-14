@@ -122,10 +122,25 @@ export function PrecisionFiles({
         </div>
       ) : (
         <Empty className="flex-none gap-0 rounded-none border-y border-dashed p-0 py-12 text-center [text-wrap:wrap] md:px-0 md:py-12">
-          <p className="text-sm font-medium">No matching files</p>
-          <p className="mt-1 text-xs text-muted-foreground">
-            Files will appear here after they are added to a Project.
+          <p className="text-sm font-medium">
+            {query.trim() ? `No files match "${query.trim()}"` : "No files yet"}
           </p>
+          <p className="mt-1 text-xs text-muted-foreground">
+            {query.trim()
+              ? "Clear the search to see every file in your workspace."
+              : "Add a file inside a project to index it here."}
+          </p>
+          {query.trim() ? (
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="mt-3"
+              onClick={() => setQuery("")}
+            >
+              Clear search
+            </Button>
+          ) : null}
         </Empty>
       )}
     </PageContent>
