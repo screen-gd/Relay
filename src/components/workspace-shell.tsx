@@ -2,7 +2,6 @@ import {
   Accessibility,
   Bell,
   CalendarDays,
-  ChartNoAxesCombined,
   CheckSquare2,
   ChevronDown,
   CircleUserRound,
@@ -168,7 +167,7 @@ const routeGroups: RouteGroup[] = [
       { page: "clients", label: "Clients", href: "/clients", icon: UsersRound },
       {
         page: "feedback",
-        label: "Client reviews",
+        label: "Reviews",
         href: "/feedback",
         icon: MessageSquareText,
       },
@@ -199,9 +198,9 @@ const routeGroups: RouteGroup[] = [
       },
       {
         page: "reports",
-        label: "Reports",
+        label: "Payments",
         href: "/reports",
-        icon: ChartNoAxesCombined,
+        icon: CreditCard,
         shortcut: "G R",
       },
     ],
@@ -243,35 +242,43 @@ export function workspacePageForPath(pathname: string): ShellPage {
   );
 }
 
-const hubPages: ShellPage[] = [
-  "dashboard",
-  "projects",
-  "clients",
-  "files",
-  "reports",
-  "team",
-  "settings",
+/** The sidebar keeps five work hubs plus Team and Settings. */
+const sidebarGroups: RouteGroup[] = [
+  {
+    label: "Workspace",
+    items: routesFor([
+      "dashboard",
+      "projects",
+      "clients",
+      "feedback",
+      "reports",
+    ]),
+  },
+  {
+    label: "Account",
+    items: routesFor(["team", "settings"]),
+  },
 ];
-const hubGroups = routeGroups.map((group) => ({
-  ...group,
-  items: group.items
-    .filter((item) => hubPages.includes(item.page))
-    .map((item) =>
-      item.page === "files"
-        ? { ...item, label: "Library", icon: Library }
-        : item
-    ),
-}));
-const hubRoutes = hubGroups.flatMap((group) => group.items);
-const mobileRoutes = hubRoutes.filter((item) =>
-  ["dashboard", "projects", "clients", "files"].includes(item.page)
+
+const hubPages: ShellPage[] = sidebarGroups.flatMap((group) =>
+  group.items.map((item) => item.page)
 );
+const hubRoutes = sidebarGroups.flatMap((group) => group.items);
+const mobileRoutes = hubRoutes.filter((item) =>
+  ["dashboard", "projects", "clients", "feedback"].includes(item.page)
+);
+/** Pages that live under a hub instead of the sidebar. */
 const contextPages: Partial<Record<ShellPage, ShellPage[]>> = {
-  projects: ["projects", "calendar", "timeline", "feedback"],
-  files: ["files", "media", "templates", "resources"],
+  projects: ["projects", "calendar", "timeline", "files", "media"],
   team: ["team", "team-chat"],
-  settings: ["settings", "integrations"],
+  settings: ["settings", "integrations", "templates", "resources"],
 };
+
+function routesFor(pages: ShellPage[]): RouteItem[] {
+  return pages.flatMap((page) =>
+    allRoutes.filter((item) => item.page === page)
+  );
+}
 
 function hubPageForPage(page: ShellPage): ShellPage {
   return (
@@ -606,7 +613,7 @@ function DesktopSidebar({ page }: { page: ShellPage }) {
         aria-label="Primary navigation"
         className="min-h-0 flex-1 overflow-y-auto px-1 py-1"
       >
-        {hubGroups.map((group, groupIndex) => (
+        {sidebarGroups.map((group, groupIndex) => (
           <div key={group.label} className="mb-2.5">
             <SidebarGroupLabel label={group.label} groupIndex={groupIndex} />
             <div className="space-y-0.5">
