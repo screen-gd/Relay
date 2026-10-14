@@ -4,16 +4,17 @@ import {
   CONTACT_EMAIL_URL,
   LEGAL_LINKS,
   NAV_ITEMS,
+  TRUST_LINKS,
   X_URL,
 } from "../../lib/links";
 
 type FooterLink = { label: string; href: string; external?: boolean };
 
 const columns: { title: string; links: readonly FooterLink[] }[] = [
-  { title: "Product", links: NAV_ITEMS },
+  { title: "Product", links: [...NAV_ITEMS, TRUST_LINKS.about] },
   { title: "Contact", links: [{ label: "Email", href: CONTACT_EMAIL_URL }] },
   { title: "Social", links: [{ label: "X", href: X_URL, external: true }] },
-  { title: "Legal", links: LEGAL_LINKS },
+  { title: "Legal", links: [TRUST_LINKS.privacyData, ...LEGAL_LINKS] },
 ];
 
 /**
