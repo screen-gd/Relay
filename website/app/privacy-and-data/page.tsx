@@ -33,7 +33,7 @@ const sections: readonly TrustSection[] = [
     heading: "What Relay stores",
     paragraphs: [
       "Relay stores the work you enter: clients and their contact details, projects, outputs and versions, workflow stages, review comments, delivery dates, agreed amounts and payment state, salary plans and batches, saved links, and your workspace and profile settings.",
-      "A signed-in workspace also stores uploaded files, client portal links, team membership, and notifications.",
+      "A signed-in workspace also stores client portal links, team membership, and notifications. Uploaded files are stored only on a plan that includes them, and Free does not.",
     ],
   },
   {
@@ -52,7 +52,7 @@ const sections: readonly TrustSection[] = [
       {
         term: "Convex",
         children:
-          "Holds the database and live queries for account workspaces, and stores Relay's uploaded files. Project uploads use Convex Storage today; the repository also carries a Cloudflare R2 path for files that is not enabled yet.",
+          "Holds the database and live queries for account workspaces, and stores uploaded files for workspaces whose plan includes file uploads. Project uploads use Convex Storage today; the repository also carries a Cloudflare R2 path for files that is not enabled yet.",
       },
       {
         term: "Clerk",
@@ -118,7 +118,7 @@ export default function PrivacyAndDataPage() {
     <>
       <PageHeader
         title="Privacy & Data"
-        description="Where Relay keeps your work, which providers host it, and how to export or delete it. Last updated October 15, 2026."
+        description="Where Relay keeps your work, which providers host it, and how to export or delete it. Last updated October 14, 2026."
       />
       <TrustPage sections={sections} />
     </>

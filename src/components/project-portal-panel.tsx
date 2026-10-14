@@ -244,11 +244,11 @@ export function ProjectPortalPanel({
     setBusy("save");
     setFormError("");
     try {
-      await data.save(draft);
       await setProjectRevisionLimit({
         projectId: project.id,
         maxRevisions: revisions,
       });
+      await data.save(draft);
       setDraft((current) => ({ ...current, pin: "" }));
     } catch (caught) {
       setFormError(

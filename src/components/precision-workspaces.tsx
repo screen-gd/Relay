@@ -412,7 +412,9 @@ export function PrecisionClients({
           <MasterDetail
             className={cn(
               "min-h-full gap-3 lg:h-full lg:min-h-0 lg:overflow-hidden",
-              !clients.length && "lg:grid-cols-1 [&>div:first-child]:hidden"
+              !clients.length &&
+                !query.trim() &&
+                "lg:grid-cols-1 [&>div:first-child]:hidden"
             )}
             master={
               <aside className="flex min-h-0 flex-col overflow-hidden rounded-xl border border-[var(--app-border)] bg-[var(--app-panel)] lg:h-full">

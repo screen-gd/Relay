@@ -20,12 +20,19 @@ export function FirstRunChecklist({
   const { sampleWorkspace, setToast } = useData();
   const canLoadSample = sampleWorkspace.canLoad;
 
-  function loadSample() {
-    sampleWorkspace.load();
-    setToast({
-      message: "Sample data loaded. Clear it whenever you want.",
-      tone: "success",
-    });
+  async function loadSample() {
+    try {
+      await sampleWorkspace.load();
+      setToast({
+        message: "Sample data loaded. Clear it whenever you want.",
+        tone: "success",
+      });
+    } catch {
+      setToast({
+        message: "The sample data could not be loaded. Try again.",
+        tone: "warning",
+      });
+    }
   }
 
   const steps = [
@@ -33,7 +40,7 @@ export function FirstRunChecklist({
       ? {
           icon: Sparkles,
           title: "Load the sample workspace",
-          body: "One click adds a demo client, three projects with their outputs, and their payments.",
+          body: "One click adds a demo client and three projects with their outputs.",
         }
       : {
           icon: FolderPlus,

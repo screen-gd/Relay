@@ -49,9 +49,12 @@ export function FeedbackButton() {
 
   function sendFeedback() {
     window.location.href = composeFeedbackMailto(note, pageUrl);
-    setNote("");
+    // The note stays so it can be sent again if the handoff did not open.
     setOpen(false);
-    setToast({ message: "Note opened in your email app.", tone: "success" });
+    setToast({
+      message: "Opening your email app with the note.",
+      tone: "info",
+    });
   }
 
   return (

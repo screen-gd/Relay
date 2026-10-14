@@ -277,3 +277,61 @@ export function sampleWorkspaceProjectsFor(
 
 /** The review link a new workspace loads with the demo projects. */
 export const sampleWorkspaceResources: ResourceLink[] = sampleStudioResources;
+
+/** Setters the sample records are written through, matching the data context's. */
+type SampleWorkspaceWrites = {
+  setItems: (updater: (current: WorkItem[]) => WorkItem[]) => void;
+  setSettings: (updater: (current: SettingsState) => SettingsState) => void;
+  setResourceLinks: (
+    updater: (current: ResourceLink[]) => ResourceLink[]
+  ) => void;
+};
+
+type SampleWorkspacePorts = SampleWorkspaceWrites & {
+  clients: readonly Client[];
+  /** Resolves once a pending settings write has reached the server. */
+  awaitSettings?: () => Promise<void>;
+};
+
+/**
+ * Adds the demo records. The Clients are written first and awaited, because a
+ * synced Project may only reference a Client the Workspace already holds, so a
+ * project created while that write is still in flight is rejected.
+ */
+export async function seedSampleWorkspace({
+  clients,
+  awaitSettings,
+  setItems,
+  setSettings,
+  setResourceLinks,
+}: SampleWorkspacePorts) {
+  const seededClients = sampleWorkspaceClientsFor(clients);
+  setSettings((current) => ({
+    ...current,
+    clients: withSampleRecords(current.clients, seededClients),
+  }));
+  if (awaitSettings) await awaitSettings();
+  setItems((current) =>
+    withSampleRecords(
+      current,
+      sampleWorkspaceProjectsFor([...clients, ...seededClients])
+    )
+  );
+  setResourceLinks((current) =>
+    withSampleRecords(current, sampleWorkspaceResources)
+  );
+}
+
+/** Removes the seeded records and leaves everything else in place. */
+export function clearSampleWorkspace({
+  setItems,
+  setSettings,
+  setResourceLinks,
+}: SampleWorkspaceWrites) {
+  setSettings((current) => ({
+    ...current,
+    clients: withoutSampleRecords(current.clients),
+  }));
+  setItems((current) => withoutSampleRecords(current));
+  setResourceLinks((current) => withoutSampleRecords(current));
+}
