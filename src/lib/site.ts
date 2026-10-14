@@ -11,3 +11,6 @@ export const siteUrl = (configuredSiteUrl || fallbackSiteUrl).replace(
   /\/$/,
   ""
 );
+
+/** Public origin of the marketing site, which hosts the About and Privacy & Data pages. */
+export const marketingSiteUrl = "https://web.relay-app.cc.cd";
