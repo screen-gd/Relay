@@ -34,7 +34,7 @@ Examples: `feature/portal-expiry`, `fix/file-version-order`, or `docs/setup-guid
 
 ## Development
 
-Run the Next.js app and Convex development deployment together:
+Run the TanStack Start app and Convex development deployment together:
 
 ```bash
 pnpm dev
@@ -64,7 +64,7 @@ Describe the checks you ran in the pull request. Include clear reproduction and 
 
 ## Code Style
 
-- Follow the existing Next.js, React, TypeScript, Tailwind, owned Radix UI, and Convex patterns.
+- Follow the existing TanStack Start, React, TypeScript, Tailwind, owned Radix UI, and Convex patterns.
 - Keep TypeScript strict and avoid `any` where a precise type is available.
 - Read `convex/_generated/ai/guidelines.md` before changing Convex code.
 - Derive authorization from the authenticated Convex identity; do not trust client-provided user IDs.
@@ -80,7 +80,7 @@ Describe the checks you ran in the pull request. Include clear reproduction and 
 
 ## End-to-end tests
 
-The Playwright suite uses Chromium and starts Next.js on `http://localhost:3100`,
+The Playwright suite uses Chromium and starts the Vite dev server (`pnpm dev:web`) on `http://localhost:3100`,
 or reuses an existing local server on that address.
 
 Install the browser once:
@@ -106,9 +106,9 @@ The local-mode project test does not create an authenticated session. The
 authenticated project files, approvals, and client portal journey additionally
 requires the Clerk secret:
 
-- `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`
+- `VITE_CLERK_PUBLISHABLE_KEY`
 - `CLERK_SECRET_KEY`
-- `NEXT_PUBLIC_CONVEX_URL`
+- `VITE_CONVEX_URL`
 
 The setup reuses `relay-e2e+clerk_test@example.com` in the Clerk development
 instance. Override it with `E2E_CLERK_USER_EMAIL` when needed. The cloud test

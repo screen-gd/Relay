@@ -1,9 +1,7 @@
-"use client";
-
 import { supportEmail } from "@/lib/support-contact";
 
 import { useState, type ReactNode } from "react";
-import Link from "next/link";
+import { Link } from "@tanstack/react-router";
 import { Check } from "lucide-react";
 
 import { RelayBrand } from "@/app/relay-brand";
@@ -249,16 +247,16 @@ function ModeStep({
           variant="link"
           className="h-auto px-0 text-[var(--app-ink)]"
         >
-          <Link href="/sample-studio">Open sample workspace</Link>
+          <Link to="/sample-studio">Open sample workspace</Link>
         </Button>
       </div>
       <p className="text-xs leading-relaxed text-[var(--app-muted)]">
         Read the{" "}
-        <Link href="/privacy" className="underline underline-offset-2">
+        <Link to="/privacy" className="underline underline-offset-2">
           Privacy Policy
         </Link>{" "}
         and{" "}
-        <Link href="/terms" className="underline underline-offset-2">
+        <Link to="/terms" className="underline underline-offset-2">
           Terms
         </Link>
         .

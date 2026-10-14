@@ -1,9 +1,7 @@
-"use client";
-
-import { UserProfile, useUser } from "@clerk/nextjs";
+import { UserProfile, useUser } from "@clerk/tanstack-react-start";
 import { useOptionalAuth } from "@/lib/optional-auth";
 import type { FunctionReturnType } from "convex/server";
-import Link from "next/link";
+import { Link } from "@tanstack/react-router";
 import { useState } from "react";
 
 import { api } from "../../convex/_generated/api";
@@ -62,7 +60,7 @@ export function CapabilityUpgradePrompt({
         </p>
       </div>
       <Button asChild size="sm" variant="outline">
-        <Link href="/subscription">View plans</Link>
+        <Link to="/subscription">View plans</Link>
       </Button>
     </div>
   );

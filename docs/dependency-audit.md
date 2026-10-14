@@ -14,6 +14,8 @@ Before remediation, the audit reported **18 findings: 2 critical, 6 high, 7 mode
 
 The security follow-up resolves all 18 findings. Both `pnpm audit --prod --json` and `pnpm audit --json` report **zero vulnerabilities**. Both workspaces now resolve Next.js **16.3.6**. Scoped workspace overrides replace Undici 7.x versions below 7.29.1 with **7.29.1**, brace-expansion 2.x versions below 2.1.7 with **2.1.7**, and brace-expansion 5.x versions below 5.0.12 with **5.0.12**. The overrides preserve each affected major-version line, and the refreshed lockfile is committed.
 
+This snapshot predates the move of the app to TanStack Start. Next.js and OpenNext now apply only to the marketing site in `website/`; the app's optional Cloudflare build uses Nitro and Wrangler.
+
 ## Exposure and remediation
 
 - **Next.js:** the advisory concerns remote code execution in `next/og`’s `ImageResponse`. A source search found no `ImageResponse`, `next/og`, or dynamic Open Graph image route in Relay’s app or marketing code. The metadata uses a static social-preview image. This reduces the known exposure to that particular feature; it does not replace updating both framework versions.

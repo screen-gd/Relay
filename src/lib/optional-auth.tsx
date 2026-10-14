@@ -1,5 +1,3 @@
-"use client";
-
 import {
   createContext,
   useCallback,
@@ -9,7 +7,7 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import { useClerk, useUser } from "@clerk/nextjs";
+import { useClerk, useUser } from "@clerk/tanstack-react-start";
 
 type UserState = ReturnType<typeof useUser>;
 type ClerkState = ReturnType<typeof useClerk>;

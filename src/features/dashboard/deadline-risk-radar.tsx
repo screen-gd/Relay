@@ -1,6 +1,4 @@
-"use client";
-
-import Link from "next/link";
+import { Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { useMutation, useQuery } from "convex/react";
 import type { FunctionReturnType } from "convex/server";
@@ -8,7 +6,7 @@ import { api } from "../../../convex/_generated/api";
 import type { Id } from "../../../convex/_generated/dataModel";
 import { Button } from "@/components/ui/button";
 import { ContentSection } from "@/components/workspace-page";
-import { projectHref } from "@/features/projects/project-view";
+import { projectLink } from "@/features/projects/project-view";
 import { cn } from "@/lib/utils";
 
 type Finding = FunctionReturnType<
@@ -17,8 +15,8 @@ type Finding = FunctionReturnType<
 type Digest = NonNullable<FunctionReturnType<typeof api.riskDigest.latest>>;
 type Source = Pick<Finding, "projectId" | "outputId">;
 
-function sourceHref({ projectId, outputId }: Source) {
-  return projectHref({ projectId, view: outputId ? "outputs" : undefined });
+function sourceLink({ projectId, outputId }: Source) {
+  return projectLink({ projectId, view: outputId ? "outputs" : undefined });
 }
 
 function dueLabel(days: number) {
@@ -126,7 +124,7 @@ export function DeadlineRiskRadar({
               className="grid gap-1 text-xs sm:grid-cols-[minmax(0,1fr)_auto] sm:items-baseline sm:gap-3"
             >
               <Link
-                href={sourceHref(finding)}
+                {...sourceLink(finding)}
                 className="truncate font-medium text-foreground underline-offset-4 hover:underline"
               >
                 {finding.outputTitle
@@ -180,7 +178,7 @@ export function DeadlineRiskRadar({
               >
                 {item.line}{" "}
                 <Link
-                  href={sourceHref(item)}
+                  {...sourceLink(item)}
                   className="text-xs underline underline-offset-4"
                 >
                   Source

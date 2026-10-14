@@ -1,9 +1,14 @@
 @import "tailwindcss";
 @import "tw-animate-css";
+@import "@fontsource-variable/geist";
+@import "@fontsource-variable/geist-mono";
 
 @custom-variant dark (&:is(.dark *));
 
 :root {
+  /* Self-hosted Geist from Fontsource. */
+  --font-geist-sans: "Geist Variable";
+  --font-geist-mono: "Geist Mono Variable";
   --background: var(--app-canvas);
   --foreground: var(--app-ink);
   --card: var(--app-panel);
@@ -182,10 +187,12 @@
 }
 
 @theme inline {
-  --font-sans: "Geist", "Geist Fallback", ui-sans-serif, system-ui, sans-serif;
-  --font-mono: "Geist Mono", "Geist Mono Fallback", ui-monospace, monospace;
+  --font-sans:
+    "Geist Variable", "Geist Fallback", ui-sans-serif, system-ui, sans-serif;
+  --font-mono:
+    "Geist Mono Variable", "Geist Mono Fallback", ui-monospace, monospace;
   --font-display:
-    "Geist", "Geist Fallback", ui-sans-serif, system-ui, sans-serif;
+    "Geist Variable", "Geist Fallback", ui-sans-serif, system-ui, sans-serif;
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -256,7 +263,8 @@ body {
   min-height: 100dvh;
   background: var(--app-canvas);
   color: var(--app-ink);
-  font-family: "Geist", "Geist Fallback", ui-sans-serif, system-ui, sans-serif;
+  font-family:
+    "Geist Variable", "Geist Fallback", ui-sans-serif, system-ui, sans-serif;
   letter-spacing: 0;
   text-rendering: optimizeLegibility;
 }
@@ -738,14 +746,15 @@ h3,
 h4,
 h5,
 h6 {
-  font-family: "Geist", "Geist Fallback", ui-sans-serif, system-ui, sans-serif;
+  font-family:
+    "Geist Variable", "Geist Fallback", ui-sans-serif, system-ui, sans-serif;
   font-weight: 600;
 }
 
 .font-display {
   font-family:
-    var(--font-geist-sans), "Geist", "Geist Fallback", ui-sans-serif, system-ui,
-    sans-serif;
+    var(--font-geist-sans), "Geist Variable", "Geist Fallback", ui-sans-serif,
+    system-ui, sans-serif;
 }
 
 .metric-value,
@@ -753,7 +762,8 @@ h6 {
 [data-timecode],
 [data-id],
 [data-stat] {
-  font-family: "Geist Mono", "Geist Mono Fallback", ui-monospace, monospace;
+  font-family:
+    "Geist Mono Variable", "Geist Mono Fallback", ui-monospace, monospace;
   font-variant-numeric: tabular-nums;
 }
 

@@ -1,7 +1,5 @@
-"use client";
-
 import { FolderKanban } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { useNavigate } from "@tanstack/react-router";
 
 import { PrecisionProjects } from "@/components/precision-projects";
 import { PageEmptyState } from "@/components/workspace-page";
@@ -10,7 +8,7 @@ import { useProjectAccess } from "./project-access";
 import { useProjectActions } from "./project-actions-provider";
 import { useProjectActivity } from "./project-activity";
 import { ProjectWorkspace } from "./project-workspace";
-import { projectHref } from "./project-view";
+import { useProjectNavigation } from "./project-view";
 import { useProjectsApplicationState } from "./use-projects-application-state";
 
 export function ProjectsApplication({
@@ -22,7 +20,8 @@ export function ProjectsApplication({
   projectView?: string;
   sample?: boolean;
 }) {
-  const router = useRouter();
+  const navigate = useNavigate();
+  const openProject = useProjectNavigation();
   const { settings, isAuthLoaded } = useData();
   const { groups } = useProjectGroups();
   const access = useProjectAccess();
@@ -77,20 +76,21 @@ export function ProjectsApplication({
         localActivity={localActivity.filter(
           (event) => event.projectId === detailProject.id
         )}
-        onBack={() => router.push(isSample ? "/sample-studio" : "/projects")}
+        onBack={() =>
+          void navigate({ to: isSample ? "/sample-studio" : "/projects" })
+        }
         onViewChange={(view) => {
           setActiveProjectView(view);
           window.localStorage.setItem(
             "relay:last-project-workspace-view",
             view
           );
-          router.replace(
-            projectHref({
-              projectId: detailProject.id,
-              view,
-              sample: isSample,
-            })
-          );
+          void openProject({
+            projectId: detailProject.id,
+            view,
+            sample: isSample,
+            replace: true,
+          });
         }}
         onEdit={actions.openEditProject}
         onDelete={(project) => actions.requestDeleteProject(project.id)}

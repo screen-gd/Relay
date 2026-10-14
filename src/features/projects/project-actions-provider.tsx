@@ -1,5 +1,3 @@
-"use client";
-
 import {
   createContext,
   useCallback,
@@ -10,8 +8,6 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import { useRouter } from "next/navigation";
-
 import { NewProjectDialog } from "@/components/new-project-dialog";
 import { ProjectGroupsDialog } from "@/components/project-groups-dialog";
 import { useClientActions } from "@/features/clients/use-client-actions";
@@ -26,7 +22,7 @@ import {
   ProjectActivityProvider,
   useProjectActivity,
 } from "./project-activity";
-import { projectHref } from "./project-view";
+import { useProjectNavigation } from "./project-view";
 import {
   useData,
   useProjectGroups,
@@ -140,7 +136,7 @@ function ProjectActionsRuntime({
   const access = useProjectAccess();
   const { clientRecords, clientOptions, addClient } = useClientActions();
   const { recordProjectActivity, removeProjectActivity } = useProjectActivity();
-  const router = useRouter();
+  const openProject = useProjectNavigation();
   const projectPort = useMemo(() => createProjectPort(setItems), [setItems]);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [newProjectOpen, setNewProjectOpen] = useState(false);
@@ -296,9 +292,9 @@ function ProjectActionsRuntime({
           entrySource: "sample_dashboard",
         });
       }
-      router.push(projectHref({ projectId: project.id, sample }));
+      void openProject({ projectId: project.id, sample });
     },
-    [router, sample]
+    [openProject, sample]
   );
 
   const canDeleteProject = useCallback(
@@ -401,7 +397,7 @@ function ProjectActionsRuntime({
       });
       setNewProjectOpen(false);
       notify("Project created.");
-      router.push(projectHref({ projectId: project.id }));
+      void openProject({ projectId: project.id });
     },
   });
 
@@ -556,7 +552,7 @@ function ProjectActionsRuntime({
     setEditingId("");
     setForm(emptyProjectForm());
     notify(editingId ? "Project updated." : "Project created.");
-    if (!editingId) router.push(projectHref({ projectId: payload.id }));
+    if (!editingId) void openProject({ projectId: payload.id });
   }, [
     access.teamData?.currentMember.userId,
     clientOptions,
@@ -569,7 +565,7 @@ function ProjectActionsRuntime({
     projectPort,
     projectTagOptions,
     recordProjectActivity,
-    router,
+    openProject,
     setSettings,
     settings,
   ]);
@@ -614,7 +610,7 @@ function ProjectActionsRuntime({
       <NewProjectDialog
         briefImportEnabled={!sample && isSignedIn}
         teamId={projectStartScope === "team" ? access.currentTeamId : undefined}
-        onBriefCreated={(id) => router.push(projectHref({ projectId: id }))}
+        onBriefCreated={(id) => void openProject({ projectId: id })}
         open={newProjectOpen}
         clients={clientRecords}
         projectGroups={groups.filter(

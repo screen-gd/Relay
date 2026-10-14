@@ -35,7 +35,7 @@ function CartesianSeries({
   const ctx = useChartPart(part, kind === "line" ? "line" : "area");
   const { registerSeries, unregisterSeries } = ctx;
 
-  if (process.env.NODE_ENV !== "production" && !ctx.config[dataKey]) {
+  if (import.meta.env.DEV && !ctx.config[dataKey]) {
     console.warn(
       `<${part} dataKey="${dataKey}" />: "${dataKey}" is not in the chart \`config\`. Add it so the series has a colour and label.`
     );

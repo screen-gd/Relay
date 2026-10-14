@@ -57,7 +57,7 @@ export function useProjectTableController(
     if (!ready) return;
     const query = serializeProjectTableSearch(state);
     window.history.replaceState(
-      null,
+      window.history.state,
       "",
       `${window.location.pathname}${query ? `?${query}` : ""}`
     );

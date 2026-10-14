@@ -1,3 +1,6 @@
+import { linkOptions, useNavigate } from "@tanstack/react-router";
+import { useCallback } from "react";
+
 export type ProjectWorkspaceView =
   "overview" | "outputs" | "review" | "files" | "activity";
 
@@ -24,6 +27,55 @@ export function projectHref({
 }) {
   const path = `${sample ? "/sample-studio" : ""}/projects/${encodeURIComponent(projectId)}`;
   return view ? `${path}?view=${view}` : path;
+}
+
+/**
+ * Typed `Link` options for a workspace project page, e.g.
+ * `<Link {...projectLink({ projectId, view: "outputs" })} hash="output-1">`.
+ */
+export function projectLink({
+  projectId,
+  view,
+}: {
+  projectId: string;
+  view?: ProjectWorkspaceView;
+}) {
+  return linkOptions({
+    to: "/projects/$projectId",
+    params: { projectId },
+    search: { view },
+  });
+}
+
+/**
+ * Returns a function that opens a project page through the router. Use it
+ * instead of pushing `projectHref` strings so params and `?view=` stay typed.
+ * Pass `replace` to swap the current history entry, e.g. when changing tabs.
+ */
+export function useProjectNavigation() {
+  const navigate = useNavigate();
+  return useCallback(
+    ({
+      projectId,
+      view,
+      sample = false,
+      replace = false,
+    }: {
+      projectId: string;
+      view?: ProjectWorkspaceView;
+      sample?: boolean;
+      replace?: boolean;
+    }) =>
+      sample
+        ? navigate({
+            to: "/sample-studio/projects/$projectId",
+            params: { projectId },
+            search: { view },
+            replace,
+          })
+        : navigate({ ...projectLink({ projectId, view }), replace }),
+    [navigate]
+  );
 }
 
 export type WorkspaceMemberOption = {

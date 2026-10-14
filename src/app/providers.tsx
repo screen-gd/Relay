@@ -1,7 +1,5 @@
-"use client";
-
 import { useMemo } from "react";
-import { ClerkProvider, useAuth } from "@clerk/nextjs";
+import { ClerkProvider, useAuth } from "@clerk/tanstack-react-start";
 import { ConvexProviderWithClerk } from "convex/react-clerk";
 import { ConvexProviderWithAuth, ConvexReactClient } from "convex/react";
 import { DataProvider } from "@/lib/data-context";
@@ -63,9 +61,8 @@ export function Providers({
   const hasConvexConfig = Boolean(convexUrl);
   const hasClerkConfig = Boolean(clerkPublishableKey);
   const hasCloudConfig = hasConvexConfig && hasClerkConfig;
-  // Cloudflare runtime variables are not inlined into client bundles. The
-  // server layout passes the public settings as props so hydration uses the
-  // same values as the Worker render.
+  // The root route passes the public build-time settings as props so tests
+  // and local mode can render without them.
   const convex = useMemo(
     () =>
       new ConvexReactClient(convexUrl || "https://placeholder.convex.cloud"),

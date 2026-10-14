@@ -2,7 +2,7 @@
 
 ## Security Model
 
-- Clerk handles user authentication in the Next.js application.
+- Clerk handles user authentication in the TanStack Start application.
 - Convex functions derive server-side authorization from the authenticated Convex identity. Client-provided user identifiers must not be trusted for access decisions.
 - Public client portal queries must return explicit client-safe projections rather than raw project, file, user, or team records.
 - Internal notes, uploader IDs, team data, private assets, reference files, and other internal metadata must not be included in public portal responses.
