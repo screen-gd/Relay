@@ -22,8 +22,11 @@ export function pageMeta(title: string, description: string) {
  * dropped and the page falls back to its default tab.
  */
 export const projectViewSearch = z.object({
-  view: z.unknown().transform((value) => {
-    const first = Array.isArray(value) ? value[0] : value;
-    return typeof first === "string" ? first : undefined;
-  }),
+  view: z
+    .unknown()
+    .optional()
+    .transform((value) => {
+      const first = Array.isArray(value) ? value[0] : value;
+      return typeof first === "string" ? first : undefined;
+    }),
 });
