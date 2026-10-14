@@ -217,3 +217,86 @@ test("requires project edit access for portal management", async () => {
       })
   ).rejects.toThrow("Project access required");
 });
+
+test("reports the project revision allowance and the rounds a client used", async () => {
+  const t = convexTest(schema, modules);
+  await seedProject(t);
+  const owner = t.withIdentity({ tokenIdentifier: "owner" });
+  const created = await owner.mutation(api.projectPortals.publish, {
+    projectId: "project-portal",
+    config: {
+      publicNotes: "",
+      showStartDate: false,
+      showDueDate: false,
+      selectedOutputIds: ["main-output"],
+      expiresAt: null,
+    },
+  });
+  await owner.mutation(api.projectPortals.setStatus, {
+    portalId: created.portalId,
+    status: "open",
+  });
+
+  expect(
+    await t.query(api.projectPortals.getByToken, { token: created.token })
+  ).toMatchObject({ access: "active", revisions: null });
+
+  await owner.mutation(api.clientPortals.setProjectRevisionLimit, {
+    projectId: "project-portal",
+    maxRevisions: 3,
+  });
+  await t.run(async (ctx) => {
+    const output = await ctx.db
+      .query("projectOutputs")
+      .withIndex("by_projectId_and_archived", (q) =>
+        q.eq("projectId", "project-portal").eq("archived", false)
+      )
+      .unique();
+    if (!output) throw new Error("Expected the shared output");
+    const version = await ctx.db
+      .query("projectMediaVersions")
+      .withIndex("by_outputId_and_versionNumber", (q) =>
+        q.eq("outputId", output._id)
+      )
+      .first();
+    if (!version) throw new Error("Expected the shared version");
+    await ctx.db.insert("mediaVersionComments", {
+      ownerUserId: "owner",
+      projectId: "project-portal",
+      outputId: output._id,
+      mediaVersionId: version._id,
+      authorName: "Client",
+      body: "Trim the intro.",
+      resolved: false,
+      createdAt: "2026-08-03T00:00:00.000Z",
+    });
+    await ctx.db.insert("projectMediaVersions", {
+      ownerUserId: "owner",
+      projectId: "project-portal",
+      outputId: output._id,
+      id: "main-v2",
+      versionNumber: 2,
+      source: {
+        kind: "youtube",
+        url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+        videoId: "dQw4w9WgXcQ",
+      },
+      title: "Second cut",
+      notes: "",
+      createdByUserId: "owner",
+      createdAt: "2026-08-04T00:00:00.000Z",
+    });
+  });
+
+  expect(
+    await t.query(api.projectPortals.getByToken, { token: created.token })
+  ).toMatchObject({ access: "active", revisions: { used: 1, limit: 3 } });
+
+  await owner.mutation(api.clientPortals.setProjectRevisionLimit, {
+    projectId: "project-portal",
+    maxRevisions: null,
+  });
+  expect(
+    await t.query(api.projectPortals.getByToken, { token: created.token })
+  ).toMatchObject({ access: "active", revisions: null });
+});

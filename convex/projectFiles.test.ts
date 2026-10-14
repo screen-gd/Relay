@@ -1434,4 +1434,154 @@ describe("project file management", () => {
       )
     ).toBe(true);
   });
+
+  test("project Max revisions caps portal requests, and a portal limit overrides it", async () => {
+    const { owner, t } = await setupProject();
+    await owner.mutation(api.clientPortals.setProjectRevisionLimit, {
+      projectId: "project-files",
+      maxRevisions: 2,
+    });
+    const { token } = await owner.mutation(api.clientPortals.publish, {
+      projectId: "project-files",
+      clientSummary: "",
+      clientNotes: "",
+      estimatedCompletion: "2026-06-10",
+      clientStage: "Review",
+    });
+
+    await t.mutation(api.clientPortals.submitRevision, {
+      token,
+      clientName: "Client",
+      message: "First pass.",
+    });
+    await t.mutation(api.clientPortals.submitRevision, {
+      token,
+      clientName: "Client",
+      message: "Second pass.",
+    });
+    await expect(
+      t.mutation(api.clientPortals.submitRevision, {
+        token,
+        clientName: "Client",
+        message: "Third pass.",
+      })
+    ).rejects.toThrow("This portal has reached its revision request limit");
+
+    const inherited = await t.query(api.clientPortals.getByToken, { token });
+    expect(inherited).toMatchObject({ revisionLimit: 2, revisionsUsed: 2 });
+    expect(
+      await owner.query(api.clientPortals.getForProject, {
+        projectId: "project-files",
+      })
+    ).toMatchObject({
+      portal: { revisionLimit: 2, revisionsUsed: 2 },
+    });
+
+    await owner.mutation(api.clientPortals.setProjectRevisionLimit, {
+      projectId: "project-files",
+      maxRevisions: 1,
+    });
+    const publicPortal = await t.query(api.clientPortals.getByToken, { token });
+    expect(publicPortal).toMatchObject({ revisionLimit: 1, revisionsUsed: 2 });
+  });
+
+  test("a portal keeps its own explicit limit over the project's", async () => {
+    const { owner, t } = await setupProject();
+    await owner.mutation(api.clientPortals.setProjectRevisionLimit, {
+      projectId: "project-files",
+      maxRevisions: 3,
+    });
+    const { token } = await owner.mutation(api.clientPortals.publish, {
+      projectId: "project-files",
+      clientSummary: "",
+      clientNotes: "",
+      estimatedCompletion: "2026-06-10",
+      revisionLimit: 1,
+      clientStage: "Review",
+    });
+
+    await t.mutation(api.clientPortals.submitRevision, {
+      token,
+      clientName: "Client",
+      message: "First pass.",
+    });
+    await expect(
+      t.mutation(api.clientPortals.submitRevision, {
+        token,
+        clientName: "Client",
+        message: "Second pass.",
+      })
+    ).rejects.toThrow("This portal has reached its revision request limit");
+    expect(
+      await t.query(api.clientPortals.getByToken, { token })
+    ).toMatchObject({ revisionLimit: 1, revisionsUsed: 1 });
+  });
+
+  test("portals without a limit or a project limit keep accepting requests", async () => {
+    const { owner, t } = await setupProject();
+    const { token } = await owner.mutation(api.clientPortals.publish, {
+      projectId: "project-files",
+      clientSummary: "",
+      clientNotes: "",
+      estimatedCompletion: "2026-06-10",
+      clientStage: "Review",
+    });
+
+    for (const message of ["One.", "Two.", "Three.", "Four."]) {
+      await t.mutation(api.clientPortals.submitRevision, {
+        token,
+        clientName: "Client",
+        message,
+      });
+    }
+
+    expect(
+      await t.query(api.clientPortals.getByToken, { token })
+    ).toMatchObject({ revisionLimit: null, revisionsUsed: 4 });
+    expect(
+      await owner.query(api.clientPortals.getProjectRevisionLimit, {
+        projectId: "project-files",
+      })
+    ).toMatchObject({ maxRevisions: null });
+  });
+
+  test("setting the project revision limit clamps, clears, and needs edit access", async () => {
+    const { owner, reviewer } = await setupProject(true, "team");
+    await owner.mutation(api.clientPortals.setProjectRevisionLimit, {
+      projectId: "project-files",
+      maxRevisions: 3,
+    });
+    expect(
+      await owner.query(api.clientPortals.getProjectRevisionLimit, {
+        projectId: "project-files",
+      })
+    ).toMatchObject({ maxRevisions: 3 });
+
+    await owner.mutation(api.clientPortals.setProjectRevisionLimit, {
+      projectId: "project-files",
+      maxRevisions: 42,
+    });
+    expect(
+      await owner.query(api.clientPortals.getProjectRevisionLimit, {
+        projectId: "project-files",
+      })
+    ).toMatchObject({ maxRevisions: 20 });
+
+    await expect(
+      reviewer.mutation(api.clientPortals.setProjectRevisionLimit, {
+        projectId: "project-files",
+        maxRevisions: 5,
+      })
+    ).rejects.toThrow("Project access required");
+
+    await owner.mutation(api.clientPortals.setProjectRevisionLimit, {
+      projectId: "project-files",
+      maxRevisions: null,
+    });
+    expect(
+      await owner.query(api.clientPortals.getProjectRevisionLimit, {
+        projectId: "project-files",
+      })
+    ).toMatchObject({ maxRevisions: null });
+  });
 });
