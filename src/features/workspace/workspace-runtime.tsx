@@ -4,7 +4,10 @@ import {
   WorkspaceShell,
   workspacePageForPath,
 } from "@/components/workspace-shell";
-import { SampleModeBar } from "@/components/sample-mode-bar";
+import {
+  SampleModeBar,
+  WorkspaceSampleBar,
+} from "@/components/sample-mode-bar";
 import { useData, useProjectGroups } from "@/lib/data-context";
 import { useOptionalAuth } from "@/lib/optional-auth";
 import { useClientActions } from "@/features/clients/use-client-actions";
@@ -45,6 +48,7 @@ function WorkspaceFrame({ children }: { children: ReactNode }) {
     setSettings,
     isAuthLoaded,
     continueLocally,
+    sampleWorkspace,
     toast,
     setToast,
   } = useData();
@@ -123,7 +127,19 @@ function WorkspaceFrame({ children }: { children: ReactNode }) {
             notificationSlot={<NotificationBell />}
           >
             <div className="flex min-h-full flex-col lg:h-full">
-              {sample ? <SampleModeBar /> : null}
+              {sample ? (
+                <SampleModeBar />
+              ) : sampleWorkspace.loaded ? (
+                <WorkspaceSampleBar
+                  onClear={() => {
+                    sampleWorkspace.clear();
+                    setToast({
+                      message: "Sample data removed.",
+                      tone: "success",
+                    });
+                  }}
+                />
+              ) : null}
               <div
                 ref={contentRef}
                 className="min-h-0 flex-1 bg-[var(--app-canvas)] text-[var(--app-ink)] transition-colors lg:overflow-y-auto"

@@ -28,6 +28,7 @@ import {
 } from "@/features/settings/settings-defaults";
 import type { AnalyticsConsent } from "@/lib/telemetry";
 import { cn } from "@/lib/utils";
+import { TrustLinks } from "./trust-links";
 
 export type WorkspaceMode = "local" | "account";
 export type OnboardingProfile = {
@@ -260,6 +261,9 @@ function ModeStep({
           Terms
         </Link>
         .
+      </p>
+      <p className="text-xs leading-relaxed text-[var(--app-muted)]">
+        <TrustLinks />
       </p>
     </>
   );
