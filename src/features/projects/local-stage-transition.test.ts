@@ -1,9 +1,10 @@
 import { describe, expect, it } from "vitest";
-import type { SalaryBatch, WorkItem } from "@/lib/types";
+import type { SalaryBatch, SalaryPlan, WorkItem } from "@/lib/types";
 import { createDefaultSettings } from "@/features/settings/settings-defaults";
 import { buildPayoutReport } from "@/lib/payout-reporting";
 import {
   applyLocalStageTransition,
+  dashboardSalaryBatch,
   previewLocalStageTransition,
   salaryBatchProgress,
 } from "./local-stage-transition";
@@ -123,5 +124,66 @@ describe("local delivery and salary totals", () => {
     expect(salaryBatchProgress(nextItems, nextBatches, settings).progress).toBe(
       2
     );
+  });
+});
+
+describe("dashboard salary batch", () => {
+  const plan: SalaryPlan = {
+    id: "plan-a",
+    clientId: "client-a",
+    requiredProjectCount: 4,
+    amount: 8000,
+    startDate: "2026-09-01",
+    notes: "",
+    archived: false,
+  };
+  const delivered = (id: string, overrides: Partial<WorkItem> = {}) =>
+    salaryProject(id, { status: "Delivered", ...overrides });
+
+  it("tracks a Payment plan's unsettled deliveries against the plan size", () => {
+    const projects = [
+      ...["a", "b", "c", "d", "e", "f"].map((id) =>
+        delivered(id, { salaryPlanId: plan.id })
+      ),
+      salaryProject("planned", { salaryPlanId: plan.id }),
+    ];
+    const batches: SalaryBatch[] = [
+      {
+        id: "batch-1",
+        number: 1,
+        completedDate: "2026-10-01",
+        archived: false,
+        archivedDate: "",
+        paid: true,
+        projectIds: ["a", "b", "c", "d"],
+        requiredProjectCount: 4,
+        salaryPlanId: plan.id,
+      },
+    ];
+
+    expect(dashboardSalaryBatch(projects, batches, [plan], settings)).toEqual({
+      progress: 2,
+      size: 4,
+    });
+  });
+
+  it("prefers the settings batch on ties and hides with no salary work", () => {
+    const projects = [
+      delivered("legacy"),
+      delivered("planned", { salaryPlanId: plan.id }),
+    ];
+
+    expect(dashboardSalaryBatch(projects, [], [plan], settings)).toEqual({
+      progress: 1,
+      size: 5,
+    });
+    expect(
+      dashboardSalaryBatch(
+        [salaryProject("client", { workType: "Client" })],
+        [],
+        [plan],
+        settings
+      )
+    ).toBeNull();
   });
 });
