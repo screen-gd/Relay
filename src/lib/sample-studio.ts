@@ -1,4 +1,4 @@
-import type { ResourceLink, SettingsState, WorkItem } from "./types";
+import type { Client, ResourceLink, SettingsState, WorkItem } from "./types";
 import { workflowStagesFromLabels } from "./workflow-templates";
 
 export const sampleStudioSettings: SettingsState = {
@@ -167,3 +167,113 @@ export const sampleStudioResources: ResourceLink[] = [
     updatedAt: "2026-07-21T09:00:00.000Z",
   },
 ];
+
+/** Seeded sample records carry this id prefix, so clearing finds exactly them. */
+const SAMPLE_RECORD_PREFIX = "sample-";
+
+export function isSampleRecordId(id: string) {
+  return id.startsWith(SAMPLE_RECORD_PREFIX);
+}
+
+/** Adds the sample records to a workspace list without disturbing the rest. */
+export function withSampleRecords<RecordType extends { id: string }>(
+  current: readonly RecordType[],
+  sample: readonly RecordType[]
+): RecordType[] {
+  const sampleIds = new Set(sample.map((record) => record.id));
+  return [...current.filter((record) => !sampleIds.has(record.id)), ...sample];
+}
+
+/** Removes the sample records and leaves everything else in place. */
+export function withoutSampleRecords<RecordType extends { id: string }>(
+  records: readonly RecordType[]
+): RecordType[] {
+  return records.filter((record) => !isSampleRecordId(record.id));
+}
+
+function sampleRecordId(fixtureId: string) {
+  return `${SAMPLE_RECORD_PREFIX}${fixtureId}`;
+}
+
+/** The demo clients a new workspace loads. */
+export const sampleWorkspaceClients: Client[] =
+  sampleStudioSettings.clients.map((client) => ({
+    ...client,
+    id: sampleRecordId(client.id),
+  }));
+
+/** The demo clients a workspace loads, skipping names it already holds. */
+export function sampleWorkspaceClientsFor(
+  existing: readonly Client[]
+): Client[] {
+  const names = new Set(
+    existing.map((client) => client.name.trim().toLowerCase())
+  );
+  return sampleWorkspaceClients.filter(
+    (client) => !names.has(client.name.trim().toLowerCase())
+  );
+}
+
+/** Outputs for the demo projects, drawn from what each fixture project notes. */
+const sampleProjectOutputs: Record<
+  string,
+  NonNullable<WorkItem["templateDeliverables"]>
+> = {
+  "sample-launch-film": [
+    { title: "Fine cut", category: "Deliverable", initialStatus: "approved" },
+    { title: "Picture lock", category: "Deliverable", initialStatus: "draft" },
+    { title: "Sound mix", category: "Deliverable", initialStatus: "draft" },
+    { title: "Captions", category: "Deliverable", initialStatus: "draft" },
+  ],
+  "sample-founder-story": [
+    {
+      title: "Opening cut",
+      category: "Deliverable",
+      initialStatus: "changes_requested",
+    },
+    {
+      title: "Lower thirds",
+      category: "Asset",
+      initialStatus: "changes_requested",
+    },
+  ],
+  "sample-field-notes": [
+    {
+      title: "Master",
+      category: "Deliverable",
+      initialStatus: "final_delivered",
+    },
+    {
+      title: "Social cutdown",
+      category: "Deliverable",
+      initialStatus: "final_delivered",
+    },
+  ],
+};
+
+/**
+ * The demo projects a workspace loads, linked to the demo clients. A project
+ * whose client name already exists points at that record instead, because
+ * clients are stored one per name.
+ */
+export function sampleWorkspaceProjectsFor(
+  existingClients: readonly Client[]
+): WorkItem[] {
+  const clientIdByName = new Map(
+    existingClients.map((client) => [
+      client.name.trim().toLowerCase(),
+      client.id,
+    ])
+  );
+  return sampleStudioProjects.map((project) => ({
+    ...project,
+    clientId:
+      clientIdByName.get((project.client ?? "").trim().toLowerCase()) ??
+      sampleWorkspaceClients.find((client) => client.name === project.client)
+        ?.id,
+    templateDeliverables: sampleProjectOutputs[project.id],
+  }));
+}
+
+/** The review link a new workspace loads with the demo projects. */
+export const sampleWorkspaceResources: ResourceLink[] = sampleStudioResources;
