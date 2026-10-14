@@ -15,9 +15,14 @@ import {
 import { isDoneStatus } from "@/features/routes/utils/status-utils";
 import { safeMoneyValue } from "@/features/routes/utils/number-utils";
 import { buildPayoutReport } from "@/lib/payout-reporting";
-import { salaryBatchProgress } from "@/features/projects/local-stage-transition";
+import { dashboardSalaryBatch } from "@/features/projects/local-stage-transition";
 import type { ProjectStatus } from "@/lib/domain-values";
-import type { SalaryBatch, SettingsState, WorkItem } from "@/lib/types";
+import type {
+  SalaryBatch,
+  SalaryPlan,
+  SettingsState,
+  WorkItem,
+} from "@/lib/types";
 import type {
   ProjectSessionActivity,
   ProjectSessionActivityListener,
@@ -41,6 +46,8 @@ export type DashboardStats = {
   outstanding: number;
   salaryEdits: number;
   salaryBatchProgress: number;
+  /** Edits per batch on the Salary batch card; null hides the card. */
+  salaryBatchSize: number | null;
   delivered: number;
   avgTurnaroundDays: number;
 };
@@ -49,6 +56,7 @@ export function useDashboardApplicationState({
   projects,
   settings,
   salaryBatches,
+  salaryPlans,
   clientOptions,
   projectTagOptions,
   subscribeToProjectActivity,
@@ -56,6 +64,7 @@ export function useDashboardApplicationState({
   projects: WorkItem[];
   settings: SettingsState;
   salaryBatches: SalaryBatch[];
+  salaryPlans: readonly SalaryPlan[];
   clientOptions: string[];
   projectTagOptions: string[];
   subscribeToProjectActivity: (
@@ -169,6 +178,12 @@ export function useDashboardApplicationState({
           ) / delivered.length
         )
       : 0;
+    const salaryBatch = dashboardSalaryBatch(
+      projects,
+      salaryBatches,
+      salaryPlans,
+      settings
+    );
     return {
       total: projects.length,
       active,
@@ -177,15 +192,12 @@ export function useDashboardApplicationState({
       collected: moneyReport.collected,
       outstanding: moneyReport.outstanding,
       salaryEdits: deliveredSalaryProjects.length,
-      salaryBatchProgress: salaryBatchProgress(
-        projects,
-        salaryBatches,
-        settings
-      ).progress,
+      salaryBatchProgress: salaryBatch?.progress ?? 0,
+      salaryBatchSize: salaryBatch?.size ?? null,
       delivered: delivered.length,
       avgTurnaroundDays,
     };
-  }, [projects, salaryBatches, settings]);
+  }, [projects, salaryBatches, salaryPlans, settings]);
 
   return {
     query,

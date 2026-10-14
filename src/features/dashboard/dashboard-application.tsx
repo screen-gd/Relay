@@ -15,6 +15,7 @@ export function DashboardApplication() {
   const {
     settings,
     salaryBatches,
+    salaryPlans,
     isSignedIn,
     setToast,
     updateSalaryBatchPayment,
@@ -28,6 +29,7 @@ export function DashboardApplication() {
     projects: access.personalProjects,
     settings,
     salaryBatches,
+    salaryPlans,
     clientOptions,
     projectTagOptions: ["ALL", ...projectTagOptions],
     subscribeToProjectActivity,
