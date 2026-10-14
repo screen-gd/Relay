@@ -691,6 +691,7 @@ body::before {
 }
 
 .brand-cta {
+  --brand-cta-radius: 32px;
   position: relative;
   display: flex;
   flex-direction: column;
@@ -698,7 +699,8 @@ body::before {
   gap: 32px;
   overflow: hidden;
   padding: 120px 24px 136px;
-  border-radius: 20px;
+  border-radius: var(--brand-cta-radius);
+  clip-path: inset(0 round var(--brand-cta-radius));
   background: var(--brand-ink);
   color: #ffffff;
   text-align: center;
@@ -714,6 +716,15 @@ body::before {
   position: absolute;
   inset: 0;
   pointer-events: none;
+}
+
+/* Carry the radius through Grainient's wrapper to both background canvases. */
+.brand-cta::before,
+.brand-cta::after,
+.brand-cta-shader,
+.brand-cta-shader > div,
+.brand-cta-shader canvas {
+  border-radius: inherit;
 }
 
 .brand-cta::before,
