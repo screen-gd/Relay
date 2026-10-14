@@ -79,6 +79,7 @@ const sections: readonly TrustSection[] = [
     heading: "Export",
     paragraphs: [
       "Settings > Backup and restore has Export backup, which writes one JSON file with projects, clients, project groups, saved links, payment batches, and settings. Account and integration details are left out, and uploaded files are not in it.",
+      "Next to it, Export CSV writes separate files for projects, clients, and payment records. Earnings and payment amounts appear only for members with finance access.",
       "Import replaces local workspace data. In an account workspace it works only while that workspace has no projects, files, or payment batches, because Relay never merges a backup into data that already exists.",
       "The Reports page also exports CSV files of its payment summary and invoice drafts. Those cover report figures, not the workspace.",
     ],
