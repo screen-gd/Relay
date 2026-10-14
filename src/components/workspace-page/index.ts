@@ -7,6 +7,7 @@ export { DataTableFrame } from "./data-table-frame";
 export { FillViewport } from "./fill-viewport";
 export { MasterDetail } from "./master-detail";
 export { MetricItem, MetricStrip } from "./metric-strip";
+export { PageActions } from "./page-actions";
 export { PageContent } from "./page-content";
 export { PageEmptyState } from "./page-empty-state";
 export { PageHeader } from "./page-header";
