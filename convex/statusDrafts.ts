@@ -4,6 +4,7 @@ import type { Id } from "./_generated/dataModel";
 import { mutation, query, internalMutation } from "./_generated/server";
 import { enqueueAiRun, requireAiEditor } from "./aiRuns";
 import { aiCompletionValidator, aiModelTierValidator } from "./aiValidators";
+import { safeCommentTimestampSeconds } from "./commentTimestamps";
 import { statusDraftAccess } from "./statusDraftsAccess";
 import { statusChannel } from "./statusDraftsValidators";
 import {
@@ -69,7 +70,7 @@ export const generate = mutation({
       comments: comments.map((c) => ({
         text: c.body.slice(0, 1000),
         createdAt: c.createdAt.slice(0, 40),
-        timestamp: c.timestampSeconds ?? null,
+        timestamp: safeCommentTimestampSeconds(c.timestampSeconds),
       })),
     });
     return enqueueAiRun(
