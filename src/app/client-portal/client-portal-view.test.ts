@@ -47,6 +47,7 @@ describe("public Client Portal boundary", () => {
             versions: [{ id: "v1" }],
           },
         ],
+        revisions: { used: 2, limit: 3, roundsUsed: 9 },
       })
     ).toEqual({
       kind: "active",
@@ -55,6 +56,7 @@ describe("public Client Portal boundary", () => {
         notes: "Ready for review",
         stage: "Review",
         progress: 75,
+        revisions: { used: 2, limit: 3 },
         outputs: [
           {
             id: "main",

@@ -31,6 +31,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PublicMediaVersionComments } from "@/components/media-version-comments";
 import { normalizeMediaUrl } from "@/features/project-outputs/project-output-domain";
+import {
+  RevisionAllowance,
+  readRevisionAllowance,
+  type PortalRevisionAllowance,
+} from "@/features/client-portals/internal/revision-allowance";
 import type { MediaVersionComment } from "@/features/media-version-comments/media-version-comments";
 import { parseMediaVersionComments } from "@/features/media-version-comments/media-version-comments-data";
 import { trackOptionalEvent } from "@/lib/telemetry";
@@ -75,6 +80,7 @@ type PublicPortal = {
   stage: string;
   progress: number;
   outputs: PublicOutput[];
+  revisions: PortalRevisionAllowance | null;
   branding?: { name: string; accentColor: string };
 };
 type PublicAccess =
@@ -195,6 +201,7 @@ export function readPublicPortalAccess(value: unknown): PublicAccess {
         Math.min(100, number(project.progress) ?? progressForStage(stage))
       ),
       outputs: readOutputs(project.outputs ?? source.outputs),
+      revisions: readRevisionAllowance(source.revisions),
       branding:
         brandingName &&
         brandingAccentColor &&
@@ -777,6 +784,7 @@ function ActivePortal({
               <p className="mt-1 text-sm text-muted-foreground">
                 Only the current version shared by your editor appears here.
               </p>
+              <RevisionAllowance allowance={portal.revisions} />
             </div>
             <Badge variant="outline">{portal.outputs.length}</Badge>
           </div>
