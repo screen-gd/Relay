@@ -11,7 +11,7 @@ import {
 } from "../../../convex/briefImportPrompt";
 import type { z } from "zod";
 import type { Client } from "@/lib/types";
-import { AiLockedNotice } from "@/features/ai/ai-availability";
+import { AiLockedNotice, type AiAccess } from "@/features/ai/ai-availability";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -140,13 +140,19 @@ export function BriefImport({
       setBusy(false);
     }
   }
-  if (!isAuthenticated || workspace === null)
+  /**
+   * A Workspace that cannot run AI keeps the notice where the import sits, so
+   * nobody fills the form for a run that would fail.
+   */
+  const locked: AiAccess | null = !isAuthenticated
+    ? "signIn"
+    : workspace === null || (workspace && !workspace.aiEnabled)
+      ? "settings"
+      : null;
+  if (locked)
     return (
       <section className={sectionClassName}>
-        <AiLockedNotice
-          feature="Import a brief"
-          access={isAuthenticated ? "settings" : "signIn"}
-        />
+        <AiLockedNotice feature="Import a brief" access={locked} />
       </section>
     );
   if (!workspace) return null;
