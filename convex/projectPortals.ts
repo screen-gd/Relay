@@ -330,6 +330,12 @@ async function publicOutputs(
 /**
  * The client's revision allowance: the rounds their feedback produced against
  * the Project's Max revisions. Null when the Project sets no limit.
+ *
+ * This portal is the client-facing one and has no request submissions, so
+ * "used" counts the Revision Rounds the client's feedback produced, the same
+ * number the editor's panel shows. `clientPortals.submitRevision` gates a
+ * separate, older request path that counts submitted requests instead, and
+ * that portal's own limit applies only there.
  */
 async function revisionAllowance(
   ctx: QueryCtx,
