@@ -68,12 +68,20 @@ export async function resolveProjectLifecycle(
 ): Promise<ProjectLifecycle> {
   const delivered = project.status === "Delivered" && !project.archived;
   const workType = delivered ? await salaryWorkType(ctx, project) : null;
-  const salaryWork =
+  const salaryType =
     !project.teamId &&
     (Boolean(project.salaryPlanId) ||
       (workType !== null &&
         project.workType.trim().toLowerCase() ===
           workType.trim().toLowerCase()));
+  // Salary Batches are a paid feature. On Free no batch will ever include the
+  // Project, so it settles on delivery instead of waiting in the live list.
+  const salaryWork =
+    salaryType &&
+    Boolean(
+      (await resolveOwnerWorkspaceEntitlements(ctx, project.ownerUserId))
+        ?.capabilities.salaryPlans
+    );
   return projectLifecycle({
     ...project,
     salaryWork,

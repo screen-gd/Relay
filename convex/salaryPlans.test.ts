@@ -261,9 +261,10 @@ test("Free delivery succeeds without creating legacy payment batches", async () 
       stageId: "done",
     })
   ).toMatchObject({ kind: "none" });
-  expect(await owner.query(api.projects.list, {})).toMatchObject([
-    { id: "free-salary", status: "Delivered" },
-  ]);
+  // No batch will include it on Free, so it settles on delivery.
+  expect(
+    await owner.query(api.projects.get, { projectId: "free-salary" })
+  ).toMatchObject({ status: "Delivered", lifecycle: "history" });
   expect(await owner.query(api.salaryPlans.listBatches, {})).toEqual([]);
 });
 

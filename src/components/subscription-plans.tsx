@@ -194,8 +194,8 @@ export function SubscriptionPricingView({
           </p>
           <p className="text-sm text-muted-foreground">
             Creator adds Client Hub, custom portal branding, custom Workflow
-            Templates, advanced reports, and new payment plans and batches.
-            Existing payment records remain available on Free.
+            Templates, advanced reports, and payment plans and batches. Batches
+            from a paid plan stay visible on Free.
           </p>
           <p role="status" className="text-sm text-muted-foreground">
             Paid plans are coming later and are not available to purchase yet.

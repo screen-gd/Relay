@@ -280,7 +280,7 @@ const capabilityErrors: Record<WorkspaceCapability, string> = {
     "Custom Workflow Templates require a Creator or Team plan.",
   advancedReports: "Advanced reports require a Creator or Team plan.",
   salaryPlans:
-    "Payment plans and new payment batches require a Creator or Team plan.",
+    "Payment plans and payment batches require a Creator or Team plan.",
   customPortalBranding:
     "Custom portal branding requires a Creator or Team plan.",
   clientHub: "Client Hub requires a Creator or Team plan.",

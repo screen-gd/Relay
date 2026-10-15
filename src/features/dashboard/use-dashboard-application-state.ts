@@ -60,11 +60,14 @@ export function useDashboardApplicationState({
   clientOptions,
   projectTagOptions,
   subscribeToProjectActivity,
+  salaryBatchesEnabled,
 }: {
   projects: WorkItem[];
   settings: SettingsState;
   salaryBatches: SalaryBatch[];
   salaryPlans: readonly SalaryPlan[];
+  /** False on Free, where the Salary batch card is hidden. */
+  salaryBatchesEnabled: boolean;
   clientOptions: string[];
   projectTagOptions: string[];
   subscribeToProjectActivity: (
@@ -178,12 +181,9 @@ export function useDashboardApplicationState({
           ) / delivered.length
         )
       : 0;
-    const salaryBatch = dashboardSalaryBatch(
-      projects,
-      salaryBatches,
-      salaryPlans,
-      settings
-    );
+    const salaryBatch = salaryBatchesEnabled
+      ? dashboardSalaryBatch(projects, salaryBatches, salaryPlans, settings)
+      : null;
     return {
       total: projects.length,
       active,
@@ -197,7 +197,7 @@ export function useDashboardApplicationState({
       delivered: delivered.length,
       avgTurnaroundDays,
     };
-  }, [projects, salaryBatches, salaryPlans, settings]);
+  }, [projects, salaryBatches, salaryBatchesEnabled, salaryPlans, settings]);
 
   return {
     query,

@@ -32,6 +32,7 @@ vi.mock("@/features/projects/project-access", () => ({
       capabilities: { advancedReports: state.advancedReports },
     },
     canManageFinance: state.canManageFinance,
+    salaryBatchesEnabled: true,
   }),
 }));
 vi.mock("@/components/salary-plans-panel", () => ({

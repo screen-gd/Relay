@@ -48,7 +48,7 @@ Included:
 - Basic Reviews and delivery
 - Standard project-specific Client Portals
 - Embedded video review and comments
-- Basic payment tracking, including updates to existing payment records
+- Basic payment tracking for client Projects (mark paid or unpaid)
 
 Limits:
 
@@ -56,8 +56,10 @@ Limits:
 - No Relay storage quota
 - No internal Team Members
 - Creating payment plans, assigning new Projects to payment plans, and generating
-  new payment batches require Creator or Team. Existing plans and batches remain
-  readable and editable; receipt/payment updates and historical imports remain available.
+  payment batches require Creator or Team, and so do recording batch payments
+  and correction notes. Plans and batches made on a paid plan stay visible on
+  Free, and delivered salary work settles on delivery because no batch will
+  include it. Historical batch imports remain available.
 - 10 Projects in progress at a time (`FREE_OPEN_PROJECT_LIMIT` in
   `shared/subscription-plans.ts`). A Project counts while it is not delivered,
   cancelled, or archived, so delivering one frees a slot. Creating, reopening a
@@ -94,7 +96,7 @@ Includes everything in Free, plus:
 - Custom portal branding
 - Custom Workflow Templates
 - Advanced reports
-- New payment plans and batches
+- Payment plans and batches
 
 Creator supports one internal Workspace owner. Client Contacts remain free and do not become Team Members.
 

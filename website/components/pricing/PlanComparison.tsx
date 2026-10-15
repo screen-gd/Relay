@@ -44,7 +44,7 @@ const rows = [
   { label: "Client portals and password links", values: [true, true, true] },
   { label: "Embedded video review", values: [true, true, true] },
   { label: "Payment tracking", values: [true, true, true] },
-  { label: "New payment plans and batches", values: [false, true, true] },
+  { label: "Payment plans and batches", values: [false, true, true] },
   { label: "Client hub", values: [false, true, true] },
   { label: "Custom portal branding", values: [false, true, true] },
   { label: "Workflow templates", values: [false, true, true] },
