@@ -38,63 +38,108 @@ function cleanRequired(value: string, label: string, maxLength: number) {
   return cleaned;
 }
 
+const YOUTUBE_HOSTS = new Set([
+  "youtube.com",
+  "m.youtube.com",
+  "youtu.be",
+  "youtube-nocookie.com",
+]);
+const VIMEO_HOSTS = new Set(["vimeo.com", "player.vimeo.com"]);
+const YOUTUBE_ID = /^[A-Za-z0-9_-]{11}$/;
+const VIMEO_ID = /^\d{6,12}$/;
+/** The privacy hash Vimeo adds to an unlisted video, in the path or an `h` parameter. */
+const VIMEO_HASH = /^[A-Za-z0-9]{6,32}$/;
+
+function providerHost(url: URL) {
+  return url.hostname.toLowerCase().replace(/^www\./, "");
+}
+
+function youtubeVideoId(url: URL): string | undefined {
+  const host = providerHost(url);
+  if (host === "youtu.be") {
+    const id = url.pathname.split("/").filter(Boolean);
+    return id.length === 1 && YOUTUBE_ID.test(id[0]) ? id[0] : undefined;
+  }
+  if (!YOUTUBE_HOSTS.has(host)) return undefined;
+  const segments = url.pathname.split("/").filter(Boolean);
+  const id =
+    segments[0] === "watch"
+      ? (url.searchParams.get("v") ?? "")
+      : ["shorts", "embed", "live"].includes(segments[0] ?? "") &&
+          segments.length === 2
+        ? segments[1]
+        : undefined;
+  return id && YOUTUBE_ID.test(id) ? id : undefined;
+}
+
+function vimeoVideo(url: URL): { id: string; hash?: string } | undefined {
+  const host = providerHost(url);
+  if (!VIMEO_HOSTS.has(host)) return undefined;
+  const segments = url.pathname.split("/").filter(Boolean);
+  const playerLink =
+    host === "player.vimeo.com" &&
+    segments[0] === "video" &&
+    segments.length === 2;
+  const pageLink =
+    host === "vimeo.com" && (segments.length === 1 || segments.length === 2);
+  if (!playerLink && !pageLink) return undefined;
+  const id = segments[playerLink ? 1 : 0];
+  if (!id || !VIMEO_ID.test(id)) return undefined;
+  // An unlisted video carries its privacy hash after the id, or as `h` on the player.
+  const pathHash = pageLink ? segments[1] : undefined;
+  const hash =
+    pathHash && VIMEO_HASH.test(pathHash)
+      ? pathHash
+      : (url.searchParams.get("h") ?? undefined);
+  return hash && VIMEO_HASH.test(hash) ? { id, hash } : { id };
+}
+
+/**
+ * Mirrors `normalizeMediaUrl` in src/features/project-outputs/project-output-domain.ts.
+ * The two build different shapes (this one adds the `kind` the cloud row stores) and
+ * Convex bundles relative imports only, so the accepted links, the stored Vimeo privacy
+ * hash, and the refusal messages stay in step with the client's by hand.
+ */
 function normalizeMediaUrl(raw: string) {
-  if (raw.includes("<") || raw.includes(">"))
-    throw new Error("Embed code is not accepted");
+  const value = raw.trim();
+  if (!value || /[\s<>"'`]/.test(value))
+    throw new Error("Enter a valid HTTP or HTTPS URL.");
+
   let url: URL;
   try {
-    url = new URL(raw.trim());
+    url = new URL(value);
   } catch {
-    throw new Error("Media URL is invalid");
+    throw new Error("Enter a valid HTTP or HTTPS URL.");
   }
-  if (
-    (url.protocol !== "http:" && url.protocol !== "https:") ||
-    url.username ||
-    url.password
-  ) {
-    throw new Error("Media URL must use HTTP or HTTPS");
-  }
-  const host = url.hostname.toLowerCase().replace(/^www\./, "");
-  if (
-    host === "youtu.be" ||
-    host === "youtube.com" ||
-    host === "m.youtube.com" ||
-    host === "youtube-nocookie.com"
-  ) {
-    const segments = url.pathname.split("/").filter(Boolean);
-    const videoId =
-      host === "youtu.be"
-        ? segments.length === 1
-          ? segments[0]
-          : undefined
-        : url.pathname === "/watch"
-          ? (url.searchParams.get("v") ?? undefined)
-          : url.pathname.match(/^\/(?:shorts|embed|live)\/([^/]+)\/?$/)?.[1];
-    if (!videoId || !/^[A-Za-z0-9_-]{11}$/.test(videoId)) {
-      throw new Error("YouTube URL is invalid");
-    }
+  if (url.protocol !== "http:" && url.protocol !== "https:")
+    throw new Error("Only HTTP and HTTPS URLs are allowed.");
+  if (url.username || url.password)
+    throw new Error("URLs with embedded credentials are not allowed.");
+
+  const host = providerHost(url);
+  const youtubeId = youtubeVideoId(url);
+  if (YOUTUBE_HOSTS.has(host)) {
+    if (!youtubeId)
+      throw new Error("That YouTube URL does not contain a valid video.");
     return {
       kind: "youtube" as const,
-      url: `https://www.youtube.com/watch?v=${videoId}`,
-      videoId,
+      videoId: youtubeId,
+      url: `https://www.youtube.com/watch?v=${youtubeId}`,
     };
   }
-  if (host === "vimeo.com" || host === "player.vimeo.com") {
-    const parts = url.pathname.split("/").filter(Boolean);
-    const videoId =
-      host === "player.vimeo.com" && parts[0] === "video" && parts.length === 2
-        ? parts[1]
-        : host === "vimeo.com" && parts.length === 1
-          ? parts[0]
-          : undefined;
-    if (!videoId || !/^\d{6,12}$/.test(videoId))
-      throw new Error("Vimeo URL is invalid");
+
+  const vimeo = vimeoVideo(url);
+  if (VIMEO_HOSTS.has(host)) {
+    if (!vimeo)
+      throw new Error("That Vimeo URL does not contain a valid video.");
     return {
       kind: "vimeo" as const,
-      url: `https://vimeo.com/${videoId}`,
-      videoId,
+      videoId: vimeo.id,
+      // An unlisted video only plays with its privacy hash, so keep it on the stored link.
+      url: `https://vimeo.com/${vimeo.id}${vimeo.hash ? `/${vimeo.hash}` : ""}`,
     };
   }
+
   url.hash = "";
   return { kind: "link" as const, url: url.toString() };
 }
