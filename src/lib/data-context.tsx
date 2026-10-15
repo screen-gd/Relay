@@ -1734,6 +1734,16 @@ function CloudDataProvider({ children }: { children: React.ReactNode }) {
     Promise.resolve([])
   );
   /**
+   * The project list every writer reads. It is written together with the state
+   * through `writeItems`, so a setter never computes from a stale list.
+   */
+  const itemsRef = useRef<WorkItem[]>([]);
+  /** The one way the project list is written, state and ref together. */
+  const writeItems = useCallback((next: WorkItem[]) => {
+    itemsRef.current = next;
+    setItemsState(next);
+  }, []);
+  /**
    * Writes every pending settings patch. The promise rejects when the write
    * fails, after the local fallback is in place, so a caller that must not
    * continue on unsaved data can await it.
@@ -1801,7 +1811,7 @@ function CloudDataProvider({ children }: { children: React.ReactNode }) {
 
     const stored = readInitialItems();
     const nextSettings = readInitialSettings();
-    setItemsState(stored);
+    writeItems(stored);
     setSettingsState(nextSettings);
     setProjectGroupsState(readInitialProjectGroups(nextSettings.clients));
     setResourceLinksState(readInitialResources());
@@ -1821,7 +1831,7 @@ function CloudDataProvider({ children }: { children: React.ReactNode }) {
     if (!convexAuthenticated) {
       if (ready) return;
       const nextSettings = readInitialSettings();
-      setItemsState(readInitialItems());
+      writeItems(readInitialItems());
       setSettingsState(nextSettings);
       setProjectGroupsState(readInitialProjectGroups(nextSettings.clients));
       setResourceLinksState(readInitialResources());
@@ -1977,7 +1987,7 @@ function CloudDataProvider({ children }: { children: React.ReactNode }) {
       }
 
       if (cancelled || initializationToken.current !== token) return;
-      setItemsState(nextItems);
+      writeItems(nextItems);
       setSettingsState(nextSettings);
       setProjectGroupsState(nextProjectGroups);
       setResourceLinksState(nextResources);
@@ -2027,7 +2037,7 @@ function CloudDataProvider({ children }: { children: React.ReactNode }) {
       convexSalaryPlans === undefined
     )
       return;
-    setItemsState(normalizeWorkItems(convexItems));
+    writeItems(normalizeWorkItems(convexItems));
     setProjectGroupsState(
       normalizeProjectGroups(convexProjectGroups, settings.clients)
     );
@@ -2132,96 +2142,94 @@ function CloudDataProvider({ children }: { children: React.ReactNode }) {
 
   const setItems = useCallback(
     (updater: React.SetStateAction<WorkItem[]>) => {
-      setItemsState((prev: WorkItem[]) => {
-        const next = normalizeWorkItems(
-          typeof updater === "function" ? updater(prev) : updater
+      const prev = itemsRef.current;
+      const next = normalizeWorkItems(
+        typeof updater === "function" ? updater(prev) : updater
+      );
+      writeItems(next);
+      if (isSignedIn && convexAuthenticated) {
+        const previousById = new Map(prev.map((item) => [item.id, item]));
+        const nextIds = new Set(next.map((item) => item.id));
+        const newItems = next.filter((item) => !previousById.has(item.id));
+        const changedItems = next.filter(
+          (item) =>
+            previousById.has(item.id) &&
+            JSON.stringify(previousById.get(item.id)) !== JSON.stringify(item)
         );
-        if (isSignedIn && convexAuthenticated) {
-          const previousById = new Map(prev.map((item) => [item.id, item]));
-          const nextIds = new Set(next.map((item) => item.id));
-          const newItems = next.filter((item) => !previousById.has(item.id));
-          const changedItems = next.filter(
-            (item) =>
-              previousById.has(item.id) &&
-              JSON.stringify(previousById.get(item.id)) !== JSON.stringify(item)
-          );
-          const removedIds = [
-            ...new Set(
-              prev
-                .filter((item) => !nextIds.has(item.id))
-                .map((item) => item.id)
-            ),
-          ];
-          const writes = [
-            ...newItems.map((project) =>
-              createProject({
-                project: cloudProjectInput(
-                  project,
-                  settings.clients,
-                  salaryPlans
-                ),
-              })
-            ),
-            ...changedItems.flatMap((project) => {
-              const previous = previousById.get(project.id);
-              if (!previous) return [];
-              return [
-                updateProject({
-                  projectId: project.id,
-                  changes: cloudProjectChanges(project),
-                }),
-                ...(previous.paid !== project.paid
-                  ? [
-                      setProjectPayment({
-                        projectId: project.id,
-                        paid: Boolean(project.paid),
-                      }),
-                    ]
-                  : []),
-                ...(previous.archived !== project.archived
-                  ? [
-                      setProjectArchived({
-                        projectId: project.id,
-                        archived: project.archived ?? false,
-                      }),
-                    ]
-                  : []),
-              ];
-            }),
-            ...removedIds.map((projectId) => deleteProject({ projectId })),
-          ];
-          const settled = Promise.allSettled(writes);
-          projectWritesRef.current = settled;
-          void settled
-            .then((results) => {
-              const failure = results.find(
-                (result): result is PromiseRejectedResult =>
-                  result.status === "rejected"
-              );
-              if (failure) throw failure.reason;
+        const removedIds = [
+          ...new Set(
+            prev.filter((item) => !nextIds.has(item.id)).map((item) => item.id)
+          ),
+        ];
+        const writes = [
+          ...newItems.map((project) =>
+            createProject({
+              project: cloudProjectInput(
+                project,
+                settings.clients,
+                salaryPlans
+              ),
             })
-            .catch((error) => {
-              if (isProjectAuthorizationError(error)) {
-                setItemsState(prev);
-                setToast({
-                  tone: "warning",
-                  message:
-                    "Project change was not allowed by your team permissions.",
-                });
-                return;
-              }
-              writeJson(STORAGE_KEY, next);
+          ),
+          ...changedItems.flatMap((project) => {
+            const previous = previousById.get(project.id);
+            if (!previous) return [];
+            return [
+              updateProject({
+                projectId: project.id,
+                changes: cloudProjectChanges(project),
+              }),
+              ...(previous.paid !== project.paid
+                ? [
+                    setProjectPayment({
+                      projectId: project.id,
+                      paid: Boolean(project.paid),
+                    }),
+                  ]
+                : []),
+              ...(previous.archived !== project.archived
+                ? [
+                    setProjectArchived({
+                      projectId: project.id,
+                      archived: project.archived ?? false,
+                    }),
+                  ]
+                : []),
+            ];
+          }),
+          ...removedIds.map((projectId) => deleteProject({ projectId })),
+        ];
+        // The writes start here, outside React's state updater, so the batch a
+        // caller awaits after this call is the batch this call started.
+        const settled = Promise.allSettled(writes);
+        projectWritesRef.current = settled;
+        void settled
+          .then((results) => {
+            const failure = results.find(
+              (result): result is PromiseRejectedResult =>
+                result.status === "rejected"
+            );
+            if (failure) throw failure.reason;
+          })
+          .catch((error) => {
+            if (isProjectAuthorizationError(error)) {
+              writeItems(prev);
               setToast({
                 tone: "warning",
                 message:
-                  "Cloud sync failed. Projects are saved locally for now.",
+                  "Project change was not allowed by your team permissions.",
               });
+              return;
+            }
+            writeJson(STORAGE_KEY, next);
+            setToast({
+              tone: "warning",
+              message: "Cloud sync failed. Projects are saved locally for now.",
             });
-        } else {
-          writeJson(STORAGE_KEY, next);
-        }
-        return next;
-      });
+          });
+      } else {
+        writeJson(STORAGE_KEY, next);
+      }
     },
     [
       convexAuthenticated,
@@ -2233,10 +2241,11 @@ function CloudDataProvider({ children }: { children: React.ReactNode }) {
       salaryPlans,
       settings.clients,
       updateProject,
+      writeItems,
     ]
   );
 
-  // Keep network effects outside React state updaters. Retries retain only the intended edits.
+  // Retries retain only the intended edits.
   const setSettings = useCallback(
     (updater: React.SetStateAction<SettingsState>) => {
       const previous = settingsRef.current;
@@ -2395,7 +2404,7 @@ function CloudDataProvider({ children }: { children: React.ReactNode }) {
         settings,
         input
       );
-      setItemsState(nextItems);
+      writeItems(nextItems);
       setSalaryBatches(nextBatches);
       writeJson(STORAGE_KEY, nextItems);
       if (nextBatches !== salaryBatches)
@@ -2528,7 +2537,7 @@ function CloudDataProvider({ children }: { children: React.ReactNode }) {
           })
         );
       }
-      setItemsState(nextItems);
+      writeItems(nextItems);
       setSettingsState(nextSettings);
       setProjectGroupsState(nextProjectGroups);
       setResourceLinksState(nextResources);
