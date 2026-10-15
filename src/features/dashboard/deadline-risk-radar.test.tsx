@@ -91,6 +91,6 @@ test("locks the digest behind sign-in when the visit has no account", () => {
 test("offers the digest once Workspace AI is on", () => {
   state.aiEnabled = true;
   const html = render();
-  expect(html).toContain("Draft digest");
+  expect(html).toContain("Flag deadline risk");
   expect(html).not.toContain('data-slot="ai-locked-notice"');
 });

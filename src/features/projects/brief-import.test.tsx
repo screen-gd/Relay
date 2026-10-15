@@ -16,11 +16,15 @@ const workspace = {
 
 const state = vi.hoisted(() => ({
   isAuthenticated: false,
+  isLoading: false,
   workspace: undefined as typeof workspace | null | undefined,
 }));
 
 vi.mock("convex/react", () => ({
-  useConvexAuth: () => ({ isAuthenticated: state.isAuthenticated }),
+  useConvexAuth: () => ({
+    isAuthenticated: state.isAuthenticated,
+    isLoading: state.isLoading,
+  }),
   useQuery: (fn: Parameters<typeof getFunctionName>[0]) =>
     getFunctionName(fn) === "briefImport:workspace"
       ? state.workspace
@@ -35,6 +39,7 @@ vi.mock("@tanstack/react-router", () => ({
 
 beforeEach(() => {
   state.isAuthenticated = false;
+  state.isLoading = false;
   state.workspace = undefined;
 });
 
@@ -76,6 +81,11 @@ test("locks the import while the Workspace has AI off", () => {
 
 test("waits instead of flashing a lock while the workspace loads", () => {
   state.isAuthenticated = true;
+  expect(render()).toBe("");
+});
+
+test("waits for sign-in to resolve instead of flashing a lock", () => {
+  state.isLoading = true;
   expect(render()).toBe("");
 });
 

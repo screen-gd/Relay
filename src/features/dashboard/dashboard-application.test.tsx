@@ -10,6 +10,12 @@ const state = vi.hoisted(() => ({
   sample: false,
   populated: false,
   isSignedIn: false,
+  currentTeamId: undefined as undefined | string,
+  teamData: undefined as
+    | undefined
+    | {
+        currentMember: { role: string; permissions: { viewProjects: boolean } };
+      },
 }));
 vi.mock("@/lib/data-context", () => ({
   useData: () => ({
@@ -34,7 +40,14 @@ vi.mock("@/features/projects/project-access", () => ({
     canCreateProjects: true,
     canEditProjects: true,
     teamDataLoading: false,
+    teamData: state.teamData,
+    currentTeamId: state.currentTeamId,
   }),
+}));
+vi.mock("./deadline-risk-radar", () => ({
+  DeadlineRiskRadar: ({ workspaceId }: { workspaceId: string }) => (
+    <div data-slot="deadline-risk-radar">{workspaceId}</div>
+  ),
 }));
 vi.mock("@/features/projects/project-actions-provider", () => ({
   useProjectActions: () => ({
@@ -59,6 +72,8 @@ describe("Dashboard route headings", () => {
     state.sample = false;
     state.populated = false;
     state.isSignedIn = false;
+    state.currentTeamId = undefined;
+    state.teamData = undefined;
   });
   it.each([
     [false, false, false, "Dashboard"],
@@ -85,4 +100,33 @@ describe("Dashboard route headings", () => {
       }
     }
   );
+});
+
+describe("Deadline risk on the dashboard", () => {
+  beforeEach(() => {
+    state.sample = false;
+    state.populated = true;
+    state.isSignedIn = false;
+    state.currentTeamId = undefined;
+    state.teamData = undefined;
+  });
+
+  it("shows the feature locked to a local visit that could never meet it", async () => {
+    const html = await renderWithRouter(<DashboardApplication />);
+    expect(html).toContain('data-slot="ai-locked-notice"');
+    expect(html).toContain("Flag deadline risk");
+    expect(html).toContain("Sign in to use AI");
+    expect(html).not.toContain('data-slot="deadline-risk-radar"');
+  });
+
+  it("keeps the radar for an Editor in a team Workspace", async () => {
+    state.isSignedIn = true;
+    state.currentTeamId = "workspace-1";
+    state.teamData = {
+      currentMember: { role: "Editor", permissions: { viewProjects: true } },
+    };
+    const html = await renderWithRouter(<DashboardApplication />);
+    expect(html).toContain('data-slot="deadline-risk-radar"');
+    expect(html).not.toContain('data-slot="ai-locked-notice"');
+  });
 });

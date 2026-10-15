@@ -5,7 +5,7 @@ import { useConvexAuth, useMutation, useQuery } from "convex/react";
 import { api } from "../../../../convex/_generated/api";
 import type { Doc, Id } from "../../../../convex/_generated/dataModel";
 import { projectHref } from "@/features/projects/project-view";
-import { AiLockedNotice } from "@/features/ai/ai-availability";
+import { AiLockedNotice, useAiAccount } from "@/features/ai/ai-availability";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -139,11 +139,15 @@ const sectionClassName =
 export function StatusDrafts({
   projectId,
   portalId,
+  aiEnabled,
 }: {
   projectId: string;
   portalId?: Id<"projectPortals">;
+  /** Whether this project's Workspace can run AI at all. */
+  aiEnabled: boolean;
 }) {
   const { isAuthenticated } = useConvexAuth();
+  const { hasAccount } = useAiAccount();
 
   const generate = useMutation(api.statusDrafts.generate);
   const [channel, setChannel] =
@@ -172,11 +176,14 @@ export function StatusDrafts({
       setBusy(false);
     }
   }
-  if (!isAuthenticated) {
+  if (!isAuthenticated || !aiEnabled) {
     return (
       <section aria-label="Client status draft" className={sectionClassName}>
         <h4 className="mb-2 text-sm font-semibold">Client update</h4>
-        <AiLockedNotice feature="Draft a client status update" />
+        <AiLockedNotice
+          feature="Draft a client status update"
+          access={hasAccount ? "settings" : "signIn"}
+        />
       </section>
     );
   }
@@ -214,7 +221,7 @@ export function StatusDrafts({
           disabled={running}
           onClick={() => void request("default")}
         >
-          Draft update
+          Draft a client status update
         </Button>
         {run || selected ? (
           <Button

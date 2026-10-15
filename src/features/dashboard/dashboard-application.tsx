@@ -2,6 +2,8 @@
 
 import { FirstRunChecklist } from "@/components/first-run-checklist";
 import { PrecisionDashboard } from "@/components/precision-dashboard";
+import { ContentSection } from "@/components/workspace-page";
+import { AiLockedNotice } from "@/features/ai/ai-availability";
 import { useClientActions } from "@/features/clients/use-client-actions";
 import { useProjectAccess } from "@/features/projects/project-access";
 import { useProjectActions } from "@/features/projects/project-actions-provider";
@@ -10,6 +12,24 @@ import { projectWorkTypeOptions } from "@/features/routes/utils/work-type-utils"
 import { DeadlineRiskRadar } from "./deadline-risk-radar";
 import { useDashboardApplicationState } from "./use-dashboard-application-state";
 import { useData } from "@/lib/data-context";
+
+/**
+ * Deadline risk scans a team Workspace's projects, so a local or signed-out
+ * visit meets the feature where it lives, locked, instead of never seeing it.
+ */
+function LockedDeadlineRisk() {
+  return (
+    <ContentSection
+      title="Deadline risk"
+      description="Projects running late or waiting on a client."
+    >
+      <AiLockedNotice
+        feature="Flag deadline risk"
+        hint="Runs in a team Workspace."
+      />
+    </ContentSection>
+  );
+}
 
 export function DashboardApplication() {
   const {
@@ -40,6 +60,8 @@ export function DashboardApplication() {
     (member?.role === "Owner" || member?.role === "Editor") &&
     member.permissions.viewProjects ? (
       <DeadlineRiskRadar workspaceId={access.currentTeamId} />
+    ) : !access.sample && !isSignedIn ? (
+      <LockedDeadlineRisk />
     ) : null;
 
   return (

@@ -103,7 +103,7 @@ export function DeadlineRiskRadar({
                 disabled={running}
                 onClick={() => void request("default")}
               >
-                Draft digest
+                Flag deadline risk
               </Button>
               {digest ? (
                 <Button

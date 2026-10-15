@@ -173,7 +173,7 @@ export function EarningsQa({
             variant="outline"
             disabled={running || question.trim().length < 3}
           >
-            Ask
+            Ask about your earnings
           </Button>
         </form>
         {error ? (
