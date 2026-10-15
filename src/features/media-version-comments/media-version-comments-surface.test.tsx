@@ -63,8 +63,8 @@ describe("version review surface", () => {
     const html = renderVersion(false);
 
     expect(html).toContain("Turn feedback into revisions");
-    expect(html).toContain("Draft the changelog");
-    expect(html).toContain("Match ambiguous comments");
+    expect(html).toContain("Draft a version changelog");
+    expect(html).toContain("Match comments in a transcript");
     expect(html).toContain("Sign in to use AI");
   });
 
@@ -74,7 +74,7 @@ describe("version review surface", () => {
     const html = renderVersion(true);
 
     expect(html).toContain("Turn feedback into revisions");
-    expect(html).toContain("Draft changelog");
+    expect(html).toContain("Draft a version changelog");
     expect(html).not.toContain('data-slot="ai-locked-notice"');
     expect(html).not.toContain("Add note");
   });
