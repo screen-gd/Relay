@@ -214,4 +214,30 @@ describe("Workspace hub navigation", () => {
       "projects"
     );
   });
+
+  it("marks the hubs that hold AI tools", async () => {
+    const html = await shell("/");
+    const rail = navigation(html, "Primary navigation");
+    expect([...rail.matchAll(/data-slot="ai-nav-badge"/g)]).toHaveLength(3);
+    expect(html).toContain('aria-label="AI tools"');
+  });
+
+  it("lists every AI action in the command menu, saying what unlocks it", async () => {
+    const html = await shell("/projects/relay-launch");
+    const command = html.slice(html.indexOf('data-test="command-dialog"'));
+    for (const label of [
+      "Turn feedback into revisions",
+      "Draft a client status update",
+      "Import a brief",
+      "Review a call transcript",
+      "Summarise a version",
+      "Draft a change order",
+      "Ask about your earnings",
+      "Flag deadline risk",
+    ])
+      expect(command).toContain(label);
+    expect(command).toContain("AI tools");
+    // Signed out, every AI action names the step that unlocks it.
+    expect(command.match(/Sign in to use AI/g)).toHaveLength(8);
+  });
 });
