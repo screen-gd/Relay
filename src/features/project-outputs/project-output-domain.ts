@@ -94,6 +94,8 @@ const YOUTUBE_HOSTS = new Set([
 const VIMEO_HOSTS = new Set(["vimeo.com", "player.vimeo.com"]);
 const YOUTUBE_ID = /^[A-Za-z0-9_-]{11}$/;
 const VIMEO_ID = /^\d{6,12}$/;
+/** The privacy hash Vimeo adds to an unlisted video, in the path or an `h` parameter. */
+const VIMEO_HASH = /^[A-Za-z0-9]{6,32}$/;
 
 function providerHost(url: URL) {
   return url.hostname.toLowerCase().replace(/^www\./, "");
@@ -117,19 +119,26 @@ function youtubeVideoId(url: URL): string | undefined {
   return id && YOUTUBE_ID.test(id) ? id : undefined;
 }
 
-function vimeoVideoId(url: URL): string | undefined {
+function vimeoVideo(url: URL): { id: string; hash?: string } | undefined {
   const host = providerHost(url);
   if (!VIMEO_HOSTS.has(host)) return undefined;
   const segments = url.pathname.split("/").filter(Boolean);
-  const id =
+  const playerLink =
     host === "player.vimeo.com" &&
     segments[0] === "video" &&
-    segments.length === 2
-      ? segments[1]
-      : host === "vimeo.com" && segments.length === 1
-        ? segments[0]
-        : undefined;
-  return id && VIMEO_ID.test(id) ? id : undefined;
+    segments.length === 2;
+  const pageLink =
+    host === "vimeo.com" && (segments.length === 1 || segments.length === 2);
+  if (!playerLink && !pageLink) return undefined;
+  const id = segments[playerLink ? 1 : 0];
+  if (!id || !VIMEO_ID.test(id)) return undefined;
+  // An unlisted video carries its privacy hash after the id, or as `h` on the player.
+  const pathHash = pageLink ? segments[1] : undefined;
+  const hash =
+    pathHash && VIMEO_HASH.test(pathHash)
+      ? pathHash
+      : (url.searchParams.get("h") ?? undefined);
+  return hash && VIMEO_HASH.test(hash) ? { id, hash } : { id };
 }
 
 /** Parses only navigable HTTP(S) URLs and turns supported providers into safe metadata. */
@@ -171,9 +180,9 @@ export function normalizeMediaUrl(input: string): MediaUrlResult {
     };
   }
 
-  const vimeoId = vimeoVideoId(url);
+  const vimeo = vimeoVideo(url);
   if (VIMEO_HOSTS.has(host)) {
-    if (!vimeoId)
+    if (!vimeo)
       return {
         ok: false,
         error: "That Vimeo URL does not contain a valid video.",
@@ -182,9 +191,10 @@ export function normalizeMediaUrl(input: string): MediaUrlResult {
       ok: true,
       value: {
         provider: "vimeo",
-        videoId: vimeoId,
-        url: `https://vimeo.com/${vimeoId}`,
-        embedUrl: `https://player.vimeo.com/video/${vimeoId}`,
+        videoId: vimeo.id,
+        // An unlisted video only plays with its privacy hash, so keep it on both links.
+        url: `https://vimeo.com/${vimeo.id}${vimeo.hash ? `/${vimeo.hash}` : ""}`,
+        embedUrl: `https://player.vimeo.com/video/${vimeo.id}${vimeo.hash ? `?h=${vimeo.hash}` : ""}`,
       },
     };
   }
