@@ -1,6 +1,6 @@
 import { UserProfile } from "@clerk/tanstack-react-start";
 import { Link } from "@tanstack/react-router";
-import { LoaderCircle, Pencil } from "lucide-react";
+import { LoaderCircle, Pencil } from "@/components/icons";
 import {
   ContentSection,
   PageContent,

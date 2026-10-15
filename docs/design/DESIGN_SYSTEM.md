@@ -1,6 +1,6 @@
 # Relay design system
 
-This index defines the unified UI contract for the Relay workspace. It keeps the current TanStack Start, Tailwind, shadcn/ui, Radix, Lucide, Motion, TanStack Table, Recharts, and existing fonts. The implementation must preserve current routes, data flows, local/cloud modes, permissions, and feature actions.
+This index defines the unified UI contract for the Relay workspace. It keeps the current TanStack Start, Tailwind, shadcn/ui, Radix, Hugeicons (through `src/components/icons.tsx`), Motion, TanStack Table, the dither chart kit, and existing fonts. The implementation must preserve current routes, data flows, local/cloud modes, permissions, and feature actions.
 
 ## System sections
 

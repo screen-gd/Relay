@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
-import { ChevronRight, ExternalLink, RefreshCw } from "lucide-react";
+import { ChevronRight, ExternalLink, RefreshCw } from "@/components/icons";
 import {
   Collapsible,
   CollapsibleContent,

@@ -2,7 +2,12 @@
 
 import { useState, type FormEvent } from "react";
 import { useConvexAuth } from "convex/react";
-import { Check, ChevronRight, MessageCircle, RotateCcw } from "lucide-react";
+import {
+  Check,
+  ChevronRight,
+  MessageCircle,
+  RotateCcw,
+} from "@/components/icons";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {

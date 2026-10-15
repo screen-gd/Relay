@@ -5,7 +5,7 @@ import {
   Link2,
   LockKeyhole,
   Sparkles,
-} from "lucide-react";
+} from "@/components/icons";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { useData } from "@/lib/data-context";

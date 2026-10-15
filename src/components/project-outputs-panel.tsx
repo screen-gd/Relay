@@ -7,7 +7,7 @@ import {
   History,
   MoreHorizontal,
   Plus,
-} from "lucide-react";
+} from "@/components/icons";
 import {
   Collapsible,
   CollapsibleContent,

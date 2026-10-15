@@ -64,7 +64,7 @@ import {
   Plus,
   Trash2,
   Unplug,
-} from "lucide-react";
+} from "@/components/icons";
 import type { ToastState } from "@/features/routes/shared/route-types";
 import { EmptyPanel } from "@/features/routes/shared/empty-panel";
 import {

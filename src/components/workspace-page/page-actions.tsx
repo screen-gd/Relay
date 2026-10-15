@@ -1,4 +1,4 @@
-import { MoreHorizontal } from "lucide-react";
+import { MoreHorizontal } from "@/components/icons";
 import type { ReactNode } from "react";
 
 import { Button } from "@/components/ui/button";

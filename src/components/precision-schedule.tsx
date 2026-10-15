@@ -11,7 +11,7 @@ import {
   Clock3,
   Download,
   Milestone,
-} from "lucide-react";
+} from "@/components/icons";
 import { motion } from "motion/react";
 import {
   useLayoutEffect,

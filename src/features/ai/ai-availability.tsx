@@ -1,6 +1,6 @@
 "use client";
 
-import { LockKeyhole } from "lucide-react";
+import { LockKeyhole } from "@/components/icons";
 import { Link } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
 import { useOptionalAuth } from "@/lib/optional-auth";

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useLocation } from "@tanstack/react-router";
-import { MessageSquarePlus } from "lucide-react";
+import { MessageSquarePlus } from "@/components/icons";
 import { Button as OwnedButton } from "@/components/ui/button";
 import {
   Dialog as OwnedDialog,

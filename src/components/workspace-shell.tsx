@@ -13,6 +13,7 @@ import {
   Info,
   LayoutDashboard,
   Library,
+  PanelLeft,
   LockKeyhole,
   LogIn,
   LogOut,
@@ -29,7 +30,7 @@ import {
   UsersRound,
   UserPlus,
   Workflow,
-} from "lucide-react";
+} from "@/components/icons";
 import { motion } from "motion/react";
 import { Link, useLocation, useNavigate } from "@tanstack/react-router";
 import {
@@ -425,6 +426,7 @@ export function WorkspaceShell({
   const [commandOpen, setCommandOpen] = useState(false);
   const [moreOpen, setMoreOpen] = useState(false);
   const [breadcrumb, setBreadcrumb] = useState<string | null>(null);
+  const [sidebarCollapsed, toggleSidebar] = useSidebarCollapsed();
   const goChordRef = useRef(false);
   const goChordTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const commandReturnFocusRef = useRef<HTMLElement | null>(null);
@@ -494,12 +496,17 @@ export function WorkspaceShell({
     <BreadcrumbContext.Provider value={setBreadcrumb}>
       <div
         data-testid="workspace-shell"
+        data-sidebar={sidebarCollapsed ? "collapsed" : "expanded"}
         className="relay-density-balanced min-h-dvh bg-[var(--app-canvas)] text-[var(--app-ink)] lg:h-dvh lg:overflow-hidden lg:bg-[var(--app-sidebar)]"
       >
-        <DesktopSidebar page={page} />
+        <DesktopSidebar
+          page={page}
+          collapsed={sidebarCollapsed}
+          onToggle={toggleSidebar}
+        />
 
-        <div className="min-h-dvh lg:pl-[52px]">
-          <header className="fixed inset-x-0 top-0 z-30 flex h-[54px] items-center bg-[var(--app-sidebar)] px-2.5 lg:left-[52px] lg:justify-between lg:px-3">
+        <div className="min-h-dvh transition-[padding] duration-200 ease-out motion-reduce:transition-none lg:pl-[var(--sidebar-width)]">
+          <header className="fixed inset-x-0 top-0 z-30 flex h-[54px] items-center bg-[var(--app-sidebar)] px-2.5 lg:left-[var(--sidebar-width)] lg:justify-between lg:px-3">
             <div className="flex h-full min-w-0 flex-1 items-center gap-2 lg:flex-none">
               <RelayBrand compact className="lg:hidden" />
               <p className="truncate text-sm font-semibold lg:hidden">
@@ -595,7 +602,7 @@ export function WorkspaceShell({
             id="main-content"
             data-testid="workspace-content-surface"
             tabIndex={-1}
-            className="workspace-scrollbar-hidden h-[calc(100dvh_-_68px_-_env(safe-area-inset-bottom))] overflow-y-auto bg-[var(--app-canvas)] pt-12 outline-none lg:fixed lg:bottom-0 lg:right-0 lg:top-[54px] lg:left-[52px] lg:h-auto lg:min-h-0 lg:overscroll-contain lg:rounded-tl-2xl lg:border-l lg:border-t lg:border-[var(--app-border)] lg:pt-0"
+            className="workspace-scrollbar-hidden h-[calc(100dvh_-_68px_-_env(safe-area-inset-bottom))] overflow-y-auto bg-[var(--app-canvas)] pt-12 outline-none lg:fixed lg:bottom-0 lg:right-0 lg:top-[54px] lg:left-[var(--sidebar-width)] lg:h-auto lg:min-h-0 lg:overscroll-contain lg:rounded-tl-2xl lg:border-l lg:border-t lg:border-[var(--app-border)] lg:pt-0"
           >
             <div className="flex min-h-full flex-col lg:h-full">
               <ContextNavigation page={page} />
@@ -633,38 +640,179 @@ export function WorkspaceShell({
   );
 }
 
-function DesktopSidebar({ page }: { page: ShellPage }) {
+const SIDEBAR_STORAGE_KEY = "relay:sidebar-collapsed";
+
+/**
+ * Whether the desktop sidebar is collapsed to its icon rail. Expanded is the
+ * default; the choice is remembered on this device. Read after mount so the
+ * server render and the first client render agree.
+ */
+function useSidebarCollapsed() {
+  const [collapsed, setCollapsed] = useState(false);
+  useEffect(() => {
+    try {
+      setCollapsed(window.localStorage.getItem(SIDEBAR_STORAGE_KEY) === "1");
+    } catch {
+      // Storage is unavailable; keep the expanded default.
+    }
+  }, []);
+  const toggle = () =>
+    setCollapsed((current) => {
+      const next = !current;
+      try {
+        window.localStorage.setItem(SIDEBAR_STORAGE_KEY, next ? "1" : "0");
+      } catch {
+        // The toggle still works for this visit.
+      }
+      return next;
+    });
+  return [collapsed, toggle] as const;
+}
+
+/** Pages listed in a hub's sidebar dropdown, without the hub itself. */
+function hubChildren(hub: ShellPage) {
+  return (contextPages[hub] ?? [])
+    .filter((page) => page !== hub)
+    .flatMap((page) => allRoutes.filter((item) => item.page === page));
+}
+
+const sidebarLinkClassName =
+  "group relative flex min-h-10 items-center rounded-[10px] text-[13px] font-medium outline-none transition-[box-shadow,color] duration-150 ease-out focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)] focus-visible:ring-inset";
+
+function DesktopSidebar({
+  page,
+  collapsed,
+  onToggle,
+}: {
+  page: ShellPage;
+  collapsed: boolean;
+  onToggle: () => void;
+}) {
+  const activeHub = hubPageForPage(page);
+  const [openHubs, setOpenHubs] = useState<ReadonlySet<ShellPage>>(
+    () => new Set([activeHub])
+  );
+  // Opening a page inside a hub opens that hub's dropdown.
+  useEffect(() => {
+    setOpenHubs((current) =>
+      current.has(activeHub) ? current : new Set([...current, activeHub])
+    );
+  }, [activeHub]);
+  const toggleHub = (hub: ShellPage) =>
+    setOpenHubs((current) => {
+      const next = new Set(current);
+      if (next.has(hub)) next.delete(hub);
+      else next.add(hub);
+      return next;
+    });
+
   return (
-    <aside className="fixed inset-y-0 left-0 z-40 hidden w-[52px] overflow-hidden bg-[var(--app-sidebar)] lg:flex lg:flex-col">
-      <div className="grid h-[54px] grid-cols-1 items-center justify-items-center bg-[var(--app-sidebar)] px-1.5">
-        <RelayBrand variant="mark" compact />
+    <aside className="fixed inset-y-0 left-0 z-40 hidden w-[var(--sidebar-width)] overflow-hidden bg-[var(--app-sidebar)] transition-[width] duration-200 ease-out motion-reduce:transition-none lg:flex lg:flex-col">
+      <div
+        className={cn(
+          "flex h-[54px] shrink-0 items-center gap-2 px-3",
+          collapsed ? "justify-center px-2" : "justify-between"
+        )}
+      >
+        {collapsed ? null : <RelayBrand compact />}
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              className="size-10 shrink-0 text-[var(--app-muted)] hover:bg-transparent hover:text-[var(--app-ink)]"
+              aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+              aria-expanded={!collapsed}
+              aria-controls="workspace-sidebar-navigation"
+              onClick={onToggle}
+            >
+              <PanelLeft className="size-[18px]" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent side="right">
+            {collapsed ? "Expand sidebar" : "Collapse sidebar"}
+          </TooltipContent>
+        </Tooltip>
       </div>
 
       <nav
+        id="workspace-sidebar-navigation"
         aria-label="Primary navigation"
-        className="min-h-0 flex-1 overflow-y-auto px-1 py-1"
+        className={cn(
+          "workspace-scrollbar-hidden min-h-0 flex-1 overflow-y-auto py-2",
+          collapsed ? "px-2" : "px-3"
+        )}
       >
         {sidebarGroups.map((group, groupIndex) => (
-          <div key={group.label} className="mb-2.5">
-            <SidebarGroupLabel label={group.label} groupIndex={groupIndex} />
-            <div className="space-y-0.5">
-              {group.items.map((item) => (
-                <SidebarRoute
-                  key={item.page}
-                  item={item}
-                  active={routeIsActive(page, item)}
-                />
-              ))}
+          <div key={group.label} className="mb-4">
+            <SidebarGroupLabel
+              label={group.label}
+              groupIndex={groupIndex}
+              collapsed={collapsed}
+            />
+            <div className="space-y-1">
+              {group.items.map((item) => {
+                const children = collapsed ? [] : hubChildren(item.page);
+                const open = openHubs.has(item.page);
+                return (
+                  <div key={item.page}>
+                    <SidebarRoute
+                      item={item}
+                      active={routeIsActive(page, item)}
+                      collapsed={collapsed}
+                      dropdown={
+                        children.length
+                          ? { open, onToggle: () => toggleHub(item.page) }
+                          : undefined
+                      }
+                    />
+                    {children.length && open ? (
+                      <div
+                        id={`sidebar-${item.page}-pages`}
+                        role="group"
+                        aria-label={`${item.label} pages`}
+                        className="ml-[22px] mt-1 space-y-0.5 border-l border-[var(--app-border)] pl-3"
+                      >
+                        {children.map((child) => (
+                          <Link
+                            key={child.page}
+                            to={child.href}
+                            aria-current={
+                              page === child.page ? "page" : undefined
+                            }
+                            className={cn(
+                              sidebarLinkClassName,
+                              "min-h-8 px-2.5 text-[12.5px]",
+                              page === child.page
+                                ? "text-[var(--app-ink)] shadow-[var(--neu-pressed)]"
+                                : "text-[var(--app-muted)] hover:text-[var(--app-ink)]"
+                            )}
+                          >
+                            {child.label}
+                          </Link>
+                        ))}
+                      </div>
+                    ) : null}
+                  </div>
+                );
+              })}
             </div>
           </div>
         ))}
       </nav>
-      <footer className="border-t border-[var(--app-border)] p-1.5">
-        <nav aria-label="Support and legal" className="grid gap-0.5">
+      <footer className="shrink-0 border-t border-[var(--app-border)] p-2">
+        <nav
+          aria-label="Support and legal"
+          className={cn(
+            "grid gap-0.5",
+            collapsed ? "grid-cols-1" : "grid-cols-6"
+          )}
+        >
           {compactSupportLinks.map((link) => {
             const Icon = link.icon;
             const className =
-              "flex h-8 w-full items-center justify-center rounded-md text-[var(--app-muted)] outline-none transition-[background-color,color] duration-150 hover:bg-[var(--app-hover)] hover:text-[var(--app-ink)] focus-visible:ring-2 focus-visible:ring-[var(--app-accent)] focus-visible:ring-inset";
+              "flex h-9 w-full items-center justify-center rounded-lg text-[var(--app-muted)] outline-none transition-colors duration-150 hover:text-[var(--app-ink)] focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)] focus-visible:ring-inset";
             return (
               <Tooltip key={link.label}>
                 <TooltipTrigger asChild>
@@ -676,7 +824,7 @@ function DesktopSidebar({ page }: { page: ShellPage }) {
                       rel="noreferrer"
                       className={className}
                     >
-                      <Icon className="size-4" strokeWidth={1.8} />
+                      <Icon className="size-4" />
                     </a>
                   ) : (
                     <Link
@@ -684,11 +832,13 @@ function DesktopSidebar({ page }: { page: ShellPage }) {
                       aria-label={link.label}
                       className={className}
                     >
-                      <Icon className="size-4" strokeWidth={1.8} />
+                      <Icon className="size-4" />
                     </Link>
                   )}
                 </TooltipTrigger>
-                <TooltipContent side="right">{link.label}</TooltipContent>
+                <TooltipContent side={collapsed ? "right" : "top"}>
+                  {link.label}
+                </TooltipContent>
               </Tooltip>
             );
           })}
@@ -701,32 +851,48 @@ function DesktopSidebar({ page }: { page: ShellPage }) {
 function SidebarGroupLabel({
   label,
   groupIndex,
+  collapsed,
 }: {
   label: string;
   groupIndex: number;
+  collapsed: boolean;
 }) {
-  const heading = (
+  if (!collapsed)
+    return (
+      <div
+        role="heading"
+        aria-level={2}
+        className="mb-1.5 px-2.5 text-[11px] font-medium text-[var(--app-subtle)]"
+      >
+        {label}
+      </div>
+    );
+  return (
     <div
       role="heading"
       aria-level={2}
       aria-label={label}
-      className="relative mb-1.5 flex h-3.5 items-center justify-center overflow-hidden text-[9px] font-semibold uppercase leading-none tracking-[0.08em] text-[var(--app-subtle)]"
+      className="relative mb-1.5 flex h-3.5 items-center justify-center"
     >
       {groupIndex > 0 ? (
         <Separator className="pointer-events-none absolute h-px w-8" />
       ) : null}
     </div>
   );
-
-  return (
-    <Tooltip>
-      <TooltipTrigger asChild>{heading}</TooltipTrigger>
-      <TooltipContent side="right">{label}</TooltipContent>
-    </Tooltip>
-  );
 }
 
-function SidebarRoute({ item, active }: { item: RouteItem; active: boolean }) {
+function SidebarRoute({
+  item,
+  active,
+  collapsed,
+  dropdown,
+}: {
+  item: RouteItem;
+  active: boolean;
+  collapsed: boolean;
+  /** Present when the hub has pages listed beneath it. */
+  dropdown?: { open: boolean; onToggle: () => void };
+}) {
   const Icon = item.icon;
   const aiHere = aiToolsForPage(item.page);
 
@@ -736,31 +902,58 @@ function SidebarRoute({ item, active }: { item: RouteItem; active: boolean }) {
       aria-label={item.label}
       aria-current={active ? "page" : undefined}
       className={cn(
-        "group relative flex h-8 items-center overflow-hidden rounded-lg text-[12px] font-medium outline-none transition-[background-color,color] duration-150 ease-out focus-visible:ring-2 focus-visible:ring-[var(--app-accent)] focus-visible:ring-inset",
-        "mx-auto w-9 justify-center px-0",
+        sidebarLinkClassName,
+        collapsed ? "mx-auto w-10 justify-center" : "flex-1 gap-3 px-2.5",
         active
-          ? "bg-[var(--app-active)] text-[var(--app-ink)]"
-          : "text-[var(--app-muted)] hover:bg-[var(--app-hover)] hover:text-[var(--app-ink)]"
+          ? "text-[var(--app-ink)] shadow-[var(--neu-pressed)]"
+          : "text-[var(--app-muted)] hover:text-[var(--app-ink)]"
       )}
     >
-      <span
+      <Icon
         className={cn(
-          "relative z-10 flex shrink-0 transition-transform duration-150 ease-out motion-reduce:transition-none group-hover:translate-x-0.5 motion-reduce:group-hover:translate-x-0",
-          active && "text-[var(--app-ink)]"
+          "size-[18px] shrink-0",
+          active && "text-[var(--app-accent)]"
         )}
-      >
-        <Icon className="size-4" strokeWidth={active ? 2.1 : 1.8} />
-      </span>
+        strokeWidth={active ? 2 : 1.75}
+      />
+      {collapsed ? null : <span className="truncate">{item.label}</span>}
       {aiHere.length ? (
         <span
           aria-hidden="true"
           data-slot="ai-nav-badge"
-          className="absolute right-1 top-1 size-1.5 rounded-full bg-[var(--app-highlight)]"
+          className={cn(
+            "size-1.5 rounded-full bg-[var(--app-highlight)]",
+            collapsed ? "absolute right-1.5 top-1.5" : "ml-auto"
+          )}
         />
       ) : null}
     </Link>
   );
 
+  const row = dropdown ? (
+    <div className="flex items-center gap-1">
+      {link}
+      <button
+        type="button"
+        aria-label={`${dropdown.open ? "Hide" : "Show"} ${item.label} pages`}
+        aria-expanded={dropdown.open}
+        aria-controls={`sidebar-${item.page}-pages`}
+        onClick={dropdown.onToggle}
+        className="flex size-8 shrink-0 items-center justify-center rounded-lg text-[var(--app-muted)] outline-none hover:text-[var(--app-ink)] focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)]"
+      >
+        <ChevronDown
+          className={cn(
+            "size-4 transition-transform duration-150 motion-reduce:transition-none",
+            dropdown.open ? "rotate-0" : "-rotate-90"
+          )}
+        />
+      </button>
+    </div>
+  ) : (
+    link
+  );
+
+  if (!collapsed) return row;
   return (
     <Tooltip>
       <TooltipTrigger asChild>{link}</TooltipTrigger>

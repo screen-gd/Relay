@@ -7,7 +7,7 @@ import {
   PopoverContent as OwnedPopoverContent,
   PopoverTrigger as OwnedPopoverTrigger,
 } from "@/components/ui/popover";
-import { Bell, Check, Settings } from "lucide-react";
+import { Bell, Check, Settings } from "@/components/icons";
 
 export function NotificationBell() {
   const [notificationOpen, setNotificationOpen] = useState(false);

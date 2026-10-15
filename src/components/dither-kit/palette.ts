@@ -5,7 +5,7 @@
 export type Rgb = [number, number, number];
 
 export type DitherColor =
-  "green" | "blue" | "purple" | "pink" | "orange" | "red" | "grey";
+  "green" | "blue" | "purple" | "pink" | "orange" | "red" | "grey" | "ember";
 
 export type Seed = { fill: Rgb; line: Rgb; star: Rgb };
 
@@ -25,6 +25,12 @@ export const PALETTE: Record<DitherColor, Seed> = {
     star: [255, 220, 175],
   },
   red: { fill: [240, 70, 70], line: [255, 150, 140], star: [255, 195, 185] },
+  // Relay brand accent (Relay change, not upstream).
+  ember: {
+    fill: [236, 138, 94],
+    line: [255, 190, 160],
+    star: [255, 222, 204],
+  },
   // No-data: a muted grey so empty metrics read as "nothing here".
   grey: { fill: [92, 92, 100], line: [140, 140, 150], star: [165, 165, 175] },
 };

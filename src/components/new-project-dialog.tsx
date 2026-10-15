@@ -31,7 +31,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { FieldLayout } from "@/components/ui/field-layout";
 import { Input } from "@/components/ui/input";
-import { Check, ChevronDown } from "lucide-react";
+import { Check, ChevronDown } from "@/components/icons";
 import { ProjectDatePicker } from "@/features/projects/project-dialogs";
 import { useConfirm } from "@/components/confirm-dialog";
 import { useOptionalAuth } from "@/lib/optional-auth";

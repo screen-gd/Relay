@@ -38,7 +38,7 @@ import { projectStatusTone } from "@/lib/project-status-style";
 import type { SettingsState, WorkItem } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { useWorkspaceBreadcrumb } from "@/components/workspace-shell";
-import { ArrowLeft, ExternalLink, MoreHorizontal } from "lucide-react";
+import { ArrowLeft, ExternalLink, MoreHorizontal } from "@/components/icons";
 import {
   formatShortDateTime,
   ProjectActivityFeed,

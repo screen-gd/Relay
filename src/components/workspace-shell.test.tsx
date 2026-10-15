@@ -155,9 +155,12 @@ describe("Workspace hub navigation", () => {
     "keeps %s reachable under its active hub",
     async (pathname, hub, hubHref, destinations) => {
       const html = await shell(pathname);
-      expect(currentLinks(navigation(html, "Primary navigation"))).toEqual([
-        hubHref,
-      ]);
+      // The active hub's dropdown opens and marks the page inside it.
+      expect(currentLinks(navigation(html, "Primary navigation"))).toEqual(
+        pathname === hubHref || pathname.startsWith("/projects/")
+          ? [hubHref]
+          : [hubHref, pathname]
+      );
       const context = navigation(html, `${hub} navigation`);
       for (const href of destinations)
         expect(context).toContain(`href="${href}"`);
@@ -213,6 +216,20 @@ describe("Workspace hub navigation", () => {
     expect(workspacePageForPath("/sample-studio/projects/demo")).toBe(
       "projects"
     );
+  });
+
+  it("offers a sidebar toggle and dropdowns for hubs with pages", async () => {
+    const html = await shell("/calendar");
+    expect(html).toMatch(
+      /aria-label="Collapse sidebar"[^>]*aria-expanded="true"|aria-expanded="true"[^>]*aria-label="Collapse sidebar"/
+    );
+    const rail = navigation(html, "Primary navigation");
+    expect(rail).toContain('aria-label="Hide Projects pages"');
+    expect(rail).toContain('aria-label="Show Team pages"');
+    expect(rail).toContain('aria-label="Show Settings pages"');
+    for (const href of ["/calendar", "/timeline", "/files", "/media"])
+      expect(rail).toContain(`href="${href}"`);
+    expect(rail).not.toContain('href="/team-chat"');
   });
 
   it("marks the hubs that hold AI tools", async () => {

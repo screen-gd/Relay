@@ -1,6 +1,6 @@
 "use client";
 
-import { LockKeyhole, Sparkles } from "lucide-react";
+import { LockKeyhole, Sparkles } from "@/components/icons";
 import { useLocation, useNavigate } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
 import {

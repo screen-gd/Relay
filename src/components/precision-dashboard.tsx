@@ -17,7 +17,7 @@ import {
   Trash2,
   UserRound,
   UsersRound,
-} from "lucide-react";
+} from "@/components/icons";
 import {
   createColumnHelper,
   flexRender,
@@ -46,6 +46,7 @@ import { Card } from "@/components/ui/card";
 import { Empty, EmptyHeader, EmptyMedia } from "@/components/ui/empty";
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
+import { Sparkline } from "@/components/dither-kit/sparkline";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -414,6 +415,20 @@ export function PrecisionDashboard(props: DashboardProps) {
 
   const selected =
     props.projects.find((project) => project.id === selectedId) ?? null;
+  /** Paid value per week over the last eight weeks, oldest first. */
+  const paidTrend = useMemo(() => {
+    const weeks = Array.from({ length: 8 }, () => 0);
+    const now = Date.now();
+    for (const project of props.projects) {
+      if (!project.paid || !(project.earnings > 0)) continue;
+      const paidAt = Date.parse(project.paidDate || project.completedAt || "");
+      if (Number.isNaN(paidAt)) continue;
+      const weeksAgo = Math.floor((now - paidAt) / (7 * 86_400_000));
+      if (weeksAgo >= 0 && weeksAgo < weeks.length)
+        weeks[weeks.length - 1 - weeksAgo] += project.earnings;
+    }
+    return weeks;
+  }, [props.projects]);
   const projectSummary = useMemo(() => {
     const activeProjects = props.projects.filter(
       (project) => !delivered(project) && project.status !== "Cancelled"
@@ -877,10 +892,28 @@ export function PrecisionDashboard(props: DashboardProps) {
                       }
                     />
                   }
-                  supporting={`${formatMoney(
-                    props.stats.outstanding,
-                    props.settings.currencyCode
-                  )} unpaid`}
+                  supporting={
+                    <>
+                      {`${formatMoney(
+                        props.stats.outstanding,
+                        props.settings.currencyCode
+                      )} unpaid`}
+                      {paidTrend.some(Boolean) ? (
+                        <div
+                          role="img"
+                          aria-label="Paid value per week, last 8 weeks"
+                          className="chart-glow mt-2 h-8"
+                        >
+                          <Sparkline
+                            data={paidTrend}
+                            color="ember"
+                            bloom="high"
+                            bloomOnHover
+                          />
+                        </div>
+                      ) : null}
+                    </>
+                  }
                 />
                 {showSalaryBatch ? (
                   <MetricItem

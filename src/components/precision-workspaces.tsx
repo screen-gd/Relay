@@ -14,7 +14,7 @@ import {
   Search,
   UsersRound,
   X,
-} from "lucide-react";
+} from "@/components/icons";
 import { AnimatePresence, motion } from "motion/react";
 import { Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
@@ -22,6 +22,8 @@ import { useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { AreaChart } from "@/components/dither-kit/area-chart";
 import { Area } from "@/components/dither-kit/area";
+import { BarChart } from "@/components/dither-kit/bar-chart";
+import { Bar } from "@/components/dither-kit/bar";
 import { Grid } from "@/components/dither-kit/grid";
 import { PieChart } from "@/components/dither-kit/pie-chart";
 import { Pie } from "@/components/dither-kit/pie";
@@ -1412,12 +1414,27 @@ export function PrecisionReports({
       .slice(0, 5);
   }, [report.deliveredProjects]);
   const colors = [
+    "ember",
     "blue",
-    "purple",
     "green",
-    "orange",
+    "purple",
     "pink",
   ] satisfies DitherColor[];
+  /** Top six clients by delivered value, for the stacked paid/unpaid bars. */
+  const clientChartData = useMemo(
+    () =>
+      [...report.clients]
+        .sort(
+          (a, b) => b.collected + b.outstanding - (a.collected + a.outstanding)
+        )
+        .slice(0, 6)
+        .map((client) => ({
+          name: client.name,
+          paid: client.collected,
+          unpaid: client.outstanding,
+        })),
+    [report.clients]
+  );
   const mixConfig = Object.fromEntries(
     mixData.map((item, index) => [
       item.name,
@@ -1594,7 +1611,8 @@ export function PrecisionReports({
                   ? { duration: 0 }
                   : { ...revealTransition, delay: 0.08 }
               }
-              className="flex h-full min-w-0 flex-col rounded-[6px] border border-[var(--app-border)] bg-[var(--app-panel)] p-4"
+              data-surface="raised"
+              className="flex h-full min-w-0 flex-col rounded-[var(--radius-panel)] bg-[var(--app-panel)] p-4"
             >
               <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                 <div>
@@ -1650,15 +1668,16 @@ export function PrecisionReports({
                   transition={
                     reduceMotion ? { duration: 0 } : { duration: 0.2 }
                   }
-                  className="mt-4 h-[220px] shrink-0 sm:h-[260px]"
+                  className="chart-glow mt-4 h-[220px] shrink-0 sm:h-[260px]"
                 >
                   {trendData.length ? (
                     <AreaChart
                       data={trendData}
-                      config={{ earned: { label: "Earned", color: "blue" } }}
+                      config={{ earned: { label: "Earned", color: "ember" } }}
                       animate={!reduceMotion}
                       animationDuration={420}
-                      bloom="off"
+                      bloom="high"
+                      bloomOnHover
                     >
                       <Grid />
                       <XAxis dataKey="label" />
@@ -1700,7 +1719,8 @@ export function PrecisionReports({
                   ? { duration: 0 }
                   : { ...revealTransition, delay: 0.12 }
               }
-              className="flex h-full min-w-0 flex-col rounded-[6px] border border-[var(--app-border)] bg-[var(--app-panel)] p-4"
+              data-surface="raised"
+              className="flex h-full min-w-0 flex-col rounded-[var(--radius-panel)] bg-[var(--app-panel)] p-4"
             >
               <div>
                 <h2 className="text-sm font-semibold">Work mix</h2>
@@ -1709,7 +1729,7 @@ export function PrecisionReports({
                 </p>
               </div>
               <div
-                className="mt-4 h-[220px] shrink-0 sm:h-[260px]"
+                className="chart-glow mt-4 h-[220px] shrink-0 sm:h-[260px]"
                 role="img"
                 aria-label={
                   mixData.length
@@ -1727,7 +1747,8 @@ export function PrecisionReports({
                     innerRadius={0.65}
                     animate={!reduceMotion}
                     animationDuration={420}
-                    bloom="off"
+                    bloom="high"
+                    bloomOnHover
                   >
                     <Pie variant="gradient" />
                     <ChartTooltip labelKey="name" />
@@ -1787,6 +1808,29 @@ export function PrecisionReports({
               value={String(delayedStages)}
             />
           </dl>
+          {trendSeries.length ? (
+            <div
+              role="img"
+              aria-label={`Deliveries by month: ${trendSeries
+                .slice(-6)
+                .map((item) => `${item.label} ${item.delivered}`)
+                .join(", ")}`}
+              className="chart-glow mt-5 h-[160px]"
+            >
+              <BarChart
+                data={trendSeries.slice(-6)}
+                config={{ delivered: { label: "Delivered", color: "ember" } }}
+                animate={!reduceMotion}
+                animationDuration={420}
+                bloom="high"
+                bloomOnHover
+              >
+                <XAxis dataKey="label" />
+                <ChartTooltip labelKey="label" />
+                <Bar dataKey="delivered" variant="gradient" />
+              </BarChart>
+            </div>
+          ) : null}
         </ContentSection>
 
         {advancedReports ? (
@@ -1795,6 +1839,41 @@ export function PrecisionReports({
             description="Delivered value per client, paid and unpaid."
             bodyMode="flush"
           >
+            {canManageFinance && report.clients.length ? (
+              <div
+                role="img"
+                aria-label={`Paid and unpaid by client: ${clientChartData
+                  .map(
+                    (client) =>
+                      `${client.name} ${money(client.paid, settings.currencyCode)} paid, ${money(client.unpaid, settings.currencyCode)} unpaid`
+                  )
+                  .join("; ")}`}
+                className="chart-glow mx-4 mb-4 h-[180px]"
+              >
+                <BarChart
+                  data={clientChartData}
+                  config={{
+                    paid: { label: "Paid", color: "ember" },
+                    unpaid: { label: "Unpaid", color: "grey" },
+                  }}
+                  stackType="stacked"
+                  animate={!reduceMotion}
+                  animationDuration={420}
+                  bloom="high"
+                  bloomOnHover
+                >
+                  <XAxis dataKey="name" />
+                  <ChartTooltip
+                    labelKey="name"
+                    valueFormatter={(value) =>
+                      money(value, settings.currencyCode)
+                    }
+                  />
+                  <Bar dataKey="paid" variant="gradient" />
+                  <Bar dataKey="unpaid" variant="gradient" />
+                </BarChart>
+              </div>
+            ) : null}
             <div className="divide-y divide-[var(--app-border)] border-t border-[var(--app-border)]">
               {report.clients.length ? (
                 <div

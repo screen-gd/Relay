@@ -16,7 +16,7 @@ import {
   Search,
   SlidersHorizontal,
   Trash2,
-} from "lucide-react";
+} from "@/components/icons";
 import {
   createColumnHelper,
   flexRender,

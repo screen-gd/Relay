@@ -33,13 +33,15 @@
   --chart-4: var(--app-danger);
   --chart-5: var(--app-muted);
   /* Theme values live here; runtime code only overrides the user's accent. */
-  --surface-canvas: #f4f4f5;
-  --surface-panel: #ffffff;
-  --surface-panel-raised: #ffffff;
-  --surface-sunken: #f4f4f5;
-  --surface-overlay: #ffffff;
-  --text-primary: #000000;
-  --text-secondary: #3f3f46;
+  /* Relay Ember: one cool neutral base, raised and pressed with paired light
+     and dark shadows, and a single warm accent. */
+  --surface-canvas: #e7e8ec;
+  --surface-panel: #eceef2;
+  --surface-panel-raised: #f1f2f5;
+  --surface-sunken: #e2e4e9;
+  --surface-overlay: #f3f4f7;
+  --text-primary: #0d0d10;
+  --text-secondary: #3a3a42;
   --text-muted: #52525b;
   --text-disabled: #52525b;
   --status-info: #2563eb;
@@ -50,8 +52,8 @@
   --status-warning-bg: #fffbeb;
   --status-danger: #b91c1c;
   --status-danger-bg: #fef2f2;
-  --focus-ring: #18181b;
-  --selected-bg: #e4e4e7;
+  --focus-ring: #a8471f;
+  --selected-bg: #dfe1e7;
   --disabled-bg: #f4f4f5;
   --overlay-scrim: rgb(24 24 27 / 0.58);
   --brand-google-drive: #4285f4;
@@ -85,8 +87,19 @@
   /* Badges and tags are small squares, never pills. */
   --radius-badge: 0.25rem;
   --radius-pill: 9999px;
-  --shadow-panel: none;
-  --shadow-overlay: 0 18px 50px rgb(24 24 27 / 0.16);
+  /* Neumorphic depth. Light comes from the top left in both themes. */
+  --neu-light: rgb(255 255 255 / 0.9);
+  --neu-dark: rgb(150 156 172 / 0.5);
+  --neu-raised: -6px -6px 14px var(--neu-light), 6px 6px 16px var(--neu-dark);
+  --neu-raised-sm: -3px -3px 7px var(--neu-light), 3px 3px 8px var(--neu-dark);
+  --neu-inset:
+    inset 2px 2px 6px var(--neu-dark), inset -2px -2px 6px var(--neu-light);
+  --neu-pressed:
+    inset 3px 3px 7px var(--neu-dark), inset -3px -3px 7px var(--neu-light);
+  /* Hover glow behind dither charts. */
+  --chart-glow: color-mix(in srgb, var(--app-accent) 30%, transparent);
+  --shadow-panel: var(--neu-raised);
+  --shadow-overlay: 0 18px 50px rgb(60 64 80 / 0.22);
   --sidebar: var(--app-sidebar);
   --sidebar-foreground: var(--app-ink);
   --sidebar-primary: var(--app-accent);
@@ -96,9 +109,9 @@
   --sidebar-border: var(--app-border);
   --sidebar-ring: var(--app-accent);
 
-  --app-accent: #18181b;
+  --app-accent: #a8471f;
   --app-accent-foreground: #ffffff;
-  --app-highlight: #18181b;
+  --app-highlight: #a8471f;
   --app-canvas: var(--surface-canvas);
   --app-panel: var(--surface-panel);
   /* Light chrome is white so the gray canvas and white panels read as layers. */
@@ -106,17 +119,17 @@
   --app-soft-panel: var(--surface-sunken);
   --app-header-panel: var(--surface-panel-raised);
   --app-active: var(--selected-bg);
-  --app-hover: rgb(24 24 27 / 0.05);
+  --app-hover: rgb(13 13 16 / 0.04);
   --app-ink: var(--text-primary);
   --app-muted: var(--text-muted);
   --app-subtle: var(--text-muted);
   --app-border: #e4e4e7;
   --app-strong-border: #d4d4d8;
-  --app-control: var(--surface-panel);
+  --app-control: var(--surface-sunken);
   --app-input-border: #d4d4d8;
   --app-secondary: #e4e4e7;
   /* Panels separate from the canvas by fill; the edge is only a hint. */
-  --panel-edge: #e4e4e7;
+  --panel-edge: rgb(255 255 255 / 0.55);
   /* Inset wells inside panels (nested records, comments, previews). */
   --surface-inset: var(--surface-sunken);
   --app-success: var(--status-success);
@@ -126,7 +139,7 @@
   --app-warning-bg: var(--status-warning-bg);
   --app-danger-bg: var(--status-danger-bg);
   --app-progress-track: var(--app-border);
-  --app-chart-grid: #85858e;
+  --app-chart-grid: #7a7a83;
   --app-avatar-surface: var(--surface-sunken);
   --app-thumb-icon: rgb(24 24 27 / 0.36);
   /* Keeps the switch thumb crisp white on light panels. */
@@ -142,17 +155,17 @@
 
 .dark {
   --app-chart-grid: #71717a;
-  --app-accent: #ffffff;
-  --app-accent-foreground: #000000;
-  --app-highlight: #ffffff;
+  --app-accent: #ec8a5e;
+  --app-accent-foreground: #0c0c0f;
+  --app-highlight: #ec8a5e;
   --app-hover: rgb(255 255 255 / 0.06);
   --app-border: rgb(255 255 255 / 0.08);
   --app-strong-border: rgb(255 255 255 / 0.16);
   --app-input-border: rgb(255 255 255 / 0.12);
   --app-secondary: rgb(255 255 255 / 0.08);
-  --app-control: #0a0a0a;
-  --panel-edge: rgb(255 255 255 / 0.05);
-  --surface-inset: #0a0a0a;
+  --app-control: #08080a;
+  --panel-edge: rgb(255 255 255 / 0.04);
+  --surface-inset: #08080a;
   --app-thumb-icon: rgba(241, 245, 249, 0.38);
   --app-switch-thumb: #000000;
   --media-package-1: #17263a;
@@ -160,12 +173,12 @@
   --media-package-3: #172a21;
   --media-package-4: #252039;
   --media-package-5: #252b33;
-  --surface-canvas: #000000;
-  --app-sidebar: var(--surface-sunken);
-  --surface-panel: #121212;
-  --surface-panel-raised: #171717;
-  --surface-sunken: #0a0a0a;
-  --surface-overlay: #181818;
+  --surface-canvas: #0c0c0f;
+  --app-sidebar: var(--surface-canvas);
+  --surface-panel: #101014;
+  --surface-panel-raised: #141419;
+  --surface-sunken: #08080a;
+  --surface-overlay: #17171c;
   --text-primary: #ffffff;
   --text-secondary: #d4d4d8;
   --text-muted: #a1a1aa;
@@ -178,12 +191,14 @@
   --status-warning-bg: rgb(251 191 36 / 0.14);
   --status-danger: #f87171;
   --status-danger-bg: rgb(239 68 68 / 0.14);
-  --focus-ring: #ffffff;
+  --focus-ring: #ec8a5e;
   --selected-bg: rgb(255 255 255 / 0.1);
   --disabled-bg: #1a212b;
   --overlay-scrim: rgb(0 0 0 / 0.68);
-  --shadow-panel: none;
-  --shadow-overlay: 0 20px 56px rgb(0 0 0 / 0.3);
+  --neu-light: rgb(255 255 255 / 0.035);
+  --neu-dark: rgb(0 0 0 / 0.72);
+  --shadow-panel: var(--neu-raised);
+  --shadow-overlay: 0 20px 56px rgb(0 0 0 / 0.55);
 }
 
 @theme inline {
@@ -434,6 +449,59 @@ button:not(:disabled):active,
 [data-slot="badge"],
 [data-slot="tag"] {
   border-radius: var(--radius-badge);
+}
+
+/* Neumorphic surfaces. Panels lift off the canvas with paired shadows instead
+   of borders; fields and tab tracks press into it. */
+[data-slot="card"],
+[data-slot="content-section"],
+[data-slot="metric-item"],
+[data-surface="raised"] {
+  box-shadow: var(--neu-raised);
+}
+
+[data-slot="input"],
+[data-slot="textarea"],
+[data-slot="select-trigger"],
+[data-slot="tabs-list"] {
+  border-color: transparent;
+  background-color: var(--app-control);
+  box-shadow: var(--neu-inset);
+}
+
+[data-slot="tabs-trigger"][data-state="active"] {
+  background-color: var(--surface-panel-raised);
+  box-shadow: var(--neu-raised-sm);
+}
+
+[data-slot="button"][data-variant="outline"],
+[data-slot="button"][data-variant="secondary"] {
+  border-color: transparent;
+  background-color: var(--surface-panel);
+  box-shadow: var(--neu-raised-sm);
+}
+
+[data-slot="button"][data-variant="default"] {
+  box-shadow:
+    var(--neu-raised-sm),
+    inset 0 1px 0 rgb(255 255 255 / 0.18);
+}
+
+[data-slot="button"][data-variant="outline"]:not(:disabled):active,
+[data-slot="button"][data-variant="secondary"]:not(:disabled):active,
+[data-slot="button"][data-variant="ghost"]:not(:disabled):active,
+[data-slot="button"][data-variant="default"]:not(:disabled):active {
+  box-shadow: var(--neu-pressed);
+}
+
+/* Dither charts glow softly while the pointer is over them. */
+.chart-glow {
+  border-radius: var(--radius-panel);
+  transition: box-shadow var(--motion-base) var(--motion-ease-standard);
+}
+
+.chart-glow:hover {
+  box-shadow: 0 0 36px -6px var(--chart-glow);
 }
 
 [data-slot="skeleton"] {
@@ -687,6 +755,14 @@ button:not(:disabled):active,
     opacity: 0;
     transform: scale(0.98);
   }
+}
+
+[data-sidebar] {
+  --sidebar-width: 232px;
+}
+
+[data-sidebar="collapsed"] {
+  --sidebar-width: 64px;
 }
 
 .relay-density-balanced {

@@ -52,7 +52,13 @@ import { normalizeOptionalTimecode } from "@/lib/timecode";
 import type { WorkItem } from "@/lib/types";
 import { api } from "../../../convex/_generated/api";
 import { useQuery } from "convex/react";
-import { Clock3, Download, ExternalLink, History, Upload } from "lucide-react";
+import {
+  Clock3,
+  Download,
+  ExternalLink,
+  History,
+  Upload,
+} from "@/components/icons";
 import { useEffect, useRef, useState } from "react";
 import {
   useProjectActivityAdapter,

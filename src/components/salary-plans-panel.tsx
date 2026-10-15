@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useConvexAuth, useMutation, useQuery } from "convex/react";
-import { Check, Plus } from "lucide-react";
+import { Check, Plus } from "@/components/icons";
 import { api } from "../../convex/_generated/api";
 import type { Doc, Id } from "../../convex/_generated/dataModel";
 

@@ -6,7 +6,13 @@ Use one semantic palette across light, dark, accent, status, and selection state
 
 ## Anatomy
 
-Define canvas, surface, foreground, muted, border, input, primary, secondary, accent, destructive, success, warning, info, focus, and selection tokens. Keep Relay's dark-first base: graphite canvas/surfaces, teal action, cyan highlight, green success, amber warning, red error.
+Define canvas, surface, foreground, muted, border, input, primary, secondary, accent, destructive, success, warning, info, focus, and selection tokens.
+
+The Relay Ember palette is dark-first: a near-black base (`#0c0c0f` canvas, `#101014` panels) with white primary text, and one warm accent, Ember (`#ec8a5e` dark, `#a8471f` light). Light mode uses one cool neutral base (`#e7e8ec`). Status keeps green success, amber warning, and red error.
+
+Surfaces are neumorphic. Panels, cards, and metric items lift with paired shadows (`--neu-raised`) instead of borders. Fields, tab tracks, and the active navigation item press in (`--neu-inset`, `--neu-pressed`). Light comes from the top left in both themes. Buttons, links, and fields never get a highlight fill on hover; hover changes text color only, and press uses `--neu-pressed`.
+
+Charts use the vendored dither kit (`src/components/dither-kit`) with the `ember` seed for the main series. Chart containers take the `chart-glow` class and charts set `bloom="high"` with `bloomOnHover`, so they glow only while the pointer is over them.
 
 ## Behavior
 

@@ -9,7 +9,7 @@ import {
   Grid2X2,
   List,
   Search,
-} from "lucide-react";
+} from "@/components/icons";
 import {
   AnimatePresence,
   LayoutGroup,

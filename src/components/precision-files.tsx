@@ -1,6 +1,6 @@
 "use client";
 
-import { ExternalLink, FileText, Search } from "lucide-react";
+import { ExternalLink, FileText, Search } from "@/components/icons";
 import { useMemo, useState } from "react";
 import type { WorkspaceFile } from "@/features/workspace-discovery/workspace-discovery";
 import { filterWorkspaceFiles } from "@/features/workspace-discovery/workspace-discovery";

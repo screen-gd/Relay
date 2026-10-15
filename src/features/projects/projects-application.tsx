@@ -1,4 +1,4 @@
-import { FolderKanban } from "lucide-react";
+import { FolderKanban } from "@/components/icons";
 import { Link, useNavigate } from "@tanstack/react-router";
 
 import { PrecisionProjects } from "@/components/precision-projects";

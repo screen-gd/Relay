@@ -9,7 +9,7 @@ import {
 import { SubscriptionPricingView } from "@/components/subscription-plans";
 import { Badge as OwnedBadge } from "@/components/ui/badge";
 import { Button as OwnedButton } from "@/components/ui/button";
-import { LoaderCircle } from "lucide-react";
+import { LoaderCircle } from "@/components/icons";
 import { useSubscriptionController } from "./subscription-controller";
 
 export function SubscriptionPage() {

@@ -48,7 +48,7 @@ import {
   Trash2,
   Upload,
   Users,
-} from "lucide-react";
+} from "@/components/icons";
 import { useProfileController } from "./profile-controller";
 import { copyText } from "@/features/routes/shared/clipboard";
 import {

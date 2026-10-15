@@ -44,7 +44,7 @@ import {
   Plus,
   Trash2,
   Upload,
-} from "lucide-react";
+} from "@/components/icons";
 import { ProjectSelect } from "@/features/projects/project-select";
 import { cn } from "@/lib/utils";
 import { useSettingsController } from "./settings-controller";
@@ -1051,6 +1051,7 @@ export function SettingsDesignPage({
                           className="h-auto gap-3 rounded-none bg-transparent p-0"
                         >
                           {[
+                            relay.color.ember,
                             relay.color.teal,
                             relay.color.cyan,
                             relay.color.sky,

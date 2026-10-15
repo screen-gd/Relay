@@ -41,7 +41,7 @@ import {
   LoaderCircle,
   UserRound,
   Users,
-} from "lucide-react";
+} from "@/components/icons";
 import { ProjectSelect } from "@/features/projects/project-select";
 import { useConfirm } from "@/components/confirm-dialog";
 

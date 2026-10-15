@@ -39,7 +39,7 @@ import {
   SelectValue as OwnedSelectValue,
 } from "@/components/ui/select";
 import { Textarea as OwnedTextarea } from "@/components/ui/textarea";
-import { Copy, FileText, Pencil, Plus, Trash2 } from "lucide-react";
+import { Copy, FileText, Pencil, Plus, Trash2 } from "@/components/icons";
 
 type TemplateFormState = {
   id: string;

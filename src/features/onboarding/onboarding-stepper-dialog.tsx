@@ -2,7 +2,7 @@ import { supportEmail } from "@/lib/support-contact";
 
 import { useState, type ReactNode } from "react";
 import { Link } from "@tanstack/react-router";
-import { Check } from "lucide-react";
+import { Check } from "@/components/icons";
 
 import { RelayBrand } from "@/app/relay-brand";
 import { Button } from "@/components/ui/button";

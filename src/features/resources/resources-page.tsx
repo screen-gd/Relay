@@ -33,7 +33,7 @@ import {
   SelectValue as OwnedSelectValue,
 } from "@/components/ui/select";
 import { Textarea as OwnedTextarea } from "@/components/ui/textarea";
-import { ExternalLink, Link2, Pencil, Plus, Trash2 } from "lucide-react";
+import { ExternalLink, Link2, Pencil, Plus, Trash2 } from "@/components/icons";
 import { createId, formatDate } from "@/features/routes/utils/date-utils";
 import type { ToastState } from "@/features/routes/shared/route-types";
 

@@ -1,4 +1,4 @@
-import { ArrowLeft, FlaskConical } from "lucide-react";
+import { ArrowLeft, FlaskConical } from "@/components/icons";
 import { Link } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
 import { trackOnboardingEvent } from "@/lib/onboarding";

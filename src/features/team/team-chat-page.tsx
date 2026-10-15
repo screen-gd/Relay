@@ -14,7 +14,7 @@ import { Button as OwnedButton } from "@/components/ui/button";
 import { Card as OwnedCard } from "@/components/ui/card";
 import { Label as OwnedLabel } from "@/components/ui/label";
 import { Textarea as OwnedTextarea } from "@/components/ui/textarea";
-import { LoaderCircle, MessageSquare, Send, Users } from "lucide-react";
+import { LoaderCircle, MessageSquare, Send, Users } from "@/components/icons";
 
 export function TeamChatPage() {
   const {

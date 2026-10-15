@@ -1,7 +1,7 @@
 "use client";
 
 import { useConvexAuth, usePaginatedQuery } from "convex/react";
-import { History } from "lucide-react";
+import { History } from "@/components/icons";
 import { useMemo, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 

@@ -26,7 +26,7 @@ Every icon-only control has an accessible name. Dialogs move and return focus. G
 
 ## Preserved features
 
-Keep current shadcn/Radix, Lucide, TanStack Table, Recharts, Sonner, and Motion choices. Remove MUI presentation code only after migration checks pass.
+Keep current shadcn/Radix, TanStack Table, Sonner, and Motion choices. Import icons from `@/components/icons`, which wraps Hugeicons; add a name to `scripts/icon-map.json` and run `node scripts/generate-icons.mjs` to add one. Build charts with the dither kit in `src/components/dither-kit`. Remove MUI presentation code only after migration checks pass.
 
 ## Acceptance checks
 

@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import { useHydratedReducedMotion } from "@/lib/motion";
 import { Button as OwnedButton } from "@/components/ui/button";
-import { X } from "lucide-react";
+import { X } from "@/components/icons";
 import type { ToastState } from "./route-types";
 import {
   accent,

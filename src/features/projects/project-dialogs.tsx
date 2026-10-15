@@ -51,7 +51,7 @@ import {
   findExistingClientName,
   getTypeConfig,
 } from "@/features/routes/utils/work-type-utils";
-import { Check, ChevronsUpDown, Plus, Trash2 } from "lucide-react";
+import { Check, ChevronsUpDown, Plus, Trash2 } from "@/components/icons";
 import { useState, type RefObject } from "react";
 import type { WorkspaceMemberOption } from "./project-view";
 import { ProjectSelect } from "@/features/projects/project-select";
