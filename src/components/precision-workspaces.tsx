@@ -16,6 +16,7 @@ import {
   X,
 } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
+import { Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
@@ -50,6 +51,7 @@ import {
 } from "@/lib/invoice-reporting";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
+import { projectLink } from "@/features/projects/project-view";
 import { Button } from "@/components/ui/button";
 import { Empty } from "@/components/ui/empty";
 import {
@@ -1171,11 +1173,15 @@ export function PrecisionFeedback({
                         </div>
                       </div>
                     </div>
-                    <Button
-                      className="w-full"
-                      onClick={() => onViewProject(selected)}
-                    >
-                      Open review workspace <ArrowRight className="size-4" />
+                    <Button asChild className="w-full">
+                      <Link
+                        {...projectLink({
+                          projectId: selected.id,
+                          view: "review",
+                        })}
+                      >
+                        Open review workspace <ArrowRight className="size-4" />
+                      </Link>
                     </Button>
                   </motion.div>
                 </AnimatePresence>
