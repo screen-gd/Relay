@@ -40,7 +40,6 @@ import {
   History,
   LockKeyhole,
   Palette,
-  Plug,
   Plus,
   Trash2,
   Upload,
@@ -65,7 +64,6 @@ import {
   projectTagIssues,
 } from "./settings-utils";
 import { notificationCopy } from "@/features/notifications/notification-copy";
-import { IntegrationLinkManager } from "@/features/integrations/integrations-page";
 import {
   canonicalWorkType,
   normalizedSalaryBatchAmount,
@@ -230,7 +228,6 @@ export function SettingsDesignPage({
     { id: "workspace" as const, label: "Workspace", icon: FolderKanban },
     { id: "workflow" as const, label: "Workflow", icon: History },
     { id: "permissions" as const, label: "Permissions", icon: LockKeyhole },
-    { id: "integrations" as const, label: "Integrations", icon: Plug },
     { id: "notifications" as const, label: "Notifications", icon: Bell },
     { id: "appearance" as const, label: "Appearance", icon: Palette },
     { id: "regional" as const, label: "Regional", icon: Globe2 },
@@ -1005,21 +1002,6 @@ export function SettingsDesignPage({
                       and are not workspace members.
                     </p>
                   </SettingsPanel>
-                ) : null}
-                {activeSection === "integrations" ? (
-                  <div id="integrations" className="scroll-mt-6">
-                    <IntegrationLinkManager
-                      title="Integrations"
-                      subtitle="Save workspace-level links for storage, messaging, calendars, and review tools."
-                      links={settings.integrationLinks}
-                      emptyTitle="No integration links configured"
-                      emptyBody="Add links to shared folders, calendars, review pages, or team channels. This does not connect to external APIs."
-                      onChange={(integrationLinks) => {
-                        setSettings({ ...settings, integrationLinks });
-                        notify("Integration links updated.", "success");
-                      }}
-                    />
-                  </div>
                 ) : null}
                 {activeSection === "appearance" ? (
                   <SettingsPanel

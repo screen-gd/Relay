@@ -83,7 +83,7 @@ import {
 } from "@/components/ui/command";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Kbd } from "@/components/ui/kbd";
-import { PageHeaderCompactContext } from "@/components/workspace-page/page-header";
+import { PageHeaderContext } from "@/components/workspace-page/page-header";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -372,31 +372,45 @@ function hasContextTabs(page: ShellPage) {
   );
 }
 
-function ContextNavigation({ page }: { page: ShellPage }) {
+function ContextNavigation({
+  page,
+  onActionsHost,
+}: {
+  page: ShellPage;
+  /** Receives the element page actions render into, or null when unmounted. */
+  onActionsHost: (element: HTMLElement | null) => void;
+}) {
   const hub = hubRoutes.find((item) => item.page === hubPageForPage(page));
-  if (!hub || !hasContextTabs(page)) return null;
-  const items = hubChildren(hub.page);
+  const items = hub && hasContextTabs(page) ? hubChildren(hub.page) : [];
+  // Keep the shell informed when the strip leaves the tree.
+  useEffect(() => {
+    if (!items.length) onActionsHost(null);
+  }, [items.length, onActionsHost]);
+  if (!hub || !items.length) return null;
   return (
-    <nav
-      aria-label={`${hub.label} navigation`}
-      className="flex shrink-0 flex-wrap gap-5 border-b border-[var(--app-border)] px-5"
-    >
-      {items.map((item) => (
-        <Link
-          key={item.page}
-          to={item.href}
-          aria-current={page === item.page ? "page" : undefined}
-          className={cn(
-            "-mb-px flex min-h-11 items-center border-b-2 text-[13px] font-medium outline-none transition-colors duration-150 focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)]",
-            page === item.page
-              ? "border-[var(--app-ink)] text-[var(--app-ink)]"
-              : "border-transparent text-[var(--app-muted)] hover:text-[var(--app-ink)]"
-          )}
-        >
-          {item.label}
-        </Link>
-      ))}
-    </nav>
+    <div className="flex shrink-0 items-center justify-between gap-4 border-b border-[var(--app-border)] px-5">
+      <nav
+        aria-label={`${hub.label} navigation`}
+        className="flex min-w-0 flex-wrap gap-5"
+      >
+        {items.map((item) => (
+          <Link
+            key={item.page}
+            to={item.href}
+            aria-current={page === item.page ? "page" : undefined}
+            className={cn(
+              "-mb-px flex min-h-11 items-center border-b-2 text-[13px] font-medium outline-none transition-colors duration-150 focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)]",
+              page === item.page
+                ? "border-[var(--app-ink)] text-[var(--app-ink)]"
+                : "border-transparent text-[var(--app-muted)] hover:text-[var(--app-ink)]"
+            )}
+          >
+            {item.label}
+          </Link>
+        ))}
+      </nav>
+      <div ref={onActionsHost} className="flex shrink-0 items-center py-1.5" />
+    </div>
   );
 }
 
@@ -439,6 +453,9 @@ export function WorkspaceShell({
   const [moreOpen, setMoreOpen] = useState(false);
   const [breadcrumb, setBreadcrumb] = useState<string | null>(null);
   const [sidebarOpen, toggleSidebar] = useSidebarOpen();
+  // The tab strip's right side, where page actions render.
+  const [actionsHost, setActionsHost] = useState<HTMLElement | null>(null);
+  const pageHeaderContext = useMemo(() => ({ actionsHost }), [actionsHost]);
   const goChordRef = useRef(false);
   const goChordTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const commandReturnFocusRef = useRef<HTMLElement | null>(null);
@@ -619,10 +636,10 @@ export function WorkspaceShell({
             className="workspace-scrollbar-hidden h-[calc(100dvh_-_68px_-_env(safe-area-inset-bottom))] overflow-y-auto bg-[var(--app-canvas)] pt-12 outline-none transition-[left] duration-200 ease-out motion-reduce:transition-none lg:fixed lg:bottom-2 lg:right-2 lg:top-[62px] lg:left-[var(--sidebar-width)] lg:h-auto lg:min-h-0 lg:overscroll-contain lg:rounded-b-xl lg:pt-0"
           >
             <div className="flex min-h-full flex-col lg:h-full">
-              <ContextNavigation page={page} />
-              <PageHeaderCompactContext.Provider value={hasContextTabs(page)}>
+              <ContextNavigation page={page} onActionsHost={setActionsHost} />
+              <PageHeaderContext.Provider value={pageHeaderContext}>
                 <div className="min-h-0 flex-1">{children}</div>
-              </PageHeaderCompactContext.Provider>
+              </PageHeaderContext.Provider>
             </div>
           </main>
         </div>

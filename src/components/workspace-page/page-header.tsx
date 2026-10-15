@@ -4,14 +4,19 @@ import {
   type ComponentPropsWithoutRef,
   type ReactNode,
 } from "react";
+import { createPortal } from "react-dom";
 
 import { cn } from "@/lib/utils";
 
 /**
- * True when the shell already names the page in a tab strip above it. The
- * header then drops to one line so the content starts higher.
+ * Where page actions render. The breadcrumb and sidebar already name the
+ * page, so headers show no title; actions sit on one line at the right, and
+ * when the shell renders a tab strip it offers `actionsHost` so the actions
+ * share that row.
  */
-export const PageHeaderCompactContext = createContext(false);
+export const PageHeaderContext = createContext<{
+  actionsHost: HTMLElement | null;
+}>({ actionsHost: null });
 
 type PageHeaderProps = Omit<ComponentPropsWithoutRef<"header">, "title"> & {
   title: ReactNode;
@@ -26,46 +31,49 @@ export function PageHeader({
   className,
   ...props
 }: PageHeaderProps) {
-  const compact = useContext(PageHeaderCompactContext);
-  // Under a tab strip the tab already names the page, so only the actions
-  // show; the heading stays for assistive technology.
-  if (compact && !actions) {
+  const { actionsHost } = useContext(PageHeaderContext);
+  const heading = (
+    <div className="sr-only">
+      <h1>{title}</h1>
+      {description ? <div>{description}</div> : null}
+    </div>
+  );
+  if (!actions) {
     return (
-      <header data-slot="page-header" data-compact className="sr-only">
-        <h1>{title}</h1>
-        {description ? <div>{description}</div> : null}
+      <header data-slot="page-header" className="sr-only" {...props}>
+        {heading}
+      </header>
+    );
+  }
+  if (actionsHost) {
+    return (
+      <header data-slot="page-header" {...props}>
+        {heading}
+        {createPortal(
+          <div
+            data-slot="page-header-actions"
+            className="flex shrink-0 items-center gap-2"
+          >
+            {actions}
+          </div>,
+          actionsHost
+        )}
       </header>
     );
   }
   return (
     <header
       data-slot="page-header"
-      data-compact={compact || undefined}
-      className={cn(
-        "flex min-w-0 flex-col gap-4 sm:flex-row sm:justify-between",
-        compact ? "pb-3 sm:items-center" : "pb-4 sm:items-end",
-        className
-      )}
+      className={cn("flex min-w-0 items-center justify-end pb-3", className)}
       {...props}
     >
-      <div className={cn("min-w-0", compact && "sr-only")}>
-        <h1 className="text-2xl font-semibold leading-tight tracking-[-0.03em] text-foreground">
-          {title}
-        </h1>
-        {description ? (
-          <div className="mt-1.5 max-w-3xl text-[13px] leading-5 text-muted-foreground">
-            {description}
-          </div>
-        ) : null}
+      {heading}
+      <div
+        data-slot="page-header-actions"
+        className="flex shrink-0 flex-wrap items-center justify-end gap-2"
+      >
+        {actions}
       </div>
-      {actions ? (
-        <div
-          data-slot="page-header-actions"
-          className="flex shrink-0 flex-wrap items-center gap-2 sm:justify-end"
-        >
-          {actions}
-        </div>
-      ) : null}
     </header>
   );
 }
