@@ -1,11 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { useMutation, useQuery } from "convex/react";
+import { useConvexAuth, useMutation, useQuery } from "convex/react";
 import type { FunctionReturnType } from "convex/server";
 import { api } from "../../../convex/_generated/api";
 import type { Doc, Id } from "../../../convex/_generated/dataModel";
 import { extraCharges } from "../../../convex/revisionRoundsRules";
+import { AiLockedNotice } from "@/features/ai/ai-availability";
 import { projectHref } from "@/features/projects/project-view";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -135,6 +136,7 @@ export function ChangeOrderDraft({
   projectId: string;
   summary: Summary;
 }) {
+  const { isAuthenticated } = useConvexAuth();
   const options = useQuery(api.changeOrders.revisionItemOptions, { projectId });
   const generate = useMutation(api.changeOrders.generate);
   const [runId, setRunId] = useState<Id<"aiRuns"> | null>(null);
@@ -252,29 +254,33 @@ export function ChangeOrderDraft({
           ))}
         </fieldset>
       ) : null}
-      <div className="flex flex-wrap gap-2">
-        <Button
-          size="sm"
-          variant="outline"
-          disabled={running || !billable || !validHours || !summary.aiEnabled}
-          onClick={() => void request("default")}
-        >
-          Draft change order
-        </Button>
-        {latest ? (
+      {summary.aiEnabled ? (
+        <div className="flex flex-wrap gap-2">
           <Button
             size="sm"
-            variant="ghost"
-            disabled={running || !billable || !validHours || !summary.aiEnabled}
-            onClick={() => void request("better")}
+            variant="outline"
+            disabled={running || !billable || !validHours}
+            onClick={() => void request("default")}
           >
-            Retry with better model
+            Draft change order
           </Button>
-        ) : null}
-      </div>
-      {!summary.aiEnabled ? (
-        <p className="text-xs">Turn on AI in Settings to draft.</p>
-      ) : null}
+          {latest ? (
+            <Button
+              size="sm"
+              variant="ghost"
+              disabled={running || !billable || !validHours}
+              onClick={() => void request("better")}
+            >
+              Retry with better model
+            </Button>
+          ) : null}
+        </div>
+      ) : (
+        <AiLockedNotice
+          feature="Draft a change order"
+          access={isAuthenticated ? "settings" : "signIn"}
+        />
+      )}
       {latest && latest.status !== "succeeded" ? (
         <p role="status" className="text-xs">
           {latest.status === "queued"

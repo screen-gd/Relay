@@ -1,11 +1,12 @@
 import { Link } from "@tanstack/react-router";
 import { useState } from "react";
-import { useMutation, useQuery } from "convex/react";
+import { useConvexAuth, useMutation, useQuery } from "convex/react";
 import type { FunctionReturnType } from "convex/server";
 import { api } from "../../../convex/_generated/api";
 import type { Id } from "../../../convex/_generated/dataModel";
 import { Button } from "@/components/ui/button";
 import { ContentSection } from "@/components/workspace-page";
+import { AiLockedNotice } from "@/features/ai/ai-availability";
 import { projectLink } from "@/features/projects/project-view";
 import { cn } from "@/lib/utils";
 
@@ -53,6 +54,7 @@ export function DeadlineRiskRadar({
 }: {
   workspaceId: Id<"teamWorkspaces">;
 }) {
+  const { isAuthenticated } = useConvexAuth();
   const [month] = useState(() => new Date().toISOString().slice(0, 7));
   const radar = useQuery(api.deadlineRisk.listFindings, { workspaceId });
   const digest = useQuery(api.riskDigest.latest, { workspaceId });
@@ -92,27 +94,34 @@ export function DeadlineRiskRadar({
         ) : null
       }
       actions={
-        ai?.enabled && radar.findings.length ? (
-          <div className="flex gap-2 [&_button]:bg-transparent [&_button:hover]:bg-transparent [&_button]:dark:text-white">
-            <Button
-              size="sm"
-              variant="outline"
-              disabled={running}
-              onClick={() => void request("default")}
-            >
-              Draft digest
-            </Button>
-            {digest ? (
+        ai && radar.findings.length ? (
+          ai.enabled ? (
+            <div className="flex gap-2 [&_button]:bg-transparent [&_button:hover]:bg-transparent [&_button]:dark:text-white">
               <Button
                 size="sm"
-                variant="ghost"
+                variant="outline"
                 disabled={running}
-                onClick={() => void request("better")}
+                onClick={() => void request("default")}
               >
-                Retry with better model
+                Draft digest
               </Button>
-            ) : null}
-          </div>
+              {digest ? (
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  disabled={running}
+                  onClick={() => void request("better")}
+                >
+                  Retry with better model
+                </Button>
+              ) : null}
+            </div>
+          ) : (
+            <AiLockedNotice
+              feature="Flag deadline risk"
+              access={isAuthenticated ? "settings" : "signIn"}
+            />
+          )
         ) : null
       }
     >
