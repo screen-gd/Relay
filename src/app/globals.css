@@ -478,6 +478,15 @@ button:not(:disabled):active,
   border-color: var(--app-strong-border);
 }
 
+/* Sections lie flat on the page; a hairline separates one from the next. */
+[data-slot="content-section"] + [data-slot="content-section"],
+[data-slot="content-section"] + [data-slot="split-pane"],
+[data-slot="split-pane"] + [data-slot="content-section"],
+[data-slot="metric-strip"] + [data-slot="content-section"] {
+  border-top: 1px solid var(--app-border);
+  padding-top: 1.25rem;
+}
+
 /* Top bar icon actions are round, outlined, and the same size. */
 .workspace-topbar [data-slot="button"][data-size="icon"] {
   width: 34px;

@@ -259,8 +259,7 @@ function DashboardDropdown<T extends string>({
 /** Minimalist motion: soft settle, never snappy SaaS bounce. */
 const easing = [0.16, 1, 0.3, 1] as const;
 
-const surface =
-  "rounded-xl bg-[var(--app-panel)] transition-colors duration-150";
+const surface = "transition-colors duration-150";
 
 const MotionCard = motion.create(Card);
 const MotionButton = motion.create(Button);

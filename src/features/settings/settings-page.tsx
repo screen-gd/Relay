@@ -420,13 +420,13 @@ export function SettingsDesignPage({
           bodyClassName="min-h-0 overflow-auto lg:overflow-hidden"
         >
           <MasterDetail
-            className="h-full min-h-0 gap-0 overflow-hidden rounded-xl border border-[var(--app-border)] bg-[var(--app-panel)] lg:gap-0"
+            className="h-full min-h-0 gap-0 overflow-hidden lg:gap-5"
             master={
               <nav
                 aria-label="Settings sections"
                 data-slot="settings-navigation"
                 data-navigation-kind="icon-index"
-                className="hidden h-full min-h-0 overflow-hidden border-r border-[var(--app-border)] text-card-foreground lg:flex lg:flex-col"
+                className="hidden h-full min-h-0 overflow-hidden text-card-foreground lg:flex lg:flex-col"
               >
                 <div className="grid flex-1 content-start gap-0.5 overflow-y-auto p-3">
                   {settingsNavigation.map(({ id, label, icon: Icon }) => (

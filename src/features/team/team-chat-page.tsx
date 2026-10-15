@@ -76,7 +76,7 @@ export function TeamChatPage() {
       <PageContent mode="fill" className="min-h-0">
         <FillViewport
           bodyLabel="Team chat workspace"
-          bodyClassName="overflow-auto rounded-[6px] border border-border bg-card lg:overflow-hidden"
+          bodyClassName="overflow-auto lg:overflow-hidden"
           header={
             chatReady && teamData ? (
               <div

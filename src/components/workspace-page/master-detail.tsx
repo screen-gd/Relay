@@ -32,10 +32,26 @@ export function MasterDetail({
       )}
       {...props}
     >
-      <div className="h-full min-h-0 min-w-0">{master}</div>
-      <div className="h-full min-h-0 min-w-0">{detail}</div>
+      <div
+        className={cn(
+          "h-full min-h-0 min-w-0",
+          variant === "navigation" &&
+            "lg:border-r lg:border-[var(--app-border)] lg:pr-5"
+        )}
+      >
+        {master}
+      </div>
+      <div
+        className={cn(
+          "h-full min-h-0 min-w-0",
+          variant === "detail-rail" &&
+            "lg:border-l lg:border-[var(--app-border)] lg:pl-5"
+        )}
+      >
+        {detail}
+      </div>
       {inspector ? (
-        <aside className="h-full min-h-0 min-w-0 lg:col-span-2 xl:col-span-1">
+        <aside className="h-full min-h-0 min-w-0 lg:col-span-2 xl:col-span-1 xl:border-l xl:border-[var(--app-border)] xl:pl-5">
           {inspector}
         </aside>
       ) : null}

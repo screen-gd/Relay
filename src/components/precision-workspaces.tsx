@@ -422,7 +422,7 @@ export function PrecisionClients({
                 "lg:grid-cols-1 [&>div:first-child]:hidden"
             )}
             master={
-              <aside className="flex min-h-0 flex-col overflow-hidden rounded-xl bg-[var(--app-panel)] lg:h-full">
+              <aside className="flex min-h-0 flex-col overflow-hidden lg:h-full">
                 <div className="border-b border-[var(--app-border)] bg-[var(--app-soft-panel)] p-3">
                   <div className="relative">
                     <Search className="pointer-events-none absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-[var(--app-muted)]" />
@@ -514,7 +514,7 @@ export function PrecisionClients({
             detail={
               <div className="h-full">
                 {selected ? (
-                  <main className="flex min-h-0 min-w-0 flex-col overflow-hidden rounded-xl bg-[var(--app-panel)] lg:h-full">
+                  <main className="flex min-h-0 min-w-0 flex-col overflow-hidden lg:h-full">
                     <div className="flex flex-col gap-4 border-b border-[var(--app-border)] p-5 sm:flex-row sm:items-start">
                       <span className="grid size-12 shrink-0 place-items-center rounded-lg bg-[var(--app-active)] text-sm font-semibold text-[var(--app-highlight)] ring-1 ring-[var(--app-border)]">
                         {clientInitials(selected.name)}
@@ -710,7 +710,7 @@ export function PrecisionClients({
                     </section>
                   </main>
                 ) : (
-                  <main className="grid h-full min-h-[420px] place-items-center rounded-xl bg-[var(--app-panel)] p-6 text-center">
+                  <main className="grid h-full min-h-[420px] place-items-center p-6 text-center">
                     <PageEmptyState
                       icon={<UsersRound className="size-5" />}
                       title="Add your first client"
@@ -1612,8 +1612,7 @@ export function PrecisionReports({
                   ? { duration: 0 }
                   : { ...revealTransition, delay: 0.08 }
               }
-              data-surface="raised"
-              className="flex h-full min-w-0 flex-col rounded-[var(--radius-panel)] bg-[var(--app-panel)] p-4"
+              className="flex h-full min-w-0 flex-col"
             >
               <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                 <div>
@@ -1720,8 +1719,7 @@ export function PrecisionReports({
                   ? { duration: 0 }
                   : { ...revealTransition, delay: 0.12 }
               }
-              data-surface="raised"
-              className="flex h-full min-w-0 flex-col rounded-[var(--radius-panel)] bg-[var(--app-panel)] p-4"
+              className="flex h-full min-w-0 flex-col"
             >
               <div>
                 <h2 className="text-sm font-semibold">Work mix</h2>

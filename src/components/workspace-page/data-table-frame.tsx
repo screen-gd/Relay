@@ -24,7 +24,7 @@ export function DataTableFrame({
     <section
       data-slot="data-table-frame"
       className={cn(
-        "flex min-w-0 flex-col overflow-hidden rounded-[6px] bg-card text-card-foreground",
+        "flex min-w-0 flex-col overflow-hidden",
         bounded && "min-h-0",
         className
       )}

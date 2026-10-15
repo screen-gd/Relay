@@ -21,7 +21,7 @@ export function PageContent({
         mode === "document"
           ? "space-y-4"
           : "flex min-h-0 flex-1 flex-col gap-4",
-        className,
+        className
       )}
       {...props}
     >

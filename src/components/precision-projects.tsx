@@ -1117,7 +1117,7 @@ export function PrecisionProjects(props: PrecisionProjectsProps) {
                     aria-labelledby={`project-${tableState.view}-tab project-${scope}-tab`}
                     aria-busy={isUpdating}
                     bodyLabel="Project library viewport"
-                    className="relative h-full min-h-0 overflow-visible rounded-xl bg-[var(--app-panel)]"
+                    className="relative h-full min-h-0 overflow-visible"
                     bodyClassName="flex min-h-0 flex-1 flex-col max-lg:flex-none max-lg:overflow-visible"
                   >
                     {isUpdating ? (
@@ -1520,7 +1520,7 @@ function ProjectInspector({
     return (
       <MotionCard
         className={cn(
-          "rounded-xl bg-[var(--app-panel)] p-6 text-center text-xs text-[var(--app-muted)] shadow-none",
+          "border-0 bg-transparent p-6 text-center text-xs text-[var(--app-muted)] shadow-none",
           className
         )}
       >
@@ -1544,7 +1544,7 @@ function ProjectInspector({
       role="region"
       aria-label="Selected project details"
       className={cn(
-        "h-full min-h-0 overflow-hidden rounded-xl bg-[var(--app-panel)] shadow-none",
+        "h-full min-h-0 overflow-hidden border-0 bg-transparent shadow-none",
         className
       )}
     >

@@ -1,6 +1,5 @@
 import type { ComponentPropsWithoutRef, ReactNode } from "react";
 
-import { cardSurfaceClassName } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 
 type ContentSectionProps = Omit<ComponentPropsWithoutRef<"div">, "title"> & {
@@ -27,16 +26,16 @@ type ContentSectionProps = Omit<ComponentPropsWithoutRef<"div">, "title"> & {
  * List wrapper and row styles for a `flush` ContentSection body. Rows are
  * separated by spacing and a hover fill, never divider lines.
  */
-export const sectionListClassName = "grid gap-px px-1.5 pb-1.5";
+export const sectionListClassName = "grid gap-px";
 
 export const sectionRowClassName =
   "rounded-lg px-3 py-2 transition-colors hover:bg-[var(--app-hover)]";
 
 /**
- * The standard panel for workspace content: a filled surface with a title
- * row (title, metadata, description, actions), a body, and an optional
- * footer. Stack these with `gap-4`; never nest them. Group nested content
- * with `--surface-inset` wells instead of borders.
+ * The standard block for workspace content: a title row (title, metadata,
+ * description, actions), a body, and an optional footer, laid flat on the
+ * page. Stacked sections are separated by a hairline (see globals.css);
+ * never nest them. Tables and lists inside use their own row dividers.
  */
 export function ContentSection({
   title,
@@ -60,15 +59,14 @@ export function ContentSection({
     <Root
       data-slot="content-section"
       aria-labelledby={titleId}
-      className={cn(cardSurfaceClassName, "min-w-0 overflow-hidden", className)}
+      className={cn("flex min-w-0 flex-col", className)}
       {...props}
     >
       {hasHeader ? (
         <div
           data-slot="content-section-header"
           className={cn(
-            "flex flex-col gap-3 px-4 pt-4 sm:flex-row sm:items-start sm:justify-between",
-            !hasBody && !footer && "pb-4"
+            "flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between"
           )}
         >
           <div className="min-w-0">
@@ -100,9 +98,7 @@ export function ContentSection({
         <div
           data-slot="content-section-body"
           className={cn(
-            bodyMode === "padded"
-              ? cn("px-4 pb-4", hasHeader ? "pt-3" : "pt-4")
-              : hasHeader && "pt-1",
+            hasHeader && (bodyMode === "padded" ? "pt-3" : "pt-2"),
             bodyClassName
           )}
         >
@@ -112,7 +108,7 @@ export function ContentSection({
       {footer ? (
         <div
           data-slot="content-section-footer"
-          className="flex flex-wrap items-center justify-between gap-3 px-4 pb-4"
+          className="flex flex-wrap items-center justify-between gap-3 pt-3"
         >
           {footer}
         </div>

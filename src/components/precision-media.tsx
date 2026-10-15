@@ -179,9 +179,9 @@ export function PrecisionMedia({
                 bodyClassName="min-h-0 overflow-auto lg:overflow-hidden"
               >
                 <MasterDetail
-                  className="h-full min-h-0 overflow-hidden rounded-[6px] bg-[var(--app-panel)]"
+                  className="h-full min-h-0 overflow-hidden"
                   master={
-                    <aside className="min-h-0 overflow-auto border-b border-[var(--app-border)] p-3 lg:border-b-0 lg:border-r">
+                    <aside className="min-h-0 overflow-auto border-b border-[var(--app-border)] pb-3 lg:border-b-0">
                       <p className="px-2 text-[11px] font-semibold text-[var(--app-subtle)]">
                         Collections
                       </p>

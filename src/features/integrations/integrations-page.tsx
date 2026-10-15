@@ -248,7 +248,7 @@ export function IntegrationsDesignPage({
             </OwnedBadge>
           }
         >
-          <ul className="mt-4 divide-y divide-border overflow-hidden rounded-xl border border-border shadow-[var(--app-shadow-1)]">
+          <ul className="mt-3 divide-y divide-border">
             {visibleIntegrationNames.map((name) => {
               const config =
                 settings.integrationConfigs[name] ?? emptyIntegrationConfig;
@@ -356,7 +356,7 @@ export function IntegrationsDesignPage({
           }
         >
           {visibleProjectLinks.length ? (
-            <ul className="mt-4 divide-y divide-border overflow-hidden rounded-xl border border-border shadow-[var(--app-shadow-1)]">
+            <ul className="mt-3 divide-y divide-border">
               {visibleProjectLinks.map((project) => (
                 <li
                   key={project.id}
@@ -399,7 +399,7 @@ export function IntegrationsDesignPage({
               ))}
             </ul>
           ) : (
-            <div className="mt-4 rounded-lg border border-dashed border-border">
+            <div className="mt-3">
               <EmptyPanel
                 title={
                   projectLinks.length
@@ -643,18 +643,18 @@ export function IntegrationLinkManager({
       }
     >
       {!configuredCount ? (
-        <div className="mt-4 rounded-lg border border-dashed border-border">
+        <div className="mt-3">
           <EmptyPanel title={emptyTitle} body={emptyBody} />
         </div>
       ) : null}
-      <ul className="mt-4 divide-y divide-border overflow-hidden rounded-lg border border-border">
+      <ul className="mt-3 divide-y divide-border">
         {integrationServices.map((service) => {
           const link = links?.[service.id];
           const linked = hasIntegrationLink(link);
           return (
             <li
               key={service.id}
-              className="flex flex-col justify-between gap-3 bg-card p-4 sm:flex-row sm:items-center"
+              className="flex flex-col justify-between gap-3 py-3 sm:flex-row sm:items-center"
             >
               <div className="flex min-w-0 items-center gap-3">
                 <span
