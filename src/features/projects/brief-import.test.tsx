@@ -11,6 +11,7 @@ const workspace = {
   _creationTime: 0,
   ownerUserId: "user-1",
   name: "Studio",
+  aiEnabled: true,
 };
 
 const state = vi.hoisted(() => ({
@@ -62,6 +63,15 @@ test("points a signed-in Workspace without one at Settings", () => {
   const html = render();
   expect(html).toContain("Import a brief");
   expect(html).toContain("Turn on AI in Settings");
+});
+
+test("locks the import while the Workspace has AI off", () => {
+  state.isAuthenticated = true;
+  state.workspace = { ...workspace, aiEnabled: false };
+  const html = render();
+  expect(html).toContain("Import a brief");
+  expect(html).toContain("Turn on AI in Settings");
+  expect(html).not.toContain("Paste your brief");
 });
 
 test("waits instead of flashing a lock while the workspace loads", () => {
