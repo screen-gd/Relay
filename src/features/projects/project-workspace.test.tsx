@@ -117,9 +117,11 @@ describe("Project copy", () => {
     expect(copy.workflowStages).not.toBe(project.workflowStages);
   });
 
-  it("keeps the Project's Template list rather than flattening Outputs into it", () => {
-    expect(copy.templateDeliverables).toEqual(project.templateDeliverables);
-    expect(copy.templateDeliverables).not.toBe(project.templateDeliverables);
+  it("carries no Template list, so a copy cannot regain a gone deliverable", () => {
+    // The copy gets its Outputs through the Outputs store. A Template entry the
+    // original no longer shows would be created again when the copy is opened.
+    expect(project.templateDeliverables?.length).toBeGreaterThan(0);
+    expect(copy.templateDeliverables).toBeUndefined();
   });
 
   it("carries no Media Versions or review notes", () => {
