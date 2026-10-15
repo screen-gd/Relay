@@ -41,6 +41,7 @@ export function ReportsApplication() {
     canManageFinance,
     currentTeamId,
     sample,
+    salaryBatchesEnabled,
   } = useProjectAccess();
   // Reports total past work, so completed history loads while this page is open.
   useProjectHistory();
@@ -82,6 +83,7 @@ export function ReportsApplication() {
       currentUserId={teamData?.currentMember.userId}
       canManageFinance={canManageFinance}
       onUpdateBatchPayment={updateSalaryBatchPayment}
+      batchesLocked={!salaryBatchesEnabled}
       salaryPlans={salaryPlans}
       earningsQa={earningsQa}
     />

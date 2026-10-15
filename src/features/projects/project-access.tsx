@@ -47,6 +47,8 @@ export type ProjectAccess = {
   customWorkflowTemplatesLocked: boolean;
   clientHubCapabilityEnabled: boolean;
   customPortalBrandingCapabilityEnabled: boolean;
+  /** Salary Batches are paid; Local Mode keeps them on the device. */
+  salaryBatchesEnabled: boolean;
 };
 
 type ProjectAccessProviderProps = {
@@ -181,6 +183,11 @@ function useProjectAccessValue(sample: boolean): ProjectAccess {
     customWorkflowTemplatesLocked,
     clientHubCapabilityEnabled,
     customPortalBrandingCapabilityEnabled,
+    salaryBatchesEnabled: Boolean(
+      !isAuthEnabled ||
+      !isSignedIn ||
+      workspaceSubscription?.capabilities.salaryPlans
+    ),
   };
 }
 

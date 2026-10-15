@@ -191,6 +191,11 @@ export const setReceived = mutation({
       args.batchId,
       identity.tokenIdentifier
     );
+    await requireOwnerWorkspaceCapability(
+      ctx,
+      identity.tokenIdentifier,
+      "salaryPlans"
+    );
     if (args.correctionNote !== undefined && args.correctionNote.length > 4000)
       throw new Error("Correction note is too long");
     const receivedAt = args.received
@@ -217,6 +222,11 @@ export const setCorrectionNote = mutation({
       ctx,
       args.batchId,
       identity.tokenIdentifier
+    );
+    await requireOwnerWorkspaceCapability(
+      ctx,
+      identity.tokenIdentifier,
+      "salaryPlans"
     );
     if (args.correctionNote.length > 4000)
       throw new Error("Correction note is too long");

@@ -26,9 +26,9 @@ Relay helps freelance video editors and small post-production teams manage video
 ## Plans and availability
 
 - Free includes ${FREE_OPEN_PROJECT_LIMIT} projects in progress at a time, unlimited clients and project history, external video reviews, standard client portals, and basic payment tracking. Delivered and archived projects do not count toward the limit. No invite is required.
-- Creator is planned at ${formatUsd(CREATOR_MONTHLY_PRICE_USD)}/workspace/month, with Client Hub, branding, Workflow Templates, advanced reports, and new payment plans and batches.
+- Creator is planned at ${formatUsd(CREATOR_MONTHLY_PRICE_USD)}/workspace/month, with Client Hub, branding, Workflow Templates, advanced reports, and payment plans and batches.
 - Team is planned at ${formatUsd(TEAM_MONTHLY_PRICE_USD)}/workspace/month for ${TEAM_INCLUDED_EDITOR_SEATS} editors including the owner, plus ${formatUsd(EXTRA_EDITOR_MONTHLY_PRICE_USD)}/month per extra editor. Client review access and Team viewers are free.
-- Existing payment records remain accessible on Free; creating new payment plans and batches requires Creator or Team.
+- Payment plans and payment batches require Creator or Team. Batches made on a paid plan stay visible on Free but cannot be updated.
 - Prices are subject to change. Paid checkout is not live; neither plan can be bought yet.
 - Hosted uploads are not available yet. Planned launch storage is ${CREATOR_LAUNCH_STORAGE_GB} GB for Creator and ${TEAM_LAUNCH_STORAGE_GB} GB shared for Team.
 

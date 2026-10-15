@@ -366,13 +366,10 @@ test("early delivery pulls the due date back to the delivery day", async () => {
       deliveredOn: "2026-01-01",
     });
 
-    const projects = await owner.query(api.projects.list, {});
-    expect(projects.find(({ id }) => id === "early")?.dueDate).toBe(
-      "2026-08-21"
-    );
-    expect(projects.find(({ id }) => id === "spoofed")?.dueDate).toBe(
-      "2026-08-20"
-    );
+    const dueDate = async (projectId: string) =>
+      (await owner.query(api.projects.get, { projectId }))?.dueDate;
+    expect(await dueDate("early")).toBe("2026-08-21");
+    expect(await dueDate("spoofed")).toBe("2026-08-20");
   } finally {
     vi.useRealTimers();
   }

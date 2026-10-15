@@ -15,7 +15,7 @@ Start with **Creator at $10 per workspace/month** and **Team at $29 per workspac
 | Project portals, passwords, basic payment tracking                | Included           | Included                       | Included                               |
 | Hosted uploads                                                    | None               | Upcoming: 25 GB review storage | Upcoming: 100 GB shared review storage |
 | Client Hub, custom branding, workflow templates, advanced reports | Excluded           | Included                       | Included                               |
-| New payment plans and batches                                     | Excluded           | Included                       | Included                               |
+| Payment plans and batches                                         | Excluded           | Included                       | Included                               |
 | Roles, assignments, team payouts, workload reports                | Excluded           | Excluded                       | Included                               |
 | AI runs using the workspace's own API key                         | 10/month           | 300/month                      | Current design: 300/month per editor   |
 

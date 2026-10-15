@@ -43,7 +43,7 @@ const settings = {
   density: "compact",
 };
 
-test("a Creator owner completes a batch and retains payment history after returning to Free", async () => {
+test("a Creator owner completes a batch; back on Free it stays readable but locked", async () => {
   const t = convexTest(schema, modules);
   const owner = t.withIdentity({
     subject: "owner",
@@ -142,11 +142,20 @@ test("a Creator owner completes a batch and retains payment history after return
       received: true,
     })
   ).rejects.toThrow("Not authenticated");
-  await owner.mutation(api.salaryPlans.setReceived, {
-    batchId: batch._id,
-    received: true,
-    correctionNote: "Bank transfer",
-  });
+  // Batch payment tracking is paid; on Free the batch stays readable, unchanged.
+  await expect(
+    owner.mutation(api.salaryPlans.setReceived, {
+      batchId: batch._id,
+      received: true,
+      correctionNote: "Bank transfer",
+    })
+  ).rejects.toThrow("Creator or Team");
+  await expect(
+    owner.mutation(api.projects.setSalaryBatchPaid, {
+      batchId: batch.id,
+      paid: true,
+    })
+  ).rejects.toThrow("Creator or Team");
   expect(await owner.query(api.salaryPlans.listBatches, {})).toMatchObject([
     {
       _id: batch._id,
@@ -154,9 +163,8 @@ test("a Creator owner completes a batch and retains payment history after return
       amount: 250,
       planStartDate: "2026-09-17",
       planNotes: "Original terms",
-      paid: true,
-      received: true,
-      correctionNote: "Bank transfer",
+      paid: false,
+      received: false,
     },
   ]);
   expect(

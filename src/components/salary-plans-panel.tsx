@@ -301,9 +301,9 @@ export function SalaryPlansPanel({
           <div className="border-t border-border px-4 py-3">
             <CapabilityUpgradePrompt capability="salaryPlans" inline />
             <p className="mt-2 text-xs text-muted-foreground">
-              Existing plans and batches stay available. You can keep tracking
-              projects and recording payments on Free; new batches require
-              Creator or Team.
+              Existing plans and batches stay visible. Creating plans,
+              completing batches, and recording batch payments require Creator
+              or Team.
             </p>
           </div>
         ) : null}
@@ -332,6 +332,7 @@ export function SalaryPlansPanel({
                 projects={projects}
                 money={money}
                 busy={busy}
+                locked={!canCreatePlans}
                 correctionNotes={correctionNotes}
                 onEdit={() => {
                   setDraftError("");
@@ -385,6 +386,7 @@ function SalaryPlanRow({
   projects,
   money,
   busy,
+  locked,
   correctionNotes,
   onEdit,
   onToggleArchived,
@@ -398,6 +400,8 @@ function SalaryPlanRow({
   projects: readonly WorkItem[];
   money: (value: number) => string;
   busy: string;
+  /** Free workspaces see their batches but cannot record batch payments. */
+  locked: boolean;
   correctionNotes: Record<string, string>;
   onEdit: () => void;
   onToggleArchived: () => void;
@@ -536,7 +540,7 @@ function SalaryPlanRow({
                         className={cn(
                           received && "px-0 text-[var(--app-success)]"
                         )}
-                        disabled={busy === batch._id}
+                        disabled={locked || busy === batch._id}
                         onClick={() => onToggleReceived(batch)}
                       >
                         {received ? (
@@ -554,7 +558,7 @@ function SalaryPlanRow({
                         placeholder="Add a note"
                         className="h-8 text-xs"
                         maxLength={4000}
-                        disabled={busy === `note-${batch._id}`}
+                        disabled={locked || busy === `note-${batch._id}`}
                         value={correctionNotes[batch._id] ?? ""}
                         onChange={(event) =>
                           onNoteChange(batch._id, event.target.value)

@@ -51,6 +51,7 @@ import {
 } from "@/lib/invoice-reporting";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
+import { CapabilityUpgradePrompt } from "@/components/subscription-plans";
 import { projectLink } from "@/features/projects/project-view";
 import { Button } from "@/components/ui/button";
 import { Empty } from "@/components/ui/empty";
@@ -1216,6 +1217,7 @@ export function PrecisionReports({
   currentUserId,
   canManageFinance,
   onUpdateBatchPayment,
+  batchesLocked = false,
   salaryPlans,
   earningsQa,
 }: {
@@ -1227,6 +1229,8 @@ export function PrecisionReports({
   currentUserId?: string;
   canManageFinance: boolean;
   onUpdateBatchPayment: (batchId: string, paid: boolean) => void;
+  /** Free workspaces keep their batch ledger but cannot record payments. */
+  batchesLocked?: boolean;
   /** Owner-only salary plan panel, rendered above the batch ledger. */
   salaryPlans?: ReactNode;
   /** AI earnings Q&A panel, rendered after client totals. */
@@ -1846,6 +1850,11 @@ export function PrecisionReports({
             </span>
           }
           bodyMode="flush"
+          footer={
+            batchesLocked ? (
+              <CapabilityUpgradePrompt capability="salaryPlans" inline />
+            ) : undefined
+          }
         >
           <div className="overflow-x-auto border-t border-[var(--app-border)]">
             <Table className="w-full min-w-[720px] border-collapse">
@@ -1894,7 +1903,7 @@ export function PrecisionReports({
                         size="sm"
                         className="h-7 text-xs"
                         aria-label={`${batch.paid ? "Mark unpaid" : "Mark paid"} for batch ${batch.number}`}
-                        disabled={!canManageFinance}
+                        disabled={!canManageFinance || batchesLocked}
                         onClick={() =>
                           onUpdateBatchPayment(batch.id, !batch.paid)
                         }

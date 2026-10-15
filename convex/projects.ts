@@ -444,7 +444,7 @@ async function deliveryEffect(
   const requiredProjectCount =
     plan?.requiredProjectCount ??
     Math.max(1, Math.floor(settings?.salaryBatchSize ?? 20));
-  // Delivery remains free; only paid owners can generate new payment batches.
+  // Delivery remains free; Salary Batches are a paid feature.
   const entitlement = await resolveOwnerWorkspaceEntitlements(ctx, ownerUserId);
   if (!entitlement?.capabilities.salaryPlans) {
     return { result: { kind: "none" as const }, projectIds: [] };
@@ -694,6 +694,12 @@ export const setSalaryBatchPaid = mutation({
       )
       .unique();
     if (!batch) throw new Error("Salary Batch not found");
+    // Batch payment tracking is a paid feature; the records stay readable.
+    await requireOwnerWorkspaceCapability(
+      ctx,
+      identity.tokenIdentifier,
+      "salaryPlans"
+    );
     const receivedAt = args.paid
       ? (batch.receivedAt ?? new Date().toISOString())
       : undefined;

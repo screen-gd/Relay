@@ -44,7 +44,7 @@ const faqs = [
   {
     question: "What requires Creator or Team?",
     answer:
-      "Client Hub, custom portal branding, reusable Workflow Templates, advanced reports, and new payment plans and batches require Creator or Team. Existing payment records stay accessible on Free. Hosted file uploads are still in development.",
+      "Client Hub, custom portal branding, reusable Workflow Templates, advanced reports, and payment plans and payment batches require Creator or Team. Batches made on a paid plan stay visible on Free. Hosted file uploads are still in development.",
   },
   {
     question: "Do clients and viewers need paid seats?",

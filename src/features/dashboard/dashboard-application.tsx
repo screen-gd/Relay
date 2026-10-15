@@ -56,6 +56,7 @@ export function DashboardApplication() {
     clientOptions,
     projectTagOptions: ["ALL", ...projectTagOptions],
     subscribeToProjectActivity,
+    salaryBatchesEnabled: access.salaryBatchesEnabled,
   });
 
   const member = access.teamData?.currentMember;
