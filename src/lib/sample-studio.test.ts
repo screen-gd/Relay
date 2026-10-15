@@ -161,6 +161,26 @@ describe("sample workspace", () => {
     }
   });
 
+  it("reports a failed project write instead of reporting a load", async () => {
+    let projectsWereSet = false;
+
+    await expect(
+      seedSampleWorkspace({
+        clients: [],
+        awaitSettings: async () => undefined,
+        setSettings: () => undefined,
+        setItems: () => {
+          projectsWereSet = true;
+        },
+        setResourceLinks: () => undefined,
+        awaitProjects: async () => {
+          throw new Error("Project Client must belong to this Workspace");
+        },
+      })
+    ).rejects.toThrow("Project Client must belong to this Workspace");
+    expect(projectsWereSet).toBe(true);
+  });
+
   it("saves the sample clients before creating projects that reference them", async () => {
     let savedClients: Client[] = [];
     let serverClientIds = new Set<string>();

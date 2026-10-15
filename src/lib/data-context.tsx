@@ -1207,6 +1207,7 @@ function useSampleWorkspacePort({
   clients,
   resourceLinks,
   awaitSettings,
+  awaitProjects,
   setItems,
   setSettings,
   setResourceLinks,
@@ -1217,6 +1218,8 @@ function useSampleWorkspacePort({
   resourceLinks: readonly ResourceLink[];
   /** Resolves once a pending settings write has reached the server. */
   awaitSettings?: () => Promise<void>;
+  /** Resolves once the project writes from `setItems` have reached the server. */
+  awaitProjects?: () => Promise<void>;
   setItems: React.Dispatch<React.SetStateAction<WorkItem[]>>;
   setSettings: React.Dispatch<React.SetStateAction<SettingsState>>;
   setResourceLinks: React.Dispatch<React.SetStateAction<ResourceLink[]>>;
@@ -1232,11 +1235,19 @@ function useSampleWorkspacePort({
       seedSampleWorkspace({
         clients,
         awaitSettings,
+        awaitProjects,
         setItems,
         setSettings,
         setResourceLinks,
       }),
-    [awaitSettings, clients, setItems, setResourceLinks, setSettings]
+    [
+      awaitProjects,
+      awaitSettings,
+      clients,
+      setItems,
+      setResourceLinks,
+      setSettings,
+    ]
   );
 
   const clear = useCallback(
@@ -1719,7 +1730,15 @@ function CloudDataProvider({ children }: { children: React.ReactNode }) {
   settingsRef.current = settings;
   const pendingSettings = useRef<Array<ReturnType<typeof settingsPatch>>>([]);
   const settingsSaveRef = useRef<Promise<void> | null>(null);
-  const retrySettingsSave = useCallback((): Promise<void> => {
+  const projectWritesRef = useRef<Promise<PromiseSettledResult<unknown>[]>>(
+    Promise.resolve([])
+  );
+  /**
+   * Writes every pending settings patch. The promise rejects when the write
+   * fails, after the local fallback is in place, so a caller that must not
+   * continue on unsaved data can await it.
+   */
+  const flushSettingsSave = useCallback((): Promise<void> => {
     if (settingsSaveRef.current) return settingsSaveRef.current;
     if (!pendingSettings.current.length) return Promise.resolve();
     const save = (async () => {
@@ -1733,13 +1752,14 @@ function CloudDataProvider({ children }: { children: React.ReactNode }) {
         if (edits !== pendingSettings.current) return;
         setSettingsSaveState("saved");
         removeKey(SETTINGS_STORAGE_KEY);
-      } catch {
+      } catch (caught) {
         if (edits !== pendingSettings.current) return;
         setSettingsSaveState("error");
         writeJson(
           SETTINGS_STORAGE_KEY,
           omitLegacySettings(settingsRef.current)
         );
+        throw caught;
       } finally {
         settingsSaveRef.current = null;
       }
@@ -1747,6 +1767,11 @@ function CloudDataProvider({ children }: { children: React.ReactNode }) {
     settingsSaveRef.current = save;
     return save;
   }, [patchSettings]);
+  /** The settings screen's retry, and the writers that only attempt the save. */
+  const retrySettingsSave = useCallback(
+    () => flushSettingsSave().catch(() => undefined),
+    [flushSettingsSave]
+  );
 
   const setProjectSalaryBatchPaid = useMutation(
     api.projects.setSalaryBatchPaid
@@ -2094,6 +2119,17 @@ function CloudDataProvider({ children }: { children: React.ReactNode }) {
   }, [toast]);
 
   // Unified items setter
+  /**
+   * Awaits the project writes the last `setItems` call started and reports the
+   * first failure, so a caller can tell that a project did not reach the server.
+   */
+  const awaitProjectWrites = useCallback(async () => {
+    const failure = (await projectWritesRef.current).find(
+      (result): result is PromiseRejectedResult => result.status === "rejected"
+    );
+    if (failure) throw failure.reason;
+  }, []);
+
   const setItems = useCallback(
     (updater: React.SetStateAction<WorkItem[]>) => {
       setItemsState((prev: WorkItem[]) => {
@@ -2154,7 +2190,9 @@ function CloudDataProvider({ children }: { children: React.ReactNode }) {
             }),
             ...removedIds.map((projectId) => deleteProject({ projectId })),
           ];
-          Promise.allSettled(writes)
+          const settled = Promise.allSettled(writes);
+          projectWritesRef.current = settled;
+          void settled
             .then((results) => {
               const failure = results.find(
                 (result): result is PromiseRejectedResult =>
@@ -2533,7 +2571,8 @@ function CloudDataProvider({ children }: { children: React.ReactNode }) {
     items,
     clients: settings.clients,
     resourceLinks,
-    awaitSettings: retrySettingsSave,
+    awaitSettings: flushSettingsSave,
+    awaitProjects: awaitProjectWrites,
     setItems,
     setSettings,
     setResourceLinks,
