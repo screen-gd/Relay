@@ -437,7 +437,7 @@ export function WorkspaceShell({
   const [commandOpen, setCommandOpen] = useState(false);
   const [moreOpen, setMoreOpen] = useState(false);
   const [breadcrumb, setBreadcrumb] = useState<string | null>(null);
-  const [sidebarPinned, toggleSidebarPin] = useSidebarPinned();
+  const [sidebarOpen, toggleSidebar] = useSidebarOpen();
   const goChordRef = useRef(false);
   const goChordTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const commandReturnFocusRef = useRef<HTMLElement | null>(null);
@@ -507,13 +507,16 @@ export function WorkspaceShell({
     <BreadcrumbContext.Provider value={setBreadcrumb}>
       <div
         data-testid="workspace-shell"
-        data-sidebar={sidebarPinned ? "pinned" : "rail"}
+        data-sidebar={sidebarOpen ? "open" : "rail"}
         className="relay-density-balanced min-h-dvh bg-[var(--app-canvas)] text-[var(--app-ink)] lg:h-dvh lg:overflow-hidden lg:bg-[var(--app-sidebar)]"
       >
         <DesktopSidebar
           page={page}
-          pinned={sidebarPinned}
-          onTogglePin={toggleSidebarPin}
+          open={sidebarOpen}
+          onToggle={toggleSidebar}
+          onNewProject={onNewProject}
+          canCreateProject={canCreateProject}
+          searchRecords={searchRecords}
         />
 
         <div className="min-h-dvh transition-[padding] duration-200 ease-out motion-reduce:transition-none lg:pl-[var(--sidebar-width)]">
@@ -587,7 +590,7 @@ export function WorkspaceShell({
               >
                 <Search className="size-[18px]" />
               </Button>
-              <div className="hidden h-9 items-center sm:flex">
+              <div className="hidden h-9 items-center sm:flex lg:hidden">
                 <Button
                   aria-label="Quick create project"
                   className="h-9 px-3 text-xs shadow-none"
@@ -653,48 +656,35 @@ export function WorkspaceShell({
   );
 }
 
-const SIDEBAR_PIN_STORAGE_KEY = "relay:sidebar-pinned";
+const SIDEBAR_OPEN_STORAGE_KEY = "relay:sidebar-open";
 const RAIL_WIDTH = 56;
-const PANEL_WIDTH = 248;
 
 /**
- * Whether the hub panel stays open beside the rail. Closed is the default and
- * the panel then opens on hover or focus; the choice is remembered on this
- * device. Read after mount so the server render and the first client render
- * agree.
+ * Whether the panel beside the rail is open. Open is the default; the choice
+ * is remembered on this device. Read after mount so the server render and the
+ * first client render agree.
  */
-function useSidebarPinned() {
-  const [pinned, setPinned] = useState(false);
+function useSidebarOpen() {
+  const [open, setOpen] = useState(true);
   useEffect(() => {
     try {
-      setPinned(window.localStorage.getItem(SIDEBAR_PIN_STORAGE_KEY) === "1");
+      setOpen(window.localStorage.getItem(SIDEBAR_OPEN_STORAGE_KEY) !== "0");
     } catch {
-      // Storage is unavailable; keep the rail-only default.
+      // Storage is unavailable; keep the open default.
     }
   }, []);
   const toggle = () =>
-    setPinned((current) => {
+    setOpen((current) => {
       const next = !current;
       try {
-        window.localStorage.setItem(SIDEBAR_PIN_STORAGE_KEY, next ? "1" : "0");
+        window.localStorage.setItem(SIDEBAR_OPEN_STORAGE_KEY, next ? "1" : "0");
       } catch {
         // The toggle still works for this visit.
       }
       return next;
     });
-  return [pinned, toggle] as const;
+  return [open, toggle] as const;
 }
-
-/** One line under each hub's name in the panel. */
-const hubSummaries: Partial<Record<ShellPage, string>> = {
-  dashboard: "What needs attention today.",
-  projects: "Work in progress, dates, files, and media.",
-  clients: "Who you work with and what they owe.",
-  feedback: "Review notes and revision rounds.",
-  reports: "Earnings, deliveries, and payment batches.",
-  team: "Members, roles, and team chat.",
-  settings: "Workspace defaults, integrations, and templates.",
-};
 
 /**
  * Pages listed under a hub, in the panel and the context tabs alike. The
@@ -708,78 +698,70 @@ function hubChildren(hub: ShellPage) {
   );
 }
 
-/** One-shot motion for the active markers and the panel; nothing loops. */
+/** One-shot spring for the active markers; nothing loops. */
 const markerTransition = {
   type: "spring",
   stiffness: 520,
   damping: 40,
   mass: 0.8,
 } as const;
-const panelTransition = { duration: 0.12, ease: "easeOut" } as const;
 
-const railLinkClassName =
-  "group relative flex size-10 items-center justify-center rounded-[10px] outline-none transition-colors duration-150 focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)] focus-visible:ring-inset";
+const RECENT_PROJECT_LIMIT = 8;
 
 /**
- * Desktop navigation: a slim icon rail for the seven hubs, and a panel beside
- * it with the hovered hub's pages. The panel opens on hover or keyboard focus
- * and closes when the pointer leaves; the pin keeps it open for the current
- * hub and widens the layout.
+ * Desktop navigation in two columns, as in ChatGPT and Codex: a slim rail with
+ * one icon per hub, and a panel with the current hub's pages, the primary
+ * action, and recent Projects. The toggle in the panel header closes it to
+ * the rail alone; the rail then shows the toggle to reopen it.
  */
 function DesktopSidebar({
   page,
-  pinned,
-  onTogglePin,
+  open,
+  onToggle,
+  onNewProject,
+  canCreateProject,
+  searchRecords,
 }: {
   page: ShellPage;
-  pinned: boolean;
-  onTogglePin: () => void;
+  open: boolean;
+  onToggle: () => void;
+  onNewProject: () => void;
+  canCreateProject: boolean;
+  searchRecords: readonly SearchRecord[];
 }) {
-  const activeHub = hubPageForPage(page);
   const reduceMotion = useHydratedReducedMotion();
-  const [hoveredHub, setHoveredHub] = useState<ShellPage | null>(null);
-  const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const openTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  useEffect(
-    () => () => {
-      if (closeTimer.current) clearTimeout(closeTimer.current);
-      if (openTimer.current) clearTimeout(openTimer.current);
-    },
-    []
+  const hub = hubRoutes.find((item) => item.page === hubPageForPage(page));
+  const pages = hub ? hubChildren(hub.page) : [];
+  const recentProjects = searchRecords
+    .filter((record) => record.kind === "project" && record.href)
+    .slice(0, RECENT_PROJECT_LIMIT);
+  const toggle = (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          className="size-9 text-[var(--app-muted)] hover:text-[var(--app-ink)]"
+          aria-label={open ? "Close sidebar" : "Open sidebar"}
+          aria-expanded={open}
+          aria-controls="workspace-sidebar-panel"
+          onClick={onToggle}
+        >
+          <PanelLeft className="size-[18px]" />
+        </Button>
+      </TooltipTrigger>
+      <TooltipContent side="right">
+        {open ? "Close sidebar" : "Open sidebar"}
+      </TooltipContent>
+    </Tooltip>
   );
-  // Navigating closes a hover panel; a pinned panel follows the new hub.
-  useEffect(() => setHoveredHub(null), [page]);
-
-  const show = (hub: ShellPage) => {
-    if (closeTimer.current) clearTimeout(closeTimer.current);
-    if (openTimer.current) clearTimeout(openTimer.current);
-    openTimer.current = setTimeout(() => setHoveredHub(hub), 60);
-  };
-  const hold = () => {
-    if (closeTimer.current) clearTimeout(closeTimer.current);
-  };
-  const release = () => {
-    if (openTimer.current) clearTimeout(openTimer.current);
-    if (closeTimer.current) clearTimeout(closeTimer.current);
-    closeTimer.current = setTimeout(() => setHoveredHub(null), 220);
-  };
-
-  const panelHub = hoveredHub ?? (pinned ? activeHub : null);
-  const panelRoute = hubRoutes.find((item) => item.page === panelHub);
-  const panelOpen = Boolean(panelRoute);
 
   return (
-    <div
-      className="fixed inset-y-0 left-0 z-40 hidden lg:flex"
-      onMouseLeave={release}
-      onKeyDown={(event) => {
-        if (event.key === "Escape") setHoveredHub(null);
-      }}
-    >
+    <div className="fixed inset-y-0 left-0 z-40 hidden lg:flex">
       <aside
         className="flex h-full flex-col items-center bg-[var(--app-sidebar)] py-2"
         style={{ width: RAIL_WIDTH }}
-        onMouseEnter={hold}
       >
         <div className="flex h-[46px] items-center">
           <RelayBrand variant="mark" compact />
@@ -793,88 +775,124 @@ function DesktopSidebar({
               key={item.page}
               item={item}
               active={routeIsActive(page, item)}
-              showing={panelHub === item.page}
               reduceMotion={reduceMotion}
-              hasPanel={hubHasPages(item.page)}
-              onIntent={() =>
-                hubHasPages(item.page) ? show(item.page) : release()
-              }
-              onBlur={release}
             />
           ))}
         </nav>
-        <nav
-          aria-label="Support and legal"
-          className="grid grid-cols-2 gap-0.5 px-1 pb-1"
-        >
-          {compactSupportLinks.map((link) => {
-            const Icon = link.icon;
-            const className =
-              "flex size-6 items-center justify-center rounded-md text-[var(--app-muted)] outline-none transition-colors duration-150 hover:text-[var(--app-ink)] focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)] focus-visible:ring-inset";
-            return (
-              <Tooltip key={link.label}>
-                <TooltipTrigger asChild>
-                  {link.external ? (
-                    <a
-                      href={link.href}
-                      aria-label={link.label}
-                      target="_blank"
-                      rel="noreferrer"
-                      className={className}
-                    >
-                      <Icon className="size-3.5" />
-                    </a>
-                  ) : (
-                    <Link
-                      to={link.href}
-                      aria-label={link.label}
-                      className={className}
-                    >
-                      <Icon className="size-3.5" />
-                    </Link>
-                  )}
-                </TooltipTrigger>
-                <TooltipContent side="right">{link.label}</TooltipContent>
-              </Tooltip>
-            );
-          })}
-        </nav>
+        {open ? null : <div className="pb-1">{toggle}</div>}
       </aside>
 
-      <AnimatePresence initial={false}>
-        {panelRoute ? (
-          <motion.section
-            key="hub-panel"
-            aria-label={`${panelRoute.label} pages`}
-            initial={reduceMotion ? false : { opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={reduceMotion ? undefined : { opacity: 0 }}
-            transition={panelTransition}
-            onMouseEnter={hold}
-            onFocus={hold}
-            onBlur={release}
-            className={cn(
-              "flex h-full flex-col bg-[var(--app-sidebar)]",
-              pinned
-                ? "border-l border-[var(--app-border)]"
-                : "my-2 rounded-r-xl border-y border-r border-[var(--app-strong-border)] bg-[var(--surface-overlay)] shadow-[var(--shadow-overlay)]"
-            )}
-            style={{ width: PANEL_WIDTH }}
-          >
-            <HubPanel
-              key={panelRoute.page}
-              hub={panelRoute}
-              page={page}
-              pinned={pinned}
-              onTogglePin={onTogglePin}
-              onNavigate={() => setHoveredHub(null)}
-              reduceMotion={reduceMotion}
-            />
-          </motion.section>
-        ) : null}
-      </AnimatePresence>
-      {/* Keeps the pinned width stable when the panel is closed by Escape. */}
-      {pinned && !panelOpen ? <div style={{ width: PANEL_WIDTH }} /> : null}
+      <section
+        id="workspace-sidebar-panel"
+        aria-label={hub ? `${hub.label} sidebar` : "Sidebar"}
+        hidden={!open}
+        className="flex h-full w-[248px] flex-col border-l border-[var(--app-border)] bg-[var(--app-sidebar)]"
+      >
+        <div className="flex h-[54px] shrink-0 items-center justify-between pl-4 pr-2">
+          <h2 className="truncate text-sm font-semibold">
+            {hub?.label ?? "Relay"}
+          </h2>
+          {toggle}
+        </div>
+
+        <div className="workspace-scrollbar-hidden min-h-0 flex-1 overflow-y-auto px-2 pb-2">
+          {canCreateProject ? (
+            <button
+              type="button"
+              onClick={onNewProject}
+              className="flex min-h-9 w-full items-center gap-2.5 rounded-[10px] bg-[var(--sidebar-active)] px-3 text-[13px] font-medium text-[var(--app-ink)] outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)] focus-visible:ring-inset"
+            >
+              <Plus className="size-4 text-[var(--app-highlight)]" />
+              New project
+            </button>
+          ) : null}
+
+          {hub && pages.length > 1 ? (
+            <nav aria-label={`${hub.label} pages`} className="mt-3 space-y-0.5">
+              {pages.map((item) => {
+                const current = page === item.page;
+                return (
+                  <Link
+                    key={item.page}
+                    to={item.href}
+                    aria-current={current ? "page" : undefined}
+                    className={cn(
+                      "relative flex min-h-9 items-center rounded-[10px] px-3 text-[13px] font-medium outline-none transition-colors duration-150 focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)] focus-visible:ring-inset",
+                      current
+                        ? "text-[var(--app-ink)]"
+                        : "text-[var(--app-muted)] hover:text-[var(--app-ink)]"
+                    )}
+                  >
+                    {current ? (
+                      <motion.span
+                        aria-hidden="true"
+                        layoutId="panel-active-page"
+                        transition={
+                          reduceMotion ? { duration: 0 } : markerTransition
+                        }
+                        className="absolute inset-0 rounded-[10px] bg-[var(--sidebar-active)]"
+                      />
+                    ) : null}
+                    <span className="relative truncate">{item.label}</span>
+                  </Link>
+                );
+              })}
+            </nav>
+          ) : null}
+
+          {recentProjects.length ? (
+            <nav aria-label="Recent Projects" className="mt-4">
+              <p className="px-3 pb-1 text-[11px] font-medium text-[var(--app-subtle)]">
+                Recent projects
+              </p>
+              <ul className="space-y-0.5">
+                {recentProjects.map((record) => (
+                  <li key={record.id}>
+                    <HrefLink
+                      href={record.href ?? "/projects"}
+                      className="group flex min-h-8 flex-col justify-center rounded-[10px] px-3 py-1 outline-none transition-colors duration-150 focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)] focus-visible:ring-inset"
+                    >
+                      <span className="truncate text-[13px] text-[var(--app-muted)] transition-colors group-hover:text-[var(--app-ink)]">
+                        {record.title}
+                      </span>
+                      <span className="truncate text-[11px] text-[var(--app-subtle)]">
+                        {record.detail}
+                      </span>
+                    </HrefLink>
+                  </li>
+                ))}
+              </ul>
+            </nav>
+          ) : null}
+        </div>
+
+        <nav
+          aria-label="Support and legal"
+          className="flex shrink-0 flex-wrap gap-x-3 gap-y-1 border-t border-[var(--app-border)] px-4 py-3 text-[11px] text-[var(--app-subtle)]"
+        >
+          {compactSupportLinks.map((link) =>
+            link.external ? (
+              <a
+                key={link.label}
+                href={link.href}
+                target="_blank"
+                rel="noreferrer"
+                className="rounded-sm outline-none hover:text-[var(--app-ink)] focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)]"
+              >
+                {link.label}
+              </a>
+            ) : (
+              <Link
+                key={link.label}
+                to={link.href}
+                className="rounded-sm outline-none hover:text-[var(--app-ink)] focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)]"
+              >
+                {link.label}
+              </Link>
+            )
+          )}
+        </nav>
+      </section>
     </div>
   );
 }
@@ -882,154 +900,53 @@ function DesktopSidebar({
 function RailRoute({
   item,
   active,
-  showing,
   reduceMotion,
-  hasPanel,
-  onIntent,
-  onBlur,
 }: {
   item: RouteItem;
   active: boolean;
-  /** The panel is open for this hub. */
-  showing: boolean;
   reduceMotion: boolean;
-  /** Hubs with sub-pages open the panel; the rest get a tooltip. */
-  hasPanel: boolean;
-  onIntent: () => void;
-  onBlur: () => void;
 }) {
   const Icon = item.icon;
   const aiHere = aiToolsForPage(item.page);
-  const link = (
-    <Link
-      to={item.href}
-      aria-label={item.label}
-      aria-current={active ? "page" : undefined}
-      onMouseEnter={onIntent}
-      onFocus={onIntent}
-      onBlur={onBlur}
-      className={cn(
-        railLinkClassName,
-        active || showing
-          ? "text-[var(--app-ink)]"
-          : "text-[var(--app-muted)] hover:text-[var(--app-ink)]"
-      )}
-    >
-      {active ? (
-        <motion.span
-          aria-hidden="true"
-          layoutId="rail-active-item"
-          transition={reduceMotion ? { duration: 0 } : markerTransition}
-          className="absolute inset-0 rounded-[10px] bg-[var(--sidebar-active)]"
-        />
-      ) : null}
-      <Icon
-        className={cn(
-          "relative size-[18px]",
-          active && "text-[var(--app-highlight)]"
-        )}
-      />
-      {aiHere.length ? (
-        <span
-          aria-hidden="true"
-          data-slot="ai-nav-badge"
-          className="absolute right-1.5 top-1.5 size-1.5 rounded-full bg-[var(--app-highlight)]"
-        />
-      ) : null}
-    </Link>
-  );
-  if (hasPanel) return link;
   return (
     <Tooltip>
-      <TooltipTrigger asChild>{link}</TooltipTrigger>
+      <TooltipTrigger asChild>
+        <Link
+          to={item.href}
+          aria-label={item.label}
+          aria-current={active ? "page" : undefined}
+          className={cn(
+            "group relative flex size-10 items-center justify-center rounded-[10px] outline-none transition-colors duration-150 focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)] focus-visible:ring-inset",
+            active
+              ? "text-[var(--app-ink)]"
+              : "text-[var(--app-muted)] hover:text-[var(--app-ink)]"
+          )}
+        >
+          {active ? (
+            <motion.span
+              aria-hidden="true"
+              layoutId="rail-active-item"
+              transition={reduceMotion ? { duration: 0 } : markerTransition}
+              className="absolute inset-0 rounded-[10px] bg-[var(--sidebar-active)]"
+            />
+          ) : null}
+          <Icon
+            className={cn(
+              "relative size-[18px]",
+              active && "text-[var(--app-highlight)]"
+            )}
+          />
+          {aiHere.length ? (
+            <span
+              aria-hidden="true"
+              data-slot="ai-nav-badge"
+              className="absolute right-1.5 top-1.5 size-1.5 rounded-full bg-[var(--app-highlight)]"
+            />
+          ) : null}
+        </Link>
+      </TooltipTrigger>
       <TooltipContent side="right">{item.label}</TooltipContent>
     </Tooltip>
-  );
-}
-
-function HubPanel({
-  hub,
-  page,
-  pinned,
-  onTogglePin,
-  onNavigate,
-  reduceMotion,
-}: {
-  hub: RouteItem;
-  page: ShellPage;
-  pinned: boolean;
-  onTogglePin: () => void;
-  /** Called when a page link is chosen, so a hover panel can close. */
-  onNavigate: () => void;
-  reduceMotion: boolean;
-}) {
-  const pages = hubChildren(hub.page);
-  return (
-    <div className="motion-fade flex min-h-0 flex-1 flex-col">
-      <div className="flex h-[54px] shrink-0 items-center justify-between pl-4 pr-2">
-        <h2 className="truncate text-sm font-semibold">{hub.label}</h2>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon"
-              className="size-9 text-[var(--app-muted)] hover:text-[var(--app-ink)]"
-              aria-label={pinned ? "Unpin sidebar" : "Pin sidebar"}
-              aria-pressed={pinned}
-              onClick={onTogglePin}
-            >
-              <PanelLeft className="size-[18px]" />
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent side="right">
-            {pinned ? "Unpin sidebar" : "Keep open"}
-          </TooltipContent>
-        </Tooltip>
-      </div>
-      <p className="px-4 text-xs leading-5 text-[var(--app-muted)]">
-        {hubSummaries[hub.page]}
-      </p>
-      <div className="mt-3 min-h-0 flex-1 overflow-y-auto px-2">
-        {pages.length ? (
-          <div
-            role="group"
-            aria-label={`${hub.label} pages`}
-            className="space-y-0.5"
-          >
-            {pages.map((item) => {
-              const current = page === item.page;
-              return (
-                <Link
-                  key={item.page}
-                  to={item.href}
-                  aria-current={current ? "page" : undefined}
-                  onClick={pinned ? undefined : onNavigate}
-                  className={cn(
-                    "relative flex min-h-9 items-center rounded-[10px] px-3 text-[13px] font-medium outline-none transition-colors duration-150 focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)] focus-visible:ring-inset",
-                    current
-                      ? "text-[var(--app-ink)]"
-                      : "text-[var(--app-muted)] hover:text-[var(--app-ink)]"
-                  )}
-                >
-                  {current ? (
-                    <motion.span
-                      aria-hidden="true"
-                      layoutId={`panel-active-${hub.page}`}
-                      transition={
-                        reduceMotion ? { duration: 0 } : markerTransition
-                      }
-                      className="absolute inset-0 rounded-[10px] bg-[var(--sidebar-active)]"
-                    />
-                  ) : null}
-                  <span className="relative truncate">{item.label}</span>
-                </Link>
-              );
-            })}
-          </div>
-        ) : null}
-      </div>
-    </div>
   );
 }
 

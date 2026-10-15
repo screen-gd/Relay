@@ -6,7 +6,7 @@ Let users move among work areas, current context, saved views, and actions witho
 
 ## Anatomy
 
-Desktop sidebar: Dashboard, Projects, Clients, Reviews, Payments, Team, Settings. It is a 56px icon rail. Hovering or focusing a hub opens a panel beside the rail with the hub's name, a one-line summary, and its pages (Overview first, then Calendar, Timeline, Files, Media for Projects; Team chat for Team; Integrations, Templates, Resources for Settings). The pin in the panel keeps it open for the current hub and widens the layout; the choice is remembered on the device. The context tabs above the page list the same pages, so every page stays reachable without hovering. Top bar: workspace switcher, command search, notifications, help, account. Context row: breadcrumb/project, view switcher, filters, saved views.
+Desktop sidebar: Dashboard, Projects, Clients, Reviews, Payments, Team, Settings. It has two columns, as in ChatGPT and Codex: a 56px icon rail with one icon per hub and a tooltip, and a 248px panel that is open by default and closes to the rail with the toggle in its header (remembered on the device). The panel shows the current hub's name, a New project action, the hub's pages (Overview first, then Calendar, Timeline, Files, Media for Projects; Team chat for Team; Integrations, Templates, Resources for Settings), recent Projects, and the support links. The context tabs above the page list the same pages, so every page stays reachable with the panel closed. Top bar: workspace switcher, command search, notifications, help, account. Context row: breadcrumb/project, view switcher, filters, saved views.
 
 ## Behavior
 

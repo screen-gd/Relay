@@ -217,17 +217,29 @@ describe("Workspace hub navigation", () => {
     );
   });
 
-  it("renders the rail without a hub panel until it is hovered or pinned", async () => {
+  it("opens the panel beside the rail with the hub's pages", async () => {
     const html = await shell("/calendar");
     const rail = navigation(html, "Primary navigation");
     expect([...rail.matchAll(/<a /g)]).toHaveLength(7);
-    expect(html).not.toContain('aria-label="Projects pages"');
-    expect(html).not.toContain('aria-label="Pin sidebar"');
-    // Sub-pages stay reachable through the context tabs.
+    expect(html).toContain('aria-label="Close sidebar"');
+    const panel = navigation(html, "Projects pages");
+    for (const href of [
+      "/projects",
+      "/calendar",
+      "/timeline",
+      "/files",
+      "/media",
+    ])
+      expect(panel).toContain(`href="${href}"`);
+    expect(currentLinks(panel)).toEqual(["/calendar"]);
+    // The context tabs list the same pages in the same order.
     const context = navigation(html, "Projects navigation");
-    for (const href of ["/calendar", "/timeline", "/files", "/media"])
-      expect(context).toContain(`href="${href}"`);
     expect(context).toContain(">Overview<");
+    expect(
+      [...context.matchAll(/href="([^"]*)"/g)].map(([, href]) => href)
+    ).toEqual([...panel.matchAll(/href="([^"]*)"/g)].map(([, href]) => href));
+    // Single-page hubs show no page list.
+    expect(await shell("/clients")).not.toContain('aria-label="Clients pages"');
   });
 
   it("marks the hubs that hold AI tools", async () => {

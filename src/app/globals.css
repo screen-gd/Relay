@@ -750,12 +750,12 @@ button:not(:disabled):active,
   }
 }
 
-/* The rail is always 56px; pinning the hub panel adds its 248px. */
+/* The rail is always 56px; the open panel adds its 248px. */
 [data-sidebar] {
   --sidebar-width: 56px;
 }
 
-[data-sidebar="pinned"] {
+[data-sidebar="open"] {
   --sidebar-width: 304px;
 }
 
