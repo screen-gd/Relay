@@ -5,6 +5,7 @@ import {
   TEAM_LAUNCH_STORAGE_GB,
   EXTRA_EDITOR_MONTHLY_PRICE_USD,
   TEAM_INCLUDED_EDITOR_SEATS,
+  FREE_OPEN_PROJECT_LIMIT,
   formatUsd,
 } from "../../lib/plans";
 import {
@@ -32,9 +33,14 @@ const rows = [
     ],
   },
   {
-    label: "Projects and clients",
+    label: "Projects in progress",
+    values: [`${FREE_OPEN_PROJECT_LIMIT} at a time`, "Unlimited", "Unlimited"],
+  },
+  {
+    label: "Project history and clients",
     values: ["Unlimited", "Unlimited", "Unlimited"],
   },
+  { label: "Completed projects in the timeline", values: [false, true, true] },
   { label: "Client portals and password links", values: [true, true, true] },
   { label: "Embedded video review", values: [true, true, true] },
   { label: "Payment tracking", values: [true, true, true] },

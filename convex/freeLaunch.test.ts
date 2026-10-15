@@ -283,9 +283,16 @@ test("Free supports clients, projects, external review, delivery and payments bu
     projectId: "free-project",
     paid: true,
   });
-  expect(await owner.query(api.projects.list, {})).toMatchObject([
-    { id: "free-project", paid: true },
-  ]);
+  // Paid delivered work leaves the live list and stays readable in history.
+  expect(await owner.query(api.projects.list, {})).toEqual([]);
+  expect(
+    (
+      await owner.query(api.projects.historyPage, {
+        scope: "personal",
+        paginationOpts: { numItems: 10, cursor: null },
+      })
+    ).page
+  ).toMatchObject([{ id: "free-project", paid: true, lifecycle: "history" }]);
   await expect(
     other.mutation(api.projects.transitionStage, {
       projectId: "free-project",
@@ -475,4 +482,122 @@ test("retained Free members and Client Contacts cannot claim owner or paid acces
   expect(
     await t.run((ctx) => ctx.db.query("clientContacts").collect())
   ).toHaveLength(1);
+});
+
+/** A Free owner's Project with a two-stage workflow. */
+function freeProject(id: string) {
+  return {
+    id,
+    assigneeUserIds: [],
+    profileId: "video-editing",
+    title: id,
+    clientId: "client",
+    workflowStages: [
+      { id: "edit", label: "Edit", purpose: "editing" as const },
+      { id: "done", label: "Delivered", purpose: "delivered" as const },
+    ],
+    workType: "Freelance",
+    startDate: "2026-10-01",
+    dueDate: "2026-10-20",
+    earnings: 100,
+    notes: "",
+  };
+}
+
+test("Free allows 10 Projects in progress; delivering one frees a slot and reopening needs one", async () => {
+  const t = convexTest(schema, modules);
+  const owner = t.withIdentity({
+    subject: "owner",
+    tokenIdentifier: "test|owner",
+  });
+  await owner.mutation(api.team.createWorkspace, { name: "Free Studio" });
+  await owner.mutation(api.settings.upsert, settings);
+  expect(
+    await owner.query(api.workspaceSubscriptions.getCurrent, {})
+  ).toMatchObject({ openProjectLimit: 10 });
+  for (let index = 1; index <= 10; index += 1)
+    await owner.mutation(api.projects.create, {
+      project: freeProject(`p${index}`),
+    });
+  await expect(
+    owner.mutation(api.projects.create, { project: freeProject("p11") })
+  ).rejects.toThrow("10 Projects in progress");
+
+  await owner.mutation(api.projects.transitionStage, {
+    projectId: "p1",
+    stageId: "done",
+  });
+  await owner.mutation(api.projects.create, { project: freeProject("p11") });
+  await expect(
+    owner.mutation(api.projects.transitionStage, {
+      projectId: "p1",
+      stageId: "edit",
+    })
+  ).rejects.toThrow("10 Projects in progress");
+  expect(
+    await owner.query(api.projects.get, { projectId: "p1" })
+  ).toMatchObject({ status: "Delivered", lifecycle: "awaiting_payment" });
+
+  await owner.mutation(api.projects.setArchived, {
+    projectId: "p2",
+    archived: true,
+  });
+  await owner.mutation(api.projects.transitionStage, {
+    projectId: "p1",
+    stageId: "edit",
+  });
+  await expect(
+    owner.mutation(api.projects.setArchived, {
+      projectId: "p2",
+      archived: false,
+    })
+  ).rejects.toThrow("10 Projects in progress");
+});
+
+test("paid plans have no Project limit, and history pages only completed work", async () => {
+  const t = convexTest(schema, modules);
+  const owner = t.withIdentity({
+    subject: "owner",
+    tokenIdentifier: "test|owner",
+  });
+  await owner.mutation(api.team.createWorkspace, { name: "Creator Studio" });
+  await t.run(async (ctx) => {
+    const subscription = await ctx.db.query("workspaceSubscriptions").unique();
+    if (!subscription) throw new Error("Subscription missing");
+    await ctx.db.patch(subscription._id, {
+      plan: "creator",
+      subscriptionStatus: "active",
+      billingPeriod: "monthly",
+    });
+  });
+  await owner.mutation(api.settings.upsert, settings);
+  for (let index = 1; index <= 12; index += 1)
+    await owner.mutation(api.projects.create, {
+      project: freeProject(`p${index}`),
+    });
+  for (const projectId of ["p1", "p2"]) {
+    await owner.mutation(api.projects.transitionStage, {
+      projectId,
+      stageId: "done",
+    });
+    await owner.mutation(api.projects.setPayment, { projectId, paid: true });
+  }
+
+  const live = await owner.query(api.projects.list, {});
+  expect(live).toHaveLength(10);
+  expect(live.map(({ id }) => id)).not.toContain("p1");
+  const history = await owner.query(api.projects.historyPage, {
+    scope: "personal",
+    paginationOpts: { numItems: 1, cursor: null },
+  });
+  expect(history.page).toHaveLength(1);
+  expect(history.isDone).toBe(false);
+  const rest = await owner.query(api.projects.historyPage, {
+    scope: "personal",
+    paginationOpts: { numItems: 10, cursor: history.continueCursor },
+  });
+  expect([...history.page, ...rest.page].map(({ id }) => id).sort()).toEqual([
+    "p1",
+    "p2",
+  ]);
 });

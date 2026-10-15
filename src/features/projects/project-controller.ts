@@ -11,6 +11,8 @@ import type {
 } from "@/lib/types";
 import { applyProjectTemplate } from "@/lib/project-templates";
 import { DEFAULT_WORKFLOW_STAGES } from "@/lib/workflow-templates";
+import { isOpenProjectLimitError } from "@/lib/project-history";
+import { OPEN_PROJECT_LIMIT_MESSAGE } from "../../../shared/subscription-plans";
 import {
   getProjectWorkflowStage,
   getWorkflowStageStatus,
@@ -118,8 +120,13 @@ export function useProjectController(options: ProjectControllerOptions) {
               ? `${project.title} delivered. Payment plan progress: ${result.progress}/${result.requiredProjectCount}.`
               : `${project.title} moved from ${getProjectWorkflowStage(project).label} to ${stage?.label ?? requestedStage}.`;
         notify(resultMessage);
-      } catch {
-        notify("Project stage could not be updated.", "warning");
+      } catch (error) {
+        notify(
+          isOpenProjectLimitError(error)
+            ? OPEN_PROJECT_LIMIT_MESSAGE
+            : "Project stage could not be updated.",
+          "warning"
+        );
       }
     },
     [canEditTeamProjects, canUpdateTeamStatus, notify, onStatusChanged, options]

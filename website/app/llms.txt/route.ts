@@ -6,6 +6,7 @@ import {
   EXTRA_EDITOR_MONTHLY_PRICE_USD,
   CREATOR_LAUNCH_STORAGE_GB,
   TEAM_LAUNCH_STORAGE_GB,
+  FREE_OPEN_PROJECT_LIMIT,
   formatUsd,
 } from "../../lib/plans";
 
@@ -28,7 +29,7 @@ This is the public marketing site. Product access and private workspaces are on 
 
 ## Plans
 
-- Free includes unlimited projects and clients, external video reviews, standard client portals, and basic payment tracking. No active-project cap or invite is required.
+- Free includes ${FREE_OPEN_PROJECT_LIMIT} projects in progress at a time, unlimited clients and project history, external video reviews, standard client portals, and basic payment tracking. Delivered and archived projects do not count toward the limit. No invite is required.
 - Creator is planned at ${formatUsd(CREATOR_MONTHLY_PRICE_USD)}/workspace/month, with Client Hub, branding, Workflow Templates, advanced reports, and new payment plans and batches.
 - Team is planned at ${formatUsd(TEAM_MONTHLY_PRICE_USD)}/workspace/month for ${TEAM_INCLUDED_EDITOR_SEATS} editors including the owner, plus ${formatUsd(EXTRA_EDITOR_MONTHLY_PRICE_USD)}/month per extra editor. Client review access and Team viewers are free.
 - Prices are subject to change. Paid checkout is not live; neither plan can be bought yet.

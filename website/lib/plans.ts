@@ -6,6 +6,7 @@ import {
   EXTRA_EDITOR_MONTHLY_PRICE_USD,
   CREATOR_LAUNCH_STORAGE_GB,
   TEAM_LAUNCH_STORAGE_GB,
+  FREE_OPEN_PROJECT_LIMIT,
 } from "../../shared/subscription-plans";
 export {
   CREATOR_MONTHLY_PRICE_USD,
@@ -14,6 +15,7 @@ export {
   EXTRA_EDITOR_MONTHLY_PRICE_USD,
   CREATOR_LAUNCH_STORAGE_GB,
   TEAM_LAUNCH_STORAGE_GB,
+  FREE_OPEN_PROJECT_LIMIT,
 };
 
 /** Formats a US dollar amount the way the pricing UI shows it: 10 -> "$10.00". */
@@ -40,9 +42,10 @@ export const plans = [
     price: "$0",
     period: "forever",
     status: "Available now",
-    description: "Track unlimited projects, clients, reviews, and payments.",
+    description: `Track ${FREE_OPEN_PROJECT_LIMIT} projects at a time, with clients, reviews, and payments.`,
     features: [
-      "Unlimited projects and clients",
+      `${FREE_OPEN_PROJECT_LIMIT} projects in progress, unlimited clients`,
+      "Unlimited project history",
       "Project tracking and delivery",
       "Client portals with password links",
       "Embedded video review and comments",
@@ -62,6 +65,7 @@ export const plans = [
     description: "Your client hub, branding, workflows, and payment plans.",
     features: [
       "Everything in Free",
+      "Unlimited projects in progress",
       "Client hub",
       "Custom portal branding",
       "Custom workflow templates",

@@ -42,8 +42,8 @@ Free is for trying Relay and managing basic solo work.
 
 Included:
 
-- Unlimited Projects
-- Unlimited Clients
+- 10 Projects in progress at a time
+- Unlimited Project history and Clients
 - Basic workflow tracking
 - Basic Reviews and delivery
 - Standard project-specific Client Portals
@@ -58,8 +58,28 @@ Limits:
 - Creating payment plans, assigning new Projects to payment plans, and generating
   new payment batches require Creator or Team. Existing plans and batches remain
   readable and editable; receipt/payment updates and historical imports remain available.
-- No active-project or active-client cap. Project tracking, status changes, and
-  delivery remain available even when paid batch generation is locked.
+- 10 Projects in progress at a time (`FREE_OPEN_PROJECT_LIMIT` in
+  `shared/subscription-plans.ts`). A Project counts while it is not delivered,
+  cancelled, or archived, so delivering one frees a slot. Creating, reopening a
+  delivered Project, and unarchiving all check the limit on the server.
+  Workspaces already over the limit keep every Project and can add more once
+  they are under it. No active-client cap.
+- The Timeline and Calendar show Projects in progress; completed Projects there
+  require Creator or Team. History, Reports, and the Dashboard include completed
+  Projects on every plan.
+
+## Project history
+
+A Project moves to history when it is archived or cancelled, or when it is
+delivered and settled: marked paid, delivered with no agreed amount, or included
+in a Salary Batch. Delivered work that is still unpaid stays in the live list.
+The rule lives in `convex/projectLifecycle.ts` and is stored on each Project as
+`lifecycle`, so the live list and history read separate index ranges.
+
+The workspace subscribes only to the live list. History loads on the History
+page (25 at a time, on request) and while Reports, the Dashboard, or a paid
+Timeline or Calendar is open. Opening a completed Project loads it on its own,
+and it stays editable; reopening it moves it back to the live list.
 
 YouTube and Vimeo embed directly in shared portals and support playback timestamps through their player APIs. Drive, Dropbox and other links support general comments and manual timestamps; clients open those videos with their host. Embedded and linked videos do not use Relay storage.
 

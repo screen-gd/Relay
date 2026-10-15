@@ -5,6 +5,7 @@ import { SalaryPlansPanel } from "@/components/salary-plans-panel";
 import { ContentSection } from "@/components/workspace-page";
 import { AiLockedNotice } from "@/features/ai/ai-availability";
 import { useData } from "@/lib/data-context";
+import { useProjectHistory } from "@/lib/project-history";
 import { useProjectAccess } from "@/features/projects/project-access";
 import { EarningsQa } from "./earnings-qa";
 
@@ -41,6 +42,8 @@ export function ReportsApplication() {
     currentTeamId,
     sample,
   } = useProjectAccess();
+  // Reports total past work, so completed history loads while this page is open.
+  useProjectHistory();
   const role = teamData?.currentMember.role;
   const earningsQa =
     currentTeamId &&

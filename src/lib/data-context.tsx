@@ -12,6 +12,12 @@ import { useConvex, useConvexAuth, useMutation, useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import type { Id } from "../../convex/_generated/dataModel";
 import { useWorkspaceProjectData } from "./use-workspace-project-data";
+import {
+  ProjectHistoryProvider,
+  isOpenProjectLimitError,
+  useProjectHistoryState,
+} from "./project-history";
+import { OPEN_PROJECT_LIMIT_MESSAGE } from "../../shared/subscription-plans";
 import { useOptionalAuth } from "@/lib/optional-auth";
 import type {
   WorkItem,
@@ -1709,8 +1715,21 @@ function CloudDataProvider({ children }: { children: React.ReactNode }) {
   const previousAuthMode = useRef(authMode);
 
   // Always call hooks — Convex handles unauthenticated state gracefully
-  const { projects: convexItems, batches: convexProjectBatches } =
-    useWorkspaceProjectData(convexAuthenticated);
+  const historyState = useProjectHistoryState();
+  const {
+    projects: convexItems,
+    batches: convexProjectBatches,
+    pinnedMissing,
+  } = useWorkspaceProjectData(convexAuthenticated, {
+    includeHistory: historyState.includeHistory,
+    pinnedProjectId: historyState.pinnedProjectId,
+  });
+  // The live list leaves out completed history, so an empty list does not
+  // prove the account is new; this decides whether browser Projects migrate.
+  const convexHasProjects = useQuery(
+    api.projects.hasAny,
+    convexAuthenticated ? {} : "skip"
+  );
   const convexProjectGroups = useQuery(api.projectGroups.list, {});
   const convexSettings = useQuery(api.settings.get, {});
 
@@ -1852,6 +1871,7 @@ function CloudDataProvider({ children }: { children: React.ReactNode }) {
 
     if (
       convexItems === undefined ||
+      convexHasProjects === undefined ||
       convexProjectGroups === undefined ||
       convexSettings === undefined ||
       convexProjectBatches === undefined ||
@@ -1927,7 +1947,7 @@ function CloudDataProvider({ children }: { children: React.ReactNode }) {
         }
       }
 
-      if (loadedItems.length === 0 && localItems.length > 0) {
+      if (!convexHasProjects && localItems.length > 0) {
         try {
           await Promise.all(
             localItems.map((project) =>
@@ -2010,6 +2030,7 @@ function CloudDataProvider({ children }: { children: React.ReactNode }) {
     getToken,
     ready,
     convexItems,
+    convexHasProjects,
     convexProjectGroups,
     convexSettings,
     convexProjectBatches,
@@ -2218,6 +2239,14 @@ function CloudDataProvider({ children }: { children: React.ReactNode }) {
                 tone: "warning",
                 message:
                   "Project change was not allowed by your team permissions.",
+              });
+              return;
+            }
+            if (isOpenProjectLimitError(error)) {
+              writeItems(prev);
+              setToast({
+                tone: "warning",
+                message: OPEN_PROJECT_LIMIT_MESSAGE,
               });
               return;
             }
@@ -2476,6 +2505,7 @@ function CloudDataProvider({ children }: { children: React.ReactNode }) {
       if (
         isSignedIn &&
         (items.length ||
+          convexHasProjects ||
           settings.clients.length ||
           projectGroups.length ||
           resourceLinks.length ||
@@ -2556,6 +2586,7 @@ function CloudDataProvider({ children }: { children: React.ReactNode }) {
       importProjectSalaryBatches,
       isSignedIn,
       items.length,
+      convexHasProjects,
       projectGroups.length,
       replaceAllResources,
       resourceLinks.length,
@@ -2609,34 +2640,57 @@ function CloudDataProvider({ children }: { children: React.ReactNode }) {
     toast,
     setToast,
   };
+  const { requestHistory, pinProject, pinnedProjectId } = historyState;
+  const historyControls = useMemo(
+    () => ({
+      requestHistory,
+      pinProject,
+      // Resolved once the Project is in the list or the lookup found nothing,
+      // so the page never flashes "not found" while a Project is arriving.
+      isPinResolved: (projectId: string) =>
+        !convexAuthenticated ||
+        items.some((project) => project.id === projectId) ||
+        (pinnedProjectId === projectId && pinnedMissing),
+    }),
+    [
+      convexAuthenticated,
+      items,
+      pinProject,
+      pinnedProjectId,
+      pinnedMissing,
+      requestHistory,
+    ]
+  );
 
   return (
-    <ProjectWorkflowContext.Provider
-      value={{
-        previewStage: previewProjectStage,
-        transitionStage: transitionProjectStage,
-      }}
-    >
-      <ProjectGroupsContext.Provider
+    <ProjectHistoryProvider controls={historyControls}>
+      <ProjectWorkflowContext.Provider
         value={{
-          groups: projectGroups,
-          saveGroup: (group) =>
-            setProjectGroups((current) =>
-              current.some((item) => item.id === group.id)
-                ? current.map((item) => (item.id === group.id ? group : item))
-                : [group, ...current]
-            ),
-          setGroupArchived: (groupId, archived) =>
-            setProjectGroups((current) =>
-              current.map((group) =>
-                group.id === groupId ? { ...group, archived } : group
-              )
-            ),
+          previewStage: previewProjectStage,
+          transitionStage: transitionProjectStage,
         }}
       >
-        <DataContext.Provider value={value}>{children}</DataContext.Provider>
-      </ProjectGroupsContext.Provider>
-    </ProjectWorkflowContext.Provider>
+        <ProjectGroupsContext.Provider
+          value={{
+            groups: projectGroups,
+            saveGroup: (group) =>
+              setProjectGroups((current) =>
+                current.some((item) => item.id === group.id)
+                  ? current.map((item) => (item.id === group.id ? group : item))
+                  : [group, ...current]
+              ),
+            setGroupArchived: (groupId, archived) =>
+              setProjectGroups((current) =>
+                current.map((group) =>
+                  group.id === groupId ? { ...group, archived } : group
+                )
+              ),
+          }}
+        >
+          <DataContext.Provider value={value}>{children}</DataContext.Provider>
+        </ProjectGroupsContext.Provider>
+      </ProjectWorkflowContext.Provider>
+    </ProjectHistoryProvider>
   );
 }
 

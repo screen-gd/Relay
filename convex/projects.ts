@@ -1,6 +1,10 @@
 import { getWorkspaceClient } from "./workspaceClients";
 import { requireProjectAccess, canSeeTeamProject } from "./projectAccess";
-import { paginationOptsValidator } from "convex/server";
+import {
+  paginationOptsValidator,
+  type NamedTableInfo,
+  type OrderedQuery,
+} from "convex/server";
 import schema from "./schema";
 import { type Infer, v } from "convex/values";
 import {
@@ -9,7 +13,7 @@ import {
   type MutationCtx,
   type QueryCtx,
 } from "./_generated/server";
-import type { Doc } from "./_generated/dataModel";
+import type { DataModel, Doc } from "./_generated/dataModel";
 import {
   fileCategoryValidator,
   projectOutputReviewStateValidator,
@@ -21,6 +25,61 @@ import {
   resolveOwnerWorkspaceEntitlements,
 } from "./workspaceSubscriptions";
 import { dueDateAfterDelivery } from "../src/lib/domain-values";
+import {
+  requireOpenProjectCapacity,
+  syncProjectLifecycle,
+} from "./projectLifecycle";
+
+/**
+ * Personal or Team Projects that are still active or awaiting payment. Rows the
+ * lifecycle backfill has not reached yet have no lifecycle and are included.
+ */
+function liveProjects(
+  ctx: QueryCtx | MutationCtx,
+  scope: { ownerUserId: string } | { teamId: string }
+) {
+  return "teamId" in scope
+    ? ctx.db
+        .query("projects")
+        .withIndex("by_teamId_and_lifecycle_and_completedAt", (q) =>
+          q.eq("teamId", scope.teamId).lt("lifecycle", "history")
+        )
+    : ctx.db
+        .query("projects")
+        .withIndex(
+          "by_ownerUserId_and_teamId_and_lifecycle_and_completedAt",
+          (q) =>
+            q
+              .eq("ownerUserId", scope.ownerUserId)
+              .eq("teamId", undefined)
+              .lt("lifecycle", "history")
+        );
+}
+
+/** Completed Projects, newest completion first. */
+function historyProjects(
+  ctx: QueryCtx,
+  scope: { ownerUserId: string } | { teamId: string }
+) {
+  return "teamId" in scope
+    ? ctx.db
+        .query("projects")
+        .withIndex("by_teamId_and_lifecycle_and_completedAt", (q) =>
+          q.eq("teamId", scope.teamId).eq("lifecycle", "history")
+        )
+        .order("desc")
+    : ctx.db
+        .query("projects")
+        .withIndex(
+          "by_ownerUserId_and_teamId_and_lifecycle_and_completedAt",
+          (q) =>
+            q
+              .eq("ownerUserId", scope.ownerUserId)
+              .eq("teamId", undefined)
+              .eq("lifecycle", "history")
+        )
+        .order("desc");
+}
 
 const createProjectValidator = v.object({
   id: v.string(),
@@ -211,6 +270,17 @@ async function validatedAssignees(
   return unique;
 }
 
+/** A Salary Batch settles its Projects, which moves them to history. */
+async function syncBatchProjects(ctx: MutationCtx, projectIds: string[]) {
+  for (const projectId of projectIds) {
+    const project = await ctx.db
+      .query("projects")
+      .withIndex("by_projectId", (q) => q.eq("id", projectId))
+      .unique();
+    if (project) await syncProjectLifecycle(ctx, project._id);
+  }
+}
+
 async function getProject(ctx: FunctionCtx, projectId: string) {
   const project = await ctx.db
     .query("projects")
@@ -394,12 +464,9 @@ async function deliveryEffect(
       )
       .flatMap((batch) => batch.projectIds)
   );
-  const projects = await ctx.db
-    .query("projects")
-    .withIndex("by_ownerUserId_and_teamId", (q) =>
-      q.eq("ownerUserId", ownerUserId).eq("teamId", undefined)
-    )
-    .collect();
+  // Unbatched delivered salary work is "awaiting_payment", so it is always in
+  // the live range; settled work moved to history and cannot contribute again.
+  const projects = await liveProjects(ctx, { ownerUserId }).take(1000);
   const contributors = projects
     .filter(
       (candidate) =>
@@ -431,45 +498,47 @@ async function deliveryEffect(
   };
 }
 
+/** The caller's active Team membership when it may view Team Projects. */
+async function teamViewScope(ctx: QueryCtx, userId: string) {
+  const membership = await ctx.db
+    .query("teamMembers")
+    .withIndex("by_userId_and_status", (q) =>
+      q.eq("userId", userId).eq("status", "active")
+    )
+    .first();
+  if (!membership?.permissions.viewProjects) return null;
+  const workspaceId = ctx.db.normalizeId("teamWorkspaces", membership.teamId);
+  const workspace = workspaceId
+    ? await ctx.db.get("teamWorkspaces", workspaceId)
+    : null;
+  const allowAll = workspace?.allowAllTeamProjects ?? false;
+  return {
+    teamId: membership.teamId,
+    visible: (project: Doc<"projects">) =>
+      canSeeTeamProject(project, membership, allowAll),
+  };
+}
+
+/** Live Projects only; completed work loads through `historyPage`. */
 export const list = query({
   args: {},
   returns: v.array(schema.doc("projects")),
   handler: async (ctx) => {
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) return [];
-    const personal = await ctx.db
-      .query("projects")
-      .withIndex("by_ownerUserId_and_teamId", (q) =>
-        q.eq("ownerUserId", identity.tokenIdentifier).eq("teamId", undefined)
-      )
-      .take(501);
+    const personal = await liveProjects(ctx, {
+      ownerUserId: identity.tokenIdentifier,
+    }).take(501);
     if (personal.length > 500)
       throw new Error("Use projects.listPage to load more than 500 projects");
-    const membership = await ctx.db
-      .query("teamMembers")
-      .withIndex("by_userId_and_status", (q) =>
-        q.eq("userId", identity.tokenIdentifier).eq("status", "active")
-      )
-      .first();
-    if (!membership?.permissions.viewProjects) return personal;
-    const workspaceId = ctx.db.normalizeId("teamWorkspaces", membership.teamId);
-    const workspace = workspaceId
-      ? await ctx.db.get("teamWorkspaces", workspaceId)
-      : null;
-    const teamProjects = await ctx.db
-      .query("projects")
-      .withIndex("by_teamId", (q) => q.eq("teamId", membership.teamId))
-      .take(501);
+    const team = await teamViewScope(ctx, identity.tokenIdentifier);
+    if (!team) return personal;
+    const teamProjects = await liveProjects(ctx, {
+      teamId: team.teamId,
+    }).take(501);
     if (teamProjects.length > 500)
       throw new Error("Use projects.listPage to load more than 500 projects");
-    const visibleTeamProjects = teamProjects.filter((project) =>
-      canSeeTeamProject(
-        project,
-        membership,
-        workspace?.allowAllTeamProjects ?? false
-      )
-    );
-    return [...personal, ...visibleTeamProjects];
+    return [...personal, ...teamProjects.filter(team.visible)];
   },
 });
 
@@ -493,56 +562,101 @@ export const listSalaryBatches = query({
   },
 });
 
-export const listPage = query({
-  args: {
-    scope: v.union(v.literal("personal"), v.literal("team")),
-    paginationOpts: paginationOptsValidator,
-  },
-  returns: v.object({
-    page: v.array(schema.doc("projects")),
-    isDone: v.boolean(),
-    continueCursor: v.string(),
-  }),
-  handler: async (ctx, { scope, paginationOpts }) => {
-    const identity = await requireIdentity(ctx);
-    if (scope === "personal") {
-      const result = await ctx.db
-        .query("projects")
-        .withIndex("by_ownerUserId_and_teamId", (q) =>
-          q.eq("ownerUserId", identity.tokenIdentifier).eq("teamId", undefined)
-        )
-        .paginate(paginationOpts);
-      return {
-        page: result.page,
-        isDone: result.isDone,
-        continueCursor: result.continueCursor,
-      };
-    }
-    const membership = await ctx.db
-      .query("teamMembers")
-      .withIndex("by_userId_and_status", (q) =>
-        q.eq("userId", identity.tokenIdentifier).eq("status", "active")
-      )
-      .first();
-    if (!membership?.permissions.viewProjects)
-      return { page: [], isDone: true, continueCursor: "" };
-    const workspaceId = ctx.db.normalizeId("teamWorkspaces", membership.teamId);
-    const workspace = workspaceId ? await ctx.db.get(workspaceId) : null;
-    const result = await ctx.db
-      .query("projects")
-      .withIndex("by_teamId", (q) => q.eq("teamId", membership.teamId))
-      .paginate(paginationOpts);
+const projectScopeValidator = v.union(v.literal("personal"), v.literal("team"));
+const projectPageValidator = v.object({
+  page: v.array(schema.doc("projects")),
+  isDone: v.boolean(),
+  continueCursor: v.string(),
+});
+
+/**
+ * Pages one scope of Projects. Team pages drop rows the member may not see, so
+ * a Team page can be shorter than requested.
+ */
+async function projectPage(
+  ctx: QueryCtx,
+  scope: "personal" | "team",
+  paginationOpts: Infer<typeof paginationOptsValidator>,
+  source: (
+    scope: { ownerUserId: string } | { teamId: string }
+  ) => OrderedQuery<NamedTableInfo<DataModel, "projects">>
+) {
+  const identity = await requireIdentity(ctx);
+  if (scope === "personal") {
+    const result = await source({
+      ownerUserId: identity.tokenIdentifier,
+    }).paginate(paginationOpts);
     return {
-      page: result.page.filter((project) =>
-        canSeeTeamProject(
-          project,
-          membership,
-          workspace?.allowAllTeamProjects ?? false
-        )
-      ),
+      page: result.page,
       isDone: result.isDone,
       continueCursor: result.continueCursor,
     };
+  }
+  const team = await teamViewScope(ctx, identity.tokenIdentifier);
+  if (!team) return { page: [], isDone: true, continueCursor: "" };
+  const result = await source({ teamId: team.teamId }).paginate(paginationOpts);
+  return {
+    page: result.page.filter(team.visible),
+    isDone: result.isDone,
+    continueCursor: result.continueCursor,
+  };
+}
+
+/** The live workspace list: Projects in progress or awaiting payment. */
+export const listPage = query({
+  args: {
+    scope: projectScopeValidator,
+    paginationOpts: paginationOptsValidator,
+  },
+  returns: projectPageValidator,
+  handler: (ctx, { scope, paginationOpts }) =>
+    projectPage(ctx, scope, paginationOpts, (source) =>
+      liveProjects(ctx, source)
+    ),
+});
+
+/** Settled, archived, and cancelled Projects, newest completion first. */
+export const historyPage = query({
+  args: {
+    scope: projectScopeValidator,
+    paginationOpts: paginationOptsValidator,
+  },
+  returns: projectPageValidator,
+  handler: (ctx, { scope, paginationOpts }) =>
+    projectPage(ctx, scope, paginationOpts, (source) =>
+      historyProjects(ctx, source)
+    ),
+});
+
+/** One Project the caller can view, live or in history. */
+export const get = query({
+  args: { projectId: v.string() },
+  returns: v.union(schema.doc("projects"), v.null()),
+  handler: async (ctx, { projectId }) => {
+    try {
+      return (await requireProjectAccess(ctx, projectId)).project;
+    } catch {
+      return null;
+    }
+  },
+});
+
+/**
+ * Whether the caller owns any personal Project, live or in history. The first
+ * sign-in uses it to decide if browser Projects should be copied to the cloud.
+ */
+export const hasAny = query({
+  args: {},
+  returns: v.boolean(),
+  handler: async (ctx) => {
+    const identity = await requireIdentity(ctx);
+    const first = await ctx.db
+      .query("projects")
+      .withIndex("by_ownerUserId_and_teamId", (q) =>
+        q.eq("ownerUserId", identity.tokenIdentifier).eq("teamId", undefined)
+      )
+      .first();
+    return first !== null;
   },
 });
 
@@ -642,6 +756,7 @@ export const importSalaryBatches = mutation({
         ...batch,
         ownerUserId: identity.tokenIdentifier,
       });
+      await syncBatchProjects(ctx, batch.projectIds);
     }
     return null;
   },
@@ -706,6 +821,10 @@ export const create = mutation({
       project.teamId,
       project.clientId
     );
+    await requireOpenProjectCapacity(ctx, {
+      ownerUserId: identity.tokenIdentifier,
+      teamId: project.teamId,
+    });
     const workflowStages = normalizeWorkflow(project.workflowStages);
     const firstStage = workflowStages[0];
     if (firstStage.purpose === "delivered") {
@@ -742,6 +861,7 @@ export const create = mutation({
           : Math.max(0, project.earnings),
       archived: false,
       paid: false,
+      lifecycle: "active",
       createdAt: now,
       updatedAt: now,
     });
@@ -852,6 +972,7 @@ export const update = mutation({
       ...(assigneeUserIds === undefined ? {} : { assigneeUserIds }),
       updatedAt: new Date().toISOString(),
     });
+    await syncProjectLifecycle(ctx, project._id);
     return null;
   },
 });
@@ -879,6 +1000,7 @@ export const setPayment = mutation({
       paidDate,
       updatedAt: new Date().toISOString(),
     });
+    await syncProjectLifecycle(ctx, project._id);
     await recordPaymentActivity(ctx, project, identity, args.paid);
     return null;
   },
@@ -896,6 +1018,7 @@ export const setArchived = mutation({
       archived: args.archived,
       updatedAt: new Date().toISOString(),
     });
+    await syncProjectLifecycle(ctx, project._id);
     return null;
   },
 });
@@ -998,6 +1121,7 @@ export const transitionStage = mutation({
         : {}),
       updatedAt: now,
     });
+    await syncProjectLifecycle(ctx, project._id);
 
     if (status !== "Delivered" || project.teamId) {
       return status === "Delivered"
@@ -1039,6 +1163,7 @@ export const transitionStage = mutation({
         paid: false,
         received: false,
       });
+      await syncBatchProjects(ctx, effect.projectIds);
     }
     return { ...effect.result, completedAt };
   },

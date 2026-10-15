@@ -15,6 +15,7 @@ const freeSubscription = {
   reconciliationState: "synced",
   editorSeatAllowance: 1,
   storageQuotaBytes: 0,
+  openProjectLimit: 10,
   billingHealthy: true,
   blockedReasons: [],
   capabilities: {

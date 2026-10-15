@@ -23,7 +23,7 @@ The new Free gate is creating payment plans, assigning new Projects to them, and
 
 ## Why this offer?
 
-Keep the affordable $10 Creator entry price while testing whether editors will pay for Client Hub, branding, reusable workflows, reporting, and payment plans. The earlier $12 recommendation and active-project/client caps are superseded. There is no measured cost or conversion evidence to justify them yet. Team is a clear $29 Workspace package with three Editors, including the Owner, plus $9 per extra Editor. Clients and Team Viewers are free.
+Keep the affordable $10 Creator entry price while testing whether editors will pay for Client Hub, branding, reusable workflows, reporting, and payment plans. The earlier $12 recommendation is superseded. Free now allows 10 Projects in progress at a time, with unlimited Clients and Project history, as the upgrade point; completed Projects stay out of the live workspace so they do not add read costs. Team is a clear $29 Workspace package with three Editors, including the Owner, plus $9 per extra Editor. Clients and Team Viewers are free.
 
 [Frame.io](https://frame.io/pricing) offers Pro at $15/member/month with 2 TB. [Bonsai Essentials](https://www.hellobonsai.com/pricing) costs $25/user/month on monthly billing. Relay should sell its client/project/payment workflow; its storage is for review copies, with originals kept externally. Avoid annual commitments and lifetime offers until actual customers demonstrate retention.
 

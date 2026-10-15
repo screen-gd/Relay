@@ -30,6 +30,12 @@ export type ProjectAccess = {
   currentTeamId?: ProjectTeamWorkspace["_id"];
   teamWorkspace?: ProjectTeamWorkspace;
   workspaceSubscription: ProjectSubscription | undefined;
+  /** Personal Projects in progress allowed at once; null means unlimited. */
+  openProjectLimit: number | null;
+  /** Personal Projects in progress: not delivered, cancelled, or archived. */
+  openProjectCount: number;
+  /** True when a new personal Project would go over the Free limit. */
+  openProjectLimitReached: boolean;
   canCreateProjects: boolean;
   canCreateTeamProjects: boolean;
   canEditProjects: boolean;
@@ -94,6 +100,21 @@ function useProjectAccessValue(sample: boolean): ProjectAccess {
     () => projects.filter((item) => !item.teamId),
     [projects]
   );
+  const openProjectCount = useMemo(
+    () =>
+      personalProjects.filter(
+        (project) =>
+          !project.archived &&
+          project.status !== "Delivered" &&
+          project.status !== "Cancelled"
+      ).length,
+    [personalProjects]
+  );
+  // Local and sample workspaces stay in the browser and have no limit.
+  const openProjectLimit =
+    sample || !shouldLoadTeamPermissions
+      ? null
+      : (workspaceSubscription?.openProjectLimit ?? null);
   const currentTeamId = teamData?.workspace?._id;
   const teamProjects = useMemo(
     () =>
@@ -152,6 +173,10 @@ function useProjectAccessValue(sample: boolean): ProjectAccess {
     currentTeamId,
     teamWorkspace: teamData?.workspace,
     workspaceSubscription,
+    openProjectLimit,
+    openProjectCount,
+    openProjectLimitReached:
+      openProjectLimit !== null && openProjectCount >= openProjectLimit,
     ...permissions,
     customWorkflowTemplatesLocked,
     clientHubCapabilityEnabled,

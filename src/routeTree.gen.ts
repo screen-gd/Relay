@@ -47,6 +47,7 @@ import { Route as WorkspaceProfileIndexRouteImport } from './routes/_workspace/p
 import { Route as WorkspaceProfileEditRouteImport } from './routes/_workspace/profile/edit'
 import { Route as WorkspaceProjectsIndexRouteImport } from './routes/_workspace/projects/index'
 import { Route as WorkspaceProjectsProjectIdRouteImport } from './routes/_workspace/projects/$projectId'
+import { Route as WorkspaceProjectsHistoryRouteImport } from './routes/_workspace/projects/history'
 import { Route as SampleStudioProjectsProjectIdRouteImport } from './routes/sample-studio/projects/$projectId'
 
 const WorkspaceRoute = WorkspaceRouteImport.update({
@@ -239,6 +240,12 @@ const WorkspaceProjectsProjectIdRoute =
     path: '/projects/$projectId',
     getParentRoute: () => WorkspaceRoute,
   } as any)
+const WorkspaceProjectsHistoryRoute =
+  WorkspaceProjectsHistoryRouteImport.update({
+    id: '/projects/history',
+    path: '/projects/history',
+    getParentRoute: () => WorkspaceRoute,
+  } as any)
 const SampleStudioProjectsProjectIdRoute =
   SampleStudioProjectsProjectIdRouteImport.update({
     id: '/projects/$projectId',
@@ -282,6 +289,7 @@ export interface FileRoutesByFullPath {
   '/sample-studio/': typeof SampleStudioIndexRoute
   '/profile/edit': typeof WorkspaceProfileEditRoute
   '/projects/$projectId': typeof WorkspaceProjectsProjectIdRoute
+  '/projects/history': typeof WorkspaceProjectsHistoryRoute
   '/sample-studio/projects/$projectId': typeof SampleStudioProjectsProjectIdRoute
   '/profile/': typeof WorkspaceProfileIndexRoute
   '/projects/': typeof WorkspaceProjectsIndexRoute
@@ -320,6 +328,7 @@ export interface FileRoutesByTo {
   '/sample-studio': typeof SampleStudioIndexRoute
   '/profile/edit': typeof WorkspaceProfileEditRoute
   '/projects/$projectId': typeof WorkspaceProjectsProjectIdRoute
+  '/projects/history': typeof WorkspaceProjectsHistoryRoute
   '/sample-studio/projects/$projectId': typeof SampleStudioProjectsProjectIdRoute
   '/profile': typeof WorkspaceProfileIndexRoute
   '/projects': typeof WorkspaceProjectsIndexRoute
@@ -362,6 +371,7 @@ export interface FileRoutesById {
   '/sample-studio/': typeof SampleStudioIndexRoute
   '/_workspace/profile/edit': typeof WorkspaceProfileEditRoute
   '/_workspace/projects/$projectId': typeof WorkspaceProjectsProjectIdRoute
+  '/_workspace/projects/history': typeof WorkspaceProjectsHistoryRoute
   '/sample-studio/projects/$projectId': typeof SampleStudioProjectsProjectIdRoute
   '/_workspace/profile/': typeof WorkspaceProfileIndexRoute
   '/_workspace/projects/': typeof WorkspaceProjectsIndexRoute
@@ -404,6 +414,7 @@ export interface FileRouteTypes {
     | '/sample-studio/'
     | '/profile/edit'
     | '/projects/$projectId'
+    | '/projects/history'
     | '/sample-studio/projects/$projectId'
     | '/profile/'
     | '/projects/'
@@ -442,6 +453,7 @@ export interface FileRouteTypes {
     | '/sample-studio'
     | '/profile/edit'
     | '/projects/$projectId'
+    | '/projects/history'
     | '/sample-studio/projects/$projectId'
     | '/profile'
     | '/projects'
@@ -483,6 +495,7 @@ export interface FileRouteTypes {
     | '/sample-studio/'
     | '/_workspace/profile/edit'
     | '/_workspace/projects/$projectId'
+    | '/_workspace/projects/history'
     | '/sample-studio/projects/$projectId'
     | '/_workspace/profile/'
     | '/_workspace/projects/'
@@ -773,6 +786,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof WorkspaceProjectsProjectIdRouteImport
       parentRoute: typeof WorkspaceRoute
     }
+    '/_workspace/projects/history': {
+      id: '/_workspace/projects/history'
+      path: '/projects/history'
+      fullPath: '/projects/history'
+      preLoaderRoute: typeof WorkspaceProjectsHistoryRouteImport
+      parentRoute: typeof WorkspaceRoute
+    }
     '/sample-studio/projects/$projectId': {
       id: '/sample-studio/projects/$projectId'
       path: '/projects/$projectId'
@@ -829,6 +849,7 @@ interface WorkspaceRouteChildren {
   WorkspaceIndexRoute: typeof WorkspaceIndexRoute
   WorkspaceProfileEditRoute: typeof WorkspaceProfileEditRoute
   WorkspaceProjectsProjectIdRoute: typeof WorkspaceProjectsProjectIdRoute
+  WorkspaceProjectsHistoryRoute: typeof WorkspaceProjectsHistoryRoute
   WorkspaceProfileIndexRoute: typeof WorkspaceProfileIndexRoute
   WorkspaceProjectsIndexRoute: typeof WorkspaceProjectsIndexRoute
 }
@@ -853,6 +874,7 @@ const WorkspaceRouteChildren: WorkspaceRouteChildren = {
   WorkspaceIndexRoute: WorkspaceIndexRoute,
   WorkspaceProfileEditRoute: WorkspaceProfileEditRoute,
   WorkspaceProjectsProjectIdRoute: WorkspaceProjectsProjectIdRoute,
+  WorkspaceProjectsHistoryRoute: WorkspaceProjectsHistoryRoute,
   WorkspaceProfileIndexRoute: WorkspaceProfileIndexRoute,
   WorkspaceProjectsIndexRoute: WorkspaceProjectsIndexRoute,
 }

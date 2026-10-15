@@ -1,5 +1,6 @@
 "use client";
 
+import type { ReactNode } from "react";
 import { getProjectProgress } from "@/features/projects/project-domain";
 
 import {
@@ -797,9 +798,12 @@ type MonthGroup = {
 export function PrecisionTimeline({
   projects,
   onViewProject,
+  notice,
 }: {
   projects: WorkItem[];
   onViewProject: (project: WorkItem) => void;
+  /** Shown above the timeline, such as an upgrade prompt. */
+  notice?: ReactNode;
 }) {
   const [filter, setFilter] = useState<
     "All" | "Active" | "Review" | "Delivered"
@@ -905,6 +909,7 @@ export function PrecisionTimeline({
       />
 
       <PageContent>
+        {notice}
         <PageToolbar
           primary={
             <ButtonGroup

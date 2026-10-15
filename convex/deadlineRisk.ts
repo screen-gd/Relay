@@ -51,15 +51,24 @@ async function workspaceProjects(
   ctx: MutationCtx,
   workspace: Doc<"teamWorkspaces">
 ) {
+  // `lt("awaiting_payment")` reads only work in progress, plus rows the
+  // lifecycle backfill has not reached yet; the filter below covers those.
   const [team, personal] = await Promise.all([
     ctx.db
       .query("projects")
-      .withIndex("by_teamId", (q) => q.eq("teamId", workspace._id))
+      .withIndex("by_teamId_and_lifecycle_and_completedAt", (q) =>
+        q.eq("teamId", workspace._id).lt("lifecycle", "awaiting_payment")
+      )
       .take(MAX_PROJECTS_PER_SOURCE + 1),
     ctx.db
       .query("projects")
-      .withIndex("by_ownerUserId_and_teamId", (q) =>
-        q.eq("ownerUserId", workspace.ownerUserId).eq("teamId", undefined)
+      .withIndex(
+        "by_ownerUserId_and_teamId_and_lifecycle_and_completedAt",
+        (q) =>
+          q
+            .eq("ownerUserId", workspace.ownerUserId)
+            .eq("teamId", undefined)
+            .lt("lifecycle", "awaiting_payment")
       )
       .take(MAX_PROJECTS_PER_SOURCE + 1),
   ]);

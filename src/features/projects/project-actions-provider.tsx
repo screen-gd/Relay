@@ -35,6 +35,7 @@ import {
   type ProjectTemplate,
 } from "@/lib/project-templates";
 import { mergeClientRecords } from "@/lib/clients";
+import { OPEN_PROJECT_LIMIT_MESSAGE } from "../../../shared/subscription-plans";
 import { canDeleteProject as projectCanBeDeleted } from "./project-permissions";
 import {
   normalizeChecklistCompleted,
@@ -200,8 +201,22 @@ function ProjectActionsRuntime({
     }
   }, []);
 
+  /**
+   * Explains the Free limit before the dialog opens. The server enforces the
+   * same limit, so this only saves filling in a form that cannot be saved.
+   */
+  const atProjectLimit = useCallback(
+    (scope: ProjectActionScope) => {
+      if (scope !== "personal" || !access.openProjectLimitReached) return false;
+      notify(OPEN_PROJECT_LIMIT_MESSAGE, "warning");
+      return true;
+    },
+    [access.openProjectLimitReached, notify]
+  );
+
   const openNewProject = useCallback(
     (scope: ProjectActionScope = "personal") => {
+      if (atProjectLimit(scope)) return;
       if (scope === "team" && !access.canCreateTeamProjects) {
         notify("Your team role cannot create projects.", "warning");
         return;
@@ -221,6 +236,7 @@ function ProjectActionsRuntime({
     [
       access.canCreateTeamProjects,
       access.currentTeamId,
+      atProjectLimit,
       notify,
       rememberProjectLauncherTrigger,
     ]
@@ -228,12 +244,13 @@ function ProjectActionsRuntime({
 
   const openBlankProject = useCallback(
     (scope: ProjectActionScope = projectStartScope) => {
+      if (atProjectLimit(scope)) return;
       rememberProjectLauncherTrigger();
       setProjectStartScope(scope);
       setNewProjectTemplateId("");
       setNewProjectOpen(true);
     },
-    [projectStartScope, rememberProjectLauncherTrigger]
+    [atProjectLimit, projectStartScope, rememberProjectLauncherTrigger]
   );
 
   const openTemplateProject = useCallback(
@@ -241,6 +258,7 @@ function ProjectActionsRuntime({
       template: ProjectTemplate,
       scope: ProjectActionScope = projectStartScope
     ) => {
+      if (atProjectLimit(scope)) return;
       if (!access.canCreateProjects) {
         notify("Your team role cannot create projects.", "warning");
         return;
@@ -264,6 +282,7 @@ function ProjectActionsRuntime({
       access.canCreateProjects,
       access.canCreateTeamProjects,
       access.currentTeamId,
+      atProjectLimit,
       notify,
       projectStartScope,
       rememberProjectLauncherTrigger,
