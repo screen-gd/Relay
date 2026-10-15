@@ -7,7 +7,7 @@ import schema from "./schema";
 
 const modules = import.meta.glob("./**/*.ts");
 
-test("Salary Plans are free, owner-scoped, and available without a Workspace", async () => {
+test("existing payment plans and batches remain owner-scoped without a paid Workspace", async () => {
   const t = convexTest(schema, modules);
   const owner = t.withIdentity({
     subject: "owner",

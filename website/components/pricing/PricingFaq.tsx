@@ -1,7 +1,11 @@
 import Link from "next/link";
 import {
   CREATOR_MONTHLY_PRICE_USD,
-  TEAM_MONTHLY_PRICE_PER_SEAT_USD,
+  TEAM_MONTHLY_PRICE_USD,
+  TEAM_INCLUDED_EDITOR_SEATS,
+  EXTRA_EDITOR_MONTHLY_PRICE_USD,
+  CREATOR_LAUNCH_STORAGE_GB,
+  TEAM_LAUNCH_STORAGE_GB,
   formatUsd,
 } from "../../lib/plans";
 import {
@@ -16,24 +20,36 @@ import styles from "./PricingFaq.module.css";
 const faqs = [
   {
     question: "Is Relay free?",
-    answer: "Yes. The Free plan has no time limit and no invite is required.",
+    answer:
+      "Yes. Free includes unlimited project and client tracking, external video reviews, standard client portals, and basic payment tracking. There is no active-project cap or time limit, and no invite is required.",
   },
   {
     question: "Can I upload files?",
-    answer:
-      "Not yet. File uploads are still in development. Link videos from YouTube, Vimeo, Drive, or Dropbox instead.",
+    answer: `Not yet. File uploads are still in development. Planned launch storage is ${CREATOR_LAUNCH_STORAGE_GB} GB for Creator and ${TEAM_LAUNCH_STORAGE_GB} GB shared for Team. Link videos from YouTube, Vimeo, Drive, or Dropbox in the meantime.`,
   },
   {
     question: "When can I get Creator or Team?",
     answer: (
       <>
         Creator is {formatUsd(CREATOR_MONTHLY_PRICE_USD)} per month and Team is{" "}
-        {formatUsd(TEAM_MONTHLY_PRICE_PER_SEAT_USD)} per member per month. Both
-        are still in development, and checkout is not live, so there is no way
-        to buy either one yet. Follow the <Link href="/roadmap">roadmap</Link>{" "}
-        for updates.
+        {formatUsd(TEAM_MONTHLY_PRICE_USD)} per workspace per month, including{" "}
+        {TEAM_INCLUDED_EDITOR_SEATS} editors and the owner counts as one. Extra
+        editors are {formatUsd(EXTRA_EDITOR_MONTHLY_PRICE_USD)} each per month.
+        Prices are subject to change. Both are still in development, and
+        checkout is not live, so there is no way to buy either one yet. Follow
+        the <Link href="/roadmap">roadmap</Link> for updates.
       </>
     ),
+  },
+  {
+    question: "What requires Creator or Team?",
+    answer:
+      "Client Hub, custom portal branding, reusable Workflow Templates, advanced reports, and new payment plans and batches require Creator or Team. Existing payment records stay accessible on Free. Hosted file uploads are still in development.",
+  },
+  {
+    question: "Do clients and viewers need paid seats?",
+    answer:
+      "No. Client review access is free on every plan. Team viewers are free too. Team charges only for internal editors beyond the three included seats.",
   },
   {
     question: "Do linked videos use storage?",

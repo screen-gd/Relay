@@ -43,7 +43,7 @@ const settings = {
   density: "compact",
 };
 
-test("a Free owner completes a Salary Batch with immutable terms and owner-only payment updates", async () => {
+test("a Creator owner completes a batch and retains payment history after returning to Free", async () => {
   const t = convexTest(schema, modules);
   const owner = t.withIdentity({
     subject: "owner",
@@ -54,6 +54,15 @@ test("a Free owner completes a Salary Batch with immutable terms and owner-only 
     tokenIdentifier: "test|other",
   });
   await owner.mutation(api.team.createWorkspace, { name: "Free Studio" });
+  await t.run(async (ctx) => {
+    const subscription = await ctx.db.query("workspaceSubscriptions").unique();
+    if (!subscription) throw new Error("Subscription missing");
+    await ctx.db.patch(subscription._id, {
+      plan: "creator",
+      subscriptionStatus: "active",
+      billingPeriod: "monthly",
+    });
+  });
   await owner.mutation(api.settings.upsert, settings);
   const planId = await owner.mutation(api.salaryPlans.create, {
     clientId: "client",
@@ -101,6 +110,15 @@ test("a Free owner completes a Salary Batch with immutable terms and owner-only 
     paid: false,
     received: false,
   });
+  await t.run(async (ctx) => {
+    const subscription = await ctx.db.query("workspaceSubscriptions").unique();
+    if (!subscription) throw new Error("Subscription missing");
+    await ctx.db.patch(subscription._id, {
+      plan: "free",
+      subscriptionStatus: "free",
+      billingPeriod: null,
+    });
+  });
   await owner.mutation(api.salaryPlans.update, {
     planId,
     changes: {
@@ -146,7 +164,7 @@ test("a Free owner completes a Salary Batch with immutable terms and owner-only 
   ).toMatchObject({ plan: "free" });
 });
 
-test("a new Free owner can create a Client, Project, external video, portal, delivery and Salary Plan", async () => {
+test("Free supports clients, projects, external review, delivery and payments but blocks new payment plans", async () => {
   const t = convexTest(schema, modules);
   const owner = t.withIdentity({
     subject: "owner",
@@ -168,19 +186,21 @@ test("a new Free owner can create a Client, Project, external video, portal, del
       fileUploads: false,
       customWorkflowTemplates: false,
       advancedReports: false,
-      salaryPlans: true,
+      salaryPlans: false,
       customPortalBranding: false,
       clientHub: false,
       teamFeatures: false,
     },
   });
-  const planId = await owner.mutation(api.salaryPlans.create, {
-    clientId: "client",
-    requiredProjectCount: 1,
-    amount: 100,
-    startDate: "2026-09-17",
-    notes: "Owner contract",
-  });
+  await expect(
+    owner.mutation(api.salaryPlans.create, {
+      clientId: "client",
+      requiredProjectCount: 1,
+      amount: 100,
+      startDate: "2026-09-17",
+      notes: "Owner contract",
+    })
+  ).rejects.toThrow("Creator or Team");
   await owner.mutation(api.projects.create, {
     project: {
       id: "free-project",
@@ -259,12 +279,13 @@ test("a new Free owner can create a Client, Project, external video, portal, del
     { id: "free-project", status: "Delivered" },
   ]);
   expect(await other.query(api.projects.list, {})).toEqual([]);
-  await expect(
-    other.mutation(api.salaryPlans.setArchived, { planId, archived: true })
-  ).rejects.toThrow("Salary Plan not found");
-  await expect(
-    t.mutation(api.salaryPlans.setArchived, { planId, archived: true })
-  ).rejects.toThrow("Not authenticated");
+  await owner.mutation(api.projects.setPayment, {
+    projectId: "free-project",
+    paid: true,
+  });
+  expect(await owner.query(api.projects.list, {})).toMatchObject([
+    { id: "free-project", paid: true },
+  ]);
   await expect(
     other.mutation(api.projects.transitionStage, {
       projectId: "free-project",
@@ -353,13 +374,19 @@ test("retained Free members and Client Contacts cannot claim owner or paid acces
   });
   await owner.mutation(api.team.createWorkspace, { name: "Free Studio" });
   await owner.mutation(api.settings.upsert, settings);
-  const planId = await owner.mutation(api.salaryPlans.create, {
-    clientId: "client",
-    requiredProjectCount: 1,
-    amount: 100,
-    startDate: "2026-09-17",
-    notes: "Private",
-  });
+  const planId = await t.run((ctx) =>
+    ctx.db.insert("salaryPlans", {
+      ownerUserId: "test|owner",
+      clientId: "client",
+      requiredProjectCount: 1,
+      amount: 100,
+      startDate: "2026-09-17",
+      notes: "Private",
+      archived: false,
+      createdAt: "2026-09-17T00:00:00.000Z",
+      updatedAt: "2026-09-17T00:00:00.000Z",
+    })
+  );
   await owner.mutation(api.projects.create, {
     project: {
       id: "retained-publication",

@@ -274,7 +274,7 @@ Salary Plans support repeat contracts:
 - Add correction notes.
 - Archive Plans while keeping completed batch history.
 
-Local Mode keeps a simpler legacy salary batch flow. Durable Salary Plans are available to authenticated Workspace owners on Free and paid plans, and remain limited to solo Projects.
+Local Mode keeps a simpler legacy salary batch flow. Creating durable Salary Plans, assigning new Projects to them, and generating new cloud payment batches require the owner's Creator or Team plan. Existing plans and batches remain readable and editable on Free, including payment updates. Project delivery remains free. Durable plans remain limited to solo Projects.
 
 ### Reports
 
@@ -395,13 +395,13 @@ Only the information selected for publication is shown.
 
 The app has a subscription surface backed by Clerk and Convex Workspace entitlements. The current capability model is:
 
-| Plan    | Main access                                                                                                                                                                                    |
-| ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Free    | Unlimited basic Projects and Clients, basic workflow tracking, standard Client Portals, external video links, and owner-managed Salary Plans. No hosted file uploads or internal Team members. |
-| Creator | Free features plus hosted file uploads, 5 GB storage, Client Hub, custom Portal branding, custom Workflow Templates, and advanced Reports.                                                     |
-| Team    | Creator features plus Team Workspaces, roles, assignments, Team payouts, workload reporting, and included Editor seats.                                                                        |
+| Plan    | Main access                                                                                                                                                                                                                                |
+| ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Free    | Unlimited Projects and Clients, basic workflow tracking, standard Client Portals, external video reviews, basic payment tracking, and retained payment records. No new payment plans or batches, hosted uploads, or internal Team members. |
+| Creator | $10/Workspace/month launch offer: Client Hub, custom Portal branding, custom Workflow Templates, advanced Reports, and new payment plans and batches. Hosted uploads with 25 GB review storage remain upcoming.                            |
+| Team    | $29/Workspace/month for three Editors including the Owner; $9 per extra Editor. Adds roles, assignments, Team payouts and workload reports. Clients and Viewers are free. 100 GB shared review storage remains upcoming.                   |
 
-The current backend gates file uploads, custom templates, advanced Reports, custom Portal branding, Client Hub, and Team features by plan. Salary Plans are available on Free for authenticated Workspace owners. The public plan document is marked as a proposed launch model, and the app can pause new purchases through configuration.
+The backend gates file uploads, custom templates, advanced Reports, custom Portal branding, Client Hub, new payment plans/batches, and Team features by plan. Personal payment features use the record owner's Workspace entitlement, not a joined Team's entitlement. There is no active-project or active-client cap. Paid checkout remains disabled. Current operational upload quotas remain 5 GB for Creator/trial and 15 GB for Team until the R2 launch storage targets are implemented and verified.
 
 ## Public, support, and access surfaces
 

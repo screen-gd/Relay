@@ -627,7 +627,8 @@ function ProjectActionsRuntime({
         salaryPlanLabel={`${settings.salaryWorkType} Plan`}
         salaryPlans={
           isSignedIn
-            ? projectStartScope === "team"
+            ? projectStartScope === "team" ||
+              !access.workspaceSubscription?.capabilities.salaryPlans
               ? []
               : salaryPlans
             : undefined

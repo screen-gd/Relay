@@ -7,6 +7,7 @@ import { api } from "../../convex/_generated/api";
 import type { Doc, Id } from "../../convex/_generated/dataModel";
 
 import { ContentSection } from "@/components/workspace-page";
+import { CapabilityUpgradePrompt } from "@/components/subscription-plans";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -91,6 +92,7 @@ type SalaryPlansPanelProps = {
   settings: SettingsState;
   projects: readonly WorkItem[];
   isOwner: boolean;
+  canCreatePlans: boolean;
 };
 
 /**
@@ -101,6 +103,7 @@ export function SalaryPlansPanel({
   settings,
   projects,
   isOwner,
+  canCreatePlans,
 }: SalaryPlansPanelProps) {
   const { isAuthenticated } = useConvexAuth();
   const enabled = isOwner && isAuthenticated;
@@ -281,17 +284,29 @@ export function SalaryPlansPanel({
                 {showArchived ? "Hide archived" : `Archived (${archivedCount})`}
               </Button>
             ) : null}
-            <Button
-              type="button"
-              size="sm"
-              disabled={!clients.length}
-              onClick={openNewPlan}
-            >
-              <Plus /> New plan
-            </Button>
+            {canCreatePlans ? (
+              <Button
+                type="button"
+                size="sm"
+                disabled={!clients.length}
+                onClick={openNewPlan}
+              >
+                <Plus /> New plan
+              </Button>
+            ) : null}
           </>
         }
       >
+        {!canCreatePlans ? (
+          <div className="border-t border-border px-4 py-3">
+            <CapabilityUpgradePrompt capability="salaryPlans" inline />
+            <p className="mt-2 text-xs text-muted-foreground">
+              Existing plans and batches stay available. You can keep tracking
+              projects and recording payments on Free; new batches require
+              Creator or Team.
+            </p>
+          </div>
+        ) : null}
         {error ? (
           <p
             role="alert"

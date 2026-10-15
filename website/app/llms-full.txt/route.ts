@@ -1,7 +1,11 @@
 import { siteUrl } from "../../lib/site-metadata";
 import {
   CREATOR_MONTHLY_PRICE_USD,
-  TEAM_MONTHLY_PRICE_PER_SEAT_USD,
+  TEAM_MONTHLY_PRICE_USD,
+  TEAM_INCLUDED_EDITOR_SEATS,
+  EXTRA_EDITOR_MONTHLY_PRICE_USD,
+  CREATOR_LAUNCH_STORAGE_GB,
+  TEAM_LAUNCH_STORAGE_GB,
   formatUsd,
 } from "../../lib/plans";
 
@@ -20,9 +24,12 @@ Relay helps freelance video editors and small post-production teams manage video
 
 ## Plans and availability
 
-- Free is available to everyone. No invite is required.
-- Creator costs ${formatUsd(CREATOR_MONTHLY_PRICE_USD)} per month and Team costs ${formatUsd(TEAM_MONTHLY_PRICE_PER_SEAT_USD)} per member per month. Both are still in development, and checkout is not live, so neither can be bought yet.
-- File uploads are not available yet.
+- Free includes unlimited projects and clients, external video reviews, standard client portals, and basic payment tracking. No active-project cap or invite is required.
+- Creator is planned at ${formatUsd(CREATOR_MONTHLY_PRICE_USD)}/workspace/month, with Client Hub, branding, Workflow Templates, advanced reports, and new payment plans and batches.
+- Team is planned at ${formatUsd(TEAM_MONTHLY_PRICE_USD)}/workspace/month for ${TEAM_INCLUDED_EDITOR_SEATS} editors including the owner, plus ${formatUsd(EXTRA_EDITOR_MONTHLY_PRICE_USD)}/month per extra editor. Client review access and Team viewers are free.
+- Existing payment records remain accessible on Free; creating new payment plans and batches requires Creator or Team.
+- Prices are subject to change. Paid checkout is not live; neither plan can be bought yet.
+- Hosted uploads are not available yet. Planned launch storage is ${CREATOR_LAUNCH_STORAGE_GB} GB for Creator and ${TEAM_LAUNCH_STORAGE_GB} GB shared for Team.
 
 For current plan details, read ${origin}/pricing rather than treating this summary as a price list.
 

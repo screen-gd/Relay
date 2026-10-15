@@ -8,6 +8,7 @@ import { useProjectActions } from "@/features/projects/project-actions-provider"
 import { useProjectActivity } from "@/features/projects/project-activity";
 import { projectWorkTypeOptions } from "@/features/routes/utils/work-type-utils";
 import { useDashboardApplicationState } from "./use-dashboard-application-state";
+import { DeadlineRiskRadar } from "./deadline-risk-radar";
 import { useData } from "@/lib/data-context";
 
 export function DashboardApplication() {
