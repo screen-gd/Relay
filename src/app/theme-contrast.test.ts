@@ -75,17 +75,29 @@ test("muted and subtle text use the accessible shared token", () => {
 
 test("the lime accent keeps text on it and accent text readable", () => {
   for (const theme of [light, dark]) {
-    const accent = token(theme, "--app-accent");
     expect(
-      contrast(accent, token(theme, "--app-accent-foreground"))
+      contrast(
+        token(theme, "--app-accent"),
+        token(theme, "--app-accent-foreground")
+      )
     ).toBeGreaterThanOrEqual(4.5);
+    // Highlight is used as text and icon color on these surfaces.
+    const highlight = token(theme, "--app-highlight");
     for (const name of [
       "--surface-canvas",
       "--surface-panel",
       "--surface-panel-raised",
     ]) {
-      expect(contrast(accent, token(theme, name))).toBeGreaterThanOrEqual(3);
+      expect(contrast(highlight, token(theme, name))).toBeGreaterThanOrEqual(
+        4.5
+      );
     }
+    expect(
+      contrast(
+        token(theme, "--sidebar-active"),
+        token(theme, "--surface-frame")
+      )
+    ).toBeGreaterThanOrEqual(1.15);
   }
 });
 

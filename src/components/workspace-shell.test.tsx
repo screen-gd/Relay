@@ -155,12 +155,12 @@ describe("Workspace hub navigation", () => {
     "keeps %s reachable under its active hub",
     async (pathname, hub, hubHref, destinations) => {
       const html = await shell(pathname);
-      // The active hub's dropdown opens and marks the page inside it.
-      expect(currentLinks(navigation(html, "Primary navigation"))).toEqual(
-        pathname === hubHref || pathname.startsWith("/projects/")
-          ? [hubHref]
-          : [hubHref, pathname]
-      );
+      // The active hub's dropdown opens and lists the same pages as the
+      // context tabs, so the hub link and the current page are both marked.
+      expect(currentLinks(navigation(html, "Primary navigation"))).toEqual([
+        hubHref,
+        pathname.startsWith("/projects/") ? "/projects" : pathname,
+      ]);
       const context = navigation(html, `${hub} navigation`);
       for (const href of destinations)
         expect(context).toContain(`href="${href}"`);

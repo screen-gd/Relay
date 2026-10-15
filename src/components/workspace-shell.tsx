@@ -360,30 +360,30 @@ function routeIsActive(currentPage: ShellPage, item: RouteItem) {
 
 function ContextNavigation({ page }: { page: ShellPage }) {
   const hub = hubRoutes.find((item) => item.page === hubPageForPage(page));
-  const pages = hub ? contextPages[hub.page] : undefined;
-  if (!hub || !pages) return null;
+  if (!hub || !contextPages[hub.page]) return null;
+  const items = hubChildren(hub.page);
+  // Account and profile pages borrow the Settings hub but are not tabs there.
+  if (!items.some((item) => item.page === page)) return null;
   return (
     <nav
       aria-label={`${hub.label} navigation`}
       className="flex shrink-0 flex-wrap gap-5 border-b border-[var(--app-border)] px-5"
     >
-      {pages
-        .flatMap((page) => allRoutes.filter((item) => item.page === page))
-        .map((item) => (
-          <Link
-            key={item.page}
-            to={item.href}
-            aria-current={page === item.page ? "page" : undefined}
-            className={cn(
-              "-mb-px flex min-h-11 items-center border-b-2 text-[13px] font-medium outline-none transition-colors duration-150 focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)]",
-              page === item.page
-                ? "border-[var(--app-ink)] text-[var(--app-ink)]"
-                : "border-transparent text-[var(--app-muted)] hover:text-[var(--app-ink)]"
-            )}
-          >
-            {item.label}
-          </Link>
-        ))}
+      {items.map((item) => (
+        <Link
+          key={item.page}
+          to={item.href}
+          aria-current={page === item.page ? "page" : undefined}
+          className={cn(
+            "-mb-px flex min-h-11 items-center border-b-2 text-[13px] font-medium outline-none transition-colors duration-150 focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)]",
+            page === item.page
+              ? "border-[var(--app-ink)] text-[var(--app-ink)]"
+              : "border-transparent text-[var(--app-muted)] hover:text-[var(--app-ink)]"
+          )}
+        >
+          {item.label}
+        </Link>
+      ))}
     </nav>
   );
 }
@@ -669,11 +669,16 @@ function useSidebarCollapsed() {
   return [collapsed, toggle] as const;
 }
 
-/** Pages listed in a hub's sidebar dropdown, without the hub itself. */
+/**
+ * Pages listed under a hub, in the sidebar dropdown and the context tabs
+ * alike. The hub's own page comes first and is labelled "Overview".
+ */
 function hubChildren(hub: ShellPage) {
-  return (contextPages[hub] ?? [])
-    .filter((page) => page !== hub)
-    .flatMap((page) => allRoutes.filter((item) => item.page === page));
+  return (contextPages[hub] ?? []).flatMap((page) =>
+    allRoutes
+      .filter((item) => item.page === page)
+      .map((item) => (page === hub ? { ...item, label: "Overview" } : item))
+  );
 }
 
 /** One-shot motion for the sidebar marker and dropdowns; nothing loops. */
@@ -721,13 +726,7 @@ function DesktopSidebar({
 
   return (
     <aside className="fixed inset-y-0 left-0 z-40 hidden w-[var(--sidebar-width)] overflow-hidden bg-[var(--app-sidebar)] transition-[width] duration-200 ease-out motion-reduce:transition-none lg:flex lg:flex-col">
-      <div
-        className={cn(
-          "flex h-[54px] shrink-0 items-center gap-2 px-3",
-          collapsed ? "justify-center px-2" : "justify-between"
-        )}
-      >
-        {collapsed ? null : <RelayBrand compact />}
+      <div className="flex h-[54px] shrink-0 items-center gap-1 px-3">
         <Tooltip>
           <TooltipTrigger asChild>
             <Button
@@ -747,15 +746,13 @@ function DesktopSidebar({
             {collapsed ? "Expand sidebar" : "Collapse sidebar"}
           </TooltipContent>
         </Tooltip>
+        {collapsed ? null : <RelayBrand compact />}
       </div>
 
       <nav
         id="workspace-sidebar-navigation"
         aria-label="Primary navigation"
-        className={cn(
-          "workspace-scrollbar-hidden min-h-0 flex-1 overflow-y-auto py-2",
-          collapsed ? "px-2" : "px-3"
-        )}
+        className="workspace-scrollbar-hidden min-h-0 flex-1 overflow-y-auto px-3 py-2"
       >
         {sidebarGroups.map((group, groupIndex) => (
           <div key={group.label} className="mb-4">
@@ -808,7 +805,7 @@ function DesktopSidebar({
                                 sidebarLinkClassName,
                                 "min-h-8 px-2.5 text-[12.5px]",
                                 page === child.page
-                                  ? "bg-[var(--surface-panel)] text-[var(--app-ink)]"
+                                  ? "bg-[var(--sidebar-active)] text-[var(--app-ink)]"
                                   : "text-[var(--app-muted)] hover:text-[var(--app-ink)]"
                               )}
                             >
@@ -830,7 +827,7 @@ function DesktopSidebar({
           aria-label="Support and legal"
           className={cn(
             "grid gap-0.5",
-            collapsed ? "grid-cols-1" : "grid-cols-6"
+            collapsed ? "grid-cols-2" : "grid-cols-6"
           )}
         >
           {compactSupportLinks.map((link) => {
@@ -886,7 +883,7 @@ function SidebarGroupLabel({
       <div
         role="heading"
         aria-level={2}
-        className="mb-1.5 px-2.5 text-[11px] font-medium text-[var(--app-subtle)]"
+        className="mb-1 flex h-5 items-center px-2.5 text-[11px] font-medium text-[var(--app-subtle)]"
       >
         {label}
       </div>
@@ -896,7 +893,7 @@ function SidebarGroupLabel({
       role="heading"
       aria-level={2}
       aria-label={label}
-      className="relative mb-1.5 flex h-3.5 items-center justify-center"
+      className="relative mb-1 flex h-5 items-center justify-center"
     >
       {groupIndex > 0 ? (
         <Separator className="pointer-events-none absolute h-px w-8" />
@@ -939,15 +936,14 @@ function SidebarRoute({
           aria-hidden="true"
           layoutId="sidebar-active-item"
           transition={reduceMotion ? { duration: 0 } : sidebarMarkerTransition}
-          className="absolute inset-0 -z-0 rounded-[10px] bg-[var(--surface-panel)]"
+          className="absolute inset-0 rounded-[10px] bg-[var(--sidebar-active)]"
         />
       ) : null}
       <Icon
         className={cn(
           "relative size-[18px] shrink-0",
-          active && "text-[var(--app-accent)]"
+          active && "text-[var(--app-highlight)]"
         )}
-        strokeWidth={active ? 2 : 1.75}
       />
       {collapsed ? null : (
         <span className="relative truncate">{item.label}</span>
@@ -965,27 +961,31 @@ function SidebarRoute({
     </Link>
   );
 
-  const row = dropdown ? (
+  const row = collapsed ? (
+    link
+  ) : (
     <div className="flex items-center gap-1">
       {link}
-      <button
-        type="button"
-        aria-label={`${dropdown.open ? "Hide" : "Show"} ${item.label} pages`}
-        aria-expanded={dropdown.open}
-        aria-controls={`sidebar-${item.page}-pages`}
-        onClick={dropdown.onToggle}
-        className="flex size-8 shrink-0 items-center justify-center rounded-lg text-[var(--app-muted)] outline-none hover:text-[var(--app-ink)] focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)]"
-      >
-        <ChevronDown
-          className={cn(
-            "size-4 transition-transform duration-150 motion-reduce:transition-none",
-            dropdown.open ? "rotate-0" : "-rotate-90"
-          )}
-        />
-      </button>
+      {dropdown ? (
+        <button
+          type="button"
+          aria-label={`${dropdown.open ? "Hide" : "Show"} ${item.label} pages`}
+          aria-expanded={dropdown.open}
+          aria-controls={`sidebar-${item.page}-pages`}
+          onClick={dropdown.onToggle}
+          className="flex size-8 shrink-0 items-center justify-center rounded-lg text-[var(--app-muted)] outline-none hover:text-[var(--app-ink)] focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)]"
+        >
+          <ChevronDown
+            className={cn(
+              "size-4 transition-transform duration-150 motion-reduce:transition-none",
+              dropdown.open ? "rotate-0" : "-rotate-90"
+            )}
+          />
+        </button>
+      ) : (
+        <span aria-hidden="true" className="size-8 shrink-0" />
+      )}
     </div>
-  ) : (
-    link
   );
 
   if (!collapsed) return row;

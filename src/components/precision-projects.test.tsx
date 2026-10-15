@@ -35,7 +35,13 @@ describe("Projects directory public states", () => {
   });
 
   it("renders loading and error states", () => {
-    expect(renderToStaticMarkup(<PrecisionProjects {...baseProps} loading />)).toContain("Loading projects");
-    expect(renderToStaticMarkup(<PrecisionProjects {...baseProps} error="Projects failed to load." />)).toContain("Projects failed to load.");
+    expect(
+      renderToStaticMarkup(<PrecisionProjects {...baseProps} loading />)
+    ).toContain("Loading projects");
+    expect(
+      renderToStaticMarkup(
+        <PrecisionProjects {...baseProps} error="Projects failed to load." />
+      )
+    ).toContain("Projects failed to load.");
   });
 });

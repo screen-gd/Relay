@@ -260,7 +260,7 @@ function DashboardDropdown<T extends string>({
 const easing = [0.16, 1, 0.3, 1] as const;
 
 const surface =
-  "rounded-xl border border-[var(--app-border)] bg-[var(--app-panel)] transition-colors duration-150";
+  "rounded-xl bg-[var(--app-panel)] transition-colors duration-150";
 
 const MotionCard = motion.create(Card);
 const MotionButton = motion.create(Button);
@@ -1577,7 +1577,7 @@ function ProjectInspector({
           <EmptyHeader className="max-w-none gap-0">
             <EmptyMedia
               variant="default"
-              className="mx-auto grid size-10 place-items-center rounded-md border border-[var(--app-border)] bg-[var(--app-soft-panel)]"
+              className="mx-auto grid size-10 place-items-center rounded-md bg-[var(--app-soft-panel)]"
             >
               <FolderKanban
                 className="size-4 text-[var(--app-muted)]"

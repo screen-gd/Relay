@@ -844,13 +844,13 @@ export function PrecisionProjects(props: PrecisionProjectsProps) {
                   >
                     <TabsList
                       aria-label="Project view"
-                      className="h-9 rounded-lg border border-[var(--app-border)] bg-[var(--app-panel)] p-0.5"
+                      className="h-9 rounded-lg bg-[var(--app-panel)] p-0.5"
                     >
                       <TabsTrigger
                         id="project-table-tab"
                         aria-controls="project-library-panel"
                         value="table"
-                        className="h-7 px-2 text-xs"
+                        className="h-8 px-3 text-xs"
                       >
                         Table
                       </TabsTrigger>
@@ -858,7 +858,7 @@ export function PrecisionProjects(props: PrecisionProjectsProps) {
                         id="project-board-tab"
                         aria-controls="project-library-panel"
                         value="board"
-                        className="h-7 px-2 text-xs"
+                        className="h-8 px-3 text-xs"
                       >
                         Board
                       </TabsTrigger>
@@ -875,7 +875,7 @@ export function PrecisionProjects(props: PrecisionProjectsProps) {
                   >
                     <TabsList
                       aria-label="Project scope"
-                      className="h-9 rounded-lg border border-[var(--app-border)] bg-[var(--app-panel)] p-0.5"
+                      className="h-9 rounded-lg bg-[var(--app-panel)] p-0.5"
                     >
                       <TabsTrigger
                         id="project-personal-tab"
@@ -1117,7 +1117,7 @@ export function PrecisionProjects(props: PrecisionProjectsProps) {
                     aria-labelledby={`project-${tableState.view}-tab project-${scope}-tab`}
                     aria-busy={isUpdating}
                     bodyLabel="Project library viewport"
-                    className="relative h-full min-h-0 overflow-visible rounded-xl border border-[var(--app-border)] bg-[var(--app-panel)]"
+                    className="relative h-full min-h-0 overflow-visible rounded-xl bg-[var(--app-panel)]"
                     bodyClassName="flex min-h-0 flex-1 flex-col max-lg:flex-none max-lg:overflow-visible"
                   >
                     {isUpdating ? (
@@ -1520,7 +1520,7 @@ function ProjectInspector({
     return (
       <MotionCard
         className={cn(
-          "rounded-xl border border-[var(--app-border)] bg-[var(--app-panel)] p-6 text-center text-xs text-[var(--app-muted)] shadow-none",
+          "rounded-xl bg-[var(--app-panel)] p-6 text-center text-xs text-[var(--app-muted)] shadow-none",
           className
         )}
       >
@@ -1544,7 +1544,7 @@ function ProjectInspector({
       role="region"
       aria-label="Selected project details"
       className={cn(
-        "h-full min-h-0 overflow-hidden rounded-xl border border-[var(--app-border)] bg-[var(--app-panel)] shadow-none",
+        "h-full min-h-0 overflow-hidden rounded-xl bg-[var(--app-panel)] shadow-none",
         className
       )}
     >

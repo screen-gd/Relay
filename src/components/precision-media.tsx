@@ -179,10 +179,10 @@ export function PrecisionMedia({
                 bodyClassName="min-h-0 overflow-auto lg:overflow-hidden"
               >
                 <MasterDetail
-                  className="h-full min-h-0 overflow-hidden rounded-[6px] border border-[var(--app-border)] bg-[var(--app-panel)]"
+                  className="h-full min-h-0 overflow-hidden rounded-[6px] bg-[var(--app-panel)]"
                   master={
                     <aside className="min-h-0 overflow-auto border-b border-[var(--app-border)] bg-[var(--app-soft-panel)] p-3 lg:border-b-0 lg:border-r">
-                      <p className="px-2 text-[10px] font-semibold uppercase tracking-[0.08em] text-[var(--app-subtle)]">
+                      <p className="px-2 text-[11px] font-semibold text-[var(--app-subtle)]">
                         Collections
                       </p>
                       <nav
@@ -252,7 +252,7 @@ export function PrecisionMedia({
                             />
                           </div>
                           <div
-                            className="inline-flex self-start rounded-md border border-[var(--app-border)] bg-[var(--app-panel)] p-0.5"
+                            className="inline-flex self-start rounded-md bg-[var(--app-panel)] p-0.5"
                             role="group"
                             aria-label="Media view"
                           >
@@ -462,7 +462,7 @@ export function PrecisionMedia({
                                           key={project.id}
                                           type="button"
                                           className={cn(
-                                            "studio-motion-edge-sweep relative overflow-hidden rounded-[6px] border border-[var(--app-border)] bg-[var(--app-panel)] text-left outline-none transition-colors hover:border-[var(--app-strong-border)] hover:bg-[var(--app-hover)] focus-visible:ring-2 focus-visible:ring-[var(--app-accent)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--app-panel)]",
+                                            "studio-motion-edge-sweep relative overflow-hidden rounded-[6px] bg-[var(--app-panel)] text-left outline-none transition-colors hover:border-[var(--app-strong-border)] hover:bg-[var(--app-hover)] focus-visible:ring-2 focus-visible:ring-[var(--app-accent)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--app-panel)]",
                                             active && "border-transparent"
                                           )}
                                           onClick={() =>
@@ -553,7 +553,7 @@ export function PrecisionMedia({
                             >
                               <div>
                                 <motion.div
-                                  className="mx-auto grid size-11 place-items-center rounded-[6px] border border-[var(--app-border)] bg-[var(--app-soft-panel)]"
+                                  className="mx-auto grid size-11 place-items-center rounded-[6px] bg-[var(--app-soft-panel)]"
                                   initial={reduceMotion ? false : { y: 4 }}
                                   animate={{ y: 0 }}
                                   transition={transition}
@@ -735,7 +735,7 @@ function MediaPreview({
 function Detail({ label, value }: { label: string; value: string }) {
   return (
     <div>
-      <p className="text-[9px] font-semibold uppercase text-[var(--app-subtle)]">
+      <p className="text-[11px] font-semibold text-[var(--app-subtle)]">
         {label}
       </p>
       <p className="mt-1 text-xs leading-5 text-[var(--app-muted)]">{value}</p>

@@ -410,7 +410,7 @@ export function PrecisionCalendar({
             >
               <TabsList
                 aria-label="Calendar view"
-                className="h-9 rounded-md border border-[var(--app-border)] bg-[var(--app-soft-panel)] p-0.5"
+                className="h-9 rounded-md bg-[var(--app-soft-panel)] p-0.5"
               >
                 {(["month", "week", "agenda"] as const).map((mode) => (
                   <TabsTrigger
@@ -886,19 +886,19 @@ export function PrecisionTimeline({
             className="flex flex-wrap items-center gap-2 text-xs"
             aria-label="Timeline summary"
           >
-            <span className="rounded-md border border-[var(--app-border)] bg-[var(--app-soft-panel)] px-2.5 py-1.5">
+            <span className="rounded-md bg-[var(--app-soft-panel)] px-2.5 py-1.5">
               <strong className="text-base tabular-nums text-[var(--app-ink)]">
                 {active}
               </strong>
               <span className="ml-1 text-[var(--app-muted)]">active</span>
             </span>
-            <span className="rounded-md border border-[var(--app-border)] bg-[var(--app-soft-panel)] px-2.5 py-1.5">
+            <span className="rounded-md bg-[var(--app-soft-panel)] px-2.5 py-1.5">
               <strong className="text-base tabular-nums text-[var(--app-warning)]">
                 {review}
               </strong>
               <span className="ml-1 text-[var(--app-muted)]">in review</span>
             </span>
-            <span className="rounded-md border border-[var(--app-border)] bg-[var(--app-soft-panel)] px-2.5 py-1.5">
+            <span className="rounded-md bg-[var(--app-soft-panel)] px-2.5 py-1.5">
               <strong className="text-base tabular-nums text-[var(--app-success)]">
                 {delivered}
               </strong>
@@ -926,7 +926,7 @@ export function PrecisionTimeline({
                     aria-pressed={filter === option}
                     onClick={() => setFilter(option)}
                     className={cn(
-                      "h-8 gap-0 rounded-md px-3 text-xs text-[var(--app-muted)] hover:bg-[var(--app-hover)] hover:text-[var(--app-text)] dark:hover:bg-[var(--app-hover)] focus-visible:ring-2 focus-visible:ring-[var(--app-highlight)] active:translate-y-0 active:scale-100",
+                      "h-8 gap-0 rounded-md px-3 text-xs text-[var(--app-muted)] hover:bg-[var(--app-hover)] hover:text-[var(--app-ink)] dark:hover:bg-[var(--app-hover)] focus-visible:ring-2 focus-visible:ring-[var(--app-highlight)] active:translate-y-0 active:scale-100",
                       filter === option &&
                         "bg-[var(--app-active)] text-[var(--app-highlight)]"
                     )}
@@ -1011,7 +1011,7 @@ export function PrecisionTimeline({
                             }}
                           />
                           <span>
-                            <span className="block text-[10px] font-semibold uppercase text-[var(--app-subtle)]">
+                            <span className="block text-[11px] font-semibold text-[var(--app-subtle)]">
                               {isDelivered(project) ? "Delivered" : "Expected"}
                             </span>
                             <span className="mt-1 block text-xs font-medium">

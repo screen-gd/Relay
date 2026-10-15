@@ -422,7 +422,7 @@ export function PrecisionClients({
                 "lg:grid-cols-1 [&>div:first-child]:hidden"
             )}
             master={
-              <aside className="flex min-h-0 flex-col overflow-hidden rounded-xl border border-[var(--app-border)] bg-[var(--app-panel)] lg:h-full">
+              <aside className="flex min-h-0 flex-col overflow-hidden rounded-xl bg-[var(--app-panel)] lg:h-full">
                 <div className="border-b border-[var(--app-border)] bg-[var(--app-soft-panel)] p-3">
                   <div className="relative">
                     <Search className="pointer-events-none absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-[var(--app-muted)]" />
@@ -514,7 +514,7 @@ export function PrecisionClients({
             detail={
               <div className="h-full">
                 {selected ? (
-                  <main className="flex min-h-0 min-w-0 flex-col overflow-hidden rounded-xl border border-[var(--app-border)] bg-[var(--app-panel)] lg:h-full">
+                  <main className="flex min-h-0 min-w-0 flex-col overflow-hidden rounded-xl bg-[var(--app-panel)] lg:h-full">
                     <div className="flex flex-col gap-4 border-b border-[var(--app-border)] p-5 sm:flex-row sm:items-start">
                       <span className="grid size-12 shrink-0 place-items-center rounded-lg bg-[var(--app-active)] text-sm font-semibold text-[var(--app-highlight)] ring-1 ring-[var(--app-border)]">
                         {clientInitials(selected.name)}
@@ -602,7 +602,7 @@ export function PrecisionClients({
                           .filter((entry) => entry[1])
                           .map(([label, value]) => (
                             <div key={label}>
-                              <dt className="text-[10px] uppercase tracking-[0.08em] text-[var(--app-muted)]">
+                              <dt className="text-[11px] text-[var(--app-muted)]">
                                 {label}
                               </dt>
                               <dd className="mt-1 text-[var(--app-ink)]">
@@ -710,7 +710,7 @@ export function PrecisionClients({
                     </section>
                   </main>
                 ) : (
-                  <main className="grid h-full min-h-[420px] place-items-center rounded-xl border border-[var(--app-border)] bg-[var(--app-panel)] p-6 text-center">
+                  <main className="grid h-full min-h-[420px] place-items-center rounded-xl bg-[var(--app-panel)] p-6 text-center">
                     <PageEmptyState
                       icon={<UsersRound className="size-5" />}
                       title="Add your first client"
@@ -954,7 +954,7 @@ export function PrecisionFeedback({
                 >
                   <TabsList
                     aria-label="Filter review queue"
-                    className="h-8 rounded-md border border-[var(--app-border)] bg-[var(--app-soft-panel)] p-0.5"
+                    className="h-8 rounded-md bg-[var(--app-soft-panel)] p-0.5"
                   >
                     {(["All", "Review", "Revision"] as const).map((option) => {
                       const count =
@@ -1137,7 +1137,7 @@ export function PrecisionFeedback({
                       />
                     </dl>
                     <div className="border-t border-[var(--app-border)] pt-4">
-                      <p className="text-[10px] font-semibold uppercase tracking-[0.1em] text-[var(--app-muted)]">
+                      <p className="text-[11px] font-semibold text-[var(--app-muted)]">
                         Latest review note
                       </p>
                       <p className="mt-2 text-xs leading-5 text-[var(--app-ink)]">
@@ -1146,7 +1146,7 @@ export function PrecisionFeedback({
                       </p>
                     </div>
                     <div className="border-t border-[var(--app-border)] pt-4">
-                      <p className="text-[10px] font-semibold uppercase tracking-[0.1em] text-[var(--app-muted)]">
+                      <p className="text-[11px] font-semibold text-[var(--app-muted)]">
                         Review history
                       </p>
                       <div className="mt-3 space-y-3">
@@ -1634,7 +1634,7 @@ export function PrecisionReports({
                 >
                   <TabsList
                     aria-label="Earnings trend range"
-                    className="h-8 rounded-md border border-[var(--app-border)] bg-[var(--app-soft-panel)] p-0.5"
+                    className="h-8 rounded-md bg-[var(--app-soft-panel)] p-0.5"
                   >
                     {[
                       { value: "3", label: "3M" },
@@ -1938,7 +1938,7 @@ export function PrecisionReports({
           <div className="overflow-x-auto border-t border-[var(--app-border)]">
             <Table className="w-full min-w-[720px] border-collapse">
               <TableHeader>
-                <TableRow className="bg-[var(--app-soft-panel)] text-left text-[10px] font-semibold uppercase text-[var(--app-subtle)]">
+                <TableRow className="bg-[var(--app-soft-panel)] text-left text-[11px] font-semibold text-[var(--app-subtle)]">
                   <TableHead className="h-8 px-4">Batch</TableHead>
                   <TableHead className="px-4">Completed</TableHead>
                   <TableHead className="px-4">Edits</TableHead>
@@ -2027,7 +2027,7 @@ export function PrecisionReports({
             <div className="overflow-x-auto border-t border-[var(--app-border)]">
               <Table className="w-full min-w-[760px] border-collapse">
                 <TableHeader>
-                  <TableRow className="bg-[var(--app-soft-panel)] text-left text-[10px] font-semibold uppercase text-[var(--app-subtle)]">
+                  <TableRow className="bg-[var(--app-soft-panel)] text-left text-[11px] font-semibold text-[var(--app-subtle)]">
                     <TableHead className="h-8 px-4">Draft</TableHead>
                     <TableHead className="px-4">Client</TableHead>
                     <TableHead className="px-4">Projects</TableHead>
@@ -2173,8 +2173,8 @@ const clientTotalsGrid =
 
 function ClientMetric({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-lg border border-[var(--app-border)] bg-[var(--app-soft-panel)] px-3 py-2.5">
-      <p className="text-[9px] font-semibold uppercase text-[var(--app-subtle)]">
+    <div className="rounded-lg bg-[var(--app-soft-panel)] px-3 py-2.5">
+      <p className="text-[11px] font-semibold text-[var(--app-subtle)]">
         {label}
       </p>
       <p className="mt-1 text-sm font-semibold">{value}</p>
