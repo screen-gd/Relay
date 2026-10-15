@@ -1,9 +1,5 @@
 import { describe, expect, it } from "vitest";
 import type { WorkItem } from "@/lib/types";
-import {
-  createProjectOutput,
-  setProjectOutputReviewState,
-} from "@/features/project-outputs/project-output-domain";
 import { projectCopy, projectMenuItems } from "./project-workspace";
 
 const project: WorkItem = {
@@ -29,27 +25,13 @@ const project: WorkItem = {
     { id: "client-review", label: "Client Review", purpose: "client_review" },
   ],
   templateDeliverables: [
-    { title: "Suggested master", category: "Deliverable", initialStatus: "draft" },
+    {
+      title: "Suggested master",
+      category: "Deliverable",
+      initialStatus: "draft",
+    },
   ],
 };
-
-const master = createProjectOutput({
-  id: "project-1:output:1",
-  projectId: "project-1",
-  title: "Main film",
-  createdAt: "2026-01-02T09:00:00.000Z",
-});
-const thumbnail = setProjectOutputReviewState(
-  createProjectOutput({
-    id: "project-1:output:2",
-    projectId: "project-1",
-    title: "Thumbnail",
-    category: "Asset",
-    createdAt: "2026-01-02T09:05:00.000Z",
-  }),
-  "approved",
-  "2026-01-03T09:00:00.000Z"
-);
 
 const allPermissions = {
   canDuplicate: true,
@@ -106,7 +88,7 @@ describe("Project menu actions", () => {
 });
 
 describe("Project copy", () => {
-  const copy = projectCopy(project, [master, thumbnail], {
+  const copy = projectCopy(project, {
     id: "project-2",
     createdAt: "2026-10-15T08:00:00.000Z",
   });
@@ -135,21 +117,13 @@ describe("Project copy", () => {
     expect(copy.workflowStages).not.toBe(project.workflowStages);
   });
 
-  it("brings the Project's outputs as deliverable definitions, without review history", () => {
-    expect(copy.templateDeliverables).toEqual([
-      { title: "Main film", category: "Deliverable", initialStatus: "draft" },
-      { title: "Thumbnail", category: "Asset", initialStatus: "approved" },
-    ]);
-    expect(Object.keys(copy)).not.toContain("versions");
-    expect(Object.keys(copy)).not.toContain("comments");
+  it("keeps the Project's Template list rather than flattening Outputs into it", () => {
+    expect(copy.templateDeliverables).toEqual(project.templateDeliverables);
+    expect(copy.templateDeliverables).not.toBe(project.templateDeliverables);
   });
 
-  it("keeps the source deliverables when no output exists yet", () => {
-    expect(
-      projectCopy(project, [], {
-        id: "project-3",
-        createdAt: "2026-10-15T08:00:00.000Z",
-      }).templateDeliverables
-    ).toEqual(project.templateDeliverables);
+  it("carries no Media Versions or review notes", () => {
+    expect(Object.keys(copy)).not.toContain("versions");
+    expect(Object.keys(copy)).not.toContain("comments");
   });
 });

@@ -176,7 +176,7 @@ export function StatusDrafts({
       setBusy(false);
     }
   }
-  if (!isAuthenticated || !aiEnabled) {
+  if (!isAuthenticated) {
     return (
       <section aria-label="Client status draft" className={sectionClassName}>
         <h4 className="mb-2 text-sm font-semibold">Client update</h4>
@@ -195,44 +195,61 @@ export function StatusDrafts({
     <section aria-label="Client status draft" className={sectionClassName}>
       <h4 className="mb-2 text-sm font-semibold">Client update</h4>
       <div className="flex flex-wrap items-center gap-2">
-        <Select
-          value={channel}
-          onValueChange={(value) => {
-            if (value === "portal" || value === "email" || value === "whatsapp")
-              setChannel(value);
-          }}
-          disabled={running}
-        >
-          <SelectTrigger
-            className="w-36 bg-transparent dark:bg-black dark:text-white"
-            aria-label="Update channel"
-          >
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent className="dark:bg-black dark:text-white [&_[data-slot=select-item]:focus]:bg-transparent">
-            <SelectItem value="portal">Portal note</SelectItem>
-            <SelectItem value="email">Email</SelectItem>
-            <SelectItem value="whatsapp">WhatsApp</SelectItem>
-          </SelectContent>
-        </Select>
-        <Button
-          variant="ghost"
-          size="sm"
-          disabled={running}
-          onClick={() => void request("default")}
-        >
-          Draft a client status update
-        </Button>
-        {run || selected ? (
-          <Button
-            variant="ghost"
-            size="sm"
+        {aiEnabled || drafts?.length ? (
+          <Select
+            value={channel}
+            onValueChange={(value) => {
+              if (
+                value === "portal" ||
+                value === "email" ||
+                value === "whatsapp"
+              )
+                setChannel(value);
+            }}
             disabled={running}
-            onClick={() => void request("better")}
           >
-            Retry with better model
-          </Button>
+            <SelectTrigger
+              className="w-36 bg-transparent dark:bg-black dark:text-white"
+              aria-label="Update channel"
+            >
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent className="dark:bg-black dark:text-white [&_[data-slot=select-item]:focus]:bg-transparent">
+              <SelectItem value="portal">Portal note</SelectItem>
+              <SelectItem value="email">Email</SelectItem>
+              <SelectItem value="whatsapp">WhatsApp</SelectItem>
+            </SelectContent>
+          </Select>
         ) : null}
+        {/* Reading, editing, copying, and publishing a saved draft needs no AI
+            consent, so the locked notice replaces generation only. */}
+        {aiEnabled ? (
+          <>
+            <Button
+              variant="ghost"
+              size="sm"
+              disabled={running}
+              onClick={() => void request("default")}
+            >
+              Draft a client status update
+            </Button>
+            {run || selected ? (
+              <Button
+                variant="ghost"
+                size="sm"
+                disabled={running}
+                onClick={() => void request("better")}
+              >
+                Retry with better model
+              </Button>
+            ) : null}
+          </>
+        ) : (
+          <AiLockedNotice
+            feature="Draft a client status update"
+            access={hasAccount ? "settings" : "signIn"}
+          />
+        )}
       </div>
       {run ? (
         <p role="status" className="mt-2 text-xs">
