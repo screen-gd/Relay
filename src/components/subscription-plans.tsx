@@ -25,6 +25,7 @@ import {
   EXTRA_EDITOR_MONTHLY_PRICE_USD,
   CREATOR_LAUNCH_STORAGE_GB,
   TEAM_LAUNCH_STORAGE_GB,
+  FREE_OPEN_PROJECT_LIMIT,
 } from "../../shared/subscription-plans";
 
 export type WorkspaceSubscriptionState = NonNullable<
@@ -38,6 +39,7 @@ const capabilityUpgradeCopy = {
   customPortalBranding: "Custom portal branding",
   clientHub: "Client Hub",
   salaryPlans: "Payment plans and batches",
+  scheduleHistory: "completed Projects in the Timeline and Calendar",
 } as const;
 
 type PaidWorkspaceCapability = keyof typeof capabilityUpgradeCopy;
@@ -175,7 +177,8 @@ export function SubscriptionPricingView({
         <CardContent className="space-y-3 py-5">
           <h2 className="text-lg font-semibold">Start with Free</h2>
           <p>
-            Unlimited Projects and Clients, basic workflow tracking, standard
+            {FREE_OPEN_PROJECT_LIMIT} Projects in progress at a time, unlimited
+            Clients and Project history, basic workflow tracking, standard
             Client Portals, and client review on embedded videos.
           </p>
           <p className="text-sm text-muted-foreground">

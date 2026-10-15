@@ -3,6 +3,7 @@ import type { MigrationFunctionReference } from "@convex-dev/migrations";
 import { makeFunctionReference } from "convex/server";
 import { components } from "./_generated/api.js";
 import { internalMutation } from "./_generated/server.js";
+import { resolveProjectLifecycle } from "./projectLifecycle.js";
 
 export const migrations = new Migrations(components.migrations, {
   internalMutation,
@@ -336,6 +337,19 @@ export const migrateResourceLinksIdentityV2 = migrations.define({
   },
 });
 
+// Sets `projects.lifecycle` so live lists and history read separate index
+// ranges. Safe to re-run: it rewrites only rows whose lifecycle is out of date,
+// for example after the salary work type changes in Settings. Backfilled rows
+// never hit the Free limit, because this writes the field directly.
+// Run: npx convex run migrations:runProjectLifecycleBackfill
+export const backfillProjectLifecycle = migrations.define({
+  table: "projects",
+  migrateOne: async (ctx, doc) => {
+    const lifecycle = await resolveProjectLifecycle(ctx, doc);
+    if (lifecycle !== doc.lifecycle) await ctx.db.patch(doc._id, { lifecycle });
+  },
+});
+
 function migrationRef(name: string): MigrationFunctionReference {
   return makeFunctionReference<"mutation">(
     name
@@ -369,3 +383,7 @@ export const runCanonicalIdentityMigration = migrations.runner([
   migrationRef("migrations:migrateSettingsIdentityV2"),
   migrationRef("migrations:migrateResourceLinksIdentityV2"),
 ]);
+
+export const runProjectLifecycleBackfill = migrations.runner(
+  migrationRef("migrations:backfillProjectLifecycle")
+);

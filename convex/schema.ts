@@ -26,6 +26,7 @@ import {
   settingsTeamRoleValidator,
   storedFileStatusValidator,
   storedProjectStatusValidator,
+  projectLifecycleValidator,
   storedTeamRoleValidator,
   subscriptionPlanValidator,
   billingPeriodValidator,
@@ -146,11 +147,25 @@ export default defineSchema({
     templateProjectType: v.optional(v.string()),
     createdAt: v.string(),
     updatedAt: v.string(),
+    // Optional until `migrations:backfillProjectLifecycle` has run. Rows without
+    // it sort before "history", so active-list reads still include them.
+    lifecycle: v.optional(projectLifecycleValidator),
   })
     .index("by_ownerUserId_and_teamId", ["ownerUserId", "teamId"])
+    .index("by_ownerUserId_and_teamId_and_lifecycle_and_completedAt", [
+      "ownerUserId",
+      "teamId",
+      "lifecycle",
+      "completedAt",
+    ])
     .index("by_ownerUserId_and_id", ["ownerUserId", "id"])
     .index("by_projectId", ["id"])
     .index("by_teamId", ["teamId"])
+    .index("by_teamId_and_lifecycle_and_completedAt", [
+      "teamId",
+      "lifecycle",
+      "completedAt",
+    ])
     .index("by_teamId_and_id", ["teamId", "id"]),
 
   projectSalaryBatches: defineTable({

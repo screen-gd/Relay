@@ -14,6 +14,7 @@ import {
   subscriptionPlanValidator,
   subscriptionStatusValidator,
 } from "./domainValidators";
+import { FREE_OPEN_PROJECT_LIMIT } from "../shared/subscription-plans";
 
 export const FREE_STORAGE_QUOTA_BYTES = 0;
 export const CREATOR_STORAGE_QUOTA_BYTES = 5_000_000_000;
@@ -38,6 +39,8 @@ const entitlementValidator = v.object({
   reconciliationState: reconciliationStateValidator,
   editorSeatAllowance: v.number(),
   storageQuotaBytes: v.number(),
+  /** Projects in progress allowed at once; null means unlimited. */
+  openProjectLimit: v.union(v.number(), v.null()),
   billingHealthy: v.boolean(),
   blockedReasons: v.array(
     v.union(v.literal("payment_past_due"), v.literal("subscription_canceled"))
@@ -249,6 +252,7 @@ function entitlements(projection: SubscriptionProjection) {
           projection.purchasedExtraEditorSeatQuantity
         : 1,
     storageQuotaBytes: storageQuotaBytes(projection, plan),
+    openProjectLimit: plan === "free" ? FREE_OPEN_PROJECT_LIMIT : null,
     billingHealthy: ["free", "active", "trialing"].includes(
       projection.subscriptionStatus
     ),

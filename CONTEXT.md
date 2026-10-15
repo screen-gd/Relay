@@ -20,6 +20,14 @@ An optional group of related Projects for one Client, such as a retainer, campai
 **Project**:
 One tracked video job. A Project is the unit of workflow, delivery, earnings, reporting, and Salary Plan progress.
 
+**Project in progress**:
+A Project that is not delivered, cancelled, or archived. Free workspaces can have 10 at a time.
+_Avoid_: Active project (delivered but unpaid Projects are also in the live list)
+
+**Project history**:
+Completed Projects: archived, cancelled, or delivered and settled (paid, nothing to collect, or in a Salary Batch). History stays viewable and editable but loads only when a screen needs it.
+_Avoid_: Archive (archiving is one way a Project reaches history)
+
 **Project Output**:
 One promised result inside a Project, such as a main video, short cut, thumbnail, captions, or document.
 _Avoid_: Deliverable target, task

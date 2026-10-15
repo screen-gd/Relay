@@ -12,6 +12,7 @@ import { projectWorkTypeOptions } from "@/features/routes/utils/work-type-utils"
 import { DeadlineRiskRadar } from "./deadline-risk-radar";
 import { useDashboardApplicationState } from "./use-dashboard-application-state";
 import { useData } from "@/lib/data-context";
+import { useProjectHistory } from "@/lib/project-history";
 
 /**
  * Deadline risk scans a team Workspace's projects, so a local or signed-out
@@ -43,6 +44,8 @@ export function DashboardApplication() {
   const access = useProjectAccess();
   const actions = useProjectActions();
   const { clientOptions } = useClientActions();
+  // All-time earnings and delivery counts include completed history.
+  useProjectHistory();
   const { subscribeToProjectActivity } = useProjectActivity();
   const projectTagOptions = projectWorkTypeOptions(settings, access.projects);
   const dashboardState = useDashboardApplicationState({

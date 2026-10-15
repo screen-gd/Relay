@@ -54,7 +54,7 @@ Keep existing WebApplication data. Do not invent ratings to qualify for software
 
 Working message: **Relay keeps editing projects, client review, delivery, and payment status in one workspace. Start on Free.**
 
-Use current product facts: unlimited projects and clients on Free, embedded video review and comments, client portals, and payment tracking. YouTube and Vimeo support playback timestamps; Drive and Dropbox use manual timestamps. Relay manages work around editing; it does not replace an NLE or collect client payments. Cloud client review requires an account. Do not promote planned paid uploads, storage, team seats, or advanced reports as current Free features.
+Use current product facts: 10 projects in progress with unlimited clients and project history on Free, embedded video review and comments, client portals, and payment tracking. YouTube and Vimeo support playback timestamps; Drive and Dropbox use manual timestamps. Relay manages work around editing; it does not replace an NLE or collect client payments. Cloud client review requires an account. Do not promote planned paid uploads, storage, team seats, or advanced reports as current Free features.
 
 The strongest content opportunity is one demonstrated workflow, reused across channels. Adjacent industry content discusses client-review practices and keeping project work together; this supports the topic, not a traffic or revenue estimate. [Frame.io's editor workflow article](https://blog.frame.io/2020/04/06/10-things-editors-need-to-know-before-working-from-home/).
 

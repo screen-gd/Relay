@@ -206,6 +206,10 @@ type PrecisionProjectsProps = {
   canUpdateProjectStatus: boolean;
   canDeleteProject: (project: WorkItem) => boolean;
   onManageProjectGroups: (scope: WorkspaceScope) => void;
+  /** Opens completed Projects; omitted where every Project is already listed. */
+  onOpenHistory?: () => void;
+  /** Shown above the list, such as the Free Project limit. */
+  notice?: ReactNode;
 };
 
 const columnHelper = createColumnHelper<WorkItem>();
@@ -782,12 +786,16 @@ export function PrecisionProjects(props: PrecisionProjectsProps) {
                     label: "Project Groups",
                     onSelect: () => props.onManageProjectGroups(scope),
                   },
+                  ...(props.onOpenHistory
+                    ? [{ label: "History", onSelect: props.onOpenHistory }]
+                    : []),
                 ]}
               />
             }
           />
 
           <PageContent mode="fill">
+            {props.notice}
             <PageToolbar
               primary={
                 <>

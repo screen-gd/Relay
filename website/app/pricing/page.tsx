@@ -8,6 +8,7 @@ import {
   TEAM_MONTHLY_PRICE_USD,
   TEAM_INCLUDED_EDITOR_SEATS,
   EXTRA_EDITOR_MONTHLY_PRICE_USD,
+  FREE_OPEN_PROJECT_LIMIT,
   formatUsd,
 } from "../../lib/plans";
 import { siteOpenGraph } from "../../lib/site-metadata";
@@ -15,7 +16,7 @@ import styles from "./page.module.css";
 
 export const metadata: Metadata = {
   title: "Pricing",
-  description: `Track unlimited projects and clients free. Creator is ${formatUsd(CREATOR_MONTHLY_PRICE_USD)}/month. Team is ${formatUsd(TEAM_MONTHLY_PRICE_USD)}/workspace/month for ${TEAM_INCLUDED_EDITOR_SEATS} editors, plus ${formatUsd(EXTRA_EDITOR_MONTHLY_PRICE_USD)} per extra editor. Paid plans are coming later; checkout is not live. Prices are subject to change.`,
+  description: `Track ${FREE_OPEN_PROJECT_LIMIT} projects at a time free, with unlimited clients and history. Creator is ${formatUsd(CREATOR_MONTHLY_PRICE_USD)}/month. Team is ${formatUsd(TEAM_MONTHLY_PRICE_USD)}/workspace/month for ${TEAM_INCLUDED_EDITOR_SEATS} editors, plus ${formatUsd(EXTRA_EDITOR_MONTHLY_PRICE_USD)} per extra editor. Paid plans are coming later; checkout is not live. Prices are subject to change.`,
   alternates: { canonical: "/pricing" },
   openGraph: { ...siteOpenGraph, url: "/pricing" },
 };
@@ -26,7 +27,7 @@ export default function PricingPage() {
     <>
       <PageHeader
         title="Pricing"
-        description="Track unlimited projects and clients free. Upgrade for your client hub, branding, workflows, and team. Paid plans are coming later. Prices are subject to change."
+        description={`Track ${FREE_OPEN_PROJECT_LIMIT} projects at a time free. Upgrade for unlimited projects, your client hub, branding, workflows, and team. Paid plans are coming later. Prices are subject to change.`}
       />
       <section className="section" aria-labelledby="plans-title">
         <div className="container">

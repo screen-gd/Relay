@@ -40,6 +40,16 @@ export const storedProjectStatusValidator = v.union(
   v.literal("Client Review")
 );
 
+/**
+ * Where a Project lives. "active" and "awaiting_payment" sort before "history",
+ * so one index range below "history" reads the live workspace list.
+ */
+export const projectLifecycleValidator = v.union(
+  v.literal("active"),
+  v.literal("awaiting_payment"),
+  v.literal("history")
+);
+
 export const workflowStagePurposeValidator = v.union(
   v.literal("planned"),
   v.literal("editing"),

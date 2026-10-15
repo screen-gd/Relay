@@ -6,6 +6,7 @@ import {
   EXTRA_EDITOR_MONTHLY_PRICE_USD,
   CREATOR_LAUNCH_STORAGE_GB,
   TEAM_LAUNCH_STORAGE_GB,
+  FREE_OPEN_PROJECT_LIMIT,
   formatUsd,
 } from "../../lib/plans";
 import {
@@ -20,8 +21,7 @@ import styles from "./PricingFaq.module.css";
 const faqs = [
   {
     question: "Is Relay free?",
-    answer:
-      "Yes. Free includes unlimited project and client tracking, external video reviews, standard client portals, and basic payment tracking. There is no active-project cap or time limit, and no invite is required.",
+    answer: `Yes. Free includes ${FREE_OPEN_PROJECT_LIMIT} projects in progress at a time, unlimited clients and project history, external video reviews, standard client portals, and basic payment tracking. Delivered and archived projects do not count toward the limit. There is no time limit, and no invite is required.`,
   },
   {
     question: "Can I upload files?",

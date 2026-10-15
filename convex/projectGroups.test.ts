@@ -95,9 +95,9 @@ test("Project Groups persist per Workspace and enforce the Project Client", asyn
     projectId: project.id,
     archived: true,
   });
-  expect(await owner.query(api.projects.list, {})).toMatchObject([
-    { id: project.id, archived: true },
-  ]);
+  expect(
+    await owner.query(api.projects.get, { projectId: project.id })
+  ).toMatchObject({ id: project.id, archived: true, lifecycle: "history" });
   await expect(
     owner.mutation(api.projects.create, {
       project: {
