@@ -6,6 +6,7 @@ import type { FunctionReturnType } from "convex/server";
 import { api } from "../../../convex/_generated/api";
 import type { RoundBasis } from "../../../convex/revisionRoundsRules";
 import { ContentSection } from "@/components/workspace-page";
+import { AiLockedNotice } from "@/features/ai/ai-availability";
 import { projectHref } from "@/features/projects/project-view";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -266,12 +267,27 @@ function LimitEditor({
  * change order when scope is exceeded.
  */
 export function RevisionScopePanel({ projectId }: { projectId: string }) {
-  const { isAuthenticated } = useConvexAuth();
+  const { isAuthenticated, isLoading } = useConvexAuth();
   const summary = useQuery(
     api.revisionRounds.getSummary,
     isAuthenticated ? { projectId } : "skip"
   );
   const [error, setError] = useState("");
+  /**
+   * Rounds are counted in a Workspace. Sign-in resolves first, so a local visit
+   * meets the change order where it lives instead of waiting on a query that
+   * never runs.
+   */
+  if (isLoading) return null;
+  if (!isAuthenticated)
+    return (
+      <ContentSection
+        title="Revision rounds"
+        description="Counted in a team Workspace."
+      >
+        <AiLockedNotice feature="Draft a change order" />
+      </ContentSection>
+    );
   if (!summary) return null;
   return (
     <ContentSection

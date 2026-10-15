@@ -73,6 +73,6 @@ test("locks the draft behind sign-in when the visit has no account", () => {
 test("offers the draft once Workspace AI is on", () => {
   state.aiEnabled = true;
   const html = render();
-  expect(html).toContain("Draft change order");
+  expect(html).toContain("Draft a change order");
   expect(html).not.toContain('data-slot="ai-locked-notice"');
 });
