@@ -5,6 +5,7 @@ import { useConvexAuth, useMutation, useQuery } from "convex/react";
 import { api } from "../../../../convex/_generated/api";
 import type { Doc, Id } from "../../../../convex/_generated/dataModel";
 import { projectHref } from "@/features/projects/project-view";
+import { AiLockedNotice, useAiAccount } from "@/features/ai/ai-availability";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -131,15 +132,22 @@ function DraftEditor({
   );
 }
 
+const sectionClassName =
+  "py-3 dark:bg-black dark:text-white [&_button]:bg-transparent [&_button:hover]:bg-transparent [&_textarea]:dark:bg-black [&_button]:dark:text-white";
+
 /** Reviews channel-specific updates; copying and portal publishing require a click. */
 export function StatusDrafts({
   projectId,
   portalId,
+  aiEnabled,
 }: {
   projectId: string;
   portalId?: Id<"projectPortals">;
+  /** Whether this project's Workspace can run AI at all. */
+  aiEnabled: boolean;
 }) {
   const { isAuthenticated } = useConvexAuth();
+  const { hasAccount } = useAiAccount();
 
   const generate = useMutation(api.statusDrafts.generate);
   const [channel, setChannel] =
@@ -168,56 +176,80 @@ export function StatusDrafts({
       setBusy(false);
     }
   }
-  if (!isAuthenticated) return null;
+  if (!isAuthenticated) {
+    return (
+      <section aria-label="Client status draft" className={sectionClassName}>
+        <h4 className="mb-2 text-sm font-semibold">Client update</h4>
+        <AiLockedNotice
+          feature="Draft a client status update"
+          access={hasAccount ? "settings" : "signIn"}
+        />
+      </section>
+    );
+  }
   const running = busy || run?.status === "queued" || run?.status === "running";
   const selected =
     drafts?.find((d) => d.runId === runId && d.channel === channel) ??
     drafts?.find((d) => d.channel === channel);
   return (
-    <section
-      aria-label="Client status draft"
-      className="py-3 dark:bg-black dark:text-white [&_button]:bg-transparent [&_button:hover]:bg-transparent [&_textarea]:dark:bg-black [&_button]:dark:text-white"
-    >
+    <section aria-label="Client status draft" className={sectionClassName}>
       <h4 className="mb-2 text-sm font-semibold">Client update</h4>
       <div className="flex flex-wrap items-center gap-2">
-        <Select
-          value={channel}
-          onValueChange={(value) => {
-            if (value === "portal" || value === "email" || value === "whatsapp")
-              setChannel(value);
-          }}
-          disabled={running}
-        >
-          <SelectTrigger
-            className="w-36 bg-transparent dark:bg-black dark:text-white"
-            aria-label="Update channel"
-          >
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent className="dark:bg-black dark:text-white [&_[data-slot=select-item]:focus]:bg-transparent">
-            <SelectItem value="portal">Portal note</SelectItem>
-            <SelectItem value="email">Email</SelectItem>
-            <SelectItem value="whatsapp">WhatsApp</SelectItem>
-          </SelectContent>
-        </Select>
-        <Button
-          variant="ghost"
-          size="sm"
-          disabled={running}
-          onClick={() => void request("default")}
-        >
-          Draft update
-        </Button>
-        {run || selected ? (
-          <Button
-            variant="ghost"
-            size="sm"
+        {aiEnabled || drafts?.length ? (
+          <Select
+            value={channel}
+            onValueChange={(value) => {
+              if (
+                value === "portal" ||
+                value === "email" ||
+                value === "whatsapp"
+              )
+                setChannel(value);
+            }}
             disabled={running}
-            onClick={() => void request("better")}
           >
-            Retry with better model
-          </Button>
+            <SelectTrigger
+              className="w-36 bg-transparent dark:bg-black dark:text-white"
+              aria-label="Update channel"
+            >
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent className="dark:bg-black dark:text-white [&_[data-slot=select-item]:focus]:bg-transparent">
+              <SelectItem value="portal">Portal note</SelectItem>
+              <SelectItem value="email">Email</SelectItem>
+              <SelectItem value="whatsapp">WhatsApp</SelectItem>
+            </SelectContent>
+          </Select>
         ) : null}
+        {/* Reading, editing, copying, and publishing a saved draft needs no AI
+            consent, so the locked notice replaces generation only. */}
+        {aiEnabled ? (
+          <>
+            <Button
+              variant="ghost"
+              size="sm"
+              disabled={running}
+              onClick={() => void request("default")}
+            >
+              Draft a client status update
+            </Button>
+            {run || selected ? (
+              <Button
+                variant="ghost"
+                size="sm"
+                disabled={running}
+                onClick={() => void request("better")}
+              >
+                Retry with better model
+              </Button>
+            ) : null}
+          </>
+        ) : (
+          <AiLockedNotice
+            feature="Draft a client status update"
+            access={hasAccount ? "settings" : "signIn"}
+          />
+        )}
       </div>
       {run ? (
         <p role="status" className="mt-2 text-xs">

@@ -23,6 +23,12 @@ import {
   WorkspacePage,
 } from "@/components/workspace-page";
 import { PROJECT_STATUS_VALUES, type ProjectStatus } from "@/lib/domain-values";
+import { downloadCsv, projectsToCsv } from "@/lib/export-csv";
+import { useData } from "@/lib/data-context";
+import { useProjectOutputDuplication } from "@/lib/project-output-data";
+import { createId } from "@/features/routes/utils/date-utils";
+import { useProjectAccess } from "./project-access";
+import { useProjectActions } from "./project-actions-provider";
 import {
   hasIntegrationLink,
   integrationDisplayText,
@@ -59,6 +65,85 @@ const projectViews: ReadonlyArray<{ id: ProjectWorkspaceView; label: string }> =
   ];
 
 const WORKFLOW_STAGES = ["Planned", "In Progress", "Review", "Delivered"];
+
+export type ProjectMenuAction = "duplicate" | "archive" | "export" | "delete";
+
+/**
+ * The Project menu offers what this Project and this person allow. Duplicate
+ * needs permission to create Projects, and Archive follows edit rights.
+ */
+export function projectMenuItems(
+  project: Pick<WorkItem, "archived">,
+  permissions: {
+    canDuplicate: boolean;
+    canArchive: boolean;
+    canDelete: boolean;
+  }
+): Array<{ id: ProjectMenuAction; label: string }> {
+  return [
+    ...(permissions.canDuplicate
+      ? [{ id: "duplicate" as const, label: "Duplicate project" }]
+      : []),
+    ...(permissions.canArchive
+      ? [
+          {
+            id: "archive" as const,
+            label: project.archived ? "Restore project" : "Archive project",
+          },
+        ]
+      : []),
+    { id: "export" as const, label: "Export CSV" },
+    ...(permissions.canDelete
+      ? [{ id: "delete" as const, label: "Delete project" }]
+      : []),
+  ];
+}
+
+/**
+ * The copy Duplicate creates: the same client, schedule, and workflow stages
+ * under a new id, unarchived and unpaid. Its Outputs are created separately,
+ * through the Outputs store, so the copy keeps as many as the original holds.
+ * Media versions and their comments belong to the original Project, so a copy
+ * starts with an empty review history.
+ */
+export function projectCopy(
+  project: WorkItem,
+  copy: { id: string; createdAt: string }
+): WorkItem {
+  return {
+    ...project,
+    id: copy.id,
+    createdAt: copy.createdAt,
+    title: `${project.title.trim()} (copy)`,
+    archived: false,
+    paid: false,
+    paidDate: undefined,
+    completedAt: undefined,
+    ...(project.workflowStages
+      ? {
+          workflowStages: project.workflowStages.map((stage) => ({ ...stage })),
+        }
+      : {}),
+    ...(project.templateDeliverables
+      ? {
+          templateDeliverables: project.templateDeliverables.map(
+            (deliverable) => ({ ...deliverable })
+          ),
+        }
+      : {}),
+  };
+}
+
+/** Names the single-Project export the way the Settings exports are named. */
+function projectCsvFileName(title: string, stamp: string) {
+  const slug = title
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 60);
+  return `relay-project-${slug ? `${slug}-` : ""}${stamp}.csv`;
+}
 
 function isSalaryWorkType(value: string, settings: SettingsState) {
   return (
@@ -155,6 +240,57 @@ export function ProjectWorkspace({
   onPaymentChange: (project: WorkItem, paid: boolean) => void;
 }) {
   useWorkspaceBreadcrumb(project.title);
+  const { setItems, setToast } = useData();
+  const { archiveProject } = useProjectActions();
+  const access = useProjectAccess();
+  const duplicateOutputs = useProjectOutputDuplication(project);
+  const menuItems = projectMenuItems(project, {
+    canDuplicate:
+      access.canCreateProjects &&
+      (!project.teamId || access.canCreateTeamProjects),
+    canArchive: canEdit,
+    canDelete,
+  });
+
+  /** Creates the copy first, then fills it with the Outputs it holds now. */
+  async function duplicateProject() {
+    const createdAt = new Date().toISOString();
+    const copy = projectCopy(project, { id: createId(), createdAt });
+    setItems((items) => [copy, ...items]);
+    try {
+      const copied = await duplicateOutputs(copy.id, createdAt);
+      setToast({
+        message: copied
+          ? `${copy.title} created with ${copied} Project Output${copied === 1 ? "" : "s"}.`
+          : `${copy.title} created.`,
+        tone: "success",
+      });
+    } catch (caught) {
+      setToast({
+        message: `Could not copy the Project Outputs: ${
+          caught instanceof Error ? caught.message : "the copy is empty."
+        }`,
+        tone: "warning",
+      });
+    }
+  }
+
+  const menuActions: Record<ProjectMenuAction, () => void> = {
+    duplicate: () => void duplicateProject(),
+    archive: () => archiveProject(project),
+    export: () =>
+      downloadCsv(
+        projectCsvFileName(
+          project.title,
+          new Date().toISOString().slice(0, 10)
+        ),
+        projectsToCsv([project], {
+          includeMoney: canManagePayment,
+          currencyCode: settings.currencyCode,
+        })
+      ),
+    delete: () => onDelete(project),
+  };
   const isSalary = isSalaryWorkType(project.workType, settings);
   const isClientBillable =
     !isSalary &&
@@ -219,27 +355,32 @@ export function ProjectWorkspace({
                   Edit
                 </OwnedButton>
               ) : null}
-              {canDelete ? (
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <OwnedButton
-                      variant="ghost"
-                      size="icon-sm"
-                      aria-label="Project actions"
-                    >
-                      <MoreHorizontal />
-                    </OwnedButton>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <OwnedButton
+                    variant="ghost"
+                    size="icon-sm"
+                    aria-label="Project actions"
+                  >
+                    <MoreHorizontal />
+                  </OwnedButton>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  {menuItems.map((item) => (
                     <DropdownMenuItem
-                      className="text-destructive"
-                      onSelect={() => onDelete(project)}
+                      key={item.id}
+                      className={
+                        item.id === "delete"
+                          ? "text-destructive focus:text-destructive"
+                          : undefined
+                      }
+                      onSelect={menuActions[item.id]}
                     >
-                      Delete project
+                      {item.label}
                     </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              ) : null}
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
           </div>
           <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain pt-4 pb-5">

@@ -6,6 +6,7 @@ import { api } from "../../../convex/_generated/api";
 import type { Doc, Id } from "../../../convex/_generated/dataModel";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { AiLockedNotice, useAiAccount } from "@/features/ai/ai-availability";
 
 function ChangelogEditor({ row }: { row: Doc<"versionChangelogs"> }) {
   const [text, setText] = useState(row.text);
@@ -77,23 +78,26 @@ function ChangelogEditor({ row }: { row: Doc<"versionChangelogs"> }) {
 export function VersionChangelog({
   mediaVersionId,
   canEdit,
+  enabled,
 }: {
   mediaVersionId: string;
   canEdit: boolean;
+  /** Whether this version's Workspace can run AI at all. */
+  enabled: boolean;
 }) {
   const { isAuthenticated } = useConvexAuth();
+  const { hasAccount } = useAiAccount();
+  const available = enabled && isAuthenticated && canEdit;
 
   const generate = useMutation(api.versionChangelog.generate);
   const [runId, setRunId] = useState<Id<"aiRuns"> | null>(null);
   const rows = useQuery(
     api.versionChangelog.list,
-    isAuthenticated && canEdit
-      ? { mediaVersionId, ...(runId ? { runId } : {}) }
-      : "skip"
+    available ? { mediaVersionId, ...(runId ? { runId } : {}) } : "skip"
   );
   const run = useQuery(
     api.aiRuns.getRun,
-    isAuthenticated && canEdit && runId ? { runId } : "skip"
+    available && runId ? { runId } : "skip"
   );
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
@@ -112,7 +116,15 @@ export function VersionChangelog({
       setBusy(false);
     }
   }
-  if (!isAuthenticated || !canEdit) return null;
+  if (!available)
+    return canEdit ? (
+      <section aria-label="Version changelog" className="mt-4">
+        <AiLockedNotice
+          feature="Draft a version changelog"
+          access={hasAccount ? "settings" : "signIn"}
+        />
+      </section>
+    ) : null;
   const selected = rows?.find((row) => row.runId === runId) ?? rows?.[0];
   const running = busy || run?.status === "queued" || run?.status === "running";
   return (
@@ -128,7 +140,7 @@ export function VersionChangelog({
           disabled={running}
           onClick={() => void request("default")}
         >
-          Draft changelog
+          Draft a version changelog
         </Button>
         {run || rows?.length ? (
           <Button

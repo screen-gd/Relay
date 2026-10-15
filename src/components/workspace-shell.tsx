@@ -2,16 +2,18 @@ import {
   Accessibility,
   Bell,
   CalendarDays,
-  ChartNoAxesCombined,
   CheckSquare2,
   ChevronDown,
   CircleUserRound,
   CreditCard,
+  Database,
   FileText,
   FolderKanban,
   Images,
+  Info,
   LayoutDashboard,
   Library,
+  LockKeyhole,
   LogIn,
   LogOut,
   Mail,
@@ -29,7 +31,7 @@ import {
   Workflow,
 } from "lucide-react";
 import { motion } from "motion/react";
-import { Link, useNavigate } from "@tanstack/react-router";
+import { Link, useLocation, useNavigate } from "@tanstack/react-router";
 import {
   createContext,
   useContext,
@@ -42,10 +44,20 @@ import {
   type RefObject,
 } from "react";
 import { useData } from "@/lib/data-context";
+import { marketingSiteUrl } from "@/lib/site";
 import { useOptionalAuth } from "@/lib/optional-auth";
 import type { SettingsState } from "@/lib/types";
 import type { FileRouteTypes } from "@/routeTree.gen";
 import type { SearchRecord } from "@/features/workspace-discovery/workspace-discovery";
+import { FeedbackButton } from "@/features/feedback/feedback-button";
+import { AiToolsMenu } from "@/features/ai/ai-tools-menu";
+import { AiBadge, useAiAccount } from "@/features/ai/ai-availability";
+import {
+  aiToolHref,
+  aiTools,
+  aiToolsForPage,
+  featuredAiToolIds,
+} from "@/features/ai/ai-tools";
 import { useHydratedReducedMotion } from "@/lib/motion";
 import { cn } from "@/lib/utils";
 import { RelayBrand } from "@/app/relay-brand";
@@ -168,7 +180,7 @@ const routeGroups: RouteGroup[] = [
       { page: "clients", label: "Clients", href: "/clients", icon: UsersRound },
       {
         page: "feedback",
-        label: "Client reviews",
+        label: "Reviews",
         href: "/feedback",
         icon: MessageSquareText,
       },
@@ -199,9 +211,9 @@ const routeGroups: RouteGroup[] = [
       },
       {
         page: "reports",
-        label: "Reports",
+        label: "Payments",
         href: "/reports",
-        icon: ChartNoAxesCombined,
+        icon: CreditCard,
         shortcut: "G R",
       },
     ],
@@ -243,35 +255,43 @@ export function workspacePageForPath(pathname: string): ShellPage {
   );
 }
 
-const hubPages: ShellPage[] = [
-  "dashboard",
-  "projects",
-  "clients",
-  "files",
-  "reports",
-  "team",
-  "settings",
+/** The sidebar keeps five work hubs plus Team and Settings. */
+const sidebarGroups: RouteGroup[] = [
+  {
+    label: "Workspace",
+    items: routesFor([
+      "dashboard",
+      "projects",
+      "clients",
+      "feedback",
+      "reports",
+    ]),
+  },
+  {
+    label: "Account",
+    items: routesFor(["team", "settings"]),
+  },
 ];
-const hubGroups = routeGroups.map((group) => ({
-  ...group,
-  items: group.items
-    .filter((item) => hubPages.includes(item.page))
-    .map((item) =>
-      item.page === "files"
-        ? { ...item, label: "Library", icon: Library }
-        : item
-    ),
-}));
-const hubRoutes = hubGroups.flatMap((group) => group.items);
-const mobileRoutes = hubRoutes.filter((item) =>
-  ["dashboard", "projects", "clients", "files"].includes(item.page)
+
+const hubPages: ShellPage[] = sidebarGroups.flatMap((group) =>
+  group.items.map((item) => item.page)
 );
+const hubRoutes = sidebarGroups.flatMap((group) => group.items);
+const mobileRoutes = hubRoutes.filter((item) =>
+  ["dashboard", "projects", "clients", "feedback"].includes(item.page)
+);
+/** Pages that live under a hub instead of the sidebar. */
 const contextPages: Partial<Record<ShellPage, ShellPage[]>> = {
-  projects: ["projects", "calendar", "timeline", "feedback"],
-  files: ["files", "media", "templates", "resources"],
+  projects: ["projects", "calendar", "timeline", "files", "media"],
   team: ["team", "team-chat"],
-  settings: ["settings", "integrations"],
+  settings: ["settings", "integrations", "templates", "resources"],
 };
+
+function routesFor(pages: ShellPage[]): RouteItem[] {
+  return pages.flatMap((page) =>
+    allRoutes.filter((item) => item.page === page)
+  );
+}
 
 function hubPageForPage(page: ShellPage): ShellPage {
   return (
@@ -288,12 +308,28 @@ function hubPageForPage(page: ShellPage): ShellPage {
   );
 }
 
-const compactSupportLinks = [
+type SupportLink =
+  | { label: string; href: StaticPath; icon: typeof Mail; external?: false }
+  | { label: string; href: string; icon: typeof Mail; external: true };
+
+const compactSupportLinks: readonly SupportLink[] = [
   { label: "Contact", href: "/contact", icon: Mail },
   { label: "Privacy", href: "/privacy", icon: ShieldCheck },
   { label: "Terms", href: "/terms", icon: ScrollText },
   { label: "Accessibility", href: "/accessibility", icon: Accessibility },
-] as const;
+  {
+    label: "About",
+    href: `${marketingSiteUrl}/about`,
+    icon: Info,
+    external: true,
+  },
+  {
+    label: "Privacy & Data",
+    href: `${marketingSiteUrl}/privacy-and-data`,
+    icon: Database,
+    external: true,
+  },
+];
 
 const shellTransition = {
   duration: 0.22,
@@ -549,6 +585,8 @@ export function WorkspaceShell({
                   <Bell className="size-[18px]" />
                 </Button>
               )}
+              <AiToolsMenu />
+              <FeedbackButton />
               <ProfileMenu settings={settings} compact page={page} />
             </div>
           </header>
@@ -606,7 +644,7 @@ function DesktopSidebar({ page }: { page: ShellPage }) {
         aria-label="Primary navigation"
         className="min-h-0 flex-1 overflow-y-auto px-1 py-1"
       >
-        {hubGroups.map((group, groupIndex) => (
+        {sidebarGroups.map((group, groupIndex) => (
           <div key={group.label} className="mb-2.5">
             <SidebarGroupLabel label={group.label} groupIndex={groupIndex} />
             <div className="space-y-0.5">
@@ -623,20 +661,37 @@ function DesktopSidebar({ page }: { page: ShellPage }) {
       </nav>
       <footer className="border-t border-[var(--app-border)] p-1.5">
         <nav aria-label="Support and legal" className="grid gap-0.5">
-          {compactSupportLinks.map(({ label, href, icon: Icon }) => (
-            <Tooltip key={label}>
-              <TooltipTrigger asChild>
-                <Link
-                  to={href}
-                  aria-label={label}
-                  className="flex h-8 w-full items-center justify-center rounded-md text-[var(--app-muted)] outline-none transition-[background-color,color] duration-150 hover:bg-[var(--app-hover)] hover:text-[var(--app-ink)] focus-visible:ring-2 focus-visible:ring-[var(--app-accent)] focus-visible:ring-inset"
-                >
-                  <Icon className="size-4" strokeWidth={1.8} />
-                </Link>
-              </TooltipTrigger>
-              <TooltipContent side="right">{label}</TooltipContent>
-            </Tooltip>
-          ))}
+          {compactSupportLinks.map((link) => {
+            const Icon = link.icon;
+            const className =
+              "flex h-8 w-full items-center justify-center rounded-md text-[var(--app-muted)] outline-none transition-[background-color,color] duration-150 hover:bg-[var(--app-hover)] hover:text-[var(--app-ink)] focus-visible:ring-2 focus-visible:ring-[var(--app-accent)] focus-visible:ring-inset";
+            return (
+              <Tooltip key={link.label}>
+                <TooltipTrigger asChild>
+                  {link.external ? (
+                    <a
+                      href={link.href}
+                      aria-label={link.label}
+                      target="_blank"
+                      rel="noreferrer"
+                      className={className}
+                    >
+                      <Icon className="size-4" strokeWidth={1.8} />
+                    </a>
+                  ) : (
+                    <Link
+                      to={link.href}
+                      aria-label={link.label}
+                      className={className}
+                    >
+                      <Icon className="size-4" strokeWidth={1.8} />
+                    </Link>
+                  )}
+                </TooltipTrigger>
+                <TooltipContent side="right">{link.label}</TooltipContent>
+              </Tooltip>
+            );
+          })}
         </nav>
       </footer>
     </aside>
@@ -673,6 +728,7 @@ function SidebarGroupLabel({
 
 function SidebarRoute({ item, active }: { item: RouteItem; active: boolean }) {
   const Icon = item.icon;
+  const aiHere = aiToolsForPage(item.page);
 
   const link = (
     <Link
@@ -695,13 +751,28 @@ function SidebarRoute({ item, active }: { item: RouteItem; active: boolean }) {
       >
         <Icon className="size-4" strokeWidth={active ? 2.1 : 1.8} />
       </span>
+      {aiHere.length ? (
+        <span
+          aria-hidden="true"
+          data-slot="ai-nav-badge"
+          className="absolute right-1 top-1 size-1.5 rounded-full bg-[var(--app-highlight)]"
+        />
+      ) : null}
     </Link>
   );
 
   return (
     <Tooltip>
       <TooltipTrigger asChild>{link}</TooltipTrigger>
-      <TooltipContent side="right">{item.label}</TooltipContent>
+      <TooltipContent side="right">
+        {item.label}
+        {aiHere.length ? (
+          <span className="mt-1 block text-[11px] opacity-80">
+            AI: {aiHere[0].label}
+            {aiHere.length > 1 ? ` +${aiHere.length - 1} more` : ""}
+          </span>
+        ) : null}
+      </TooltipContent>
     </Tooltip>
   );
 }
@@ -899,6 +970,46 @@ function WorkspaceCommand({
   searchRecords: readonly SearchRecord[];
 }) {
   const reduceMotion = useHydratedReducedMotion();
+  const { hasAccount, signIn } = useAiAccount();
+  const pathname = useLocation({ select: (location) => location.pathname });
+  const navigate = useNavigate();
+  const featuredAiTools = aiTools.filter((tool) =>
+    featuredAiToolIds.includes(tool.id as (typeof featuredAiToolIds)[number])
+  );
+  const otherAiTools = aiTools.filter(
+    (tool) => !featuredAiTools.includes(tool)
+  );
+
+  // Closes the menu, returns focus, then runs the action so a dialog the
+  // action opens starts from the same place the menu did.
+  function runCommand(action: () => void) {
+    onOpenChange(false);
+    requestAnimationFrame(() => {
+      const target = returnFocusRef.current;
+      if (target?.isConnected) target.focus();
+      action();
+    });
+  }
+
+  const aiCommand = (tool: (typeof aiTools)[number]) => (
+    <CommandItem
+      key={tool.id}
+      value={`${tool.label} ${tool.home} ${tool.keywords}`}
+      onSelect={() =>
+        runCommand(() =>
+          tool.id === "brief-import"
+            ? onNewProject()
+            : void navigate({ href: aiToolHref(tool, pathname) })
+        )
+      }
+    >
+      {hasAccount ? <Sparkles /> : <LockKeyhole />}
+      <span className="min-w-0 flex-1 truncate">{tool.label}</span>
+      <CommandShortcut>
+        {hasAccount ? tool.home : "Sign in to use AI"}
+      </CommandShortcut>
+    </CommandItem>
+  );
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -926,18 +1037,13 @@ function WorkspaceCommand({
             <CommandList className="max-h-[420px]">
               <CommandEmpty>No matching workspace action found.</CommandEmpty>
               <CommandGroup heading="Quick actions">
-                <CommandItem
-                  onSelect={() => {
-                    onOpenChange(false);
-                    requestAnimationFrame(() => {
-                      const target = returnFocusRef.current;
-                      if (target?.isConnected) target.focus();
-                      onNewProject();
-                    });
-                  }}
-                >
+                <CommandItem onSelect={() => runCommand(onNewProject)}>
                   <Plus /> Create new project
                 </CommandItem>
+                {featuredAiTools.map(aiCommand)}
+              </CommandGroup>
+              <CommandGroup heading="AI tools">
+                {otherAiTools.map(aiCommand)}
               </CommandGroup>
               <CommandSeparator />
               {searchRecords.length ? (

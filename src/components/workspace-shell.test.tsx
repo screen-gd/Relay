@@ -66,29 +66,45 @@ describe("Workspace hub navigation", () => {
       "Dashboard",
       "Projects",
       "Clients",
-      "Library",
-      "Reports",
+      "Reviews",
+      "Payments",
       "Team",
       "Settings",
     ]) {
       expect(rail).toContain(`aria-label="${label}"`);
     }
     expect(rail).toContain('href="/team"');
+    for (const href of [
+      "/files",
+      "/media",
+      "/templates",
+      "/resources",
+      "/integrations",
+      "/calendar",
+      "/timeline",
+    ])
+      expect(rail).not.toContain(`href="${href}"`);
     const support = navigation(html, "Support and legal");
     for (const href of ["/contact", "/privacy", "/terms", "/accessibility"])
+      expect(support).toContain(`href="${href}"`);
+    for (const href of [
+      "https://web.relay-app.cc.cd/about",
+      "https://web.relay-app.cc.cd/privacy-and-data",
+    ])
       expect(support).toContain(`href="${href}"`);
     const mobile = navigation(html, "Mobile navigation");
     for (const href of [
       "/",
       "/projects",
       "/clients",
-      "/files",
+      "/feedback",
       "/reports",
       "/team",
       "/settings",
     ])
       expect(mobile).toContain(`href="${href}"`);
     expect(mobile).not.toContain('href="/calendar"');
+    expect(mobile).not.toContain('href="/files"');
   });
 
   it.each([
@@ -96,51 +112,44 @@ describe("Workspace hub navigation", () => {
       "/projects/example",
       "Projects",
       "/projects",
-      ["/projects", "/calendar", "/timeline", "/feedback"],
+      ["/projects", "/calendar", "/timeline", "/files", "/media"],
     ],
     [
       "/calendar",
       "Projects",
       "/projects",
-      ["/projects", "/calendar", "/timeline", "/feedback"],
-    ],
-    [
-      "/timeline",
-      "Projects",
-      "/projects",
-      ["/projects", "/calendar", "/timeline", "/feedback"],
-    ],
-    [
-      "/feedback",
-      "Projects",
-      "/projects",
-      ["/projects", "/calendar", "/timeline", "/feedback"],
+      ["/projects", "/calendar", "/timeline", "/files", "/media"],
     ],
     [
       "/files",
-      "Library",
-      "/files",
-      ["/files", "/media", "/templates", "/resources"],
+      "Projects",
+      "/projects",
+      ["/projects", "/calendar", "/timeline", "/files", "/media"],
     ],
     [
       "/media",
-      "Library",
-      "/files",
-      ["/files", "/media", "/templates", "/resources"],
+      "Projects",
+      "/projects",
+      ["/projects", "/calendar", "/timeline", "/files", "/media"],
+    ],
+    [
+      "/integrations",
+      "Settings",
+      "/settings",
+      ["/settings", "/integrations", "/templates", "/resources"],
     ],
     [
       "/templates",
-      "Library",
-      "/files",
-      ["/files", "/media", "/templates", "/resources"],
+      "Settings",
+      "/settings",
+      ["/settings", "/integrations", "/templates", "/resources"],
     ],
     [
       "/resources",
-      "Library",
-      "/files",
-      ["/files", "/media", "/templates", "/resources"],
+      "Settings",
+      "/settings",
+      ["/settings", "/integrations", "/templates", "/resources"],
     ],
-    ["/integrations", "Settings", "/settings", ["/settings", "/integrations"]],
     ["/team-chat", "Team", "/team", ["/team", "/team-chat"]],
   ])(
     "keeps %s reachable under its active hub",
@@ -158,6 +167,16 @@ describe("Workspace hub navigation", () => {
       const command = html.slice(html.indexOf('data-test="command-dialog"'));
       for (const href of destinations)
         expect(command).toContain(`href="${href}"`);
+    }
+  );
+
+  it.each(["/", "/clients", "/feedback", "/reports"])(
+    "marks %s as the active top-level hub",
+    async (pathname) => {
+      const html = await shell(pathname);
+      expect(currentLinks(navigation(html, "Primary navigation"))).toEqual([
+        pathname,
+      ]);
     }
   );
 
@@ -194,5 +213,31 @@ describe("Workspace hub navigation", () => {
     expect(workspacePageForPath("/sample-studio/projects/demo")).toBe(
       "projects"
     );
+  });
+
+  it("marks the hubs that hold AI tools", async () => {
+    const html = await shell("/");
+    const rail = navigation(html, "Primary navigation");
+    expect([...rail.matchAll(/data-slot="ai-nav-badge"/g)]).toHaveLength(3);
+    expect(html).toContain('aria-label="AI tools"');
+  });
+
+  it("lists every AI action in the command menu, saying what unlocks it", async () => {
+    const html = await shell("/projects/relay-launch");
+    const command = html.slice(html.indexOf('data-test="command-dialog"'));
+    for (const label of [
+      "Turn feedback into revisions",
+      "Draft a client status update",
+      "Import a brief",
+      "Match comments in a transcript",
+      "Draft a version changelog",
+      "Draft a change order",
+      "Ask about your earnings",
+      "Flag deadline risk",
+    ])
+      expect(command).toContain(label);
+    expect(command).toContain("AI tools");
+    // Signed out, every AI action names the step that unlocks it.
+    expect(command.match(/Sign in to use AI/g)).toHaveLength(8);
   });
 });

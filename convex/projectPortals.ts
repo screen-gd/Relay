@@ -1,4 +1,6 @@
 import { approvedVersionChangelog } from "./versionChangelog";
+import { clampRevisionLimit } from "./clientPortals";
+import { loadRoundSummary } from "./revisionRounds";
 import { requireProjectVisibility } from "./projectAccess";
 import { v } from "convex/values";
 import type { Doc } from "./_generated/dataModel";
@@ -325,6 +327,29 @@ async function publicOutputs(
   return visible;
 }
 
+/**
+ * The client's revision allowance: the rounds their feedback produced against
+ * the Project's Max revisions. Null when the Project sets no limit.
+ *
+ * This portal is the client-facing one and has no request submissions, so
+ * "used" counts the Revision Rounds the client's feedback produced, the same
+ * number the editor's panel shows. `clientPortals.submitRevision` gates a
+ * separate, older request path that counts submitted requests instead, and
+ * that portal's own limit applies only there.
+ */
+async function revisionAllowance(
+  ctx: QueryCtx,
+  project: Doc<"projects">,
+  workspace: Doc<"teamWorkspaces"> | null
+) {
+  if (project.maxRevisions === undefined) return null;
+  const summary = await loadRoundSummary(ctx, project, workspace);
+  return {
+    used: summary.roundsUsed,
+    limit: clampRevisionLimit(project.maxRevisions),
+  };
+}
+
 async function publicProjection(
   ctx: QueryCtx,
   project: Doc<"projects">,
@@ -333,7 +358,14 @@ async function publicProjection(
   const workspaceId = project.teamId
     ? ctx.db.normalizeId("teamWorkspaces", project.teamId)
     : null;
-  const workspace = workspaceId ? await ctx.db.get(workspaceId) : null;
+  const workspace = workspaceId
+    ? await ctx.db.get(workspaceId)
+    : await ctx.db
+        .query("teamWorkspaces")
+        .withIndex("by_ownerUserId", (q) =>
+          q.eq("ownerUserId", project.ownerUserId)
+        )
+        .unique();
   const brandingAllowed = workspaceId
     ? (await resolveWorkspaceEntitlements(ctx, workspaceId)).capabilities
         .customPortalBranding
@@ -341,6 +373,7 @@ async function publicProjection(
   return {
     project: publicProject(project, portal),
     outputs: await publicOutputs(ctx, project.id, portal),
+    revisions: await revisionAllowance(ctx, project, workspace),
     branding: brandingAllowed
       ? {
           name: workspace?.portalBrandName ?? "Relay",

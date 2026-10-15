@@ -8,6 +8,7 @@ import {
   DialogHeader as OwnedDialogHeader,
   DialogTitle as OwnedDialogTitle,
 } from "@/components/ui/dialog";
+import { TrustLinks } from "./trust-links";
 
 export function WelcomeChoiceDialog({
   open,
@@ -111,6 +112,9 @@ export function WelcomeChoiceDialog({
             Terms
           </Link>
           .
+        </p>
+        <p className="text-xs leading-relaxed text-muted-foreground">
+          <TrustLinks />
         </p>
       </OwnedDialogContent>
     </OwnedDialog>

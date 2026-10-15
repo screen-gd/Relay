@@ -13,7 +13,82 @@ const output = createProjectOutput({
   title: "Main video",
   createdAt: "2026-08-24T10:00:00.000Z",
 });
+
+/** Every shape below is the same YouTube video as this link. */
+const YOUTUBE_VIDEO_URL = "https://www.youtube.com/watch?v=dQw4w9WgXcQ";
+
+/** Every shape below is the same Vimeo video as this link. */
+const VIMEO_VIDEO_URL = "https://vimeo.com/123456789";
+
+const YOUTUBE_SHAPES = [
+  YOUTUBE_VIDEO_URL,
+  "https://youtube.com/watch?v=dQw4w9WgXcQ",
+  "https://m.youtube.com/watch?v=dQw4w9WgXcQ",
+  "https://www.youtube.com/watch?v=dQw4w9WgXcQ&t=42s&list=PL1234567890",
+  "https://youtu.be/dQw4w9WgXcQ",
+  "https://www.youtu.be/dQw4w9WgXcQ?si=AbCdEf12",
+  "https://www.youtube.com/shorts/dQw4w9WgXcQ",
+  "https://www.youtube.com/shorts/dQw4w9WgXcQ?feature=share",
+  "https://www.youtube.com/embed/dQw4w9WgXcQ",
+  "https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ",
+  "https://www.youtube.com/live/dQw4w9WgXcQ",
+];
+
+const VIMEO_VIDEO_SHAPES = [
+  VIMEO_VIDEO_URL,
+  "https://vimeo.com/123456789/",
+  "https://www.vimeo.com/123456789",
+  "https://vimeo.com/123456789?share=copy",
+  "https://player.vimeo.com/video/123456789",
+];
+
+const REJECTED_MEDIA_URLS = [
+  "https://www.youtube.com/playlist?list=PL1234567890",
+  "https://www.youtube.com/@somechannel",
+  "https://www.youtube.com/watch?v=too-short",
+  "https://youtu.be/dQw4w9WgXcQ/extra",
+  "https://vimeo.com/channels/staffpicks/123456789",
+  "https://vimeo.com/abcdef",
+  "https://vimeo.com/",
+];
+
 describe("Project Output domain", () => {
+  it("treats every YouTube and Vimeo link shape as the video it points at", () => {
+    const canonicalYoutube = normalizeMediaUrl(YOUTUBE_VIDEO_URL);
+    const canonicalVimeo = normalizeMediaUrl(VIMEO_VIDEO_URL);
+    expect(canonicalYoutube.ok).toBe(true);
+    expect(canonicalVimeo.ok).toBe(true);
+    for (const shape of YOUTUBE_SHAPES)
+      expect(normalizeMediaUrl(shape), shape).toEqual(canonicalYoutube);
+    for (const shape of VIMEO_VIDEO_SHAPES)
+      expect(normalizeMediaUrl(shape), shape).toEqual(canonicalVimeo);
+  });
+
+  it("keeps the privacy hash that makes an unlisted Vimeo video playable", () => {
+    expect(normalizeMediaUrl("https://vimeo.com/123456789/1a2b3c4d5e")).toEqual({
+      ok: true,
+      value: {
+        provider: "vimeo",
+        videoId: "123456789",
+        url: "https://vimeo.com/123456789/1a2b3c4d5e",
+        embedUrl: "https://player.vimeo.com/video/123456789?h=1a2b3c4d5e",
+      },
+    });
+    expect(
+      normalizeMediaUrl("https://player.vimeo.com/video/123456789?h=1a2b3c4d5e")
+    ).toEqual(
+      normalizeMediaUrl("https://vimeo.com/123456789/1a2b3c4d5e")
+    );
+  });
+
+  it("says why a link is refused instead of accepting the wrong video", () => {
+    for (const shape of REJECTED_MEDIA_URLS) {
+      const result = normalizeMediaUrl(shape);
+      expect(result.ok, shape).toBe(false);
+      if (!result.ok) expect(result.error, shape).toMatch(/URL/);
+    }
+  });
+
   it("normalizes supported providers and preserves ordinary links", () => {
     expect(normalizeMediaUrl("https://youtu.be/dQw4w9WgXcQ")).toEqual({
       ok: true,

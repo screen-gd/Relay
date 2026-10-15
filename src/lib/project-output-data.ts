@@ -165,11 +165,11 @@ export function useProjectOutputs(project: WorkItem, editable: boolean) {
 
   const updateLocal = useCallback(
     (updater: (current: ProjectOutputSnapshot) => ProjectOutputSnapshot) => {
-      setLocal((current) => {
-        const next = updater(current);
-        writeLocalSnapshot(next);
-        return next;
-      });
+      // The Duplicate action and any other mounted panel write this same
+      // browser record, so a write starts from what it holds now.
+      const next = updater(readLocalSnapshot());
+      writeLocalSnapshot(next);
+      setLocal(next);
     },
     []
   );
@@ -400,4 +400,135 @@ export function useProjectOutputs(project: WorkItem, editable: boolean) {
     setReviewState: controller.setReviewState,
     addMediaVersion: controller.addMediaVersion,
   };
+}
+
+export type ProjectOutputCopy = {
+  id: string;
+  projectId: string;
+  title: string;
+  category: ProjectOutput["category"];
+  reviewState: ProjectOutputReviewState;
+  dueDate?: string;
+  createdAt: string;
+};
+
+/**
+ * The Outputs a copy of a Project starts with: the same titles, categories,
+ * review states, and due dates under the copy's own Output ids.
+ *
+ * Duplicating reads the Outputs when it runs and creates them on the copy
+ * through this store. It does not write them onto the Project's Template list,
+ * which holds at most twelve Deliverables, so a Project with more than twelve
+ * Outputs used to copy only the first twelve and look successful.
+ */
+export function projectOutputCopies({
+  outputs,
+  targetProjectId,
+  createdAt,
+}: {
+  outputs: readonly ProjectOutput[];
+  targetProjectId: string;
+  createdAt: string;
+}): ProjectOutputCopy[] {
+  return outputs
+    .filter((output) => !output.archived)
+    .map((output, index) => ({
+      id: outputId(targetProjectId, index),
+      projectId: targetProjectId,
+      title: output.title,
+      category: output.category,
+      reviewState: output.reviewState,
+      ...(output.dueDate ? { dueDate: output.dueDate } : {}),
+      createdAt,
+    }));
+}
+
+/** Writes copies onto a Project in browser storage, on top of what it holds now. */
+function writeLocalProjectOutputCopies(
+  copies: readonly ProjectOutputCopy[]
+): number {
+  if (!copies.length) return 0;
+  const current = readLocalSnapshot();
+  const added = copies.map((copy) =>
+    setProjectOutputReviewState(
+      createProjectOutput({
+        id: copy.id,
+        projectId: copy.projectId,
+        title: copy.title,
+        category: copy.category,
+        ...(copy.dueDate ? { dueDate: copy.dueDate } : {}),
+        createdAt: copy.createdAt,
+      }),
+      copy.reviewState,
+      copy.createdAt
+    )
+  );
+  writeLocalSnapshot({ ...current, outputs: [...current.outputs, ...added] });
+  return added.length;
+}
+
+/** Copies a Project's live Outputs onto another Project in browser storage. */
+export function duplicateLocalProjectOutputs({
+  sourceProjectId,
+  targetProjectId,
+  createdAt,
+}: {
+  sourceProjectId: string;
+  targetProjectId: string;
+  createdAt: string;
+}): number {
+  const outputs = readLocalSnapshot().outputs.filter(
+    (output) => output.projectId === sourceProjectId
+  );
+  return writeLocalProjectOutputCopies(
+    projectOutputCopies({ outputs, targetProjectId, createdAt })
+  );
+}
+
+/**
+ * Copies a Project's Outputs onto its duplicate, reading them at the moment
+ * Duplicate runs so Outputs added, renamed, or archived since the page opened
+ * are part of the copy. Every Output is created through the store the Outputs
+ * panel writes to, so a copy holds as many as the Project does.
+ */
+export function useProjectOutputDuplication(project: WorkItem) {
+  const { isSignedIn } = useData();
+  const { isAuthenticated } = useConvexAuth();
+  const cloud = isSignedIn && isAuthenticated;
+  const cloudWires = useQuery(
+    api.projectOutputs.listForProject,
+    cloud ? { projectId: project.id, includeArchived: true } : "skip"
+  );
+  const createCloud = useMutation(api.projectOutputs.create);
+
+  return useCallback(
+    async (targetProjectId: string, createdAt: string) => {
+      if (!cloud)
+        return duplicateLocalProjectOutputs({
+          sourceProjectId: project.id,
+          targetProjectId,
+          createdAt,
+        });
+      if (cloudWires === undefined)
+        throw new Error("The Project's Outputs are still loading.");
+      const copies = projectOutputCopies({
+        outputs: wireSnapshot(cloudWires).outputs,
+        targetProjectId,
+        createdAt,
+      });
+      for (const copy of copies)
+        await createCloud({
+          projectId: copy.projectId,
+          output: {
+            id: copy.id,
+            title: copy.title,
+            category: copy.category,
+            reviewState: copy.reviewState,
+            dueDate: copy.dueDate,
+          },
+        });
+      return copies.length;
+    },
+    [cloud, cloudWires, createCloud, project.id]
+  );
 }
