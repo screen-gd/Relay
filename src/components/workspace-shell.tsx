@@ -13,6 +13,7 @@ import {
   Info,
   LayoutDashboard,
   Library,
+  LockKeyhole,
   LogIn,
   LogOut,
   Mail,
@@ -30,7 +31,7 @@ import {
   Workflow,
 } from "lucide-react";
 import { motion } from "motion/react";
-import { Link, useNavigate } from "@tanstack/react-router";
+import { Link, useLocation, useNavigate } from "@tanstack/react-router";
 import {
   createContext,
   useContext,
@@ -49,6 +50,14 @@ import type { SettingsState } from "@/lib/types";
 import type { FileRouteTypes } from "@/routeTree.gen";
 import type { SearchRecord } from "@/features/workspace-discovery/workspace-discovery";
 import { FeedbackButton } from "@/features/feedback/feedback-button";
+import { AiToolsMenu } from "@/features/ai/ai-tools-menu";
+import { AiBadge, useAiAccount } from "@/features/ai/ai-availability";
+import {
+  aiToolHref,
+  aiTools,
+  aiToolsForPage,
+  featuredAiToolIds,
+} from "@/features/ai/ai-tools";
 import { useHydratedReducedMotion } from "@/lib/motion";
 import { cn } from "@/lib/utils";
 import { RelayBrand } from "@/app/relay-brand";
@@ -576,6 +585,7 @@ export function WorkspaceShell({
                   <Bell className="size-[18px]" />
                 </Button>
               )}
+              <AiToolsMenu />
               <FeedbackButton />
               <ProfileMenu settings={settings} compact page={page} />
             </div>
@@ -718,6 +728,7 @@ function SidebarGroupLabel({
 
 function SidebarRoute({ item, active }: { item: RouteItem; active: boolean }) {
   const Icon = item.icon;
+  const aiHere = aiToolsForPage(item.page);
 
   const link = (
     <Link
@@ -740,13 +751,28 @@ function SidebarRoute({ item, active }: { item: RouteItem; active: boolean }) {
       >
         <Icon className="size-4" strokeWidth={active ? 2.1 : 1.8} />
       </span>
+      {aiHere.length ? (
+        <span
+          aria-hidden="true"
+          data-slot="ai-nav-badge"
+          className="absolute right-1 top-1 size-1.5 rounded-full bg-[var(--app-highlight)]"
+        />
+      ) : null}
     </Link>
   );
 
   return (
     <Tooltip>
       <TooltipTrigger asChild>{link}</TooltipTrigger>
-      <TooltipContent side="right">{item.label}</TooltipContent>
+      <TooltipContent side="right">
+        {item.label}
+        {aiHere.length ? (
+          <span className="mt-1 block text-[11px] opacity-80">
+            AI: {aiHere[0].label}
+            {aiHere.length > 1 ? ` +${aiHere.length - 1} more` : ""}
+          </span>
+        ) : null}
+      </TooltipContent>
     </Tooltip>
   );
 }
@@ -944,6 +970,46 @@ function WorkspaceCommand({
   searchRecords: readonly SearchRecord[];
 }) {
   const reduceMotion = useHydratedReducedMotion();
+  const { hasAccount, signIn } = useAiAccount();
+  const pathname = useLocation({ select: (location) => location.pathname });
+  const navigate = useNavigate();
+  const featuredAiTools = aiTools.filter((tool) =>
+    featuredAiToolIds.includes(tool.id as (typeof featuredAiToolIds)[number])
+  );
+  const otherAiTools = aiTools.filter(
+    (tool) => !featuredAiTools.includes(tool)
+  );
+
+  // Closes the menu, returns focus, then runs the action so a dialog the
+  // action opens starts from the same place the menu did.
+  function runCommand(action: () => void) {
+    onOpenChange(false);
+    requestAnimationFrame(() => {
+      const target = returnFocusRef.current;
+      if (target?.isConnected) target.focus();
+      action();
+    });
+  }
+
+  const aiCommand = (tool: (typeof aiTools)[number]) => (
+    <CommandItem
+      key={tool.id}
+      value={`${tool.label} ${tool.home} ${tool.keywords}`}
+      onSelect={() =>
+        runCommand(() =>
+          tool.id === "brief-import"
+            ? onNewProject()
+            : void navigate({ href: aiToolHref(tool, pathname) })
+        )
+      }
+    >
+      {hasAccount ? <Sparkles /> : <LockKeyhole />}
+      <span className="min-w-0 flex-1 truncate">{tool.label}</span>
+      <CommandShortcut>
+        {hasAccount ? tool.home : "Sign in to use AI"}
+      </CommandShortcut>
+    </CommandItem>
+  );
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -971,18 +1037,13 @@ function WorkspaceCommand({
             <CommandList className="max-h-[420px]">
               <CommandEmpty>No matching workspace action found.</CommandEmpty>
               <CommandGroup heading="Quick actions">
-                <CommandItem
-                  onSelect={() => {
-                    onOpenChange(false);
-                    requestAnimationFrame(() => {
-                      const target = returnFocusRef.current;
-                      if (target?.isConnected) target.focus();
-                      onNewProject();
-                    });
-                  }}
-                >
+                <CommandItem onSelect={() => runCommand(onNewProject)}>
                   <Plus /> Create new project
                 </CommandItem>
+                {featuredAiTools.map(aiCommand)}
+              </CommandGroup>
+              <CommandGroup heading="AI tools">
+                {otherAiTools.map(aiCommand)}
               </CommandGroup>
               <CommandSeparator />
               {searchRecords.length ? (
