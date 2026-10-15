@@ -1,5 +1,12 @@
 import { CheckIcon } from "@phosphor-icons/react/ssr";
-import { plans } from "../../lib/plans";
+import {
+  plans,
+  CREATOR_LAUNCH_STORAGE_GB,
+  TEAM_LAUNCH_STORAGE_GB,
+  EXTRA_EDITOR_MONTHLY_PRICE_USD,
+  TEAM_INCLUDED_EDITOR_SEATS,
+  formatUsd,
+} from "../../lib/plans";
 import {
   Table,
   TableBody,
@@ -31,15 +38,37 @@ const rows = [
   { label: "Client portals and password links", values: [true, true, true] },
   { label: "Embedded video review", values: [true, true, true] },
   { label: "Payment tracking", values: [true, true, true] },
+  { label: "New payment plans and batches", values: [false, true, true] },
   { label: "Client hub", values: [false, true, true] },
   { label: "Custom portal branding", values: [false, true, true] },
   { label: "Workflow templates", values: [false, true, true] },
   { label: "Advanced reports", values: [false, true, true] },
   {
     label: "File uploads",
-    values: [false, "5 GB, coming soon", "15 GB, coming soon"],
+    values: [
+      false,
+      `${CREATOR_LAUNCH_STORAGE_GB} GB, coming soon`,
+      `${TEAM_LAUNCH_STORAGE_GB} GB shared, coming soon`,
+    ],
   },
-  { label: "Editor seats", values: ["1", "1", "3"] },
+  {
+    label: "Included editor seats",
+    values: [
+      "1 owner",
+      "1 owner",
+      `${TEAM_INCLUDED_EDITOR_SEATS}, including owner`,
+    ],
+  },
+  {
+    label: "Extra editor seats",
+    values: [
+      false,
+      false,
+      `${formatUsd(EXTRA_EDITOR_MONTHLY_PRICE_USD)}/month each`,
+    ],
+  },
+  { label: "Client review access", values: ["Free", "Free", "Free"] },
+  { label: "Internal viewer seats", values: [false, false, "Free"] },
   {
     label: "Roles, assignments, and team payouts",
     values: [false, false, true],

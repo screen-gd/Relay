@@ -21,7 +21,7 @@ const freeSubscription = {
     fileUploads: false,
     customWorkflowTemplates: false,
     advancedReports: false,
-    salaryPlans: true,
+    salaryPlans: false,
     customPortalBranding: false,
     clientHub: false,
     teamFeatures: false,

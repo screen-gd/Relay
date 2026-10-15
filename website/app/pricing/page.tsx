@@ -5,7 +5,9 @@ import PricingPlans from "../../components/pricing/PricingPlans";
 import PageHeader from "../../components/site/PageHeader";
 import {
   CREATOR_MONTHLY_PRICE_USD,
-  TEAM_MONTHLY_PRICE_PER_SEAT_USD,
+  TEAM_MONTHLY_PRICE_USD,
+  TEAM_INCLUDED_EDITOR_SEATS,
+  EXTRA_EDITOR_MONTHLY_PRICE_USD,
   formatUsd,
 } from "../../lib/plans";
 import { siteOpenGraph } from "../../lib/site-metadata";
@@ -13,7 +15,7 @@ import styles from "./page.module.css";
 
 export const metadata: Metadata = {
   title: "Pricing",
-  description: `Relay is free to start. Creator is ${formatUsd(CREATOR_MONTHLY_PRICE_USD)} per month and Team is ${formatUsd(TEAM_MONTHLY_PRICE_PER_SEAT_USD)} per member per month; both are still in development and checkout is not live. Prices are subject to change.`,
+  description: `Track unlimited projects and clients free. Creator is ${formatUsd(CREATOR_MONTHLY_PRICE_USD)}/month. Team is ${formatUsd(TEAM_MONTHLY_PRICE_USD)}/workspace/month for ${TEAM_INCLUDED_EDITOR_SEATS} editors, plus ${formatUsd(EXTRA_EDITOR_MONTHLY_PRICE_USD)} per extra editor. Paid plans are coming later; checkout is not live. Prices are subject to change.`,
   alternates: { canonical: "/pricing" },
   openGraph: { ...siteOpenGraph, url: "/pricing" },
 };
@@ -24,7 +26,7 @@ export default function PricingPage() {
     <>
       <PageHeader
         title="Pricing"
-        description="Start free. Paid plans are coming later. Prices are subject to change."
+        description="Track unlimited projects and clients free. Upgrade for your client hub, branding, workflows, and team. Paid plans are coming later. Prices are subject to change."
       />
       <section className="section" aria-labelledby="plans-title">
         <div className="container">

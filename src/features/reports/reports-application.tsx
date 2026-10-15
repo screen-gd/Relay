@@ -57,6 +57,9 @@ export function ReportsApplication() {
         settings={settings}
         projects={personalProjects}
         isOwner
+        canCreatePlans={Boolean(
+          workspaceSubscription?.capabilities.salaryPlans
+        )}
       />
     ) : null;
 

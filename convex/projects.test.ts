@@ -123,6 +123,16 @@ test("new Project activity loads in the Project workspace", async () => {
 test("stage transitions resist spoofing and settled Salary Batches stay immutable", async () => {
   const t = convexTest(schema, modules);
   const owner = t.withIdentity({ tokenIdentifier: "owner", name: "Owner" });
+  await owner.mutation(api.team.createWorkspace, { name: "Creator Studio" });
+  await t.run(async (ctx) => {
+    const subscription = await ctx.db.query("workspaceSubscriptions").unique();
+    if (!subscription) throw new Error("Subscription missing");
+    await ctx.db.patch(subscription._id, {
+      plan: "creator",
+      subscriptionStatus: "active",
+      billingPeriod: "monthly",
+    });
+  });
   await owner.mutation(api.settings.upsert, settings());
   await owner.mutation(api.projects.create, { project: project("first") });
   await owner.mutation(api.projects.create, { project: project("second") });

@@ -257,7 +257,7 @@ function entitlements(projection: SubscriptionProjection) {
       fileUploads: plan !== "free",
       customWorkflowTemplates: plan !== "free",
       advancedReports: plan !== "free",
-      salaryPlans: true,
+      salaryPlans: plan !== "free",
       customPortalBranding: plan !== "free",
       clientHub: plan !== "free",
       teamFeatures: plan === "team",
@@ -275,7 +275,8 @@ const capabilityErrors: Record<WorkspaceCapability, string> = {
   customWorkflowTemplates:
     "Custom Workflow Templates require a Creator or Team plan.",
   advancedReports: "Advanced reports require a Creator or Team plan.",
-  salaryPlans: "Salary Plans are available on every plan.",
+  salaryPlans:
+    "Payment plans and new payment batches require a Creator or Team plan.",
   customPortalBranding:
     "Custom portal branding requires a Creator or Team plan.",
   clientHub: "Client Hub requires a Creator or Team plan.",
@@ -335,6 +336,32 @@ export async function requireCurrentWorkspaceCapability(
     current.workspace._id,
     capability
   );
+}
+
+/** Personal payment records use their owner's plan, never a joined Team's plan. */
+export async function resolveOwnerWorkspaceEntitlements(
+  ctx: QueryCtx | MutationCtx,
+  ownerUserId: string
+) {
+  const workspace = await ctx.db
+    .query("teamWorkspaces")
+    .withIndex("by_ownerUserId", (q) => q.eq("ownerUserId", ownerUserId))
+    .unique();
+  return workspace
+    ? await resolveWorkspaceEntitlements(ctx, workspace._id)
+    : null;
+}
+
+export async function requireOwnerWorkspaceCapability(
+  ctx: QueryCtx | MutationCtx,
+  ownerUserId: string,
+  capability: WorkspaceCapability
+) {
+  const resolved = await resolveOwnerWorkspaceEntitlements(ctx, ownerUserId);
+  if (!resolved?.capabilities[capability]) {
+    throw new Error(capabilityErrors[capability]);
+  }
+  return resolved;
 }
 
 export const getCurrent = query({
