@@ -33,27 +33,29 @@
   --chart-4: var(--app-danger);
   --chart-5: var(--app-muted);
   /* Theme values live here; runtime code only overrides the user's accent. */
-  /* Relay Ember: one cool neutral base, raised and pressed with paired light
-     and dark shadows, and a single warm accent. */
-  --surface-canvas: #e7e8ec;
-  --surface-panel: #eceef2;
-  --surface-panel-raised: #f1f2f5;
-  --surface-sunken: #e2e4e9;
-  --surface-overlay: #f3f4f7;
-  --text-primary: #0d0d10;
+  /* Relay lime. The sidebar frame, the content panel, and cards are three
+     tone steps of one neutral; lime marks the action, the active item, and the
+     key data point. Surfaces never use shadows at rest. */
+  --surface-frame: #eeeef0;
+  --surface-canvas: #ffffff;
+  --surface-panel: #f6f6f7;
+  --surface-panel-raised: #efeff1;
+  --surface-sunken: #f6f6f7;
+  --surface-overlay: #ffffff;
+  --text-primary: #0b0c0e;
   --text-secondary: #3a3a42;
   --text-muted: #52525b;
   --text-disabled: #52525b;
   --status-info: #2563eb;
   --status-info-bg: #eff6ff;
-  --status-success: #15803d;
-  --status-success-bg: #f0fdf4;
+  --status-success: #047857;
+  --status-success-bg: #ecfdf5;
   --status-warning: #b45309;
   --status-warning-bg: #fffbeb;
   --status-danger: #b91c1c;
   --status-danger-bg: #fef2f2;
-  --focus-ring: #a8471f;
-  --selected-bg: #dfe1e7;
+  --focus-ring: #4d7c0f;
+  --selected-bg: #e7e7ea;
   --disabled-bg: #f4f4f5;
   --overlay-scrim: rgb(24 24 27 / 0.58);
   --brand-google-drive: #4285f4;
@@ -87,19 +89,10 @@
   /* Badges and tags are small squares, never pills. */
   --radius-badge: 0.25rem;
   --radius-pill: 9999px;
-  /* Neumorphic depth. Light comes from the top left in both themes. */
-  --neu-light: rgb(255 255 255 / 0.9);
-  --neu-dark: rgb(150 156 172 / 0.5);
-  --neu-raised: -6px -6px 14px var(--neu-light), 6px 6px 16px var(--neu-dark);
-  --neu-raised-sm: -3px -3px 7px var(--neu-light), 3px 3px 8px var(--neu-dark);
-  --neu-inset:
-    inset 2px 2px 6px var(--neu-dark), inset -2px -2px 6px var(--neu-light);
-  --neu-pressed:
-    inset 3px 3px 7px var(--neu-dark), inset -3px -3px 7px var(--neu-light);
   /* Hover glow behind dither charts. */
-  --chart-glow: color-mix(in srgb, var(--app-accent) 30%, transparent);
-  --shadow-panel: var(--neu-raised);
-  --shadow-overlay: 0 18px 50px rgb(60 64 80 / 0.22);
+  --chart-glow: color-mix(in srgb, var(--app-accent) 28%, transparent);
+  --shadow-panel: none;
+  --shadow-overlay: 0 16px 48px rgb(11 12 14 / 0.16);
   --sidebar: var(--app-sidebar);
   --sidebar-foreground: var(--app-ink);
   --sidebar-primary: var(--app-accent);
@@ -109,27 +102,27 @@
   --sidebar-border: var(--app-border);
   --sidebar-ring: var(--app-accent);
 
-  --app-accent: #a8471f;
+  /* Deep lime: brand lime fails contrast on light surfaces. */
+  --app-accent: #4d7c0f;
   --app-accent-foreground: #ffffff;
-  --app-highlight: #a8471f;
+  --app-highlight: #4d7c0f;
   --app-canvas: var(--surface-canvas);
   --app-panel: var(--surface-panel);
-  /* Light chrome is white so the gray canvas and white panels read as layers. */
-  --app-sidebar: var(--surface-panel);
+  --app-sidebar: var(--surface-frame);
   --app-soft-panel: var(--surface-sunken);
   --app-header-panel: var(--surface-panel-raised);
   --app-active: var(--selected-bg);
-  --app-hover: rgb(13 13 16 / 0.04);
+  --app-hover: rgb(11 12 14 / 0.04);
   --app-ink: var(--text-primary);
   --app-muted: var(--text-muted);
   --app-subtle: var(--text-muted);
   --app-border: #e4e4e7;
   --app-strong-border: #d4d4d8;
-  --app-control: var(--surface-sunken);
+  --app-control: var(--surface-canvas);
   --app-input-border: #d4d4d8;
   --app-secondary: #e4e4e7;
-  /* Panels separate from the canvas by fill; the edge is only a hint. */
-  --panel-edge: rgb(255 255 255 / 0.55);
+  /* Panels separate from the canvas by a tone step, not a line. */
+  --panel-edge: transparent;
   /* Inset wells inside panels (nested records, comments, previews). */
   --surface-inset: var(--surface-sunken);
   --app-success: var(--status-success);
@@ -155,17 +148,17 @@
 
 .dark {
   --app-chart-grid: #71717a;
-  --app-accent: #ec8a5e;
-  --app-accent-foreground: #0c0c0f;
-  --app-highlight: #ec8a5e;
+  --app-accent: #c6ff00;
+  --app-accent-foreground: #0b0c0e;
+  --app-highlight: #c6ff00;
   --app-hover: rgb(255 255 255 / 0.06);
   --app-border: rgb(255 255 255 / 0.08);
   --app-strong-border: rgb(255 255 255 / 0.16);
   --app-input-border: rgb(255 255 255 / 0.12);
   --app-secondary: rgb(255 255 255 / 0.08);
-  --app-control: #08080a;
-  --panel-edge: rgb(255 255 255 / 0.04);
-  --surface-inset: #08080a;
+  --app-control: #18181a;
+  --panel-edge: transparent;
+  --surface-inset: #0d0d0e;
   --app-thumb-icon: rgba(241, 245, 249, 0.38);
   --app-switch-thumb: #000000;
   --media-package-1: #17263a;
@@ -173,32 +166,30 @@
   --media-package-3: #172a21;
   --media-package-4: #252039;
   --media-package-5: #252b33;
-  --surface-canvas: #0c0c0f;
-  --app-sidebar: var(--surface-canvas);
-  --surface-panel: #101014;
-  --surface-panel-raised: #141419;
-  --surface-sunken: #08080a;
-  --surface-overlay: #17171c;
+  --surface-frame: #0a0a0b;
+  --surface-canvas: #111112;
+  --surface-panel: #18181a;
+  --surface-panel-raised: #1f1f22;
+  --surface-sunken: #0d0d0e;
+  --surface-overlay: #161617;
   --text-primary: #ffffff;
   --text-secondary: #d4d4d8;
   --text-muted: #a1a1aa;
   --text-disabled: #71717a;
   --status-info: #60a5fa;
   --status-info-bg: rgb(37 99 235 / 0.16);
-  --status-success: #4ade80;
-  --status-success-bg: rgb(34 197 94 / 0.14);
+  --status-success: #34d399;
+  --status-success-bg: rgb(52 211 153 / 0.14);
   --status-warning: #fbbf24;
   --status-warning-bg: rgb(251 191 36 / 0.14);
   --status-danger: #f87171;
   --status-danger-bg: rgb(239 68 68 / 0.14);
-  --focus-ring: #ec8a5e;
-  --selected-bg: rgb(255 255 255 / 0.1);
+  --focus-ring: #c6ff00;
+  --selected-bg: #1f1f22;
   --disabled-bg: #1a212b;
-  --overlay-scrim: rgb(0 0 0 / 0.68);
-  --neu-light: rgb(255 255 255 / 0.035);
-  --neu-dark: rgb(0 0 0 / 0.72);
-  --shadow-panel: var(--neu-raised);
-  --shadow-overlay: 0 20px 56px rgb(0 0 0 / 0.55);
+  --overlay-scrim: rgb(0 0 0 / 0.74);
+  --shadow-panel: none;
+  --shadow-overlay: 0 24px 64px rgb(0 0 0 / 0.6);
 }
 
 @theme inline {
@@ -451,47 +442,44 @@ button:not(:disabled):active,
   border-radius: var(--radius-badge);
 }
 
-/* Neumorphic surfaces. Panels lift off the canvas with paired shadows instead
-   of borders; fields and tab tracks press into it. */
-[data-slot="card"],
-[data-slot="content-section"],
+/* Surfaces separate by tone: cards and metric items sit one step above the
+   content panel. Only floating layers (menus, dialogs, sheets) cast shadows. */
 [data-slot="metric-item"],
 [data-surface="raised"] {
-  box-shadow: var(--neu-raised);
+  background-color: var(--surface-panel);
 }
 
-[data-slot="input"],
-[data-slot="textarea"],
-[data-slot="select-trigger"],
 [data-slot="tabs-list"] {
-  border-color: transparent;
-  background-color: var(--app-control);
-  box-shadow: var(--neu-inset);
+  background-color: var(--surface-sunken);
 }
 
 [data-slot="tabs-trigger"][data-state="active"] {
   background-color: var(--surface-panel-raised);
-  box-shadow: var(--neu-raised-sm);
+  box-shadow: none;
 }
 
 [data-slot="button"][data-variant="outline"],
 [data-slot="button"][data-variant="secondary"] {
-  border-color: transparent;
+  border-color: var(--app-input-border);
   background-color: var(--surface-panel);
-  box-shadow: var(--neu-raised-sm);
+  box-shadow: none;
 }
 
-[data-slot="button"][data-variant="default"] {
-  box-shadow:
-    var(--neu-raised-sm),
-    inset 0 1px 0 rgb(255 255 255 / 0.18);
+[data-slot="dialog-content"],
+[data-slot="sheet-content"],
+[data-slot="popover-content"],
+[data-slot="dropdown-menu-content"],
+[data-slot="select-content"] {
+  border-color: var(--app-strong-border);
 }
 
-[data-slot="button"][data-variant="outline"]:not(:disabled):active,
-[data-slot="button"][data-variant="secondary"]:not(:disabled):active,
-[data-slot="button"][data-variant="ghost"]:not(:disabled):active,
-[data-slot="button"][data-variant="default"]:not(:disabled):active {
-  box-shadow: var(--neu-pressed);
+/* Top bar icon actions are round, outlined, and the same size. */
+.workspace-topbar [data-slot="button"][data-size="icon"] {
+  width: 34px;
+  height: 34px;
+  min-height: 34px;
+  border: 1px solid var(--app-border);
+  border-radius: 9999px;
 }
 
 /* Dither charts glow softly while the pointer is over them. */

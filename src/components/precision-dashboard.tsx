@@ -47,6 +47,7 @@ import { Empty, EmptyHeader, EmptyMedia } from "@/components/ui/empty";
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
 import { Sparkline } from "@/components/dither-kit/sparkline";
+import { SegmentedMeter } from "@/components/ui/segmented-meter";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -530,11 +531,7 @@ export function PrecisionDashboard(props: DashboardProps) {
                 </span>
                 <PriorityBadge project={row.original} />
               </div>
-              <Progress
-                value={progress}
-                aria-hidden="true"
-                className="h-1 rounded-sm bg-[var(--app-progress-track)] [&_[data-slot=progress-indicator]]:rounded-sm [&_[data-slot=progress-indicator]]:bg-[var(--app-accent)]"
-              />
+              <SegmentedMeter value={progress} segments={14} />
             </div>
           );
         },
@@ -906,7 +903,7 @@ export function PrecisionDashboard(props: DashboardProps) {
                         >
                           <Sparkline
                             data={paidTrend}
-                            color="ember"
+                            color="lime"
                             bloom="high"
                             bloomOnHover
                           />
@@ -952,10 +949,10 @@ export function PrecisionDashboard(props: DashboardProps) {
                     supporting={
                       <div className="flex items-center gap-3">
                         <span className="shrink-0">{salaryPercent}%</span>
-                        <Progress
+                        <SegmentedMeter
                           value={salaryPercent}
-                          aria-hidden="true"
-                          className="h-1 flex-1 rounded-sm bg-[var(--app-progress-track)] [&_[data-slot=progress-indicator]]:rounded-sm [&_[data-slot=progress-indicator]]:bg-[var(--app-accent)]"
+                          tone="accent"
+                          className="flex-1"
                         />
                       </div>
                     }
@@ -1698,11 +1695,7 @@ function ProjectInspector({
                 {progress}%
               </span>
             </div>
-            <Progress
-              value={progress}
-              aria-hidden="true"
-              className="mt-2 h-1.5 rounded-sm bg-[var(--app-progress-track)] [&_[data-slot=progress-indicator]]:rounded-sm [&_[data-slot=progress-indicator]]:bg-[var(--app-accent)]"
-            />
+            <SegmentedMeter value={progress} segments={24} className="mt-2" />
             <p className="mt-2 text-[10px] leading-relaxed text-[var(--app-muted)]">
               {progress === 100
                 ? "Delivery complete"

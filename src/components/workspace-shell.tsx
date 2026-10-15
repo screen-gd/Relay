@@ -31,7 +31,7 @@ import {
   UserPlus,
   Workflow,
 } from "@/components/icons";
-import { motion } from "motion/react";
+import { AnimatePresence, motion } from "motion/react";
 import { Link, useLocation, useNavigate } from "@tanstack/react-router";
 import {
   createContext,
@@ -365,7 +365,7 @@ function ContextNavigation({ page }: { page: ShellPage }) {
   return (
     <nav
       aria-label={`${hub.label} navigation`}
-      className="flex shrink-0 flex-wrap gap-1 border-b border-[var(--app-border)] px-4 py-2"
+      className="flex shrink-0 flex-wrap gap-5 border-b border-[var(--app-border)] px-5"
     >
       {pages
         .flatMap((page) => allRoutes.filter((item) => item.page === page))
@@ -375,10 +375,10 @@ function ContextNavigation({ page }: { page: ShellPage }) {
             to={item.href}
             aria-current={page === item.page ? "page" : undefined}
             className={cn(
-              "rounded-md px-3 py-2 text-sm font-medium outline-none hover:bg-[var(--app-hover)] focus-visible:ring-2 focus-visible:ring-[var(--app-accent)]",
+              "-mb-px flex min-h-11 items-center border-b-2 text-[13px] font-medium outline-none transition-colors duration-150 focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)]",
               page === item.page
-                ? "bg-[var(--app-active)] text-[var(--app-ink)]"
-                : "text-[var(--app-muted)]"
+                ? "border-[var(--app-ink)] text-[var(--app-ink)]"
+                : "border-transparent text-[var(--app-muted)] hover:text-[var(--app-ink)]"
             )}
           >
             {item.label}
@@ -506,7 +506,7 @@ export function WorkspaceShell({
         />
 
         <div className="min-h-dvh transition-[padding] duration-200 ease-out motion-reduce:transition-none lg:pl-[var(--sidebar-width)]">
-          <header className="fixed inset-x-0 top-0 z-30 flex h-[54px] items-center bg-[var(--app-sidebar)] px-2.5 lg:left-[var(--sidebar-width)] lg:justify-between lg:px-3">
+          <header className="workspace-topbar fixed inset-x-0 top-0 z-30 flex h-[54px] items-center border-b border-[var(--app-border)] bg-[var(--app-canvas)] px-2.5 transition-[left] duration-200 ease-out motion-reduce:transition-none lg:left-[var(--sidebar-width)] lg:right-2 lg:top-2 lg:justify-between lg:rounded-t-xl lg:px-4">
             <div className="flex h-full min-w-0 flex-1 items-center gap-2 lg:flex-none">
               <RelayBrand compact className="lg:hidden" />
               <p className="truncate text-sm font-semibold lg:hidden">
@@ -555,7 +555,7 @@ export function WorkspaceShell({
 
             <Button
               variant="outline"
-              className="absolute left-1/2 top-1/2 hidden h-9 w-[220px] -translate-x-1/2 -translate-y-1/2 justify-start rounded-lg border-[var(--app-border)] !bg-[var(--app-control)] px-2.5 text-xs text-[var(--app-muted)] shadow-none hover:bg-[var(--app-hover)] active:-translate-y-1/2 active:scale-100 lg:flex"
+              className="absolute left-1/2 top-1/2 hidden h-9 w-[240px] -translate-x-1/2 -translate-y-1/2 justify-start rounded-lg border-[var(--app-border)] !bg-[var(--surface-panel)] px-3 text-xs text-[var(--app-muted)] shadow-none hover:text-[var(--app-ink)] active:-translate-y-1/2 active:scale-100 lg:flex"
               onClick={openCommand}
               aria-label="Quick Search (Ctrl K)"
             >
@@ -602,7 +602,7 @@ export function WorkspaceShell({
             id="main-content"
             data-testid="workspace-content-surface"
             tabIndex={-1}
-            className="workspace-scrollbar-hidden h-[calc(100dvh_-_68px_-_env(safe-area-inset-bottom))] overflow-y-auto bg-[var(--app-canvas)] pt-12 outline-none lg:fixed lg:bottom-0 lg:right-0 lg:top-[54px] lg:left-[var(--sidebar-width)] lg:h-auto lg:min-h-0 lg:overscroll-contain lg:rounded-tl-2xl lg:border-l lg:border-t lg:border-[var(--app-border)] lg:pt-0"
+            className="workspace-scrollbar-hidden h-[calc(100dvh_-_68px_-_env(safe-area-inset-bottom))] overflow-y-auto bg-[var(--app-canvas)] pt-12 outline-none transition-[left] duration-200 ease-out motion-reduce:transition-none lg:fixed lg:bottom-2 lg:right-2 lg:top-[62px] lg:left-[var(--sidebar-width)] lg:h-auto lg:min-h-0 lg:overscroll-contain lg:rounded-b-xl lg:pt-0"
           >
             <div className="flex min-h-full flex-col lg:h-full">
               <ContextNavigation page={page} />
@@ -676,6 +676,18 @@ function hubChildren(hub: ShellPage) {
     .flatMap((page) => allRoutes.filter((item) => item.page === page));
 }
 
+/** One-shot motion for the sidebar marker and dropdowns; nothing loops. */
+const sidebarMarkerTransition = {
+  type: "spring",
+  stiffness: 520,
+  damping: 40,
+  mass: 0.8,
+} as const;
+const dropdownTransition = {
+  duration: 0.18,
+  ease: [0.22, 1, 0.36, 1],
+} as const;
+
 const sidebarLinkClassName =
   "group relative flex min-h-10 items-center rounded-[10px] text-[13px] font-medium outline-none transition-[box-shadow,color] duration-150 ease-out focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)] focus-visible:ring-inset";
 
@@ -689,6 +701,7 @@ function DesktopSidebar({
   onToggle: () => void;
 }) {
   const activeHub = hubPageForPage(page);
+  const reduceMotion = useHydratedReducedMotion();
   const [openHubs, setOpenHubs] = useState<ReadonlySet<ShellPage>>(
     () => new Set([activeHub])
   );
@@ -767,33 +780,44 @@ function DesktopSidebar({
                           : undefined
                       }
                     />
-                    {children.length && open ? (
-                      <div
-                        id={`sidebar-${item.page}-pages`}
-                        role="group"
-                        aria-label={`${item.label} pages`}
-                        className="ml-[22px] mt-1 space-y-0.5 border-l border-[var(--app-border)] pl-3"
-                      >
-                        {children.map((child) => (
-                          <Link
-                            key={child.page}
-                            to={child.href}
-                            aria-current={
-                              page === child.page ? "page" : undefined
-                            }
-                            className={cn(
-                              sidebarLinkClassName,
-                              "min-h-8 px-2.5 text-[12.5px]",
-                              page === child.page
-                                ? "text-[var(--app-ink)] shadow-[var(--neu-pressed)]"
-                                : "text-[var(--app-muted)] hover:text-[var(--app-ink)]"
-                            )}
-                          >
-                            {child.label}
-                          </Link>
-                        ))}
-                      </div>
-                    ) : null}
+                    <AnimatePresence initial={false}>
+                      {children.length && open ? (
+                        <motion.div
+                          key="pages"
+                          id={`sidebar-${item.page}-pages`}
+                          role="group"
+                          aria-label={`${item.label} pages`}
+                          initial={
+                            reduceMotion ? false : { height: 0, opacity: 0 }
+                          }
+                          animate={{ height: "auto", opacity: 1 }}
+                          exit={
+                            reduceMotion ? undefined : { height: 0, opacity: 0 }
+                          }
+                          transition={dropdownTransition}
+                          className="ml-[22px] mt-1 space-y-0.5 overflow-hidden border-l border-[var(--app-border)] pl-3"
+                        >
+                          {children.map((child) => (
+                            <Link
+                              key={child.page}
+                              to={child.href}
+                              aria-current={
+                                page === child.page ? "page" : undefined
+                              }
+                              className={cn(
+                                sidebarLinkClassName,
+                                "min-h-8 px-2.5 text-[12.5px]",
+                                page === child.page
+                                  ? "bg-[var(--surface-panel)] text-[var(--app-ink)]"
+                                  : "text-[var(--app-muted)] hover:text-[var(--app-ink)]"
+                              )}
+                            >
+                              {child.label}
+                            </Link>
+                          ))}
+                        </motion.div>
+                      ) : null}
+                    </AnimatePresence>
                   </div>
                 );
               })}
@@ -895,6 +919,7 @@ function SidebarRoute({
 }) {
   const Icon = item.icon;
   const aiHere = aiToolsForPage(item.page);
+  const reduceMotion = useHydratedReducedMotion();
 
   const link = (
     <Link
@@ -905,25 +930,35 @@ function SidebarRoute({
         sidebarLinkClassName,
         collapsed ? "mx-auto w-10 justify-center" : "flex-1 gap-3 px-2.5",
         active
-          ? "text-[var(--app-ink)] shadow-[var(--neu-pressed)]"
+          ? "text-[var(--app-ink)]"
           : "text-[var(--app-muted)] hover:text-[var(--app-ink)]"
       )}
     >
+      {active ? (
+        <motion.span
+          aria-hidden="true"
+          layoutId="sidebar-active-item"
+          transition={reduceMotion ? { duration: 0 } : sidebarMarkerTransition}
+          className="absolute inset-0 -z-0 rounded-[10px] bg-[var(--surface-panel)]"
+        />
+      ) : null}
       <Icon
         className={cn(
-          "size-[18px] shrink-0",
+          "relative size-[18px] shrink-0",
           active && "text-[var(--app-accent)]"
         )}
         strokeWidth={active ? 2 : 1.75}
       />
-      {collapsed ? null : <span className="truncate">{item.label}</span>}
+      {collapsed ? null : (
+        <span className="relative truncate">{item.label}</span>
+      )}
       {aiHere.length ? (
         <span
           aria-hidden="true"
           data-slot="ai-nav-badge"
           className={cn(
             "size-1.5 rounded-full bg-[var(--app-highlight)]",
-            collapsed ? "absolute right-1.5 top-1.5" : "ml-auto"
+            collapsed ? "absolute right-1.5 top-1.5" : "relative ml-auto"
           )}
         />
       ) : null}

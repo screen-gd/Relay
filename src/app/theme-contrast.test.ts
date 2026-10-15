@@ -33,12 +33,10 @@ test("muted and subtle text use the accessible shared token", () => {
       light,
       [
         "#ffffff",
-        "#e7e8ec",
-        "#eceef2",
-        "#f1f2f5",
-        "#e2e4e9",
-        "#f3f4f7",
-        "#dfe1e7",
+        "#eeeef0",
+        "#f6f6f7",
+        "#efeff1",
+        "#e7e7ea",
         "#d4d4d8",
         "#d9e3e8",
         "#dfd5c7",
@@ -51,11 +49,12 @@ test("muted and subtle text use the accessible shared token", () => {
       dark,
       [
         "#000000",
-        "#08080a",
-        "#0c0c0f",
-        "#101014",
-        "#141419",
-        "#17171c",
+        "#0a0a0b",
+        "#0d0d0e",
+        "#111112",
+        "#161617",
+        "#18181a",
+        "#1f1f22",
         "#2f2f2f",
         "#17263a",
         "#29251f",
@@ -74,7 +73,7 @@ test("muted and subtle text use the accessible shared token", () => {
   }
 });
 
-test("the Ember accent keeps text on it and accent text readable", () => {
+test("the lime accent keeps text on it and accent text readable", () => {
   for (const theme of [light, dark]) {
     const accent = token(theme, "--app-accent");
     expect(

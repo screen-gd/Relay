@@ -8,11 +8,13 @@ Use one semantic palette across light, dark, accent, status, and selection state
 
 Define canvas, surface, foreground, muted, border, input, primary, secondary, accent, destructive, success, warning, info, focus, and selection tokens.
 
-The Relay Ember palette is dark-first: a near-black base (`#0c0c0f` canvas, `#101014` panels) with white primary text, and one warm accent, Ember (`#ec8a5e` dark, `#a8471f` light). Light mode uses one cool neutral base (`#e7e8ec`). Status keeps green success, amber warning, and red error.
+The Relay lime palette is dark-first. Three tone steps of one neutral make the layout: the sidebar frame (`#0a0a0b`), the content panel that holds the top bar and page (`#111112`), and cards, metric items, and fields (`#18181a`). Primary text is white. The brand accent is lime `#C6FF00` with near-black text on it; light mode uses deep lime `#4D7C0F`, because lime fails contrast on light surfaces. Success is mint (`#34D399`) so it never reads as a brand highlight; amber is warning and red is error.
 
-Surfaces are neumorphic. Panels, cards, and metric items lift with paired shadows (`--neu-raised`) instead of borders. Fields, tab tracks, and the active navigation item press in (`--neu-inset`, `--neu-pressed`). Light comes from the top left in both themes. Buttons, links, and fields never get a highlight fill on hover; hover changes text color only, and press uses `--neu-pressed`.
+Surfaces separate by tone, not by shadows or card frames. Only floating layers (menus, dialogs, sheets) cast a shadow. Tables and form fields keep their hairlines. Lime marks the primary action, the active navigation item, and the key data point in a chart; hover changes text color only.
 
-Charts use the vendored dither kit (`src/components/dither-kit`) with the `ember` seed for the main series. Chart containers take the `chart-glow` class and charts set `bloom="high"` with `bloomOnHover`, so they glow only while the pointer is over them.
+Progress uses `SegmentedMeter` (`src/components/ui/segmented-meter.tsx`) where there is room: cells shade from danger through warning to success by position. Charts use the vendored dither kit (`src/components/dither-kit`) with the `lime` seed for the main series; chart containers take the `chart-glow` class and charts set `bloom="high"` with `bloomOnHover`, so they glow only while the pointer is over them.
+
+Motion is one-shot: the sidebar's active marker slides between items, dropdowns open with a short height and fade, and Radix menus, selects, and dialogs fade and scale. Nothing loops.
 
 ## Behavior
 

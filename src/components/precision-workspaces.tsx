@@ -1414,7 +1414,7 @@ export function PrecisionReports({
       .slice(0, 5);
   }, [report.deliveredProjects]);
   const colors = [
-    "ember",
+    "lime",
     "blue",
     "green",
     "purple",
@@ -1673,7 +1673,7 @@ export function PrecisionReports({
                   {trendData.length ? (
                     <AreaChart
                       data={trendData}
-                      config={{ earned: { label: "Earned", color: "ember" } }}
+                      config={{ earned: { label: "Earned", color: "lime" } }}
                       animate={!reduceMotion}
                       animationDuration={420}
                       bloom="high"
@@ -1819,7 +1819,7 @@ export function PrecisionReports({
             >
               <BarChart
                 data={trendSeries.slice(-6)}
-                config={{ delivered: { label: "Delivered", color: "ember" } }}
+                config={{ delivered: { label: "Delivered", color: "lime" } }}
                 animate={!reduceMotion}
                 animationDuration={420}
                 bloom="high"
@@ -1853,7 +1853,7 @@ export function PrecisionReports({
                 <BarChart
                   data={clientChartData}
                   config={{
-                    paid: { label: "Paid", color: "ember" },
+                    paid: { label: "Paid", color: "lime" },
                     unpaid: { label: "Unpaid", color: "grey" },
                   }}
                   stackType="stacked"

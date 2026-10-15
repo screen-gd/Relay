@@ -1051,7 +1051,7 @@ export function SettingsDesignPage({
                           className="h-auto gap-3 rounded-none bg-transparent p-0"
                         >
                           {[
-                            relay.color.ember,
+                            relay.color.lime,
                             relay.color.teal,
                             relay.color.cyan,
                             relay.color.sky,

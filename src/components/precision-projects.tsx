@@ -64,7 +64,7 @@ import {
   KanbanHeader,
 } from "@/components/kibo-ui/kanban";
 import { Empty, EmptyHeader, EmptyMedia } from "@/components/ui/empty";
-import { Progress } from "@/components/ui/progress";
+import { SegmentedMeter } from "@/components/ui/segmented-meter";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   DropdownMenu,
@@ -1593,11 +1593,7 @@ function ProjectInspector({
                   <span>Progress</span>
                   <span>{value}%</span>
                 </div>
-                <Progress
-                  value={value}
-                  aria-hidden="true"
-                  className="mt-2 h-1.5 rounded-full bg-[var(--app-progress-track)] [&_[data-slot=progress-indicator]]:rounded-full [&_[data-slot=progress-indicator]]:bg-[var(--app-accent)]"
-                />
+                <SegmentedMeter value={value} segments={24} className="mt-2" />
               </div>
               <div>
                 <p className="text-xs text-[var(--app-muted)]">Project note</p>
