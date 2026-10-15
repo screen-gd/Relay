@@ -412,35 +412,66 @@ export type ProjectOutputCopy = {
   createdAt: string;
 };
 
+/** What one copied Output starts as, from a stored Output or a planned Deliverable. */
+export type CopiedProjectOutput = {
+  title: string;
+  category: ProjectOutput["category"];
+  reviewState: ProjectOutputReviewState;
+  dueDate?: string;
+};
+
+/**
+ * The Outputs a copy of a Project starts from: the live Outputs the source holds
+ * now, or, while it holds none, the Deliverables its Template plans. The copy
+ * gets them as real Outputs, never as the Project's Template list, because a
+ * template entry the source no longer shows would be created again when the copy
+ * is opened.
+ */
+export function projectOutputPlans(
+  project: {
+    dueDate?: string;
+    templateDeliverables?: WorkItem["templateDeliverables"];
+  },
+  stored: readonly ProjectOutput[]
+): CopiedProjectOutput[] {
+  const live = stored.filter((output) => !output.archived);
+  if (live.length)
+    return live.map((output) => ({
+      title: output.title,
+      category: output.category,
+      reviewState: output.reviewState,
+      ...(output.dueDate ? { dueDate: output.dueDate } : {}),
+    }));
+  return (project.templateDeliverables ?? []).map((deliverable) => ({
+    title: deliverable.title,
+    category: deliverable.category,
+    reviewState: deliverable.initialStatus,
+    ...(project.dueDate ? { dueDate: project.dueDate } : {}),
+  }));
+}
+
 /**
  * The Outputs a copy of a Project starts with: the same titles, categories,
  * review states, and due dates under the copy's own Output ids.
- *
- * Duplicating reads the Outputs when it runs and creates them on the copy
- * through this store. It does not write them onto the Project's Template list,
- * which holds at most twelve Deliverables, so a Project with more than twelve
- * Outputs used to copy only the first twelve and look successful.
  */
 export function projectOutputCopies({
   outputs,
   targetProjectId,
   createdAt,
 }: {
-  outputs: readonly ProjectOutput[];
+  outputs: readonly CopiedProjectOutput[];
   targetProjectId: string;
   createdAt: string;
 }): ProjectOutputCopy[] {
-  return outputs
-    .filter((output) => !output.archived)
-    .map((output, index) => ({
-      id: outputId(targetProjectId, index),
-      projectId: targetProjectId,
-      title: output.title,
-      category: output.category,
-      reviewState: output.reviewState,
-      ...(output.dueDate ? { dueDate: output.dueDate } : {}),
-      createdAt,
-    }));
+  return outputs.map((output, index) => ({
+    id: outputId(targetProjectId, index),
+    projectId: targetProjectId,
+    title: output.title,
+    category: output.category,
+    reviewState: output.reviewState,
+    ...(output.dueDate ? { dueDate: output.dueDate } : {}),
+    createdAt,
+  }));
 }
 
 /** Writes copies onto a Project in browser storage, on top of what it holds now. */
@@ -469,19 +500,27 @@ function writeLocalProjectOutputCopies(
 
 /** Copies a Project's live Outputs onto another Project in browser storage. */
 export function duplicateLocalProjectOutputs({
-  sourceProjectId,
+  project,
   targetProjectId,
   createdAt,
 }: {
-  sourceProjectId: string;
+  project: {
+    id: string;
+    dueDate?: string;
+    templateDeliverables?: WorkItem["templateDeliverables"];
+  };
   targetProjectId: string;
   createdAt: string;
 }): number {
-  const outputs = readLocalSnapshot().outputs.filter(
-    (output) => output.projectId === sourceProjectId
+  const stored = readLocalSnapshot().outputs.filter(
+    (output) => output.projectId === project.id
   );
   return writeLocalProjectOutputCopies(
-    projectOutputCopies({ outputs, targetProjectId, createdAt })
+    projectOutputCopies({
+      outputs: projectOutputPlans(project, stored),
+      targetProjectId,
+      createdAt,
+    })
   );
 }
 
@@ -505,14 +544,14 @@ export function useProjectOutputDuplication(project: WorkItem) {
     async (targetProjectId: string, createdAt: string) => {
       if (!cloud)
         return duplicateLocalProjectOutputs({
-          sourceProjectId: project.id,
+          project,
           targetProjectId,
           createdAt,
         });
       if (cloudWires === undefined)
         throw new Error("The Project's Outputs are still loading.");
       const copies = projectOutputCopies({
-        outputs: wireSnapshot(cloudWires).outputs,
+        outputs: projectOutputPlans(project, wireSnapshot(cloudWires).outputs),
         targetProjectId,
         createdAt,
       });
@@ -529,6 +568,6 @@ export function useProjectOutputDuplication(project: WorkItem) {
         });
       return copies.length;
     },
-    [cloud, cloudWires, createCloud, project.id]
+    [cloud, cloudWires, createCloud, project]
   );
 }
