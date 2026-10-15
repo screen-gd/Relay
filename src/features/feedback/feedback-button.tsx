@@ -26,24 +26,37 @@ export function composeFeedbackMailto(note: string, pageUrl: string) {
   )}&body=${encodeURIComponent(body)}`;
 }
 
-/**
- * Top-bar feedback note. It sends through the support mailto the contact page
- * and onboarding already use, so the reporter's own email app does the sending.
- * The button stays out of the bar until the browser reports a page URL to
- * attach, which is also what keeps it off the server render.
- */
-export function FeedbackButton() {
-  const { setToast } = useData();
+/** The page URL to attach, known once the browser reports it. */
+function usePageUrl() {
   const locationHref = useLocation({ select: (location) => location.href });
   const [pageUrl, setPageUrl] = useState("");
-  const [open, setOpen] = useState(false);
-  const [note, setNote] = useState("");
-
   useEffect(() => {
     if (locationHref) {
       setPageUrl(new URL(locationHref, window.location.origin).toString());
     }
   }, [locationHref]);
+  return pageUrl;
+}
+
+/**
+ * Feedback note dialog. It sends through the support mailto the contact page
+ * and onboarding already use, so the reporter's own email app does the
+ * sending. Opened from the profile menu; `FeedbackButton` wraps it with its
+ * own trigger for places that need one.
+ */
+export function FeedbackDialog({
+  open,
+  onOpenChange,
+  trigger,
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  trigger?: React.ReactNode;
+}) {
+  const { setToast } = useData();
+  const pageUrl = usePageUrl();
+  const [note, setNote] = useState("");
+  const setOpen = onOpenChange;
 
   if (!pageUrl) return null;
 
@@ -59,18 +72,9 @@ export function FeedbackButton() {
 
   return (
     <OwnedDialog open={open} onOpenChange={setOpen}>
-      <OwnedDialogTrigger asChild>
-        <OwnedButton
-          type="button"
-          variant="ghost"
-          size="icon"
-          title="Send feedback"
-          aria-label="Send feedback"
-          className="text-[var(--app-ink)] transition-colors data-[state=open]:bg-[var(--app-active)]"
-        >
-          <MessageSquarePlus aria-hidden="true" className="size-[18px]" />
-        </OwnedButton>
-      </OwnedDialogTrigger>
+      {trigger ? (
+        <OwnedDialogTrigger asChild>{trigger}</OwnedDialogTrigger>
+      ) : null}
       <OwnedDialogContent className="sm:max-w-md">
         <OwnedDialogHeader>
           <OwnedDialogTitle>Send feedback</OwnedDialogTitle>
@@ -107,5 +111,28 @@ export function FeedbackButton() {
         </OwnedDialogFooter>
       </OwnedDialogContent>
     </OwnedDialog>
+  );
+}
+
+/** Icon button that opens the feedback dialog. */
+export function FeedbackButton() {
+  const [open, setOpen] = useState(false);
+  return (
+    <FeedbackDialog
+      open={open}
+      onOpenChange={setOpen}
+      trigger={
+        <OwnedButton
+          type="button"
+          variant="ghost"
+          size="icon"
+          title="Send feedback"
+          aria-label="Send feedback"
+          className="text-[var(--app-ink)] transition-colors data-[state=open]:bg-[var(--app-active)]"
+        >
+          <MessageSquarePlus aria-hidden="true" className="size-[18px]" />
+        </OwnedButton>
+      }
+    />
   );
 }

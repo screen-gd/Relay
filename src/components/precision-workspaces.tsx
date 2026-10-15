@@ -1600,6 +1600,7 @@ export function PrecisionReports({
             icon={<CheckCircle2 className="size-4" />}
           />
         </MetricStrip>
+        {earningsQa}
 
         <SplitPane
           primary={
@@ -1668,7 +1669,7 @@ export function PrecisionReports({
                   transition={
                     reduceMotion ? { duration: 0 } : { duration: 0.2 }
                   }
-                  className="chart-glow mt-4 h-[220px] shrink-0 sm:h-[260px]"
+                  className="chart-glow mt-3 h-[170px] shrink-0 sm:h-[190px]"
                 >
                   {trendData.length ? (
                     <AreaChart
@@ -1729,7 +1730,7 @@ export function PrecisionReports({
                 </p>
               </div>
               <div
-                className="chart-glow mt-4 h-[220px] shrink-0 sm:h-[260px]"
+                className="chart-glow mt-3 h-[170px] shrink-0 sm:h-[190px]"
                 role="img"
                 aria-label={
                   mixData.length
@@ -1918,7 +1919,6 @@ export function PrecisionReports({
           </ContentSection>
         ) : null}
 
-        {earningsQa}
         {salaryPlans}
         <ContentSection
           title="Payment batches"

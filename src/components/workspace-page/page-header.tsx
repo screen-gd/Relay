@@ -27,6 +27,16 @@ export function PageHeader({
   ...props
 }: PageHeaderProps) {
   const compact = useContext(PageHeaderCompactContext);
+  // Under a tab strip the tab already names the page, so only the actions
+  // show; the heading stays for assistive technology.
+  if (compact && !actions) {
+    return (
+      <header data-slot="page-header" data-compact className="sr-only">
+        <h1>{title}</h1>
+        {description ? <div>{description}</div> : null}
+      </header>
+    );
+  }
   return (
     <header
       data-slot="page-header"
@@ -38,22 +48,12 @@ export function PageHeader({
       )}
       {...props}
     >
-      <div className="min-w-0">
-        <h1
-          className={cn(
-            "font-semibold leading-tight tracking-[-0.03em] text-foreground",
-            compact ? "text-base" : "text-2xl"
-          )}
-        >
+      <div className={cn("min-w-0", compact && "sr-only")}>
+        <h1 className="text-2xl font-semibold leading-tight tracking-[-0.03em] text-foreground">
           {title}
         </h1>
         {description ? (
-          <div
-            className={cn(
-              "max-w-3xl text-[13px] leading-5 text-muted-foreground",
-              compact ? "sr-only" : "mt-1.5"
-            )}
-          >
+          <div className="mt-1.5 max-w-3xl text-[13px] leading-5 text-muted-foreground">
             {description}
           </div>
         ) : null}

@@ -18,6 +18,7 @@ import {
   LogIn,
   LogOut,
   Mail,
+  MessageSquarePlus,
   MessageSquareText,
   MoreHorizontal,
   Plus,
@@ -50,7 +51,7 @@ import { useOptionalAuth } from "@/lib/optional-auth";
 import type { SettingsState } from "@/lib/types";
 import type { FileRouteTypes } from "@/routeTree.gen";
 import type { SearchRecord } from "@/features/workspace-discovery/workspace-discovery";
-import { FeedbackButton } from "@/features/feedback/feedback-button";
+import { FeedbackDialog } from "@/features/feedback/feedback-button";
 import { AiToolsMenu } from "@/features/ai/ai-tools-menu";
 import { AiBadge, useAiAccount } from "@/features/ai/ai-availability";
 import {
@@ -607,7 +608,6 @@ export function WorkspaceShell({
                 </Button>
               )}
               <AiToolsMenu />
-              <FeedbackButton />
               <ProfileMenu settings={settings} compact page={page} />
             </div>
           </header>
@@ -732,6 +732,8 @@ function DesktopSidebar({
   const reduceMotion = useHydratedReducedMotion();
   const hub = hubRoutes.find((item) => item.page === hubPageForPage(page));
   const pages = hub ? hubChildren(hub.page) : [];
+  const pathname = useLocation({ select: (location) => location.pathname });
+  const aiHere = hub ? aiToolsForPage(hub.page) : [];
   const recentProjects = searchRecords
     .filter((record) => record.kind === "project" && record.href)
     .slice(0, RECENT_PROJECT_LIMIT);
@@ -779,7 +781,7 @@ function DesktopSidebar({
             />
           ))}
         </nav>
-        {open ? null : <div className="pb-1">{toggle}</div>}
+        <div className="pb-1">{toggle}</div>
       </aside>
 
       <section
@@ -788,11 +790,10 @@ function DesktopSidebar({
         hidden={!open}
         className="flex h-full w-[248px] flex-col border-l border-[var(--app-border)] bg-[var(--app-sidebar)]"
       >
-        <div className="flex h-[54px] shrink-0 items-center justify-between pl-4 pr-2">
+        <div className="flex h-[54px] shrink-0 items-center px-4">
           <h2 className="truncate text-sm font-semibold">
             {hub?.label ?? "Relay"}
           </h2>
-          {toggle}
         </div>
 
         <div className="workspace-scrollbar-hidden min-h-0 flex-1 overflow-y-auto px-2 pb-2">
@@ -837,6 +838,27 @@ function DesktopSidebar({
                   </Link>
                 );
               })}
+            </nav>
+          ) : null}
+
+          {aiHere.length ? (
+            <nav aria-label="AI tools" className="mt-4">
+              <p className="px-3 pb-1 text-[11px] font-medium text-[var(--app-subtle)]">
+                AI
+              </p>
+              <ul className="space-y-0.5">
+                {aiHere.map((tool) => (
+                  <li key={tool.id}>
+                    <HrefLink
+                      href={aiToolHref(tool, pathname)}
+                      className="flex min-h-8 items-center gap-2.5 rounded-[10px] px-3 text-[13px] text-[var(--app-muted)] outline-none transition-colors duration-150 hover:text-[var(--app-ink)] focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)] focus-visible:ring-inset"
+                    >
+                      <Sparkles className="size-4 shrink-0 text-[var(--app-highlight)]" />
+                      <span className="truncate">{tool.label}</span>
+                    </HrefLink>
+                  </li>
+                ))}
+              </ul>
             </nav>
           ) : null}
 
@@ -964,6 +986,7 @@ function ProfileMenu({
   const { isAuthEnabled } = useData();
   const { isSignedIn, openSignIn, openSignUp, signOut } = useOptionalAuth();
   const [open, setOpen] = useState(false);
+  const [feedbackOpen, setFeedbackOpen] = useState(false);
   const reduceMotion = useHydratedReducedMotion();
   const name = settings.profileName || "Your profile";
   const handle = settings.profileUsername
@@ -971,161 +994,169 @@ function ProfileMenu({
     : settings.teamRole || "Editor";
 
   return (
-    <DropdownMenu open={open} onOpenChange={setOpen}>
-      <DropdownMenuTrigger asChild>
-        <Button
-          type="button"
-          variant="ghost"
-          className={cn(
-            "group flex items-center rounded-md text-left outline-none transition-[background-color,box-shadow] hover:bg-[var(--app-hover)] active:translate-y-0 active:scale-100 focus-visible:ring-2 focus-visible:ring-[var(--app-accent)] data-[state=open]:bg-[var(--app-active)]",
-            compact
-              ? "h-9 w-9 justify-center p-0"
-              : collapsed
-                ? "w-full justify-center p-1"
-                : "w-full gap-2.5 p-2"
-          )}
-          aria-label="Open profile menu"
+    <>
+      <FeedbackDialog open={feedbackOpen} onOpenChange={setFeedbackOpen} />
+      <DropdownMenu open={open} onOpenChange={setOpen}>
+        <DropdownMenuTrigger asChild>
+          <Button
+            type="button"
+            variant="ghost"
+            className={cn(
+              "group flex items-center rounded-md text-left outline-none transition-[background-color,box-shadow] hover:bg-[var(--app-hover)] active:translate-y-0 active:scale-100 focus-visible:ring-2 focus-visible:ring-[var(--app-accent)] data-[state=open]:bg-[var(--app-active)]",
+              compact
+                ? "h-9 w-9 justify-center p-0"
+                : collapsed
+                  ? "w-full justify-center p-1"
+                  : "w-full gap-2.5 p-2"
+            )}
+            aria-label="Open profile menu"
+          >
+            <Avatar className="size-8 border border-[var(--app-strong-border)] bg-[var(--app-avatar-surface)] ring-1 ring-transparent transition-[border-color,box-shadow] group-data-[state=open]:border-[var(--app-accent)]">
+              <AvatarImage
+                src={settings.profileImageUrl || undefined}
+                alt={name}
+                className="object-cover"
+              />
+              <AvatarFallback className="bg-[var(--app-avatar-surface)] text-[11px] font-semibold text-[var(--app-ink)]">
+                {initials(name)}
+              </AvatarFallback>
+            </Avatar>
+            {!collapsed && !compact ? (
+              <>
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate text-[12px] font-semibold">
+                    {name}
+                  </span>
+                  <span className="block truncate text-[11px] text-[var(--app-muted)]">
+                    {handle}
+                  </span>
+                </span>
+                <span
+                  className={cn(
+                    "flex transition-transform",
+                    open && "rotate-180"
+                  )}
+                >
+                  <ChevronDown className="size-3.5 text-[var(--app-muted)]" />
+                </span>
+              </>
+            ) : null}
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent
+          side={compact ? "bottom" : collapsed ? "right" : "top"}
+          align={compact ? "end" : "start"}
+          sideOffset={8}
+          className="workspace-flyout w-[280px] rounded-xl border-[var(--app-border)] bg-[var(--app-panel)] p-1.5 text-[var(--app-ink)] shadow-[var(--app-shadow-2)] [&_[data-slot=dropdown-menu-item]]:h-9 [&_[data-slot=dropdown-menu-item]]:rounded-lg [&_[data-slot=dropdown-menu-item]]:text-[13px] [&_[data-slot=dropdown-menu-item]]:transition-colors"
         >
-          <Avatar className="size-8 border border-[var(--app-strong-border)] bg-[var(--app-avatar-surface)] ring-1 ring-transparent transition-[border-color,box-shadow] group-data-[state=open]:border-[var(--app-accent)]">
-            <AvatarImage
-              src={settings.profileImageUrl || undefined}
-              alt={name}
-              className="object-cover"
-            />
-            <AvatarFallback className="bg-[var(--app-avatar-surface)] text-[11px] font-semibold text-[var(--app-ink)]">
-              {initials(name)}
-            </AvatarFallback>
-          </Avatar>
-          {!collapsed && !compact ? (
+          <DropdownMenuLabel className="flex items-center gap-3 px-2.5 py-2.5">
+            <Avatar className="size-9 border border-[var(--app-strong-border)] bg-[var(--app-avatar-surface)]">
+              <AvatarImage
+                src={settings.profileImageUrl || undefined}
+                alt=""
+                className="object-cover"
+              />
+              <AvatarFallback className="bg-[var(--app-avatar-surface)] text-xs font-semibold text-[var(--app-ink)]">
+                {initials(name)}
+              </AvatarFallback>
+            </Avatar>
+            <span className="min-w-0">
+              <span className="block truncate text-[13px] font-semibold">
+                {name}
+              </span>
+              <span className="block truncate text-xs font-normal text-[var(--app-muted)]">
+                {handle}
+              </span>
+            </span>
+          </DropdownMenuLabel>
+          <DropdownMenuSeparator className="mx-0.5 bg-[var(--app-border)]" />
+          {!isSignedIn ? (
             <>
-              <span className="min-w-0 flex-1">
-                <span className="block truncate text-[12px] font-semibold">
-                  {name}
-                </span>
-                <span className="block truncate text-[11px] text-[var(--app-muted)]">
-                  {handle}
-                </span>
-              </span>
-              <span
-                className={cn(
-                  "flex transition-transform",
-                  open && "rotate-180"
-                )}
+              <DropdownMenuLabel className="text-xs font-normal text-muted-foreground">
+                Local Workspace · stored in this browser
+              </DropdownMenuLabel>
+              <DropdownMenuItem
+                disabled={!isAuthEnabled}
+                onSelect={() => openSignIn()}
+                className="bg-primary text-primary-foreground focus:bg-primary/90 focus:text-primary-foreground"
               >
-                <ChevronDown className="size-3.5 text-[var(--app-muted)]" />
-              </span>
+                <LogIn /> Sign in
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                disabled={!isAuthEnabled}
+                onSelect={() => openSignUp()}
+              >
+                <UserPlus /> Create account
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
             </>
           ) : null}
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent
-        side={compact ? "bottom" : collapsed ? "right" : "top"}
-        align={compact ? "end" : "start"}
-        sideOffset={8}
-        className="workspace-flyout w-[280px] rounded-xl border-[var(--app-border)] bg-[var(--app-panel)] p-1.5 text-[var(--app-ink)] shadow-[var(--app-shadow-2)] [&_[data-slot=dropdown-menu-item]]:h-9 [&_[data-slot=dropdown-menu-item]]:rounded-lg [&_[data-slot=dropdown-menu-item]]:text-[13px] [&_[data-slot=dropdown-menu-item]]:transition-colors"
-      >
-        <DropdownMenuLabel className="flex items-center gap-3 px-2.5 py-2.5">
-          <Avatar className="size-9 border border-[var(--app-strong-border)] bg-[var(--app-avatar-surface)]">
-            <AvatarImage
-              src={settings.profileImageUrl || undefined}
-              alt=""
-              className="object-cover"
-            />
-            <AvatarFallback className="bg-[var(--app-avatar-surface)] text-xs font-semibold text-[var(--app-ink)]">
-              {initials(name)}
-            </AvatarFallback>
-          </Avatar>
-          <span className="min-w-0">
-            <span className="block truncate text-[13px] font-semibold">
-              {name}
-            </span>
-            <span className="block truncate text-xs font-normal text-[var(--app-muted)]">
-              {handle}
-            </span>
-          </span>
-        </DropdownMenuLabel>
-        <DropdownMenuSeparator className="mx-0.5 bg-[var(--app-border)]" />
-        {!isSignedIn ? (
-          <>
-            <DropdownMenuLabel className="text-xs font-normal text-muted-foreground">
-              Local Workspace · stored in this browser
-            </DropdownMenuLabel>
-            <DropdownMenuItem
-              disabled={!isAuthEnabled}
-              onSelect={() => openSignIn()}
-              className="bg-primary text-primary-foreground focus:bg-primary/90 focus:text-primary-foreground"
-            >
-              <LogIn /> Sign in
+          {isSignedIn ? (
+            <DropdownMenuItem asChild>
+              <Link
+                to="/subscription"
+                aria-current={page === "subscription" ? "page" : undefined}
+                className={cn(page === "subscription" && "bg-accent")}
+              >
+                <CreditCard /> Plans & billing
+              </Link>
             </DropdownMenuItem>
-            <DropdownMenuItem
-              disabled={!isAuthEnabled}
-              onSelect={() => openSignUp()}
-            >
-              <UserPlus /> Create account
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-          </>
-        ) : null}
-        {isSignedIn ? (
+          ) : null}
           <DropdownMenuItem asChild>
             <Link
-              to="/subscription"
-              aria-current={page === "subscription" ? "page" : undefined}
-              className={cn(page === "subscription" && "bg-accent")}
+              to="/profile"
+              activeOptions={{ exact: true }}
+              aria-current={page === "profile" ? "page" : undefined}
+              className={cn(page === "profile" && "bg-accent")}
             >
-              <CreditCard /> Plans & billing
+              <CircleUserRound /> Public profile
             </Link>
           </DropdownMenuItem>
-        ) : null}
-        <DropdownMenuItem asChild>
-          <Link
-            to="/profile"
-            activeOptions={{ exact: true }}
-            aria-current={page === "profile" ? "page" : undefined}
-            className={cn(page === "profile" && "bg-accent")}
-          >
-            <CircleUserRound /> Public profile
-          </Link>
-        </DropdownMenuItem>
-        <DropdownMenuItem asChild>
-          <Link
-            to="/organization"
-            aria-current={page === "organization-profile" ? "page" : undefined}
-            className={cn(page === "organization-profile" && "bg-accent")}
-          >
-            <UsersRound /> Organization profile
-          </Link>
-        </DropdownMenuItem>
-        <DropdownMenuItem asChild>
-          <Link
-            to="/profile/edit"
-            aria-current={page === "profile-edit" ? "page" : undefined}
-            className={cn(page === "profile-edit" && "bg-accent")}
-          >
-            <Sparkles /> Edit profile
-          </Link>
-        </DropdownMenuItem>
-        <DropdownMenuItem asChild>
-          <Link
-            to="/account"
-            aria-current={page === "account" ? "page" : undefined}
-            className={cn(page === "account" && "bg-accent")}
-          >
-            <Settings /> Account settings
-          </Link>
-        </DropdownMenuItem>
-        <DropdownMenuSeparator />
-        {isSignedIn ? (
-          <DropdownMenuItem onSelect={() => void signOut()}>
-            <LogOut /> Sign out
+          <DropdownMenuItem asChild>
+            <Link
+              to="/organization"
+              aria-current={
+                page === "organization-profile" ? "page" : undefined
+              }
+              className={cn(page === "organization-profile" && "bg-accent")}
+            >
+              <UsersRound /> Organization profile
+            </Link>
           </DropdownMenuItem>
-        ) : isAuthEnabled ? null : (
-          <DropdownMenuLabel className="text-xs font-normal text-muted-foreground">
-            Sign-in needs Clerk and Convex configuration.
-          </DropdownMenuLabel>
-        )}
-      </DropdownMenuContent>
-    </DropdownMenu>
+          <DropdownMenuItem onSelect={() => setFeedbackOpen(true)}>
+            <MessageSquarePlus /> Send feedback
+          </DropdownMenuItem>
+          <DropdownMenuItem asChild>
+            <Link
+              to="/profile/edit"
+              aria-current={page === "profile-edit" ? "page" : undefined}
+              className={cn(page === "profile-edit" && "bg-accent")}
+            >
+              <Sparkles /> Edit profile
+            </Link>
+          </DropdownMenuItem>
+          <DropdownMenuItem asChild>
+            <Link
+              to="/account"
+              aria-current={page === "account" ? "page" : undefined}
+              className={cn(page === "account" && "bg-accent")}
+            >
+              <Settings /> Account settings
+            </Link>
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
+          {isSignedIn ? (
+            <DropdownMenuItem onSelect={() => void signOut()}>
+              <LogOut /> Sign out
+            </DropdownMenuItem>
+          ) : isAuthEnabled ? null : (
+            <DropdownMenuLabel className="text-xs font-normal text-muted-foreground">
+              Sign-in needs Clerk and Convex configuration.
+            </DropdownMenuLabel>
+          )}
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </>
   );
 }
 
