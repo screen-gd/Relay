@@ -1,12 +1,13 @@
 import { Link } from "@tanstack/react-router";
 import { useState } from "react";
-import { useMutation, useQuery } from "convex/react";
+import { useConvexAuth, useMutation, useQuery } from "convex/react";
 import type { FunctionReturnType } from "convex/server";
 import { api } from "../../../convex/_generated/api";
 import type { Id } from "../../../convex/_generated/dataModel";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ContentSection } from "@/components/workspace-page";
+import { AiLockedNotice } from "@/features/ai/ai-availability";
 import { projectLink } from "@/features/projects/project-view";
 
 type Question = FunctionReturnType<typeof api.earningsQa.recent>[number];
@@ -110,6 +111,7 @@ export function EarningsQa({
   workspaceId: Id<"teamWorkspaces">;
 }) {
   const [month] = useState(() => new Date().toISOString().slice(0, 7));
+  const { isAuthenticated } = useConvexAuth();
   const ai = useQuery(api.aiRuns.getSummary, { workspaceId, month });
   const questions = useQuery(
     api.earningsQa.recent,
@@ -133,7 +135,16 @@ export function EarningsQa({
     }
   }
 
-  if (!ai?.enabled) return null;
+  if (!ai) return null;
+  if (!ai.enabled)
+    return (
+      <ContentSection title="Ask about earnings">
+        <AiLockedNotice
+          feature="Ask about your earnings"
+          access={isAuthenticated ? "settings" : "signIn"}
+        />
+      </ContentSection>
+    );
   const running =
     busy ||
     (questions ?? []).some(
