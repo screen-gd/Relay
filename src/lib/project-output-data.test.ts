@@ -9,6 +9,7 @@ import {
 import {
   duplicateLocalProjectOutputs,
   projectOutputCopies,
+  projectOutputPlans,
 } from "./project-output-data";
 
 const STORAGE_KEY = "relay:project-outputs:v1";
@@ -69,7 +70,7 @@ describe("copying a Project's Outputs", () => {
 
     expect(
       duplicateLocalProjectOutputs({
-        sourceProjectId: "project-1",
+        project: { id: "project-1", dueDate: "2026-01-10" },
         targetProjectId: "project-2",
         createdAt,
       })
@@ -95,7 +96,7 @@ describe("copying a Project's Outputs", () => {
 
     expect(
       duplicateLocalProjectOutputs({
-        sourceProjectId: "project-1",
+        project: { id: "project-1", dueDate: "2026-01-10" },
         targetProjectId: "project-2",
         createdAt,
       })
@@ -108,6 +109,38 @@ describe("copying a Project's Outputs", () => {
     ).toEqual(many.map(({ title }) => title));
   });
 
+  it("starts a copy from the Project's plan while it holds no Outputs", () => {
+    const entries = stubStorage();
+
+    expect(
+      duplicateLocalProjectOutputs({
+        project: {
+          id: "project-1",
+          dueDate: "2026-11-01",
+          templateDeliverables: [
+            {
+              title: "Suggested master",
+              category: "Deliverable",
+              initialStatus: "sent_to_client",
+            },
+            { title: "Rough cut", category: "Asset", initialStatus: "draft" },
+          ],
+        },
+        targetProjectId: "project-2",
+        createdAt,
+      })
+    ).toBe(2);
+
+    expect(
+      storedOutputs(entries)
+        .filter(({ projectId }) => projectId === "project-2")
+        .map(({ title, reviewState, dueDate }) => [title, reviewState, dueDate])
+    ).toEqual([
+      ["Suggested master", "sent_to_client", "2026-11-01"],
+      ["Rough cut", "draft", "2026-11-01"],
+    ]);
+  });
+
   it("brings each Output's review state and due date to the copy", () => {
     const approved = setProjectOutputReviewState(
       output(1, { dueDate: "2026-11-01" }),
@@ -115,7 +148,10 @@ describe("copying a Project's Outputs", () => {
       "2026-10-15T08:30:00.000Z"
     );
     const copies = projectOutputCopies({
-      outputs: [approved, output(2, { archived: true })],
+      outputs: projectOutputPlans({ dueDate: undefined }, [
+        approved,
+        output(2, { archived: true }),
+      ]),
       targetProjectId: "project-2",
       createdAt,
     });
@@ -141,7 +177,7 @@ describe("copying a Project's Outputs", () => {
     });
 
     duplicateLocalProjectOutputs({
-      sourceProjectId: "project-1",
+      project: { id: "project-1", dueDate: undefined },
       targetProjectId: "project-2",
       createdAt,
     });
@@ -158,7 +194,7 @@ describe("copying a Project's Outputs", () => {
 
     expect(
       duplicateLocalProjectOutputs({
-        sourceProjectId: "project-1",
+        project: { id: "project-1", dueDate: "2026-01-10" },
         targetProjectId: "project-2",
         createdAt,
       })

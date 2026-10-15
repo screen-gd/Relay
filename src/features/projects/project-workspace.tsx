@@ -103,6 +103,8 @@ export function projectMenuItems(
  * The copy Duplicate creates: the same client, schedule, and workflow stages
  * under a new id, unarchived and unpaid. Its Outputs are created separately,
  * through the Outputs store, so the copy keeps as many as the original holds.
+ * It keeps no Template list: a copied Project holds its Outputs, and a Template
+ * entry the original no longer shows would be created again on the copy.
  * Media versions and their comments belong to the original Project, so a copy
  * starts with an empty review history.
  */
@@ -110,8 +112,9 @@ export function projectCopy(
   project: WorkItem,
   copy: { id: string; createdAt: string }
 ): WorkItem {
+  const { templateDeliverables: _plan, ...rest } = project;
   return {
-    ...project,
+    ...rest,
     id: copy.id,
     createdAt: copy.createdAt,
     title: `${project.title.trim()} (copy)`,
@@ -122,13 +125,6 @@ export function projectCopy(
     ...(project.workflowStages
       ? {
           workflowStages: project.workflowStages.map((stage) => ({ ...stage })),
-        }
-      : {}),
-    ...(project.templateDeliverables
-      ? {
-          templateDeliverables: project.templateDeliverables.map(
-            (deliverable) => ({ ...deliverable })
-          ),
         }
       : {}),
   };
