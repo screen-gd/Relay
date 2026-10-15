@@ -262,7 +262,7 @@ export function ChangeOrderDraft({
             disabled={running || !billable || !validHours}
             onClick={() => void request("default")}
           >
-            Draft change order
+            Draft a change order
           </Button>
           {latest ? (
             <Button

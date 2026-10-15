@@ -27,6 +27,7 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { CapabilityUpgradePrompt } from "@/components/subscription-plans";
 import { ContentSection } from "@/components/workspace-page";
+import { useProjectAccess } from "@/features/projects/project-access";
 import { useProjectOutputs } from "@/lib/project-output-data";
 import type { SettingsState, WorkItem } from "@/lib/types";
 import {
@@ -155,6 +156,7 @@ export function ProjectPortalPanel({
   customPortalBrandingEnabled = true,
 }: ProjectPortalPanelProps) {
   const outputData = useProjectOutputs(project, canEdit);
+  const access = useProjectAccess();
   const outputs = useMemo(
     () =>
       outputData.outputs.map((output) => ({
@@ -366,7 +368,11 @@ export function ProjectPortalPanel({
           description="Requires a cloud account with portal access."
         />
         {canDraftUpdates ? (
-          <StatusDrafts key={project.id} projectId={project.id} />
+          <StatusDrafts
+            key={project.id}
+            projectId={project.id}
+            aiEnabled={Boolean(access.teamWorkspace?.aiEnabled)}
+          />
         ) : null}
       </>
     );
@@ -680,6 +686,7 @@ export function ProjectPortalPanel({
           key={project.id}
           projectId={project.id}
           portalId={data.portal?.id}
+          aiEnabled={Boolean(access.teamWorkspace?.aiEnabled)}
         />
       ) : null}
 

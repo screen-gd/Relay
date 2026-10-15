@@ -39,7 +39,7 @@ export function BriefImport({
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }) {
-  const { isAuthenticated } = useConvexAuth();
+  const { isAuthenticated, isLoading } = useConvexAuth();
   const workspace = useQuery(
     api.briefImport.workspace,
     isAuthenticated ? { teamId } : "skip"
@@ -141,15 +141,17 @@ export function BriefImport({
     }
   }
   /**
-   * A Workspace that cannot run AI keeps the notice where the import sits, so
-   * nobody fills the form for a run that would fail.
+   * A visit that cannot run AI keeps the notice where the import sits, so the
+   * feature is visible before it is unlocked and nobody fills the form for a
+   * run that would fail. Sign-in resolves first, then the Workspace, which is
+   * why a local visit never waits on a query that will not run.
    */
   const locked: AiAccess | null = !isAuthenticated
     ? "signIn"
     : workspace === null || (workspace && !workspace.aiEnabled)
       ? "settings"
       : null;
-  if (locked)
+  if (!isLoading && locked)
     return (
       <section className={sectionClassName}>
         <AiLockedNotice feature="Import a brief" access={locked} />
