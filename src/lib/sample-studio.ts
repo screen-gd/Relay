@@ -291,6 +291,8 @@ type SampleWorkspacePorts = SampleWorkspaceWrites & {
   clients: readonly Client[];
   /** Resolves once a pending settings write has reached the server. */
   awaitSettings?: () => Promise<void>;
+  /** Resolves once the projects `setItems` started have reached the server. */
+  awaitProjects?: () => Promise<void>;
 };
 
 /**
@@ -301,6 +303,7 @@ type SampleWorkspacePorts = SampleWorkspaceWrites & {
 export async function seedSampleWorkspace({
   clients,
   awaitSettings,
+  awaitProjects,
   setItems,
   setSettings,
   setResourceLinks,
@@ -320,6 +323,8 @@ export async function seedSampleWorkspace({
   setResourceLinks((current) =>
     withSampleRecords(current, sampleWorkspaceResources)
   );
+  // Rejecting here is what lets the first-run screen report the failure.
+  if (awaitProjects) await awaitProjects();
 }
 
 /** Removes the seeded records and leaves everything else in place. */

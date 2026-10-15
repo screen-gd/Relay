@@ -248,6 +248,17 @@ export function ProjectPortalPanel({
         projectId: project.id,
         maxRevisions: revisions,
       });
+    } catch (caught) {
+      // The portal is not saved yet, so say which of the two saves failed.
+      setBusy("");
+      setFormError(
+        caught instanceof Error
+          ? caught.message
+          : "Could not save the Max revisions."
+      );
+      return;
+    }
+    try {
       await data.save(draft);
       setDraft((current) => ({ ...current, pin: "" }));
     } catch (caught) {
