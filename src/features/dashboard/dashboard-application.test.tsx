@@ -15,6 +15,7 @@ vi.mock("@/lib/data-context", () => ({
   useData: () => ({
     settings: sampleStudioSettings,
     salaryBatches: [],
+    salaryPlans: [],
     isSignedIn: state.isSignedIn,
     setToast: vi.fn(),
     updateSalaryBatchPayment: vi.fn(),

@@ -109,6 +109,7 @@ type DashboardProps = {
     outstanding: number;
     salaryEdits: number;
     salaryBatchProgress: number;
+    salaryBatchSize: number | null;
   };
   projects: WorkItem[];
   visibleProjects: WorkItem[];
@@ -435,7 +436,9 @@ export function PrecisionDashboard(props: DashboardProps) {
     };
   }, [props.projects]);
   const { overdue, dueThisWeek, waitingReviews, blockers } = projectSummary;
-  const salarySize = normalizedSalaryBatchSize(props.settings.salaryBatchSize);
+  const salarySize =
+    props.stats.salaryBatchSize ??
+    normalizedSalaryBatchSize(props.settings.salaryBatchSize);
   const pendingSalaryBatch = useMemo(
     () =>
       props.salaryBatches
@@ -449,11 +452,7 @@ export function PrecisionDashboard(props: DashboardProps) {
     100,
     Math.round((salaryProgress / salarySize) * 100)
   );
-  const showSalaryBatch = props.projects.some(
-    (project) =>
-      project.workType.trim().toLowerCase() ===
-      props.settings.salaryWorkType.trim().toLowerCase()
-  );
+  const showSalaryBatch = props.stats.salaryBatchSize !== null;
   const activeFilterCount = [
     props.statusFilter !== "All",
     props.kindFilter !== "ALL",

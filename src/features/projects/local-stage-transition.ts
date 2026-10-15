@@ -1,4 +1,9 @@
-import type { SalaryBatch, SettingsState, WorkItem } from "@/lib/types";
+import type {
+  SalaryBatch,
+  SalaryPlan,
+  SettingsState,
+  WorkItem,
+} from "@/lib/types";
 import {
   getWorkflowStageStatus,
   moveProjectToStage,
@@ -37,6 +42,53 @@ export function salaryBatchProgress(
       !settledIds.has(project.id)
   ).length;
   return { progress: pending % requiredProjectCount, requiredProjectCount };
+}
+
+/**
+ * The batch the dashboard's Salary batch card tracks. Personal Projects on a
+ * Payment plan count toward that plan's size; other salary-type Projects count
+ * toward the settings batch. Returns the bucket with the most unsettled
+ * deliveries (the settings batch wins ties), or null with no salary work.
+ */
+export function dashboardSalaryBatch(
+  projects: readonly WorkItem[],
+  batches: readonly SalaryBatch[],
+  plans: readonly SalaryPlan[],
+  settings: Pick<SettingsState, "salaryWorkType" | "salaryBatchSize">
+): { progress: number; size: number } | null {
+  const settledIds = new Set(
+    batches.flatMap((batch) => batch.projectIds ?? [])
+  );
+  const settingsSize = normalizedSalaryBatchSize(settings.salaryBatchSize);
+  const buckets = new Map<string, { size: number; pending: number }>();
+  for (const project of projects) {
+    if (project.teamId) continue;
+    const planId = project.salaryPlanId ?? "";
+    if (!planId && project.workType !== settings.salaryWorkType) continue;
+    const bucket = buckets.get(planId) ?? {
+      size: planId
+        ? (plans.find((plan) => plan.id === planId)?.requiredProjectCount ??
+          settingsSize)
+        : settingsSize,
+      pending: 0,
+    };
+    if (isDoneStatus(project.status) && !settledIds.has(project.id))
+      bucket.pending += 1;
+    buckets.set(planId, bucket);
+  }
+  let shown: { size: number; pending: number } | undefined;
+  for (const [planId, bucket] of buckets) {
+    const progress = bucket.pending % bucket.size;
+    if (
+      !shown ||
+      progress > shown.pending % shown.size ||
+      (progress === shown.pending % shown.size && !planId)
+    )
+      shown = bucket;
+  }
+  return shown
+    ? { progress: shown.pending % shown.size, size: shown.size }
+    : null;
 }
 
 /** Delivery effect a stage move would have, computed from local state. */
