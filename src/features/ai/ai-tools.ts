@@ -46,14 +46,14 @@ export const aiTools: readonly AiTool[] = [
   },
   {
     id: "transcript-review",
-    label: "Review a call transcript",
+    label: "Match comments in a transcript",
     home: "Project · Outputs",
     projectView: "outputs",
     keywords: "transcript call notes feedback",
   },
   {
     id: "version-changelog",
-    label: "Summarise a version",
+    label: "Draft a version changelog",
     home: "Project · Outputs",
     projectView: "outputs",
     keywords: "changelog summary what changed",

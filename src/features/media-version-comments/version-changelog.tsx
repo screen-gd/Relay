@@ -120,7 +120,7 @@ export function VersionChangelog({
     return canEdit ? (
       <section aria-label="Version changelog" className="mt-4">
         <AiLockedNotice
-          feature="Draft the changelog"
+          feature="Draft a version changelog"
           access={hasAccount ? "settings" : "signIn"}
         />
       </section>
@@ -140,7 +140,7 @@ export function VersionChangelog({
           disabled={running}
           onClick={() => void request("default")}
         >
-          Draft changelog
+          Draft a version changelog
         </Button>
         {run || rows?.length ? (
           <Button

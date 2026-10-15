@@ -68,7 +68,7 @@ export function TranscriptReview({
     return (
       <div className="grid gap-2 py-2">
         <AiLockedNotice
-          feature="Match ambiguous comments"
+          feature="Match comments in a transcript"
           access={hasAccount ? "settings" : "signIn"}
         />
         {children}
@@ -197,7 +197,7 @@ function ConnectedTranscriptReview({
                   disabled={running}
                   onClick={() => void request("default")}
                 >
-                  Match ambiguous comments
+                  Match comments in a transcript
                 </Button>
                 {run ? (
                   <Button
