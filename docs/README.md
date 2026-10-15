@@ -13,6 +13,7 @@ Use these documents as the current project record:
 - [Dependency audit](dependency-audit.md) — resolved findings, patched versions, and verification.
 - [Testing and suite cleanup](testing.md) — useful coverage, removed checks, and remaining gaps.
 - [Subscription plans](product/subscription-plans.md) — proposed commercial model.
+- [Pricing research](product/pricing-research.md) and [cost calculator](product/pricing-cost-model.html): proposed prices, Free limits, and hosting cost scenarios.
 - [Decision records](adr/) — accepted decisions and their constraints.
 
 Active implementation plans live in `.scratch/`. Remove them after completion once their lasting decisions are captured here or in `CONTEXT.md`.

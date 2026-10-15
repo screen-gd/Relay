@@ -1,0 +1,773 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Relay pricing and cost model</title>
+    <style>
+      :root {
+        color-scheme: light dark;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        background: transparent;
+        color: var(--foreground, #111);
+        font-family: var(--font-sans, Arial, sans-serif);
+        font-size: 15px;
+        line-height: 1.5;
+      }
+      h1 {
+        font-size: 24px;
+        line-height: 1.2;
+        margin: 0 0 12px;
+      }
+      h2 {
+        font-size: 20px;
+        line-height: 1.3;
+        margin: 26px 0 12px;
+      }
+      p {
+        margin: 10px 0;
+      }
+      a {
+        color: var(--accent-foreground, #446000);
+        text-underline-offset: 3px;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 14px;
+      }
+      th,
+      td {
+        padding: 10px 8px;
+        text-align: left;
+        vertical-align: top;
+        border-bottom: 1px solid var(--border, #ddd);
+      }
+      th:first-child,
+      td:first-child {
+        padding-left: 0;
+      }
+      th:last-child,
+      td:last-child {
+        padding-right: 0;
+      }
+      th {
+        font-weight: 600;
+      }
+      td strong {
+        font-size: 16px;
+      }
+      .numbers td:not(:first-child),
+      .numbers th:not(:first-child) {
+        text-align: right;
+        font-variant-numeric: tabular-nums;
+      }
+      form {
+        margin-top: 14px;
+      }
+      .controls {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 14px 20px;
+      }
+      label {
+        display: grid;
+        gap: 6px;
+        font-size: 14px;
+      }
+      input,
+      select {
+        width: 100%;
+        min-width: 0;
+        padding: 9px 10px;
+        color: var(--foreground, #111);
+        background: var(--secondary, #f1f1f1);
+        border: 1px solid var(--border, #ddd);
+        border-radius: 6px;
+        font: inherit;
+      }
+      input:focus-visible,
+      select:focus-visible,
+      summary:focus-visible {
+        outline: 2px solid var(--accent-foreground, #446000);
+        outline-offset: 2px;
+      }
+      details {
+        margin: 18px 0;
+      }
+      summary {
+        cursor: pointer;
+        font-weight: 600;
+      }
+      .advanced {
+        margin: 14px 0;
+      }
+      small,
+      .note {
+        font-size: 13px;
+        line-height: 1.5;
+      }
+      .chart {
+        height: 138px;
+        padding: 14px 0;
+      }
+      .bar-row {
+        display: grid;
+        grid-template-columns: 106px minmax(0, 1fr) 86px;
+        align-items: center;
+        gap: 12px;
+        height: 48px;
+      }
+      .track {
+        height: 22px;
+        background: var(--secondary, #f1f1f1);
+      }
+      .bar {
+        height: 100%;
+        background: var(--accent-foreground, #446000);
+        min-width: 2px;
+      }
+      .bar.alternate {
+        background: var(--foreground, #111);
+      }
+      .bar-row output {
+        text-align: right;
+        font-weight: 600;
+        font-variant-numeric: tabular-nums;
+      }
+      .total {
+        font-weight: 700;
+      }
+      .total td {
+        font-size: 17px;
+      }
+      .sources {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px 18px;
+        margin: 14px 0 0;
+      }
+      .negative {
+        color: var(--destructive, #ff6c6c);
+      }
+      @media (max-width: 470px) {
+        body {
+          font-size: 14px;
+        }
+        th,
+        td {
+          font-size: 12px;
+          padding: 8px 5px;
+        }
+        td strong {
+          font-size: 14px;
+        }
+        .controls {
+          gap: 12px;
+        }
+        .bar-row {
+          grid-template-columns: 87px minmax(0, 1fr) 75px;
+          gap: 8px;
+        }
+        .total td {
+          font-size: 15px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Creator $10. Team $29.</h1>
+    <p>
+      Approved monthly USD launch pricing; checkout stays disabled. Clients and
+      Team viewers are free. Current users and Convex/Cloudflare bills are zero;
+      both services are on free plans. The calculator models future metered
+      usage.
+    </p>
+    <table aria-label="Proposed Relay plans">
+      <thead>
+        <tr>
+          <th>Free</th>
+          <th>Creator · $10</th>
+          <th>Team · $29</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Unlimited projects<br />Unlimited clients<br />1 owner</td>
+          <td>
+            Unlimited projects and clients<br />1 owner<br />25 GB review
+            storage, upcoming
+          </td>
+          <td>
+            3 editors, owner included<br />100 GB shared storage, upcoming<br />$9
+            per extra editor
+          </td>
+        </tr>
+        <tr>
+          <td>
+            External reviews, comments, password portals, basic payment tracking
+          </td>
+          <td>
+            Client Hub, branding, templates, reports, payment plans and batches
+          </td>
+          <td>
+            Creator features, roles, assignments, payouts, workload reports
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    <p class="note">
+      Free has no active-project or active-client cap. New cloud payment plans
+      and batches require Creator or Team. Hosted uploads and most Creator
+      features are already gated. Keep archives and existing records accessible.
+      Preserve the seven-day Creator trial.
+    </p>
+    <p class="note">
+      Use
+      <strong
+        >Workers for the app, Convex for data, and R2 for uploaded files</strong
+      >. The current config uses Convex files. R2 needs implementation and
+      operational verification before switching. Current operational quotas stay
+      at 5 GB for Creator/trial and 15 GB for Team; 25 GB/100 GB are future
+      launch targets.
+    </p>
+    <h2>Will the prices cover usage?</h2>
+    <p>
+      Compare the same workload with R2 or Convex file storage. Defaults are
+      assumptions, not measured Relay usage. One Convex developer; US East rates
+      checked 14 October 2026.
+    </p>
+    <form id="model">
+      <div class="controls">
+        <label
+          >Paying workspaces<input
+            id="paid"
+            type="number"
+            min="0"
+            max="1000000"
+            step="1"
+            value="100"
+        /></label>
+        <label
+          >Active Free workspaces<input
+            id="free"
+            type="number"
+            min="0"
+            max="10000000"
+            step="1"
+            value="1000"
+        /></label>
+        <label
+          >Revenue per paid workspace / month ($)<input
+            id="price"
+            type="number"
+            min="0"
+            max="100000"
+            step=".01"
+            value="10"
+        /></label>
+        <label
+          >Convex plan<select id="plan">
+            <option value="pro">Pro · $25 base</option>
+            <option value="starter">Starter · $0 + usage</option>
+          </select></label
+        >
+        <label
+          >Average files stored per paid workspace (GB)<input
+            id="files"
+            type="number"
+            min="0"
+            max="100000"
+            step=".1"
+            value="25"
+        /></label>
+        <label
+          >Monthly file delivery per paid workspace (GB)<input
+            id="delivery"
+            type="number"
+            min="0"
+            max="1000000"
+            step="1"
+            value="100"
+        /></label>
+        <label
+          >Payment reserve (%)<input
+            id="fee"
+            type="number"
+            min="0"
+            max="100"
+            step=".1"
+            value="5"
+        /></label>
+        <label
+          >Other monthly expenses ($)<input
+            id="other"
+            type="number"
+            min="0"
+            max="10000000"
+            step="1"
+            value="0"
+        /></label>
+      </div>
+      <details>
+        <summary>Adjust database and request assumptions</summary>
+        <div class="controls advanced">
+          <label
+            >Monthly Convex calls per Free workspace<input
+              id="freeCalls"
+              type="number"
+              min="0"
+              max="10000000"
+              value="10000"
+          /></label>
+          <label
+            >Monthly Convex calls per paid workspace<input
+              id="paidCalls"
+              type="number"
+              min="0"
+              max="10000000"
+              value="20000"
+          /></label>
+          <label
+            >Monthly database I/O per Free workspace (GB)<input
+              id="freeIO"
+              type="number"
+              min="0"
+              max="10000"
+              step=".01"
+              value=".1"
+          /></label>
+          <label
+            >Monthly database I/O per paid workspace (GB)<input
+              id="paidIO"
+              type="number"
+              min="0"
+              max="10000"
+              step=".01"
+              value=".25"
+          /></label>
+          <label
+            >Monthly metadata egress per Free workspace (GB)<input
+              id="freeEgress"
+              type="number"
+              min="0"
+              max="10000"
+              step=".01"
+              value=".01"
+          /></label>
+          <label
+            >Monthly metadata egress per paid workspace (GB)<input
+              id="paidEgress"
+              type="number"
+              min="0"
+              max="10000"
+              step=".01"
+              value=".05"
+          /></label>
+          <label
+            >Database storage per Free workspace (GB)<input
+              id="freeDB"
+              type="number"
+              min="0"
+              max="10000"
+              step=".001"
+              value=".001"
+          /></label>
+          <label
+            >Database storage per paid workspace (GB)<input
+              id="paidDB"
+              type="number"
+              min="0"
+              max="10000"
+              step=".001"
+              value=".005"
+          /></label>
+          <label
+            >Monthly action compute per Free workspace (GB-hour)<input
+              id="freeAction"
+              type="number"
+              min="0"
+              max="10000"
+              step=".001"
+              value=".005"
+          /></label>
+          <label
+            >Monthly action compute per paid workspace (GB-hour)<input
+              id="paidAction"
+              type="number"
+              min="0"
+              max="10000"
+              step=".001"
+              value=".01"
+          /></label>
+          <label
+            >Dynamic Worker requests per Free workspace<input
+              id="freeRequests"
+              type="number"
+              min="0"
+              max="10000000"
+              value="2000"
+          /></label>
+          <label
+            >Dynamic Worker requests per paid workspace<input
+              id="paidRequests"
+              type="number"
+              min="0"
+              max="10000000"
+              value="5000"
+          /></label>
+          <label
+            >Average CPU milliseconds per Worker request<input
+              id="workerCPU"
+              type="number"
+              min="0"
+              max="300000"
+              value="10"
+          /></label>
+          <label
+            >R2 Class A operations per paid workspace<input
+              id="writes"
+              type="number"
+              min="0"
+              max="10000000"
+              value="50"
+          /></label>
+          <label
+            >R2 Class B operations per paid workspace<input
+              id="reads"
+              type="number"
+              min="0"
+              max="10000000"
+              value="2500"
+          /></label>
+        </div>
+      </details>
+    </form>
+    <div id="results" aria-live="polite" aria-atomic="true">
+      <div
+        class="chart"
+        role="img"
+        aria-label="Estimated monthly infrastructure cost by file storage provider"
+        id="chart"
+      >
+        <div class="bar-row">
+          <span>R2 files</span>
+          <div class="track"><div id="r2bar" class="bar"></div></div>
+          <output id="r2chart">$82.35</output>
+        </div>
+        <div class="bar-row">
+          <span>Convex files</span>
+          <div class="track">
+            <div id="convexbar" class="bar alternate"></div>
+          </div>
+          <output id="convexchart">$1,312.80</output>
+        </div>
+      </div>
+      <table
+        class="numbers"
+        aria-label="Estimated monthly expenses and remaining revenue"
+      >
+        <thead>
+          <tr>
+            <th>Monthly estimate</th>
+            <th>R2 files</th>
+            <th>Convex files</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Cloudflare Workers</td>
+            <td id="workerR2"></td>
+            <td id="workerConvex"></td>
+          </tr>
+          <tr>
+            <td>Convex base + database + compute</td>
+            <td id="backendR2"></td>
+            <td id="backendConvex"></td>
+          </tr>
+          <tr>
+            <td>Convex data egress</td>
+            <td id="egressR2"></td>
+            <td id="egressConvex"></td>
+          </tr>
+          <tr>
+            <td>Hosted file storage / R2 operations</td>
+            <td id="mediaR2"></td>
+            <td id="mediaConvex"></td>
+          </tr>
+          <tr class="total">
+            <td>Infrastructure</td>
+            <td id="infraR2"></td>
+            <td id="infraConvex"></td>
+          </tr>
+          <tr>
+            <td>Gross revenue</td>
+            <td id="revenueR2"></td>
+            <td id="revenueConvex"></td>
+          </tr>
+          <tr>
+            <td>Payment reserve</td>
+            <td id="reserveR2"></td>
+            <td id="reserveConvex"></td>
+          </tr>
+          <tr>
+            <td>Other expenses</td>
+            <td id="otherR2"></td>
+            <td id="otherConvex"></td>
+          </tr>
+          <tr class="total">
+            <td>Remaining</td>
+            <td id="remainingR2"></td>
+            <td id="remainingConvex"></td>
+          </tr>
+          <tr>
+            <td>Remaining / gross revenue</td>
+            <td id="marginR2"></td>
+            <td id="marginConvex"></td>
+          </tr>
+        </tbody>
+      </table>
+      <p class="note" id="coverage"></p>
+    </div>
+    <p class="note">
+      Remaining is before unmodeled labor, tax, refunds, and other expenses. Add
+      Clerk, email, domains, and logging to “Other expenses.” The 5% reserve is
+      a planning assumption, not a Razorpay quote. Shared provider allowances
+      apply once across the workload. No Relay-funded AI tokens, transcoding,
+      search, or extra environments are modeled.
+    </p>
+    <p class="note">
+      R2 delivery bytes have no egress charge, but more playback can mean more
+      reads and signing calls. Adjust those separately. Convex calls include
+      reactive reruns; database I/O includes database reads and writes.
+      Active-project limits do not bound archived data or public portal traffic.
+    </p>
+    <p class="note">
+      Frame.io Pro includes 2 TB at $15/member/month. Relay's $10 Creator offer
+      sells client and payment workflows; its upcoming 25 GB is for review
+      copies. Stream, if added later, bills by stored and delivered minutes and
+      needs its own budget.
+    </p>
+    <div class="sources">
+      <a
+        href="https://www.convex.dev/pricing"
+        target="_blank"
+        rel="noopener noreferrer"
+        >Convex rates</a
+      ><a
+        href="https://developers.cloudflare.com/workers/platform/pricing/"
+        target="_blank"
+        rel="noopener noreferrer"
+        >Workers rates</a
+      ><a
+        href="https://developers.cloudflare.com/r2/pricing/"
+        target="_blank"
+        rel="noopener noreferrer"
+        >R2 rates</a
+      ><a
+        href="https://frame.io/pricing"
+        target="_blank"
+        rel="noopener noreferrer"
+        >Frame.io comparison</a
+      ><a
+        href="https://razorpay.com/subscriptions/"
+        target="_blank"
+        rel="noopener noreferrer"
+        >Razorpay</a
+      >
+    </div>
+    <noscript
+      ><p>
+        The default estimate is $82.35/month with R2 or $1,312.80/month with
+        Convex files. JavaScript enables adjustment.
+      </p></noscript
+    >
+    <script>
+      const defaults = {
+        paid: 100,
+        free: 1000,
+        price: 10,
+        plan: "pro",
+        files: 25,
+        delivery: 100,
+        fee: 5,
+        other: 0,
+        freeCalls: 10000,
+        paidCalls: 20000,
+        freeIO: 0.1,
+        paidIO: 0.25,
+        freeEgress: 0.01,
+        paidEgress: 0.05,
+        freeDB: 0.001,
+        paidDB: 0.005,
+        freeAction: 0.005,
+        paidAction: 0.01,
+        freeRequests: 2000,
+        paidRequests: 5000,
+        workerCPU: 10,
+        writes: 50,
+        reads: 2500,
+      };
+      function estimate(input = {}, r2 = true) {
+        const s = { ...defaults, ...input },
+          pro = s.plan === "pro";
+        const p = pro
+          ? {
+              base: 25,
+              calls: 25e6,
+              io: 50,
+              db: 50,
+              files: 100,
+              egress: 50,
+              action: 250,
+              c: 2,
+              i: 0.2,
+              d: 0.2,
+              f: 0.03,
+              e: 0.12,
+              a: 0.3,
+            }
+          : {
+              base: 0,
+              calls: 1e6,
+              io: 1,
+              db: 0.5,
+              files: 1,
+              egress: 1,
+              action: 20,
+              c: 2.2,
+              i: 0.22,
+              d: 0.22,
+              f: 0.033,
+              e: 0.132,
+              a: 0.33,
+            };
+        const excess = (used, included, rate) =>
+          Math.max(0, used - included) * rate;
+        const calls = s.free * s.freeCalls + s.paid * s.paidCalls,
+          io = s.free * s.freeIO + s.paid * s.paidIO,
+          db = s.free * s.freeDB + s.paid * s.paidDB,
+          metadata = s.free * s.freeEgress + s.paid * s.paidEgress,
+          actions = s.free * s.freeAction + s.paid * s.paidAction;
+        const requests = s.free * s.freeRequests + s.paid * s.paidRequests,
+          bytes = s.paid * s.files,
+          delivery = s.paid * s.delivery;
+        const worker =
+          5 +
+          excess(requests, 10e6, 0.3 / 1e6) +
+          excess(requests * s.workerCPU, 30e6, 0.02 / 1e6);
+        const backend =
+          p.base +
+          excess(calls, p.calls, p.c / 1e6) +
+          excess(io, p.io, p.i) +
+          excess(db, p.db, p.d) +
+          excess(actions, p.action, p.a);
+        const egress = excess(metadata + (r2 ? 0 : delivery), p.egress, p.e);
+        const media = r2
+          ? Math.ceil(Math.max(0, bytes - 10)) * 0.015 +
+            Math.ceil(Math.max(0, s.paid * s.writes - 1e6) / 1e6) * 4.5 +
+            Math.ceil(Math.max(0, s.paid * s.reads - 10e6) / 1e6) * 0.36
+          : excess(bytes, p.files, p.f);
+        const infra = worker + backend + egress + media,
+          revenue = s.paid * s.price,
+          reserve = (revenue * s.fee) / 100,
+          remaining = revenue - reserve - infra - s.other;
+        return {
+          worker,
+          backend,
+          egress,
+          media,
+          infra,
+          revenue,
+          reserve,
+          other: s.other,
+          remaining,
+          margin: revenue ? (remaining / revenue) * 100 : null,
+        };
+      }
+      const form = document.getElementById("model"),
+        money = new Intl.NumberFormat("en-US", {
+          style: "currency",
+          currency: "USD",
+        });
+      function number(id) {
+        const input = document.getElementById(id),
+          n = Number(input.value),
+          max = Number(input.max);
+        return Number.isFinite(n) ? Math.min(max, Math.max(0, n)) : 0;
+      }
+      function render() {
+        const s = { ...defaults, plan: document.getElementById("plan").value };
+        for (const id of Object.keys(defaults))
+          if (id !== "plan") s[id] = number(id);
+        s.paid = Math.floor(s.paid);
+        s.free = Math.floor(s.free);
+        const r2 = estimate(s, true),
+          convex = estimate(s, false);
+        for (const [suffix, result] of [
+          ["R2", r2],
+          ["Convex", convex],
+        ]) {
+          for (const key of [
+            "worker",
+            "backend",
+            "egress",
+            "media",
+            "infra",
+            "revenue",
+            "reserve",
+            "other",
+            "remaining",
+          ])
+            document.getElementById(key + suffix).textContent = money.format(
+              result[key]
+            );
+          document.getElementById("margin" + suffix).textContent =
+            result.margin === null ? "—" : result.margin.toFixed(1) + "%";
+          document
+            .getElementById("remaining" + suffix)
+            .classList.toggle("negative", result.remaining < 0);
+        }
+        const max = Math.max(r2.infra, convex.infra, 1);
+        document.getElementById("r2bar").style.width =
+          (100 * r2.infra) / max + "%";
+        document.getElementById("convexbar").style.width =
+          (100 * convex.infra) / max + "%";
+        document.getElementById("r2chart").textContent = money.format(r2.infra);
+        document.getElementById("convexchart").textContent = money.format(
+          convex.infra
+        );
+        document
+          .getElementById("chart")
+          .setAttribute(
+            "aria-label",
+            "Monthly infrastructure: R2 " +
+              money.format(r2.infra) +
+              ", Convex files " +
+              money.format(convex.infra)
+          );
+        const base = s.plan === "pro" ? 30 : 5,
+          netPrice = s.price * (1 - s.fee / 100);
+        const floorCustomers = netPrice > 0 ? Math.ceil(base / netPrice) : null;
+        document.getElementById("coverage").textContent =
+          "Fixed base: " +
+          money.format(base) +
+          "/month for Workers and one Convex developer." +
+          (floorCustomers === null
+            ? " This price leaves no revenue after the reserve."
+            : " About " +
+              floorCustomers.toLocaleString("en-US") +
+              " paid workspaces cover that base alone. Variable usage, the Free cohort, and other expenses are included in the table above.");
+      }
+      form.addEventListener("input", render);
+      form.addEventListener("change", render);
+      form.addEventListener("submit", (event) => event.preventDefault());
+      render();
+    </script>
+  </body>
+</html>

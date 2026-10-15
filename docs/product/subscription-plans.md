@@ -1,6 +1,6 @@
 # Relay subscription plans
 
-Status: Free plan open to everyone, with an opt-in 7-day Creator trial; future payments use Razorpay
+Status: launch pricing approved 2026-10-15; Free open, opt-in 7-day Creator trial; paid checkout disabled
 
 The Free plan is open to everyone without an invite. Creator, Team, extra Editor
 Seats, and Storage Add-ons are future offers, not available for purchase. Free-only
@@ -11,22 +11,30 @@ Workspace entitlements, including the no-card Creator trial. Clients and Client 
 
 Paid checkout stays disabled. Do not connect Stripe or activate Clerk
 Billing. Razorpay integration and migration of the existing Clerk-specific billing
-code are separate post-launch work. Workspace accounting supports multiple currencies. Paid prices, billing periods,
-paid subscription cancellations and refund terms await ticket 02 approval. The
+code are separate work. Workspace accounting supports multiple currencies. Monthly
+launch pricing is approved below. Annual pricing, paid subscription cancellations,
+and refund terms remain deferred. The
 7-day no-card Creator trial is approved separately. No former
 Clerk or Stripe commercial terms carry forward. The implementation checklist lives in
 `.scratch/subscription-plans/`.
 
 ## Plan summary
 
-| Plan    |  Monthly |   Annual | Trial  | Storage                 | Internal Editors   |
-| ------- | -------: | -------: | ------ | ----------------------- | ------------------ |
-| Free    |       $0 |       $0 | None   | No Relay-hosted uploads | 1 Workspace owner  |
-| Creator |  Pending |  Pending | 7 days | 5 GB                    | 1 Workspace owner  |
-| Team    | Deferred | Deferred | None   | 15 GB shared            | 3 included Editors |
+| Plan    | Monthly |   Annual | Trial  | Storage                 | Internal Editors   |
+| ------- | ------: | -------: | ------ | ----------------------- | ------------------ |
+| Free    |      $0 |       $0 | None   | No Relay-hosted uploads | 1 Workspace owner  |
+| Creator |     $10 | Deferred | 7 days | 25 GB launch target     | 1 Workspace owner  |
+| Team    |     $29 | Deferred | None   | 100 GB launch target    | 3 included Editors |
 
-Paid capacities describe the current product design, not approved commercial
-offers. Annual discounts and negotiated bundles are not approved.
+Team costs $29 per Workspace per month for three Editors, including the Owner,
+plus $9/month per extra Editor. Clients and internal Team Viewers remain free.
+Annual discounts and negotiated bundles are not approved.
+
+Hosted uploads remain upcoming. The 25 GB/100 GB launch targets depend on a verified
+R2 upload and playback path. Current operational quotas remain 5 GB for Creator
+(including its trial), 15 GB for Team, and 2 GB per extra Editor. These are not
+the advertised launch storage offer; do not increase them or enable R2 as part
+of a pricing-copy change.
 
 ## Free
 
@@ -35,33 +43,38 @@ Free is for trying Relay and managing basic solo work.
 Included:
 
 - Unlimited Projects
-- Clients
+- Unlimited Clients
 - Basic workflow tracking
 - Basic Reviews and delivery
 - Standard project-specific Client Portals
 - Embedded video review and comments
-- Payment tracking, owner-managed payment plans and payment batches
+- Basic payment tracking, including updates to existing payment records
 
 Limits:
 
 - No Relay-hosted file uploads
 - No Relay storage quota
 - No internal Team Members
+- Creating payment plans, assigning new Projects to payment plans, and generating
+  new payment batches require Creator or Team. Existing plans and batches remain
+  readable and editable; receipt/payment updates and historical imports remain available.
+- No active-project or active-client cap. Project tracking, status changes, and
+  delivery remain available even when paid batch generation is locked.
 
 YouTube and Vimeo embed directly in shared portals and support playback timestamps through their player APIs. Drive, Dropbox and other links support general comments and manual timestamps; clients open those videos with their host. Embedded and linked videos do not use Relay storage.
 
 ## Creator (post-launch)
 
-Creator is the planned upgrade for uploading your own files and reviewing them.
+Creator is $10 per Workspace per month for a professional client workflow.
 
 Includes everything in Free, plus:
 
-- Relay-hosted file uploads
-- 5 GB Storage Quota
+- Relay-hosted file uploads and 25 GB review storage, upcoming after R2 verification
 - Client Hub
 - Custom portal branding
 - Custom Workflow Templates
 - Advanced reports
+- New payment plans and batches
 
 Creator supports one internal Workspace owner. Client Contacts remain free and do not become Team Members.
 
@@ -95,7 +108,7 @@ Team is for a small editing team working in one shared Workspace.
 Includes everything in Creator, plus:
 
 - 3 included paid Editor seats, including the Workspace owner
-- 15 GB shared Storage Quota
+- 100 GB shared review storage, upcoming after R2 verification
 - Team Workspace access
 - Team roles
 - Project assignments
@@ -103,10 +116,11 @@ Includes everything in Creator, plus:
 - Workload reports
 - Free internal Viewer access
 
-The current capacity design adds 2 GB per extra Editor. Seat pricing and billing
-terms remain deferred, and this capacity is not available for purchase.
+The approved extra Editor price is $9/month. Checkout remains disabled.
+The current operational capacity design adds 2 GB per extra Editor; launch storage
+must be wired and verified separately before hosted uploads are advertised as live.
 
-Examples:
+Current operational quotas, before the R2 launch targets are enabled:
 
 - 3 included paid Editors, including the owner: 15 GB shared
 - 4 paid Editors, including the owner: 17 GB shared

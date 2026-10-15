@@ -69,7 +69,7 @@ describe("Workspace subscription authority", () => {
       editorSeatAllowance: 1,
       storageQuotaBytes: 0,
       billingHealthy: true,
-      capabilities: { fileUploads: false, salaryPlans: true },
+      capabilities: { fileUploads: false, salaryPlans: false },
       canManageBilling: true,
     });
   });

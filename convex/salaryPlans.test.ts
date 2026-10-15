@@ -49,7 +49,7 @@ function settings() {
   };
 }
 
-function project(id: string, salaryPlanId: Id<"salaryPlans">) {
+function project(id: string, salaryPlanId?: Id<"salaryPlans">) {
   return {
     id,
     assigneeUserIds: [],
@@ -218,7 +218,7 @@ test("Salary Plans are owner-only and archive without deleting history", async (
   ).toMatchObject([{ _id: planId, archived: true }]);
 });
 
-test("Free Workspaces can create Salary Plans", async () => {
+test("Free Workspaces cannot create payment plans", async () => {
   const t = convexTest(schema, modules);
   await addWorkspace(t, "free");
   const owner = t.withIdentity({ tokenIdentifier: "owner" });
@@ -232,7 +232,132 @@ test("Free Workspaces can create Salary Plans", async () => {
       startDate: "2026-08-24",
       notes: "",
     })
-  ).resolves.toBeDefined();
+  ).rejects.toThrow("Creator or Team");
+  expect(await owner.query(api.salaryPlans.list, {})).toEqual([]);
+});
+
+test("Free delivery succeeds without creating legacy payment batches", async () => {
+  const t = convexTest(schema, modules);
+  await addWorkspace(t, "free");
+  const owner = t.withIdentity({ tokenIdentifier: "owner" });
+  await owner.mutation(api.settings.upsert, {
+    ...settings(),
+    salaryBatchSize: 1,
+  });
+  await owner.mutation(api.projects.create, {
+    project: {
+      ...project("free-salary"),
+    },
+  });
+  expect(
+    await owner.query(api.projects.previewStage, {
+      projectId: "free-salary",
+      stageId: "done",
+    })
+  ).toEqual({ kind: "none" });
+  expect(
+    await owner.mutation(api.projects.transitionStage, {
+      projectId: "free-salary",
+      stageId: "done",
+    })
+  ).toMatchObject({ kind: "none" });
+  expect(await owner.query(api.projects.list, {})).toMatchObject([
+    { id: "free-salary", status: "Delivered" },
+  ]);
+  expect(await owner.query(api.salaryPlans.listBatches, {})).toEqual([]);
+});
+
+test("downgrading preserves existing plans and delivery but blocks new plan assignments and batches", async () => {
+  const t = convexTest(schema, modules);
+  await addWorkspace(t, "creator");
+  const owner = t.withIdentity({ tokenIdentifier: "owner" });
+  await owner.mutation(api.settings.upsert, settings());
+  const planId = await owner.mutation(api.salaryPlans.create, {
+    clientId: "client-a",
+    requiredProjectCount: 1,
+    amount: 500,
+    startDate: "2026-08-24",
+    notes: "Existing contract",
+  });
+  await owner.mutation(api.projects.create, {
+    project: project("existing", planId),
+  });
+  await t.run(async (ctx) => {
+    const subscription = await ctx.db.query("workspaceSubscriptions").unique();
+    if (!subscription) throw new Error("Subscription missing");
+    await ctx.db.patch(subscription._id, {
+      plan: "free",
+      subscriptionStatus: "free",
+      billingPeriod: null,
+    });
+  });
+  expect(await owner.query(api.salaryPlans.list, {})).toMatchObject([
+    { _id: planId },
+  ]);
+  await expect(
+    owner.mutation(api.projects.create, {
+      project: project("new-assignment", planId),
+    })
+  ).rejects.toThrow("Creator or Team");
+  await owner.mutation(api.projects.create, {
+    project: { ...project("unlinked", planId), salaryPlanId: undefined },
+  });
+  await expect(
+    owner.mutation(api.projects.update, {
+      projectId: "unlinked",
+      changes: { salaryPlanId: planId },
+    })
+  ).rejects.toThrow("Creator or Team");
+  await owner.mutation(api.projects.update, {
+    projectId: "existing",
+    changes: { title: "Updated title" },
+  });
+  await owner.mutation(api.projects.transitionStage, {
+    projectId: "existing",
+    stageId: "done",
+  });
+  expect(await owner.query(api.salaryPlans.listBatches, {})).toEqual([]);
+});
+
+test("a paid Team membership cannot unlock personal payment plans", async () => {
+  const t = convexTest(schema, modules);
+  await addWorkspace(t, "creator");
+  const member = t.withIdentity({ tokenIdentifier: "member" });
+  await member.mutation(api.settings.upsert, settings());
+  await t.run(async (ctx) => {
+    const workspace = await ctx.db.query("teamWorkspaces").unique();
+    if (!workspace) throw new Error("Workspace missing");
+    const subscription = await ctx.db.query("workspaceSubscriptions").unique();
+    if (!subscription) throw new Error("Subscription missing");
+    await ctx.db.patch(subscription._id, {
+      plan: "team",
+      includedEditorSeatQuantity: 3,
+    });
+    await ctx.db.insert("teamMembers", {
+      teamId: workspace._id,
+      userId: "member",
+      name: "Member",
+      email: "member@example.com",
+      role: "Editor",
+      status: "active",
+      permissions: { manageFinance: true },
+      createdAt: "2026-09-01",
+    });
+  });
+  const terms = {
+    clientId: "client-a",
+    requiredProjectCount: 1,
+    amount: 100,
+    startDate: "2026-08-24",
+    notes: "",
+  };
+  await expect(member.mutation(api.salaryPlans.create, terms)).rejects.toThrow(
+    "Creator or Team"
+  );
+  await expect(t.mutation(api.salaryPlans.create, terms)).rejects.toThrow(
+    "Not authenticated"
+  );
+  expect(await member.query(api.salaryPlans.list, {})).toEqual([]);
 });
 
 test("custom Workflow Template changes use Workspace entitlements", async () => {

@@ -21,7 +21,7 @@ const facts = [
   {
     icon: RepeatIcon,
     title: "Manage recurring work",
-    text: "Set payment plans for a client's project batches and track the next payout.",
+    text: "Creator and Team add payment plans for a client's project batches and next payout.",
   },
   {
     icon: ChartBarIcon,
@@ -149,7 +149,8 @@ export default function PaymentsSection() {
           Know what you’re owed.
         </h2>
         <p>
-          Track fees, payments, and payment batches next to your delivery work.
+          Track project fees and payments free. Creator and Team add payment
+          plans and batches for recurring work.
         </p>
       </Reveal>
 

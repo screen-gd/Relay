@@ -7,6 +7,7 @@ import {
   type QueryCtx,
 } from "./_generated/server";
 import type { Doc } from "./_generated/dataModel";
+import { requireOwnerWorkspaceCapability } from "./workspaceSubscriptions";
 
 type FunctionCtx = QueryCtx | MutationCtx;
 
@@ -92,8 +93,14 @@ export const list = query({
 
 export const create = mutation({
   args: planFields,
+  returns: v.id("salaryPlans"),
   handler: async (ctx, args) => {
     const identity = await requireIdentity(ctx);
+    await requireOwnerWorkspaceCapability(
+      ctx,
+      identity.tokenIdentifier,
+      "salaryPlans"
+    );
     validateTerms(
       args.requiredProjectCount,
       args.amount,

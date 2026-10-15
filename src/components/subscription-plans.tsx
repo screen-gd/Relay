@@ -18,6 +18,14 @@ import {
 } from "@/components/ui/dialog";
 import { shouldShowSubscriptionWelcome } from "@/lib/subscription-onboarding";
 import { cn } from "@/lib/utils";
+import {
+  CREATOR_MONTHLY_PRICE_USD,
+  TEAM_MONTHLY_PRICE_USD,
+  TEAM_INCLUDED_EDITOR_SEATS,
+  EXTRA_EDITOR_MONTHLY_PRICE_USD,
+  CREATOR_LAUNCH_STORAGE_GB,
+  TEAM_LAUNCH_STORAGE_GB,
+} from "../../shared/subscription-plans";
 
 export type WorkspaceSubscriptionState = NonNullable<
   FunctionReturnType<typeof api.workspaceSubscriptions.getCurrent>
@@ -29,6 +37,7 @@ const capabilityUpgradeCopy = {
   advancedReports: "Advanced reports",
   customPortalBranding: "Custom portal branding",
   clientHub: "Client Hub",
+  salaryPlans: "Payment plans and batches",
 } as const;
 
 type PaidWorkspaceCapability = keyof typeof capabilityUpgradeCopy;
@@ -173,6 +182,18 @@ export function SubscriptionPricingView({
             Free supports one Workspace owner. Hosted uploads and paid
             capabilities remain unavailable on Free.
           </p>
+          <p className="text-sm text-muted-foreground">
+            Creator is ${CREATOR_MONTHLY_PRICE_USD} per Workspace per month.
+            Team is ${TEAM_MONTHLY_PRICE_USD} per Workspace per month for{" "}
+            {TEAM_INCLUDED_EDITOR_SEATS} editors, including the owner, plus $
+            {EXTRA_EDITOR_MONTHLY_PRICE_USD} per extra editor. Clients and Team
+            viewers do not need paid seats.
+          </p>
+          <p className="text-sm text-muted-foreground">
+            Creator adds Client Hub, custom portal branding, custom Workflow
+            Templates, advanced reports, and new payment plans and batches.
+            Existing payment records remain available on Free.
+          </p>
           <p role="status" className="text-sm text-muted-foreground">
             Paid plans are coming later and are not available to purchase yet.
           </p>
@@ -186,7 +207,8 @@ export function SubscriptionPricingView({
             </h2>
             <p>
               Try hosted uploads, 5 GB of storage, custom Workflow Templates,
-              advanced reports, Client Hub, and custom portal branding.
+              advanced reports, Client Hub, custom portal branding, and payment
+              plans and batches.
             </p>
             <p className="text-sm text-muted-foreground">
               No card required and no automatic charge. After 7 days your
@@ -232,9 +254,11 @@ export function SubscriptionPricingView({
               Creator is not available yet
             </h2>
             <p>
-              Hosted uploads, 5 GB of storage, custom Workflow Templates,
-              advanced reports, Client Hub, and custom portal branding arrive
-              with paid plans.
+              Client Hub, custom portal branding, custom Workflow Templates,
+              advanced reports, and payment plans and batches arrive with paid
+              plans. Hosted uploads are still in development; planned launch
+              storage is {CREATOR_LAUNCH_STORAGE_GB} GB for Creator and{" "}
+              {TEAM_LAUNCH_STORAGE_GB} GB shared for Team.
             </p>
             <p role="status" className="text-sm text-muted-foreground">
               Creator and Team cannot be started or purchased right now.

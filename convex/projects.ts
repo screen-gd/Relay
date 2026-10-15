@@ -15,7 +15,11 @@ import {
   projectOutputReviewStateValidator,
   workflowStageValidator,
 } from "./domainValidators";
-import { requireWorkspaceCapability } from "./workspaceSubscriptions";
+import {
+  requireOwnerWorkspaceCapability,
+  requireWorkspaceCapability,
+  resolveOwnerWorkspaceEntitlements,
+} from "./workspaceSubscriptions";
 import { dueDateAfterDelivery } from "../src/lib/domain-values";
 
 const createProjectValidator = v.object({
@@ -370,6 +374,11 @@ async function deliveryEffect(
   const requiredProjectCount =
     plan?.requiredProjectCount ??
     Math.max(1, Math.floor(settings?.salaryBatchSize ?? 20));
+  // Delivery remains free; only paid owners can generate new payment batches.
+  const entitlement = await resolveOwnerWorkspaceEntitlements(ctx, ownerUserId);
+  if (!entitlement?.capabilities.salaryPlans) {
+    return { result: { kind: "none" as const }, projectIds: [] };
+  }
   const amount =
     plan?.amount ?? Math.max(0, settings?.salaryBatchAmount ?? 10000);
   const batches = await ctx.db
@@ -683,6 +692,13 @@ export const create = mutation({
       clientId: project.clientId,
       projectGroupId: project.projectGroupId,
     });
+    if (project.salaryPlanId) {
+      await requireOwnerWorkspaceCapability(
+        ctx,
+        identity.tokenIdentifier,
+        "salaryPlans"
+      );
+    }
     const salaryPlan = await validateSalaryPlan(
       ctx,
       project.salaryPlanId,
@@ -769,6 +785,13 @@ export const update = mutation({
         ? undefined
         : (args.changes.salaryPlanId ?? project.salaryPlanId);
     if (salaryPlanId !== project.salaryPlanId) {
+      if (salaryPlanId) {
+        await requireOwnerWorkspaceCapability(
+          ctx,
+          identity.tokenIdentifier,
+          "salaryPlans"
+        );
+      }
       const settledBatch = (
         await ctx.db
           .query("projectSalaryBatches")
@@ -983,7 +1006,7 @@ export const transitionStage = mutation({
     }
 
     const effect = await deliveryEffect(ctx, identity.tokenIdentifier, project);
-    if (effect.result.kind === "client")
+    if (effect.result.kind !== "salary")
       return { ...effect.result, completedAt };
     const batches = await ctx.db
       .query("projectSalaryBatches")
