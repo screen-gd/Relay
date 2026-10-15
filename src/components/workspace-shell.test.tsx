@@ -155,11 +155,10 @@ describe("Workspace hub navigation", () => {
     "keeps %s reachable under its active hub",
     async (pathname, hub, hubHref, destinations) => {
       const html = await shell(pathname);
-      // The active hub's dropdown opens and lists the same pages as the
-      // context tabs, so the hub link and the current page are both marked.
+      // The rail marks the hub; its pages live in the hover panel and the
+      // context tabs, so the server render carries only the hub link.
       expect(currentLinks(navigation(html, "Primary navigation"))).toEqual([
         hubHref,
-        pathname.startsWith("/projects/") ? "/projects" : pathname,
       ]);
       const context = navigation(html, `${hub} navigation`);
       for (const href of destinations)
@@ -218,18 +217,17 @@ describe("Workspace hub navigation", () => {
     );
   });
 
-  it("offers a sidebar toggle and dropdowns for hubs with pages", async () => {
+  it("renders the rail without a hub panel until it is hovered or pinned", async () => {
     const html = await shell("/calendar");
-    expect(html).toMatch(
-      /aria-label="Collapse sidebar"[^>]*aria-expanded="true"|aria-expanded="true"[^>]*aria-label="Collapse sidebar"/
-    );
     const rail = navigation(html, "Primary navigation");
-    expect(rail).toContain('aria-label="Hide Projects pages"');
-    expect(rail).toContain('aria-label="Show Team pages"');
-    expect(rail).toContain('aria-label="Show Settings pages"');
+    expect([...rail.matchAll(/<a /g)]).toHaveLength(7);
+    expect(html).not.toContain('aria-label="Projects pages"');
+    expect(html).not.toContain('aria-label="Pin sidebar"');
+    // Sub-pages stay reachable through the context tabs.
+    const context = navigation(html, "Projects navigation");
     for (const href of ["/calendar", "/timeline", "/files", "/media"])
-      expect(rail).toContain(`href="${href}"`);
-    expect(rail).not.toContain('href="/team-chat"');
+      expect(context).toContain(`href="${href}"`);
+    expect(context).toContain(">Overview<");
   });
 
   it("marks the hubs that hold AI tools", async () => {

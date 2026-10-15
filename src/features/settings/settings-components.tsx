@@ -90,7 +90,7 @@ export function SegmentedSetting({
             size="sm"
             aria-pressed={option === active}
             onClick={() => onChange(option)}
-            className={`rounded-none text-xs ${option === options[options.length - 1] ? "" : "border-r"} ${option === active ? "bg-primary/15 text-primary hover:bg-primary/20 hover:text-primary" : "bg-card text-card-foreground hover:bg-muted"}`}
+            className={`rounded-none text-xs ${option === options[options.length - 1] ? "" : "border-r"} ${option === active ? "bg-[var(--app-active)] text-[var(--app-ink)] hover:text-[var(--app-ink)]" : "text-[var(--app-muted)] hover:text-[var(--app-ink)]"}`}
           >
             {option}
           </OwnedButton>

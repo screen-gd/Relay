@@ -199,8 +199,8 @@ export function PrecisionMedia({
                               className={cn(
                                 "relative flex h-9 w-full items-center gap-2 overflow-hidden rounded-md px-2 text-xs font-medium outline-none transition-colors focus-visible:ring-2 focus-visible:ring-[var(--app-accent)] focus-visible:ring-offset-1 focus-visible:ring-offset-[var(--app-soft-panel)]",
                                 active
-                                  ? "text-[var(--app-highlight)]"
-                                  : "text-[var(--app-muted)] hover:bg-[var(--app-hover)] hover:text-[var(--app-ink)]"
+                                  ? "text-[var(--app-ink)]"
+                                  : "text-[var(--app-muted)] hover:text-[var(--app-ink)]"
                               )}
                               onClick={() => setCollection(item.id)}
                               aria-pressed={active}
@@ -277,7 +277,7 @@ export function PrecisionMedia({
                                   size="icon-sm"
                                   className={cn(
                                     "relative overflow-hidden text-[var(--app-muted)] transition-colors active:scale-[0.96]",
-                                    active && "text-[var(--app-highlight)]"
+                                    active && "text-[var(--app-ink)]"
                                   )}
                                   onClick={() => setMode(view.id)}
                                   aria-label={view.label}

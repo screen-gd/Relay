@@ -102,7 +102,6 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { Separator } from "@/components/ui/separator";
 
 export type ShellPage =
   | "dashboard"
@@ -426,7 +425,7 @@ export function WorkspaceShell({
   const [commandOpen, setCommandOpen] = useState(false);
   const [moreOpen, setMoreOpen] = useState(false);
   const [breadcrumb, setBreadcrumb] = useState<string | null>(null);
-  const [sidebarCollapsed, toggleSidebar] = useSidebarCollapsed();
+  const [sidebarPinned, toggleSidebarPin] = useSidebarPinned();
   const goChordRef = useRef(false);
   const goChordTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const commandReturnFocusRef = useRef<HTMLElement | null>(null);
@@ -496,13 +495,13 @@ export function WorkspaceShell({
     <BreadcrumbContext.Provider value={setBreadcrumb}>
       <div
         data-testid="workspace-shell"
-        data-sidebar={sidebarCollapsed ? "collapsed" : "expanded"}
+        data-sidebar={sidebarPinned ? "pinned" : "rail"}
         className="relay-density-balanced min-h-dvh bg-[var(--app-canvas)] text-[var(--app-ink)] lg:h-dvh lg:overflow-hidden lg:bg-[var(--app-sidebar)]"
       >
         <DesktopSidebar
           page={page}
-          collapsed={sidebarCollapsed}
-          onToggle={toggleSidebar}
+          pinned={sidebarPinned}
+          onTogglePin={toggleSidebarPin}
         />
 
         <div className="min-h-dvh transition-[padding] duration-200 ease-out motion-reduce:transition-none lg:pl-[var(--sidebar-width)]">
@@ -640,38 +639,52 @@ export function WorkspaceShell({
   );
 }
 
-const SIDEBAR_STORAGE_KEY = "relay:sidebar-collapsed";
+const SIDEBAR_PIN_STORAGE_KEY = "relay:sidebar-pinned";
+const RAIL_WIDTH = 56;
+const PANEL_WIDTH = 248;
 
 /**
- * Whether the desktop sidebar is collapsed to its icon rail. Expanded is the
- * default; the choice is remembered on this device. Read after mount so the
- * server render and the first client render agree.
+ * Whether the hub panel stays open beside the rail. Closed is the default and
+ * the panel then opens on hover or focus; the choice is remembered on this
+ * device. Read after mount so the server render and the first client render
+ * agree.
  */
-function useSidebarCollapsed() {
-  const [collapsed, setCollapsed] = useState(false);
+function useSidebarPinned() {
+  const [pinned, setPinned] = useState(false);
   useEffect(() => {
     try {
-      setCollapsed(window.localStorage.getItem(SIDEBAR_STORAGE_KEY) === "1");
+      setPinned(window.localStorage.getItem(SIDEBAR_PIN_STORAGE_KEY) === "1");
     } catch {
-      // Storage is unavailable; keep the expanded default.
+      // Storage is unavailable; keep the rail-only default.
     }
   }, []);
   const toggle = () =>
-    setCollapsed((current) => {
+    setPinned((current) => {
       const next = !current;
       try {
-        window.localStorage.setItem(SIDEBAR_STORAGE_KEY, next ? "1" : "0");
+        window.localStorage.setItem(SIDEBAR_PIN_STORAGE_KEY, next ? "1" : "0");
       } catch {
         // The toggle still works for this visit.
       }
       return next;
     });
-  return [collapsed, toggle] as const;
+  return [pinned, toggle] as const;
 }
 
+/** One line under each hub's name in the panel. */
+const hubSummaries: Partial<Record<ShellPage, string>> = {
+  dashboard: "What needs attention today.",
+  projects: "Work in progress, dates, files, and media.",
+  clients: "Who you work with and what they owe.",
+  feedback: "Review notes and revision rounds.",
+  reports: "Earnings, deliveries, and payment batches.",
+  team: "Members, roles, and team chat.",
+  settings: "Workspace defaults, integrations, and templates.",
+};
+
 /**
- * Pages listed under a hub, in the sidebar dropdown and the context tabs
- * alike. The hub's own page comes first and is labelled "Overview".
+ * Pages listed under a hub, in the panel and the context tabs alike. The
+ * hub's own page comes first and is labelled "Overview".
  */
 function hubChildren(hub: ShellPage) {
   return (contextPages[hub] ?? []).flatMap((page) =>
@@ -681,159 +694,106 @@ function hubChildren(hub: ShellPage) {
   );
 }
 
-/** One-shot motion for the sidebar marker and dropdowns; nothing loops. */
-const sidebarMarkerTransition = {
+/** One-shot motion for the active markers and the panel; nothing loops. */
+const markerTransition = {
   type: "spring",
   stiffness: 520,
   damping: 40,
   mass: 0.8,
 } as const;
-const dropdownTransition = {
-  duration: 0.18,
-  ease: [0.22, 1, 0.36, 1],
-} as const;
+const panelTransition = { duration: 0.16, ease: [0.22, 1, 0.36, 1] } as const;
 
-const sidebarLinkClassName =
-  "group relative flex min-h-10 items-center rounded-[10px] text-[13px] font-medium outline-none transition-[box-shadow,color] duration-150 ease-out focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)] focus-visible:ring-inset";
+const railLinkClassName =
+  "group relative flex size-10 items-center justify-center rounded-[10px] outline-none transition-colors duration-150 focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)] focus-visible:ring-inset";
 
+/**
+ * Desktop navigation: a slim icon rail for the seven hubs, and a panel beside
+ * it with the hovered hub's pages. The panel opens on hover or keyboard focus
+ * and closes when the pointer leaves; the pin keeps it open for the current
+ * hub and widens the layout.
+ */
 function DesktopSidebar({
   page,
-  collapsed,
-  onToggle,
+  pinned,
+  onTogglePin,
 }: {
   page: ShellPage;
-  collapsed: boolean;
-  onToggle: () => void;
+  pinned: boolean;
+  onTogglePin: () => void;
 }) {
   const activeHub = hubPageForPage(page);
   const reduceMotion = useHydratedReducedMotion();
-  const [openHubs, setOpenHubs] = useState<ReadonlySet<ShellPage>>(
-    () => new Set([activeHub])
+  const [hoveredHub, setHoveredHub] = useState<ShellPage | null>(null);
+  const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const openTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(
+    () => () => {
+      if (closeTimer.current) clearTimeout(closeTimer.current);
+      if (openTimer.current) clearTimeout(openTimer.current);
+    },
+    []
   );
-  // Opening a page inside a hub opens that hub's dropdown.
-  useEffect(() => {
-    setOpenHubs((current) =>
-      current.has(activeHub) ? current : new Set([...current, activeHub])
-    );
-  }, [activeHub]);
-  const toggleHub = (hub: ShellPage) =>
-    setOpenHubs((current) => {
-      const next = new Set(current);
-      if (next.has(hub)) next.delete(hub);
-      else next.add(hub);
-      return next;
-    });
+  // Navigating closes a hover panel; a pinned panel follows the new hub.
+  useEffect(() => setHoveredHub(null), [page]);
+
+  const show = (hub: ShellPage) => {
+    if (closeTimer.current) clearTimeout(closeTimer.current);
+    if (openTimer.current) clearTimeout(openTimer.current);
+    openTimer.current = setTimeout(() => setHoveredHub(hub), 90);
+  };
+  const hold = () => {
+    if (closeTimer.current) clearTimeout(closeTimer.current);
+  };
+  const release = () => {
+    if (openTimer.current) clearTimeout(openTimer.current);
+    if (closeTimer.current) clearTimeout(closeTimer.current);
+    closeTimer.current = setTimeout(() => setHoveredHub(null), 180);
+  };
+
+  const panelHub = hoveredHub ?? (pinned ? activeHub : null);
+  const panelRoute = hubRoutes.find((item) => item.page === panelHub);
+  const panelOpen = Boolean(panelRoute);
 
   return (
-    <aside className="fixed inset-y-0 left-0 z-40 hidden w-[var(--sidebar-width)] overflow-hidden bg-[var(--app-sidebar)] transition-[width] duration-200 ease-out motion-reduce:transition-none lg:flex lg:flex-col">
-      <div className="flex h-[54px] shrink-0 items-center gap-1 px-3">
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon"
-              className="size-10 shrink-0 text-[var(--app-muted)] hover:bg-transparent hover:text-[var(--app-ink)]"
-              aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
-              aria-expanded={!collapsed}
-              aria-controls="workspace-sidebar-navigation"
-              onClick={onToggle}
-            >
-              <PanelLeft className="size-[18px]" />
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent side="right">
-            {collapsed ? "Expand sidebar" : "Collapse sidebar"}
-          </TooltipContent>
-        </Tooltip>
-        {collapsed ? null : <RelayBrand compact />}
-      </div>
-
-      <nav
-        id="workspace-sidebar-navigation"
-        aria-label="Primary navigation"
-        className="workspace-scrollbar-hidden min-h-0 flex-1 overflow-y-auto px-3 py-2"
+    <div
+      className="fixed inset-y-0 left-0 z-40 hidden lg:flex"
+      onMouseLeave={release}
+      onKeyDown={(event) => {
+        if (event.key === "Escape") setHoveredHub(null);
+      }}
+    >
+      <aside
+        className="flex h-full flex-col items-center bg-[var(--app-sidebar)] py-2"
+        style={{ width: RAIL_WIDTH }}
+        onMouseEnter={hold}
       >
-        {sidebarGroups.map((group, groupIndex) => (
-          <div key={group.label} className="mb-4">
-            <SidebarGroupLabel
-              label={group.label}
-              groupIndex={groupIndex}
-              collapsed={collapsed}
+        <div className="flex h-[46px] items-center">
+          <RelayBrand variant="mark" compact />
+        </div>
+        <nav
+          aria-label="Primary navigation"
+          className="mt-2 flex min-h-0 flex-1 flex-col items-center gap-1"
+        >
+          {hubRoutes.map((item) => (
+            <RailRoute
+              key={item.page}
+              item={item}
+              active={routeIsActive(page, item)}
+              showing={panelHub === item.page}
+              reduceMotion={reduceMotion}
+              onIntent={() => show(item.page)}
+              onBlur={release}
             />
-            <div className="space-y-1">
-              {group.items.map((item) => {
-                const children = collapsed ? [] : hubChildren(item.page);
-                const open = openHubs.has(item.page);
-                return (
-                  <div key={item.page}>
-                    <SidebarRoute
-                      item={item}
-                      active={routeIsActive(page, item)}
-                      collapsed={collapsed}
-                      dropdown={
-                        children.length
-                          ? { open, onToggle: () => toggleHub(item.page) }
-                          : undefined
-                      }
-                    />
-                    <AnimatePresence initial={false}>
-                      {children.length && open ? (
-                        <motion.div
-                          key="pages"
-                          id={`sidebar-${item.page}-pages`}
-                          role="group"
-                          aria-label={`${item.label} pages`}
-                          initial={
-                            reduceMotion ? false : { height: 0, opacity: 0 }
-                          }
-                          animate={{ height: "auto", opacity: 1 }}
-                          exit={
-                            reduceMotion ? undefined : { height: 0, opacity: 0 }
-                          }
-                          transition={dropdownTransition}
-                          className="ml-[22px] mt-1 space-y-0.5 overflow-hidden border-l border-[var(--app-border)] pl-3"
-                        >
-                          {children.map((child) => (
-                            <Link
-                              key={child.page}
-                              to={child.href}
-                              aria-current={
-                                page === child.page ? "page" : undefined
-                              }
-                              className={cn(
-                                sidebarLinkClassName,
-                                "min-h-8 px-2.5 text-[12.5px]",
-                                page === child.page
-                                  ? "bg-[var(--sidebar-active)] text-[var(--app-ink)]"
-                                  : "text-[var(--app-muted)] hover:text-[var(--app-ink)]"
-                              )}
-                            >
-                              {child.label}
-                            </Link>
-                          ))}
-                        </motion.div>
-                      ) : null}
-                    </AnimatePresence>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        ))}
-      </nav>
-      <footer className="shrink-0 border-t border-[var(--app-border)] p-2">
+          ))}
+        </nav>
         <nav
           aria-label="Support and legal"
-          className={cn(
-            "grid gap-0.5",
-            collapsed ? "grid-cols-2" : "grid-cols-6"
-          )}
+          className="grid grid-cols-2 gap-0.5 px-1 pb-1"
         >
           {compactSupportLinks.map((link) => {
             const Icon = link.icon;
             const className =
-              "flex h-9 w-full items-center justify-center rounded-lg text-[var(--app-muted)] outline-none transition-colors duration-150 hover:text-[var(--app-ink)] focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)] focus-visible:ring-inset";
+              "flex size-6 items-center justify-center rounded-md text-[var(--app-muted)] outline-none transition-colors duration-150 hover:text-[var(--app-ink)] focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)] focus-visible:ring-inset";
             return (
               <Tooltip key={link.label}>
                 <TooltipTrigger asChild>
@@ -845,7 +805,7 @@ function DesktopSidebar({
                       rel="noreferrer"
                       className={className}
                     >
-                      <Icon className="size-4" />
+                      <Icon className="size-3.5" />
                     </a>
                   ) : (
                     <Link
@@ -853,80 +813,82 @@ function DesktopSidebar({
                       aria-label={link.label}
                       className={className}
                     >
-                      <Icon className="size-4" />
+                      <Icon className="size-3.5" />
                     </Link>
                   )}
                 </TooltipTrigger>
-                <TooltipContent side={collapsed ? "right" : "top"}>
-                  {link.label}
-                </TooltipContent>
+                <TooltipContent side="right">{link.label}</TooltipContent>
               </Tooltip>
             );
           })}
         </nav>
-      </footer>
-    </aside>
-  );
-}
+      </aside>
 
-function SidebarGroupLabel({
-  label,
-  groupIndex,
-  collapsed,
-}: {
-  label: string;
-  groupIndex: number;
-  collapsed: boolean;
-}) {
-  if (!collapsed)
-    return (
-      <div
-        role="heading"
-        aria-level={2}
-        className="mb-1 flex h-5 items-center px-2.5 text-[11px] font-medium text-[var(--app-subtle)]"
-      >
-        {label}
-      </div>
-    );
-  return (
-    <div
-      role="heading"
-      aria-level={2}
-      aria-label={label}
-      className="relative mb-1 flex h-5 items-center justify-center"
-    >
-      {groupIndex > 0 ? (
-        <Separator className="pointer-events-none absolute h-px w-8" />
-      ) : null}
+      <AnimatePresence initial={false}>
+        {panelRoute ? (
+          <motion.section
+            key="hub-panel"
+            aria-label={`${panelRoute.label} pages`}
+            initial={reduceMotion ? false : { opacity: 0, x: -8 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={reduceMotion ? undefined : { opacity: 0, x: -8 }}
+            transition={panelTransition}
+            onMouseEnter={hold}
+            onFocus={hold}
+            onBlur={release}
+            className={cn(
+              "flex h-full flex-col bg-[var(--app-sidebar)]",
+              pinned
+                ? "border-l border-[var(--app-border)]"
+                : "my-2 rounded-r-xl border-y border-r border-[var(--app-strong-border)] bg-[var(--surface-overlay)] shadow-[var(--shadow-overlay)]"
+            )}
+            style={{ width: PANEL_WIDTH }}
+          >
+            <HubPanel
+              hub={panelRoute}
+              page={page}
+              pinned={pinned}
+              onTogglePin={onTogglePin}
+              reduceMotion={reduceMotion}
+            />
+          </motion.section>
+        ) : null}
+      </AnimatePresence>
+      {/* Keeps the pinned width stable when the panel is closed by Escape. */}
+      {pinned && !panelOpen ? <div style={{ width: PANEL_WIDTH }} /> : null}
     </div>
   );
 }
 
-function SidebarRoute({
+function RailRoute({
   item,
   active,
-  collapsed,
-  dropdown,
+  showing,
+  reduceMotion,
+  onIntent,
+  onBlur,
 }: {
   item: RouteItem;
   active: boolean;
-  collapsed: boolean;
-  /** Present when the hub has pages listed beneath it. */
-  dropdown?: { open: boolean; onToggle: () => void };
+  /** The panel is open for this hub. */
+  showing: boolean;
+  reduceMotion: boolean;
+  onIntent: () => void;
+  onBlur: () => void;
 }) {
   const Icon = item.icon;
   const aiHere = aiToolsForPage(item.page);
-  const reduceMotion = useHydratedReducedMotion();
-
-  const link = (
+  return (
     <Link
       to={item.href}
       aria-label={item.label}
       aria-current={active ? "page" : undefined}
+      onMouseEnter={onIntent}
+      onFocus={onIntent}
+      onBlur={onBlur}
       className={cn(
-        sidebarLinkClassName,
-        collapsed ? "mx-auto w-10 justify-center" : "flex-1 gap-3 px-2.5",
-        active
+        railLinkClassName,
+        active || showing
           ? "text-[var(--app-ink)]"
           : "text-[var(--app-muted)] hover:text-[var(--app-ink)]"
       )}
@@ -934,74 +896,128 @@ function SidebarRoute({
       {active ? (
         <motion.span
           aria-hidden="true"
-          layoutId="sidebar-active-item"
-          transition={reduceMotion ? { duration: 0 } : sidebarMarkerTransition}
+          layoutId="rail-active-item"
+          transition={reduceMotion ? { duration: 0 } : markerTransition}
           className="absolute inset-0 rounded-[10px] bg-[var(--sidebar-active)]"
         />
       ) : null}
       <Icon
         className={cn(
-          "relative size-[18px] shrink-0",
+          "relative size-[18px]",
           active && "text-[var(--app-highlight)]"
         )}
       />
-      {collapsed ? null : (
-        <span className="relative truncate">{item.label}</span>
-      )}
       {aiHere.length ? (
         <span
           aria-hidden="true"
           data-slot="ai-nav-badge"
-          className={cn(
-            "size-1.5 rounded-full bg-[var(--app-highlight)]",
-            collapsed ? "absolute right-1.5 top-1.5" : "relative ml-auto"
-          )}
+          className="absolute right-1.5 top-1.5 size-1.5 rounded-full bg-[var(--app-highlight)]"
         />
       ) : null}
     </Link>
   );
+}
 
-  const row = collapsed ? (
-    link
-  ) : (
-    <div className="flex items-center gap-1">
-      {link}
-      {dropdown ? (
-        <button
-          type="button"
-          aria-label={`${dropdown.open ? "Hide" : "Show"} ${item.label} pages`}
-          aria-expanded={dropdown.open}
-          aria-controls={`sidebar-${item.page}-pages`}
-          onClick={dropdown.onToggle}
-          className="flex size-8 shrink-0 items-center justify-center rounded-lg text-[var(--app-muted)] outline-none hover:text-[var(--app-ink)] focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)]"
-        >
-          <ChevronDown
-            className={cn(
-              "size-4 transition-transform duration-150 motion-reduce:transition-none",
-              dropdown.open ? "rotate-0" : "-rotate-90"
-            )}
-          />
-        </button>
-      ) : (
-        <span aria-hidden="true" className="size-8 shrink-0" />
-      )}
-    </div>
-  );
-
-  if (!collapsed) return row;
+function HubPanel({
+  hub,
+  page,
+  pinned,
+  onTogglePin,
+  reduceMotion,
+}: {
+  hub: RouteItem;
+  page: ShellPage;
+  pinned: boolean;
+  onTogglePin: () => void;
+  reduceMotion: boolean;
+}) {
+  const pages = hubChildren(hub.page);
+  const aiHere = aiToolsForPage(hub.page);
   return (
-    <Tooltip>
-      <TooltipTrigger asChild>{link}</TooltipTrigger>
-      <TooltipContent side="right">
-        {item.label}
-        {aiHere.length ? (
-          <span className="mt-1 block text-[11px] opacity-80">
-            AI: {aiHere[0].label}
-            {aiHere.length > 1 ? ` +${aiHere.length - 1} more` : ""}
-          </span>
-        ) : null}
-      </TooltipContent>
-    </Tooltip>
+    <>
+      <div className="flex h-[54px] shrink-0 items-center justify-between pl-4 pr-2">
+        <h2 className="truncate text-sm font-semibold">{hub.label}</h2>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              className="size-9 text-[var(--app-muted)] hover:text-[var(--app-ink)]"
+              aria-label={pinned ? "Unpin sidebar" : "Pin sidebar"}
+              aria-pressed={pinned}
+              onClick={onTogglePin}
+            >
+              <PanelLeft className="size-[18px]" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent side="right">
+            {pinned ? "Unpin sidebar" : "Keep open"}
+          </TooltipContent>
+        </Tooltip>
+      </div>
+      <p className="px-4 text-xs leading-5 text-[var(--app-muted)]">
+        {hubSummaries[hub.page]}
+      </p>
+      <div className="mt-3 min-h-0 flex-1 overflow-y-auto px-2">
+        {pages.length ? (
+          <div
+            role="group"
+            aria-label={`${hub.label} pages`}
+            className="space-y-0.5"
+          >
+            {pages.map((item) => {
+              const current = page === item.page;
+              return (
+                <Link
+                  key={item.page}
+                  to={item.href}
+                  aria-current={current ? "page" : undefined}
+                  className={cn(
+                    "relative flex min-h-9 items-center rounded-[10px] px-3 text-[13px] font-medium outline-none transition-colors duration-150 focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)] focus-visible:ring-inset",
+                    current
+                      ? "text-[var(--app-ink)]"
+                      : "text-[var(--app-muted)] hover:text-[var(--app-ink)]"
+                  )}
+                >
+                  {current ? (
+                    <motion.span
+                      aria-hidden="true"
+                      layoutId={`panel-active-${hub.page}`}
+                      transition={
+                        reduceMotion ? { duration: 0 } : markerTransition
+                      }
+                      className="absolute inset-0 rounded-[10px] bg-[var(--sidebar-active)]"
+                    />
+                  ) : null}
+                  <span className="relative truncate">{item.label}</span>
+                </Link>
+              );
+            })}
+          </div>
+        ) : (
+          <Link
+            to={hub.href}
+            aria-current={page === hub.page ? "page" : undefined}
+            className="relative flex min-h-9 items-center rounded-[10px] bg-[var(--sidebar-active)] px-3 text-[13px] font-medium text-[var(--app-ink)] outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)] focus-visible:ring-inset"
+          >
+            Open {hub.label}
+          </Link>
+        )}
+      </div>
+      {aiHere.length ? (
+        <div className="shrink-0 border-t border-[var(--app-border)] px-4 py-3">
+          <p className="text-[11px] font-medium text-[var(--app-subtle)]">
+            AI tools here
+          </p>
+          <ul className="mt-1.5 space-y-1 text-xs text-[var(--app-muted)]">
+            {aiHere.map((tool) => (
+              <li key={tool.id}>{tool.label}</li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
+    </>
   );
 }
 
