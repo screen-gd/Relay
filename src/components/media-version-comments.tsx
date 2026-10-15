@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
+import { useConvexAuth } from "convex/react";
 import { Check, ChevronRight, MessageCircle, RotateCcw } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -17,6 +18,9 @@ import {
   type MediaVersionComment,
   type MediaVersionSummary,
 } from "@/features/media-version-comments/media-version-comments";
+import { useAiAccount } from "@/features/ai/ai-availability";
+import { isLocalMediaVersionComment } from "@/features/media-version-comments/local-media-version-comments";
+import { useLocalMediaVersionComments } from "@/features/media-version-comments/local-media-version-comments-data";
 
 import {
   formatReviewTimestamp,
@@ -115,6 +119,81 @@ function CommentRow({
         </Button>
       ) : null}
     </article>
+  );
+}
+
+/**
+ * The offline comment box: a local workspace has no account to attribute a
+ * note to, so it takes the note and the timecode it refers to.
+ */
+function LocalCommentForm({
+  versionId,
+  onAdd,
+}: {
+  versionId: string;
+  onAdd: (body: string, timestampSeconds?: number) => void;
+}) {
+  const [body, setBody] = useState("");
+  const [timestamp, setTimestamp] = useState("");
+  const [error, setError] = useState("");
+
+  return (
+    <form
+      className="mt-1 grid gap-2 rounded-lg bg-[var(--surface-inset)] p-3"
+      onSubmit={(event) => {
+        event.preventDefault();
+        if (!body.trim()) {
+          setError("Paste the note before adding it.");
+          return;
+        }
+        try {
+          const seconds = parseReviewTimestamp(timestamp);
+          setError("");
+          onAdd(body.trim(), seconds);
+          setBody("");
+          setTimestamp("");
+        } catch (caught) {
+          setError(
+            caught instanceof Error ? caught.message : "Could not add the note."
+          );
+        }
+      }}
+    >
+      <Label htmlFor={`note-body-${versionId}`} className="text-sm font-medium">
+        Client note
+      </Label>
+      <Textarea
+        id={`note-body-${versionId}`}
+        value={body}
+        maxLength={2000}
+        placeholder="Paste the note from WhatsApp or email"
+        onChange={(event) => {
+          setBody(event.target.value);
+          setError("");
+        }}
+      />
+      <Label htmlFor={`note-time-${versionId}`} className="text-sm font-medium">
+        Timecode (optional)
+      </Label>
+      <Input
+        id={`note-time-${versionId}`}
+        placeholder="m:ss or h:mm:ss"
+        value={timestamp}
+        className="max-w-48"
+        onChange={(event) => {
+          setTimestamp(event.target.value);
+          setError("");
+        }}
+      />
+      {error ? (
+        <p role="alert" className="text-xs text-destructive">
+          {error}
+        </p>
+      ) : null}
+      <Button type="submit" size="sm" disabled={!body.trim()}>
+        Add note
+      </Button>
+    </form>
   );
 }
 
@@ -365,6 +444,18 @@ export function MediaVersionComments({
 }) {
   const [busyCommentId, setBusyCommentId] = useState("");
   const [error, setError] = useState("");
+  const { hasAccount } = useAiAccount();
+  const { isAuthenticated } = useConvexAuth();
+  // Mirrors how the Project Outputs are stored: no account plus no session
+  // means this visit is editing the browser copy of the workspace.
+  const localMode = !(hasAccount && isAuthenticated);
+  const outputId = versions[0]?.outputId ?? "";
+  const localComments = useLocalMediaVersionComments({
+    outputId,
+    mediaVersionIds: versions.map((version) => version.id),
+    enabled: localMode,
+  });
+  const knownComments = [...comments, ...localComments.comments];
   if (loading)
     return (
       <section aria-label="Media Version comments">
@@ -375,11 +466,12 @@ export function MediaVersionComments({
     );
   if (!versions.length) return null;
   async function update(comment: MediaVersionComment) {
-    if (!onResolve) return;
     setBusyCommentId(comment.id);
     setError("");
     try {
-      await onResolve(comment.id, !comment.resolved);
+      if (isLocalMediaVersionComment(comment.id))
+        localComments.setResolved(comment.id, !comment.resolved);
+      else if (onResolve) await onResolve(comment.id, !comment.resolved);
     } catch (caught) {
       setError(
         caught instanceof Error
@@ -400,7 +492,7 @@ export function MediaVersionComments({
           Review history
         </h3>
         <span className="text-xs text-muted-foreground">
-          {comments.length} comments
+          {knownComments.length} comments
         </span>
       </div>
       {error ? (
@@ -410,7 +502,7 @@ export function MediaVersionComments({
       ) : null}
       <div className="mt-3 grid gap-2">
         {versions.map((version) => {
-          const versionComments = commentsForVersion(comments, version.id);
+          const versionComments = commentsForVersion(knownComments, version.id);
           const openByDefault =
             version.current ||
             versionComments.some((comment) => !comment.resolved);
@@ -441,12 +533,11 @@ export function MediaVersionComments({
                   canEdit={canEditRevisions}
                   enabled={revisionsEnabled}
                 >
-                  {revisionsEnabled ? (
-                    <RevisionList
-                      mediaVersionId={version.id}
-                      canEdit={canEditRevisions}
-                    />
-                  ) : null}
+                  <RevisionList
+                    mediaVersionId={version.id}
+                    canEdit={canEditRevisions}
+                    enabled={revisionsEnabled}
+                  />
                   {versionComments.length ? (
                     versionComments.map((comment) => (
                       <CommentRow
@@ -454,7 +545,8 @@ export function MediaVersionComments({
                         comment={comment}
                         busy={busyCommentId === comment.id}
                         action={
-                          !readOnly && onResolve
+                          !readOnly &&
+                          (onResolve || isLocalMediaVersionComment(comment.id))
                             ? () => update(comment)
                             : undefined
                         }
@@ -465,6 +557,14 @@ export function MediaVersionComments({
                       No comments on this version.
                     </p>
                   )}
+                  {localMode && !readOnly ? (
+                    <LocalCommentForm
+                      versionId={version.id}
+                      onAdd={(body, seconds) =>
+                        localComments.addComment(version.id, body, seconds)
+                      }
+                    />
+                  ) : null}
                 </TranscriptReview>
               </CollapsibleContent>
             </Collapsible>
