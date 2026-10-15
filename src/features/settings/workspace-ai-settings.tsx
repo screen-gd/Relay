@@ -82,6 +82,25 @@ export function WorkspaceAiSettings({
     }
   }
 
+  const connected = Boolean(workspaceId && isAuthenticated);
+  /**
+   * What keeps this switch from turning AI on, and the control that fixes it
+   * where one exists here: the connect link, or the switch itself.
+   */
+  const gap: { text: string; control?: "workspace" } | null = summary
+    ? !summary.canManage
+      ? { text: "Only the Workspace Owner can change this setting." }
+      : !summary.enabled
+        ? { text: "AI is off, so no AI feature can run." }
+        : !summary.googleConfigured
+          ? {
+              text: "No provider key saved. Add a Gemini key above to run AI.",
+            }
+          : null
+    : connected
+      ? null
+      : { text: "No Workspace connected.", control: "workspace" };
+
   return (
     <SettingsPanel
       id="workspace-ai"
@@ -174,13 +193,32 @@ export function WorkspaceAiSettings({
             Owners and Editors trigger each run. Clients and Viewers cannot run
             AI.
           </span>
+          {gap ? (
+            <span
+              id="workspace-ai-gap"
+              className="mt-1 block text-xs text-muted-foreground"
+            >
+              {gap.text}
+            </span>
+          ) : null}
         </span>
-        <Switch
-          aria-label="Allow AI in this workspace"
-          checked={summary?.enabled ?? false}
-          disabled={!summary?.canManage || saving}
-          onCheckedChange={(enabled) => void changeEnabled(enabled)}
-        />
+        <span className="flex shrink-0 items-center gap-3">
+          {gap?.control === "workspace" ? (
+            <a
+              href="/team"
+              className="text-xs font-semibold text-[var(--app-highlight)] hover:underline"
+            >
+              Connect a workspace
+            </a>
+          ) : null}
+          <Switch
+            aria-label="Allow AI in this workspace"
+            aria-describedby={gap ? "workspace-ai-gap" : undefined}
+            checked={summary?.enabled ?? false}
+            disabled={!summary?.canManage || saving}
+            onCheckedChange={(enabled) => void changeEnabled(enabled)}
+          />
+        </span>
       </Label>
       <p className="mt-3 text-sm text-muted-foreground" role="status">
         {summary
@@ -196,11 +234,6 @@ export function WorkspaceAiSettings({
         another run; new attempts, including failed attempts and better-model
         retries, do.
       </p>
-      {summary && !summary.canManage ? (
-        <p className="mt-3 text-xs text-muted-foreground">
-          Only the Workspace Owner can change this setting.
-        </p>
-      ) : null}
     </SettingsPanel>
   );
 }

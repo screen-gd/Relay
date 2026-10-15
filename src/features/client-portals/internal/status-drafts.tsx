@@ -5,6 +5,7 @@ import { useConvexAuth, useMutation, useQuery } from "convex/react";
 import { api } from "../../../../convex/_generated/api";
 import type { Doc, Id } from "../../../../convex/_generated/dataModel";
 import { projectHref } from "@/features/projects/project-view";
+import { AiLockedNotice } from "@/features/ai/ai-availability";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -131,6 +132,9 @@ function DraftEditor({
   );
 }
 
+const sectionClassName =
+  "py-3 dark:bg-black dark:text-white [&_button]:bg-transparent [&_button:hover]:bg-transparent [&_textarea]:dark:bg-black [&_button]:dark:text-white";
+
 /** Reviews channel-specific updates; copying and portal publishing require a click. */
 export function StatusDrafts({
   projectId,
@@ -168,16 +172,20 @@ export function StatusDrafts({
       setBusy(false);
     }
   }
-  if (!isAuthenticated) return null;
+  if (!isAuthenticated) {
+    return (
+      <section aria-label="Client status draft" className={sectionClassName}>
+        <h4 className="mb-2 text-sm font-semibold">Client update</h4>
+        <AiLockedNotice feature="Draft a client status update" />
+      </section>
+    );
+  }
   const running = busy || run?.status === "queued" || run?.status === "running";
   const selected =
     drafts?.find((d) => d.runId === runId && d.channel === channel) ??
     drafts?.find((d) => d.channel === channel);
   return (
-    <section
-      aria-label="Client status draft"
-      className="py-3 dark:bg-black dark:text-white [&_button]:bg-transparent [&_button:hover]:bg-transparent [&_textarea]:dark:bg-black [&_button]:dark:text-white"
-    >
+    <section aria-label="Client status draft" className={sectionClassName}>
       <h4 className="mb-2 text-sm font-semibold">Client update</h4>
       <div className="flex flex-wrap items-center gap-2">
         <Select
