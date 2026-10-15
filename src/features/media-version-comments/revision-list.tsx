@@ -6,6 +6,7 @@ import { api } from "../../../convex/_generated/api";
 import type { Doc, Id } from "../../../convex/_generated/dataModel";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { AiLockedNotice, useAiAccount } from "@/features/ai/ai-availability";
 import { VersionChangelog } from "./version-changelog";
 import { formatReviewTimestamp } from "./review-timestamps";
 import { TranscriptLine } from "./transcript-review";
@@ -151,20 +152,24 @@ function RevisionRow({
 export function RevisionList({
   mediaVersionId,
   canEdit,
+  enabled,
 }: {
   mediaVersionId: string;
   canEdit: boolean;
+  /** Whether this version's Workspace can run AI at all. */
+  enabled: boolean;
 }) {
   const { isAuthenticated } = useConvexAuth();
+  const { hasAccount } = useAiAccount();
   const items = useQuery(
     api.revisionItems.list,
-    isAuthenticated ? { mediaVersionId } : "skip"
+    enabled && isAuthenticated ? { mediaVersionId } : "skip"
   );
   const generate = useMutation(api.revisionItems.generate);
   const [runId, setRunId] = useState<Id<"aiRuns"> | null>(null);
   const run = useQuery(
     api.aiRuns.getRun,
-    isAuthenticated && runId ? { runId } : "skip"
+    enabled && isAuthenticated && runId ? { runId } : "skip"
   );
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
@@ -188,7 +193,20 @@ export function RevisionList({
     });
     setBusy(false);
   }
-  if (!isAuthenticated) return null;
+  if (!enabled || !isAuthenticated)
+    return canEdit ? (
+      <section aria-label="Revision list" className="mt-3">
+        <AiLockedNotice
+          feature="Turn feedback into revisions"
+          access={hasAccount ? "settings" : "signIn"}
+        />
+        <VersionChangelog
+          mediaVersionId={mediaVersionId}
+          canEdit={canEdit}
+          enabled={false}
+        />
+      </section>
+    ) : null;
   const running = busy || run?.status === "queued" || run?.status === "running";
   const groups = new Map<string, Doc<"revisionItems">[]>();
   for (const item of items ?? [])
@@ -209,7 +227,7 @@ export function RevisionList({
               title="Uses up to 40 comments and the first 1,000 characters of each."
               onClick={() => void request("default")}
             >
-              Generate revisions
+              Turn feedback into revisions
             </Button>
             {run || items?.length ? (
               <Button
@@ -264,6 +282,7 @@ export function RevisionList({
         key={mediaVersionId}
         mediaVersionId={mediaVersionId}
         canEdit={canEdit}
+        enabled
       />
     </section>
   );

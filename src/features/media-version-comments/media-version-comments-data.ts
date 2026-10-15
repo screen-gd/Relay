@@ -3,57 +3,13 @@
 import { useConvexAuth, useMutation, useQuery } from "convex/react";
 import { api } from "../../../convex/_generated/api";
 import type { Id } from "../../../convex/_generated/dataModel";
-import type {
-  MediaVersionComment,
-  MediaVersionCommentsAdapter,
+import {
+  parseMediaVersionComments,
+  readMediaVersionComment,
+  type MediaVersionCommentsAdapter,
 } from "./media-version-comments";
 
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null;
-}
-
-function text(value: unknown) {
-  return typeof value === "string" ? value : "";
-}
-
-function readComment(value: unknown): MediaVersionComment | undefined {
-  if (!isRecord(value)) return undefined;
-  const id = text(value.id);
-  const mediaVersionId = text(value.mediaVersionId);
-  if (!id || !mediaVersionId) return undefined;
-  const resolvedAt =
-    value.resolvedAt === null ? null : text(value.resolvedAt) || undefined;
-  return {
-    id,
-    outputId: text(value.outputId),
-    mediaVersionId,
-    authorName: text(value.authorName) || "Team member",
-    body: text(value.body),
-    ...(typeof value.timestampSeconds === "number" &&
-    Number.isSafeInteger(value.timestampSeconds) &&
-    value.timestampSeconds >= 0 &&
-    value.timestampSeconds <= 604_800
-      ? { timestampSeconds: value.timestampSeconds }
-      : {}),
-    resolved: value.resolved === true,
-    createdAt: text(value.createdAt),
-    ...(resolvedAt === undefined ? {} : { resolvedAt }),
-  };
-}
-
-export function parseMediaVersionComments(
-  value: unknown
-): MediaVersionComment[] {
-  const rows = Array.isArray(value)
-    ? value
-    : isRecord(value) && Array.isArray(value.comments)
-      ? value.comments
-      : [];
-  return rows.flatMap((row) => {
-    const comment = readComment(row);
-    return comment ? [comment] : [];
-  });
-}
+export { parseMediaVersionComments };
 
 export function useInternalMediaVersionComments(
   projectId: string,
@@ -74,7 +30,7 @@ export function useInternalMediaVersionComments(
         commentId: commentId as Id<"mediaVersionComments">,
         resolved,
       });
-      const comment = readComment(updated);
+      const comment = readMediaVersionComment(updated);
       if (!comment) throw new Error("The updated comment was not returned.");
       return comment;
     },
