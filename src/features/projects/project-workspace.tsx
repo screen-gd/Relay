@@ -25,9 +25,8 @@ import {
 import { PROJECT_STATUS_VALUES, type ProjectStatus } from "@/lib/domain-values";
 import { downloadCsv, projectsToCsv } from "@/lib/export-csv";
 import { useData } from "@/lib/data-context";
-import { useProjectOutputs } from "@/lib/project-output-data";
+import { useProjectOutputDuplication } from "@/lib/project-output-data";
 import { createId } from "@/features/routes/utils/date-utils";
-import type { ProjectOutput } from "@/features/project-outputs/project-output-domain";
 import { useProjectAccess } from "./project-access";
 import { useProjectActions } from "./project-actions-provider";
 import {
@@ -101,13 +100,14 @@ export function projectMenuItems(
 }
 
 /**
- * The copy Duplicate creates: the same client, schedule, workflow stages, and
- * deliverables under a new id. Media versions and their comments belong to the
- * original Project, so a copy starts with an empty review history.
+ * The copy Duplicate creates: the same client, schedule, and workflow stages
+ * under a new id, unarchived and unpaid. Its Outputs are created separately,
+ * through the Outputs store, so the copy keeps as many as the original holds.
+ * Media versions and their comments belong to the original Project, so a copy
+ * starts with an empty review history.
  */
 export function projectCopy(
   project: WorkItem,
-  outputs: readonly ProjectOutput[],
   copy: { id: string; createdAt: string }
 ): WorkItem {
   return {
@@ -120,15 +120,15 @@ export function projectCopy(
     paidDate: undefined,
     completedAt: undefined,
     ...(project.workflowStages
-      ? { workflowStages: project.workflowStages.map((stage) => ({ ...stage })) }
-      : {}),
-    ...(outputs.length
       ? {
-          templateDeliverables: outputs.map((output) => ({
-            title: output.title,
-            category: output.category,
-            initialStatus: output.reviewState,
-          })),
+          workflowStages: project.workflowStages.map((stage) => ({ ...stage })),
+        }
+      : {}),
+    ...(project.templateDeliverables
+      ? {
+          templateDeliverables: project.templateDeliverables.map(
+            (deliverable) => ({ ...deliverable })
+          ),
         }
       : {}),
   };
@@ -243,7 +243,7 @@ export function ProjectWorkspace({
   const { setItems, setToast } = useData();
   const { archiveProject } = useProjectActions();
   const access = useProjectAccess();
-  const { outputs: projectOutputs } = useProjectOutputs(project, false);
+  const duplicateOutputs = useProjectOutputDuplication(project);
   const menuItems = projectMenuItems(project, {
     canDuplicate:
       access.canCreateProjects &&
@@ -251,19 +251,39 @@ export function ProjectWorkspace({
     canArchive: canEdit,
     canDelete,
   });
-  const menuActions: Record<ProjectMenuAction, () => void> = {
-    duplicate: () => {
-      const copy = projectCopy(project, projectOutputs, {
-        id: createId(),
-        createdAt: new Date().toISOString(),
+
+  /** Creates the copy first, then fills it with the Outputs it holds now. */
+  async function duplicateProject() {
+    const createdAt = new Date().toISOString();
+    const copy = projectCopy(project, { id: createId(), createdAt });
+    setItems((items) => [copy, ...items]);
+    try {
+      const copied = await duplicateOutputs(copy.id, createdAt);
+      setToast({
+        message: copied
+          ? `${copy.title} created with ${copied} Project Output${copied === 1 ? "" : "s"}.`
+          : `${copy.title} created.`,
+        tone: "success",
       });
-      setItems((items) => [copy, ...items]);
-      setToast({ message: `${copy.title} created.`, tone: "success" });
-    },
+    } catch (caught) {
+      setToast({
+        message: `Could not copy the Project Outputs: ${
+          caught instanceof Error ? caught.message : "the copy is empty."
+        }`,
+        tone: "warning",
+      });
+    }
+  }
+
+  const menuActions: Record<ProjectMenuAction, () => void> = {
+    duplicate: () => void duplicateProject(),
     archive: () => archiveProject(project),
     export: () =>
       downloadCsv(
-        projectCsvFileName(project.title, new Date().toISOString().slice(0, 10)),
+        projectCsvFileName(
+          project.title,
+          new Date().toISOString().slice(0, 10)
+        ),
         projectsToCsv([project], {
           includeMoney: canManagePayment,
           currencyCode: settings.currencyCode,

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useSyncExternalStore } from "react";
 import type { MediaVersionComment } from "./media-version-comments";
 import {
   LOCAL_COMMENT_AUTHOR,
@@ -8,15 +8,22 @@ import {
   localCommentsForOutput,
   newLocalMediaVersionCommentId,
   pruneLocalMediaVersionComments,
-  readLocalMediaVersionComments,
   resolveLocalMediaVersionComment,
-  writeLocalMediaVersionComments,
 } from "./local-media-version-comments";
+import {
+  localMediaVersionCommentsSnapshot,
+  subscribeToLocalMediaVersionComments,
+  updateLocalMediaVersionComments,
+} from "./local-media-version-comments-store";
 
 /**
  * The review notes browser storage holds for one Project Output. They are read
  * in every mode, so notes left offline survive signing in, and only a local
  * workspace writes to them.
+ *
+ * The notes come from the shared store, so a Project showing several Outputs
+ * keeps every panel's notes: each panel reads the same list and writes through
+ * the store rather than over its own copy of it.
  */
 export function useLocalMediaVersionComments({
   outputId,
@@ -27,40 +34,24 @@ export function useLocalMediaVersionComments({
   mediaVersionIds: readonly string[];
   enabled: boolean;
 }) {
-  const [stored, setStored] = useState<readonly MediaVersionComment[]>([]);
-  const [ready, setReady] = useState(false);
-  const versionKey = mediaVersionIds.join(" ");
-
-  useEffect(() => {
-    setStored(readLocalMediaVersionComments());
-    setReady(true);
-  }, []);
-
-  const update = useCallback(
-    (
-      updater: (
-        current: readonly MediaVersionComment[]
-      ) => MediaVersionComment[]
-    ) =>
-      setStored((current) => {
-        const next = updater(current);
-        writeLocalMediaVersionComments(next);
-        return next;
-      }),
-    []
+  const stored = useSyncExternalStore(
+    subscribeToLocalMediaVersionComments,
+    localMediaVersionCommentsSnapshot,
+    localMediaVersionCommentsSnapshot
   );
+  const versionKey = mediaVersionIds.join(" ");
 
   // Notes go with the Media Version they were left on.
   useEffect(() => {
-    if (!enabled || !ready || !outputId || !versionKey) return;
-    update((current) =>
+    if (!enabled || !outputId || !versionKey) return;
+    updateLocalMediaVersionComments((current) =>
       pruneLocalMediaVersionComments(current, outputId, versionKey.split(" "))
     );
-  }, [enabled, outputId, ready, update, versionKey]);
+  }, [enabled, outputId, versionKey]);
 
   const addComment = useCallback(
     (mediaVersionId: string, body: string, timestampSeconds?: number) =>
-      update((current) =>
+      updateLocalMediaVersionComments((current) =>
         addLocalMediaVersionComment(current, {
           id: newLocalMediaVersionCommentId(),
           outputId,
@@ -72,12 +63,12 @@ export function useLocalMediaVersionComments({
           createdAt: new Date().toISOString(),
         })
       ),
-    [outputId, update]
+    [outputId]
   );
 
   const setResolved = useCallback(
     (commentId: string, resolved: boolean) =>
-      update((current) =>
+      updateLocalMediaVersionComments((current) =>
         resolveLocalMediaVersionComment(
           current,
           commentId,
@@ -85,7 +76,7 @@ export function useLocalMediaVersionComments({
           new Date().toISOString()
         )
       ),
-    [update]
+    []
   );
 
   return {
