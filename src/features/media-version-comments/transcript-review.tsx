@@ -12,6 +12,7 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
+import { AiLockedNotice, useAiAccount } from "@/features/ai/ai-availability";
 import { MAX_TRANSCRIPT_BYTES } from "./transcript-parser";
 import { formatReviewTimestamp } from "./review-timestamps";
 
@@ -62,15 +63,24 @@ export function TranscriptReview({
   enabled: boolean;
   children: ReactNode;
 }) {
-  return enabled ? (
+  const { hasAccount } = useAiAccount();
+  if (!enabled)
+    return (
+      <div className="grid gap-2 py-2">
+        <AiLockedNotice
+          feature="Match comments in a transcript"
+          access={hasAccount ? "settings" : "signIn"}
+        />
+        {children}
+      </div>
+    );
+  return (
     <ConnectedTranscriptReview
       mediaVersionId={mediaVersionId}
       canEdit={canEdit}
     >
       {children}
     </ConnectedTranscriptReview>
-  ) : (
-    children
   );
 }
 
@@ -187,7 +197,7 @@ function ConnectedTranscriptReview({
                   disabled={running}
                   onClick={() => void request("default")}
                 >
-                  Match ambiguous comments
+                  Match comments in a transcript
                 </Button>
                 {run ? (
                   <Button

@@ -27,6 +27,7 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { CapabilityUpgradePrompt } from "@/components/subscription-plans";
 import { ContentSection } from "@/components/workspace-page";
+import { useProjectAccess } from "@/features/projects/project-access";
 import { useProjectOutputs } from "@/lib/project-output-data";
 import type { SettingsState, WorkItem } from "@/lib/types";
 import {
@@ -56,6 +57,16 @@ function PortalSettingRow({
       <div className="min-w-0">{children}</div>
     </div>
   );
+}
+
+/** Blank means no limit; anything else must be a whole number of requests. */
+function readMaxRevisions(value: string) {
+  const trimmed = value.trim();
+  if (!trimmed) return null;
+  const parsed = Number(trimmed);
+  if (!Number.isInteger(parsed) || parsed < 0)
+    throw new Error("Enter a whole number of revisions, or leave it blank.");
+  return parsed;
 }
 
 /** Half-hour steps plus end of day, as `HH:mm`. */
@@ -145,6 +156,7 @@ export function ProjectPortalPanel({
   customPortalBrandingEnabled = true,
 }: ProjectPortalPanelProps) {
   const outputData = useProjectOutputs(project, canEdit);
+  const access = useProjectAccess();
   const outputs = useMemo(
     () =>
       outputData.outputs.map((output) => ({
@@ -156,6 +168,14 @@ export function ProjectPortalPanel({
     [outputData]
   );
   const data = useProjectPortal(project.id, canEdit);
+  const revisionLimit = useQuery(
+    api.clientPortals.getProjectRevisionLimit,
+    canEdit && data.available ? { projectId: project.id } : "skip"
+  );
+  const setProjectRevisionLimit = useMutation(
+    api.clientPortals.setProjectRevisionLimit
+  );
+  const [maxRevisions, setMaxRevisions] = useState("");
   const hubSettings = useQuery(api.clientHub.getOwnerSettings, {
     projectId: project.id,
   });
@@ -174,6 +194,15 @@ export function ProjectPortalPanel({
   useEffect(() => {
     if (!data.loading) setDraft(data.initialDraft);
   }, [data.initialDraft, data.loading]);
+
+  useEffect(() => {
+    if (revisionLimit === undefined) return;
+    setMaxRevisions(
+      revisionLimit.maxRevisions === null
+        ? ""
+        : String(revisionLimit.maxRevisions)
+    );
+  }, [revisionLimit?.maxRevisions]);
 
   useEffect(() => {
     if (!hubSettings) return;
@@ -203,8 +232,34 @@ export function ProjectPortalPanel({
       setFormError("Enter a PIN before protecting this portal.");
       return;
     }
+    let revisions: number | null;
+    try {
+      revisions = readMaxRevisions(maxRevisions);
+    } catch (caught) {
+      setFormError(
+        caught instanceof Error
+          ? caught.message
+          : "Enter a whole number of revisions, or leave it blank."
+      );
+      return;
+    }
     setBusy("save");
     setFormError("");
+    try {
+      await setProjectRevisionLimit({
+        projectId: project.id,
+        maxRevisions: revisions,
+      });
+    } catch (caught) {
+      // The portal is not saved yet, so say which of the two saves failed.
+      setBusy("");
+      setFormError(
+        caught instanceof Error
+          ? caught.message
+          : "Could not save the Max revisions."
+      );
+      return;
+    }
     try {
       await data.save(draft);
       setDraft((current) => ({ ...current, pin: "" }));
@@ -313,7 +368,11 @@ export function ProjectPortalPanel({
           description="Requires a cloud account with portal access."
         />
         {canDraftUpdates ? (
-          <StatusDrafts key={project.id} projectId={project.id} />
+          <StatusDrafts
+            key={project.id}
+            projectId={project.id}
+            aiEnabled={Boolean(access.teamWorkspace?.aiEnabled)}
+          />
         ) : null}
       </>
     );
@@ -528,6 +587,26 @@ export function ProjectPortalPanel({
               </p>
             )}
           </PortalSettingRow>
+          <PortalSettingRow
+            label="Max revisions"
+            hint={
+              revisionLimit?.maxRevisions == null
+                ? "Blank means no limit."
+                : `${revisionLimit.revisionsUsed} of ${revisionLimit.maxRevisions} used`
+            }
+          >
+            <Input
+              type="number"
+              min={0}
+              max={20}
+              inputMode="numeric"
+              placeholder="No limit"
+              aria-label="Max revisions"
+              value={maxRevisions}
+              onChange={(event) => setMaxRevisions(event.target.value)}
+              disabled={!canEdit}
+            />
+          </PortalSettingRow>
           <PortalSettingRow label="Expiry" hint="Optional. Uses local time.">
             <ExpiryPicker
               value={draft.expiresAt}
@@ -607,6 +686,7 @@ export function ProjectPortalPanel({
           key={project.id}
           projectId={project.id}
           portalId={data.portal?.id}
+          aiEnabled={Boolean(access.teamWorkspace?.aiEnabled)}
         />
       ) : null}
 

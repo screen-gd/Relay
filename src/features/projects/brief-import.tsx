@@ -11,6 +11,7 @@ import {
 } from "../../../convex/briefImportPrompt";
 import type { z } from "zod";
 import type { Client } from "@/lib/types";
+import { AiLockedNotice, type AiAccess } from "@/features/ai/ai-availability";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -21,6 +22,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+
+const sectionClassName =
+  "grid gap-3 dark:bg-black dark:text-white [&_button]:bg-transparent [&_button:hover]:bg-transparent [&_input]:bg-transparent [&_textarea]:bg-transparent";
 
 export function BriefImport({
   teamId,
@@ -35,7 +39,7 @@ export function BriefImport({
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }) {
-  const { isAuthenticated } = useConvexAuth();
+  const { isAuthenticated, isLoading } = useConvexAuth();
   const workspace = useQuery(
     api.briefImport.workspace,
     isAuthenticated ? { teamId } : "skip"
@@ -136,9 +140,26 @@ export function BriefImport({
       setBusy(false);
     }
   }
+  /**
+   * A visit that cannot run AI keeps the notice where the import sits, so the
+   * feature is visible before it is unlocked and nobody fills the form for a
+   * run that would fail. Sign-in resolves first, then the Workspace, which is
+   * why a local visit never waits on a query that will not run.
+   */
+  const locked: AiAccess | null = !isAuthenticated
+    ? "signIn"
+    : workspace === null || (workspace && !workspace.aiEnabled)
+      ? "settings"
+      : null;
+  if (!isLoading && locked)
+    return (
+      <section className={sectionClassName}>
+        <AiLockedNotice feature="Import a brief" access={locked} />
+      </section>
+    );
   if (!workspace) return null;
   return (
-    <section className="grid gap-3 dark:bg-black dark:text-white [&_button]:bg-transparent [&_button:hover]:bg-transparent [&_input]:bg-transparent [&_textarea]:bg-transparent">
+    <section className={sectionClassName}>
       <Button type="button" variant="ghost" onClick={() => onOpenChange(!open)}>
         {open ? "Back to manual" : "Import brief"}
       </Button>

@@ -38,4 +38,29 @@ describe("Project Outputs controller and adapter", () => {
     expect(snapshot.versions).toHaveLength(2);
     expect(snapshot.outputs[0]?.reviewState).toBe("sent_to_client");
   });
+
+  it("reports a refused link and saves no version for it", async () => {
+    const adapter = new InMemoryProjectOutputsAdapter();
+    const controller = createProjectOutputsController(
+      adapter,
+      () => "2026-08-24T10:00:00.000Z"
+    );
+    await controller.createOutput({
+      id: "output-1",
+      projectId: "project-1",
+      title: "Main video",
+    });
+
+    await expect(
+      controller.addMediaVersion({
+        id: "version-1",
+        outputId: "output-1",
+        url: "https://vimeo.com/channels/staffpicks/123456789",
+      })
+    ).rejects.toThrow("That Vimeo URL does not contain a valid video.");
+
+    const snapshot = await controller.list("project-1");
+    expect(snapshot.versions).toEqual([]);
+    expect(snapshot.outputs[0]?.currentVersionId).toBeUndefined();
+  });
 });

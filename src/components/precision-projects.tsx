@@ -92,6 +92,7 @@ import {
 } from "@/components/ui/table";
 import {
   DataTableFrame,
+  PageActions,
   PageContent,
   PageHeader,
   PageToolbar,
@@ -759,7 +760,32 @@ export function PrecisionProjects(props: PrecisionProjectsProps) {
           transition={contentTransition}
           className="contents"
         >
-          <PageHeader title="Projects" />
+          <PageHeader
+            title="Projects"
+            actions={
+              <PageActions
+                primary={
+                  <Button
+                    className="h-9"
+                    onClick={() => props.onNewProject(scope)}
+                    disabled={
+                      scope === "personal"
+                        ? !props.canCreateProjects
+                        : !hasTeam || !props.canCreateTeamProjects
+                    }
+                  >
+                    <Plus /> Create project
+                  </Button>
+                }
+                more={[
+                  {
+                    label: "Project Groups",
+                    onSelect: () => props.onManageProjectGroups(scope),
+                  },
+                ]}
+              />
+            }
+          />
 
           <PageContent mode="fill">
             <PageToolbar
@@ -798,13 +824,6 @@ export function PrecisionProjects(props: PrecisionProjectsProps) {
               }
               secondary={
                 <>
-                  <Button
-                    variant="outline"
-                    className="h-9 rounded-lg !bg-[var(--app-panel)]"
-                    onClick={() => props.onManageProjectGroups(scope)}
-                  >
-                    Project Groups
-                  </Button>
                   <Tabs
                     value={tableState.view}
                     onValueChange={(view) =>
@@ -1391,8 +1410,8 @@ export function PrecisionProjects(props: PrecisionProjectsProps) {
                           </p>
                           <p className="mt-1 text-xs leading-5 text-[var(--app-muted)]">
                             {hasFilters
-                              ? "Adjust the filters to bring projects back into view."
-                              : "Create the first project to start tracking production work here."}
+                              ? "Clear the filters to bring projects back into view."
+                              : "Create your first project to track deadlines, reviews, and delivery."}
                           </p>
                           {hasFilters ? (
                             <Button

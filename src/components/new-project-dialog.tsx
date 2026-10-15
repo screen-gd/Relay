@@ -34,6 +34,7 @@ import { Input } from "@/components/ui/input";
 import { Check, ChevronDown } from "lucide-react";
 import { ProjectDatePicker } from "@/features/projects/project-dialogs";
 import { useConfirm } from "@/components/confirm-dialog";
+import { useOptionalAuth } from "@/lib/optional-auth";
 import { BriefImport } from "@/features/projects/brief-import";
 import type { Id } from "../../convex/_generated/dataModel";
 
@@ -167,6 +168,9 @@ export function NewProjectDialog({
   onCreate,
 }: NewProjectDialogProps) {
   const confirm = useConfirm();
+  const { isLoaded, isSignedIn } = useOptionalAuth();
+  /** Client Review and the Client Portal need a signed-in Workspace. */
+  const isLocalMode = isLoaded && !isSignedIn;
   const activeClients = clients.filter((client) => !client.archived);
   const activeTemplates = workflowTemplates.filter(
     (template) => !template.archived
@@ -441,24 +445,43 @@ export function NewProjectDialog({
             )}
           </form.Subscribe>
           <form.Field name="workflowTemplateId">
-            {(field) => (
-              <FieldLayout label="Workflow Template">
-                <ContextMenuSelect
-                  value={field.state.value || "none"}
-                  placeholder="No Template"
-                  options={[
-                    { value: "none", label: "No Template" },
-                    ...activeTemplates.map((template) => ({
-                      value: template.id,
-                      label: template.name,
-                    })),
-                  ]}
-                  onChange={(value) =>
-                    field.handleChange(value === "none" ? "" : value)
+            {(field) => {
+              const template = activeTemplates.find(
+                (candidate) => candidate.id === field.state.value
+              );
+              const needsCloud =
+                isLocalMode &&
+                Boolean(
+                  template?.workflowStages.some(
+                    (stage) => stage.purpose === "client_review"
+                  )
+                );
+              return (
+                <FieldLayout
+                  label="Workflow Template"
+                  description={
+                    needsCloud
+                      ? "Client Review needs a cloud account with portal access. This Project still works in local mode."
+                      : undefined
                   }
-                />
-              </FieldLayout>
-            )}
+                >
+                  <ContextMenuSelect
+                    value={field.state.value || "none"}
+                    placeholder="No Template"
+                    options={[
+                      { value: "none", label: "No Template" },
+                      ...activeTemplates.map((template) => ({
+                        value: template.id,
+                        label: template.name,
+                      })),
+                    ]}
+                    onChange={(value) =>
+                      field.handleChange(value === "none" ? "" : value)
+                    }
+                  />
+                </FieldLayout>
+              );
+            }}
           </form.Field>
           <div className="grid gap-4 sm:grid-cols-2">
             <form.Field name="dueDate">

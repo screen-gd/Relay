@@ -608,7 +608,7 @@ function ProjectActionsRuntime({
     <ProjectActionsContext.Provider value={actions}>
       {children}
       <NewProjectDialog
-        briefImportEnabled={!sample && isSignedIn}
+        briefImportEnabled={!sample}
         teamId={projectStartScope === "team" ? access.currentTeamId : undefined}
         onBriefCreated={(id) => void openProject({ projectId: id })}
         open={newProjectOpen}

@@ -136,6 +136,27 @@ export function PrecisionMedia({
     },
   ];
 
+  const emptyCopy = query.trim()
+    ? {
+        title: "No packages match this search",
+        description: "Clear the search to see every package.",
+      }
+    : collection === "delivered"
+      ? {
+          title: "Nothing delivered yet",
+          description: "Mark a project as delivered to file its package here.",
+        }
+      : collection === "active"
+        ? {
+            title: "No active exports",
+            description: "Create a project to start an export.",
+          }
+        : {
+            title: "No media packages yet",
+            description:
+              "Create your first project to collect its files and exports here.",
+          };
+
   return (
     <MotionConfig reducedMotion="user">
       <WorkspacePage family="master-detail" mode="fill">
@@ -540,10 +561,10 @@ export function PrecisionMedia({
                                   <FolderArchive className="size-5 text-[var(--app-muted)]" />
                                 </motion.div>
                                 <p className="mt-3 text-sm font-semibold">
-                                  No packages in this collection
+                                  {emptyCopy.title}
                                 </p>
                                 <p className="mt-1 text-xs text-[var(--app-muted)]">
-                                  Try another collection or clear the search.
+                                  {emptyCopy.description}
                                 </p>
                                 {query ? (
                                   <Button
@@ -643,7 +664,8 @@ export function PrecisionMedia({
                                 Select a package
                               </p>
                               <p className="mt-1 text-xs text-[var(--app-muted)]">
-                                Package details will appear here.
+                                Select a package to preview it and open the
+                                project.
                               </p>
                             </div>
                           </motion.div>

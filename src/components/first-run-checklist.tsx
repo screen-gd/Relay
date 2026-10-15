@@ -4,10 +4,11 @@ import {
   FolderPlus,
   Link2,
   LockKeyhole,
+  Sparkles,
 } from "lucide-react";
-import { Link } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { useData } from "@/lib/data-context";
 
 export function FirstRunChecklist({
   mode,
@@ -16,12 +17,36 @@ export function FirstRunChecklist({
   mode: "local" | "account";
   onCreateProject: () => void;
 }) {
+  const { sampleWorkspace, setToast } = useData();
+  const canLoadSample = sampleWorkspace.canLoad;
+
+  async function loadSample() {
+    try {
+      await sampleWorkspace.load();
+      setToast({
+        message: "Sample data loaded. Clear it whenever you want.",
+        tone: "success",
+      });
+    } catch {
+      setToast({
+        message: "The sample data could not be loaded. Try again.",
+        tone: "warning",
+      });
+    }
+  }
+
   const steps = [
-    {
-      icon: FolderPlus,
-      title: "Create your first project",
-      body: "Start blank or use a production template. You can adjust every field before saving.",
-    },
+    canLoadSample
+      ? {
+          icon: Sparkles,
+          title: "Load the sample workspace",
+          body: "One click adds a demo client and three projects with their outputs.",
+        }
+      : {
+          icon: FolderPlus,
+          title: "Create your first project",
+          body: "Start blank or use a production template. You can adjust every field before saving.",
+        },
     {
       icon: CalendarClock,
       title: "Confirm the deadline and stage",
@@ -51,15 +76,29 @@ export function FirstRunChecklist({
           id="first-run-title"
           className="mt-2 max-w-2xl text-2xl font-semibold tracking-[-0.025em] sm:text-3xl"
         >
-          Turn one active edit into a clear production plan
+          {canLoadSample
+            ? "See Relay filled with a sample production"
+            : "Turn one active edit into a clear production plan"}
         </h2>
         <p className="mt-3 max-w-2xl text-sm leading-6 text-[var(--app-muted)]">
-          Create a real project first. Relay will reveal the full dashboard once
-          there is useful work to organize.
+          {canLoadSample
+            ? "Demo work you can clear at any time. Nothing you add yourself is removed with it."
+            : "Create a real project first. Relay will reveal the full dashboard once there is useful work to organize."}
         </p>
-        <Button className="mt-6 min-h-12 px-5" onClick={onCreateProject}>
-          Create first project
-        </Button>
+        <div className="mt-6 flex flex-wrap items-center gap-3">
+          {canLoadSample ? (
+            <Button className="min-h-12 px-5" onClick={loadSample}>
+              Load sample data
+            </Button>
+          ) : null}
+          <Button
+            variant={canLoadSample ? "outline" : "default"}
+            className="min-h-12 px-5"
+            onClick={onCreateProject}
+          >
+            {canLoadSample ? "Create a blank project" : "Create first project"}
+          </Button>
+        </div>
 
         <ol className="mt-8 grid gap-3 lg:grid-cols-3">
           {steps.map((step, index) => {
@@ -93,12 +132,6 @@ export function FirstRunChecklist({
               ? "Local mode stores this workspace in this browser."
               : "Account mode syncs supported workspace records."}
           </p>
-          <Link
-            className="font-semibold text-[var(--app-highlight)] hover:underline"
-            to="/sample-studio"
-          >
-            Explore the sample studio
-          </Link>
         </div>
       </Card>
       <p className="sr-only">

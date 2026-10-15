@@ -36,6 +36,8 @@ Upcoming and recently shipped features are listed at ${origin}/roadmap.
 - Features: ${origin}/features
 - Pricing: ${origin}/pricing
 - Roadmap: ${origin}/roadmap
+- About: ${origin}/about
+- Privacy & Data: ${origin}/privacy-and-data
 - Get started free: https://relay-app.cc.cd/
 - Contact: https://relay-app.cc.cd/contact
 - Accessibility: https://relay-app.cc.cd/accessibility

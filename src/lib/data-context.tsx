@@ -25,6 +25,7 @@ import type {
   SavedProjectTemplate,
   ProjectGroup,
   WorkflowStage,
+  Client,
 } from "./types";
 import { WORKFLOW_STAGE_PURPOSE_VALUES } from "./types";
 import { normalizeIntegrationLinks } from "./integrations";
@@ -67,9 +68,12 @@ import type {
 } from "@/features/projects/project-workflow-port";
 import { DEFAULT_WORKFLOW_STAGES } from "./workflow-templates";
 import {
+  clearSampleWorkspace,
+  isSampleRecordId,
   sampleStudioProjects,
   sampleStudioResources,
   sampleStudioSettings,
+  seedSampleWorkspace,
 } from "./sample-studio";
 
 const cloudSettingsInput = (settings: SettingsState) => ({
@@ -1157,6 +1161,8 @@ interface DataContextValue {
     resources: number;
     salaryBatches: number;
   }>;
+  /** Demo records a new workspace can load in one action and clear again. */
+  sampleWorkspace: SampleWorkspacePort;
   isAuthEnabled: boolean;
   isSignedIn: boolean;
   isAuthLoaded: boolean;
@@ -1167,6 +1173,92 @@ interface DataContextValue {
   continueLocally: () => void;
   toast: ToastState | null;
   setToast: React.Dispatch<React.SetStateAction<ToastState | null>>;
+}
+
+type SampleWorkspacePort = {
+  /** True while the workspace holds no projects and no clients. */
+  canLoad: boolean;
+  /** True while seeded sample records are in the workspace. */
+  loaded: boolean;
+  load: () => Promise<void>;
+  clear: () => void;
+};
+
+const SAMPLE_WORKSPACE_UNAVAILABLE: SampleWorkspacePort = {
+  canLoad: false,
+  loaded: false,
+  load: async () => undefined,
+  clear: () => undefined,
+};
+
+/**
+ * Seeds the sample records through the same setters every other workspace edit
+ * uses, so local mode writes browser storage and account mode syncs through the
+ * workspace.
+ *
+ * Account mode creates its projects with `projects.create`, which starts every
+ * project at its first workflow stage and unpaid. The fixture stage, delivery,
+ * and payment states would need the account stage transition to run after the
+ * create, the way `transitionProjectStage` runs it.
+ */
+function useSampleWorkspacePort({
+  ready,
+  items,
+  clients,
+  resourceLinks,
+  awaitSettings,
+  awaitProjects,
+  setItems,
+  setSettings,
+  setResourceLinks,
+}: {
+  ready: boolean;
+  items: WorkItem[];
+  clients: readonly Client[];
+  resourceLinks: readonly ResourceLink[];
+  /** Resolves once a pending settings write has reached the server. */
+  awaitSettings?: () => Promise<void>;
+  /** Resolves once the project writes from `setItems` have reached the server. */
+  awaitProjects?: () => Promise<void>;
+  setItems: React.Dispatch<React.SetStateAction<WorkItem[]>>;
+  setSettings: React.Dispatch<React.SetStateAction<SettingsState>>;
+  setResourceLinks: React.Dispatch<React.SetStateAction<ResourceLink[]>>;
+}): SampleWorkspacePort {
+  const canLoad = ready && items.length === 0 && clients.length === 0;
+  const loaded =
+    items.some((item) => isSampleRecordId(item.id)) ||
+    clients.some((client) => isSampleRecordId(client.id)) ||
+    resourceLinks.some((resource) => isSampleRecordId(resource.id));
+
+  const load = useCallback(
+    () =>
+      seedSampleWorkspace({
+        clients,
+        awaitSettings,
+        awaitProjects,
+        setItems,
+        setSettings,
+        setResourceLinks,
+      }),
+    [
+      awaitProjects,
+      awaitSettings,
+      clients,
+      setItems,
+      setResourceLinks,
+      setSettings,
+    ]
+  );
+
+  const clear = useCallback(
+    () => clearSampleWorkspace({ setItems, setSettings, setResourceLinks }),
+    [setItems, setResourceLinks, setSettings]
+  );
+
+  return useMemo(
+    () => ({ canLoad, loaded, load, clear }),
+    [canLoad, clear, load, loaded]
+  );
 }
 
 const DataContext = createContext<DataContextValue | null>(null);
@@ -1259,6 +1351,7 @@ function SampleDataProvider({ children }: { children: React.ReactNode }) {
     isSignedIn: false,
     isAuthLoaded: true,
     continueLocally: () => undefined,
+    sampleWorkspace: SAMPLE_WORKSPACE_UNAVAILABLE,
     toast,
     setToast,
   };
@@ -1300,6 +1393,7 @@ function LocalDataProvider({
   const [salaryBatches, setSalaryBatches] = useState<SalaryBatch[]>([]);
   const [salaryPlans] = useState<SalaryPlan[]>([]);
   const [toast, setToast] = useState<ToastState | null>(null);
+  const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
     setItemsState(readInitialItems());
@@ -1311,6 +1405,7 @@ function LocalDataProvider({
       normalizeSalaryState(readJson(SALARY_STORAGE_KEY, { batches: [] }))
         .batches
     );
+    setHydrated(true);
   }, []);
 
   useEffect(() => {
@@ -1525,6 +1620,15 @@ function LocalDataProvider({
       })),
     [items, settings.clients]
   );
+  const sampleWorkspace = useSampleWorkspacePort({
+    ready: hydrated,
+    items,
+    clients: settings.clients,
+    resourceLinks,
+    setItems,
+    setSettings,
+    setResourceLinks,
+  });
   const value: DataContextValue = {
     items: resolvedItems,
     setItems,
@@ -1544,6 +1648,7 @@ function LocalDataProvider({
     isSignedIn: authEnabled && Boolean(isSignedIn),
     isAuthLoaded: authEnabled ? isLoaded : true,
     continueLocally: () => undefined,
+    sampleWorkspace,
     toast,
     setToast,
   };
@@ -1624,28 +1729,59 @@ function CloudDataProvider({ children }: { children: React.ReactNode }) {
   const settingsRef = useRef(settings);
   settingsRef.current = settings;
   const pendingSettings = useRef<Array<ReturnType<typeof settingsPatch>>>([]);
-  const savingSettings = useRef(false);
-  const retrySettingsSave = useCallback(async () => {
-    if (savingSettings.current || !pendingSettings.current.length) return;
-    const edits = pendingSettings.current;
-    savingSettings.current = true;
-    setSettingsSaveState("saving");
-    try {
-      while (edits === pendingSettings.current && edits.length) {
-        await patchSettings(edits[0]);
-        edits.shift();
+  const settingsSaveRef = useRef<Promise<void> | null>(null);
+  const projectWritesRef = useRef<Promise<PromiseSettledResult<unknown>[]>>(
+    Promise.resolve([])
+  );
+  /**
+   * The project list every writer reads. It is written together with the state
+   * through `writeItems`, so a setter never computes from a stale list.
+   */
+  const itemsRef = useRef<WorkItem[]>([]);
+  /** The one way the project list is written, state and ref together. */
+  const writeItems = useCallback((next: WorkItem[]) => {
+    itemsRef.current = next;
+    setItemsState(next);
+  }, []);
+  /**
+   * Writes every pending settings patch. The promise rejects when the write
+   * fails, after the local fallback is in place, so a caller that must not
+   * continue on unsaved data can await it.
+   */
+  const flushSettingsSave = useCallback((): Promise<void> => {
+    if (settingsSaveRef.current) return settingsSaveRef.current;
+    if (!pendingSettings.current.length) return Promise.resolve();
+    const save = (async () => {
+      const edits = pendingSettings.current;
+      setSettingsSaveState("saving");
+      try {
+        while (edits === pendingSettings.current && edits.length) {
+          await patchSettings(edits[0]);
+          edits.shift();
+        }
+        if (edits !== pendingSettings.current) return;
+        setSettingsSaveState("saved");
+        removeKey(SETTINGS_STORAGE_KEY);
+      } catch (caught) {
+        if (edits !== pendingSettings.current) return;
+        setSettingsSaveState("error");
+        writeJson(
+          SETTINGS_STORAGE_KEY,
+          omitLegacySettings(settingsRef.current)
+        );
+        throw caught;
+      } finally {
+        settingsSaveRef.current = null;
       }
-      if (edits !== pendingSettings.current) return;
-      setSettingsSaveState("saved");
-      removeKey(SETTINGS_STORAGE_KEY);
-    } catch {
-      if (edits !== pendingSettings.current) return;
-      setSettingsSaveState("error");
-      writeJson(SETTINGS_STORAGE_KEY, omitLegacySettings(settingsRef.current));
-    } finally {
-      if (edits === pendingSettings.current) savingSettings.current = false;
-    }
+    })();
+    settingsSaveRef.current = save;
+    return save;
   }, [patchSettings]);
+  /** The settings screen's retry, and the writers that only attempt the save. */
+  const retrySettingsSave = useCallback(
+    () => flushSettingsSave().catch(() => undefined),
+    [flushSettingsSave]
+  );
 
   const setProjectSalaryBatchPaid = useMutation(
     api.projects.setSalaryBatchPaid
@@ -1661,7 +1797,7 @@ function CloudDataProvider({ children }: { children: React.ReactNode }) {
     if (previousAuthMode.current === authMode) return;
     previousAuthMode.current = authMode;
     pendingSettings.current = [];
-    savingSettings.current = false;
+    settingsSaveRef.current = null;
     setSettingsSaveState("saved");
     initializationToken.current += 1;
     setReady(false);
@@ -1675,7 +1811,7 @@ function CloudDataProvider({ children }: { children: React.ReactNode }) {
 
     const stored = readInitialItems();
     const nextSettings = readInitialSettings();
-    setItemsState(stored);
+    writeItems(stored);
     setSettingsState(nextSettings);
     setProjectGroupsState(readInitialProjectGroups(nextSettings.clients));
     setResourceLinksState(readInitialResources());
@@ -1695,7 +1831,7 @@ function CloudDataProvider({ children }: { children: React.ReactNode }) {
     if (!convexAuthenticated) {
       if (ready) return;
       const nextSettings = readInitialSettings();
-      setItemsState(readInitialItems());
+      writeItems(readInitialItems());
       setSettingsState(nextSettings);
       setProjectGroupsState(readInitialProjectGroups(nextSettings.clients));
       setResourceLinksState(readInitialResources());
@@ -1851,7 +1987,7 @@ function CloudDataProvider({ children }: { children: React.ReactNode }) {
       }
 
       if (cancelled || initializationToken.current !== token) return;
-      setItemsState(nextItems);
+      writeItems(nextItems);
       setSettingsState(nextSettings);
       setProjectGroupsState(nextProjectGroups);
       setResourceLinksState(nextResources);
@@ -1901,7 +2037,7 @@ function CloudDataProvider({ children }: { children: React.ReactNode }) {
       convexSalaryPlans === undefined
     )
       return;
-    setItemsState(normalizeWorkItems(convexItems));
+    writeItems(normalizeWorkItems(convexItems));
     setProjectGroupsState(
       normalizeProjectGroups(convexProjectGroups, settings.clients)
     );
@@ -1993,96 +2129,107 @@ function CloudDataProvider({ children }: { children: React.ReactNode }) {
   }, [toast]);
 
   // Unified items setter
+  /**
+   * Awaits the project writes the last `setItems` call started and reports the
+   * first failure, so a caller can tell that a project did not reach the server.
+   */
+  const awaitProjectWrites = useCallback(async () => {
+    const failure = (await projectWritesRef.current).find(
+      (result): result is PromiseRejectedResult => result.status === "rejected"
+    );
+    if (failure) throw failure.reason;
+  }, []);
+
   const setItems = useCallback(
     (updater: React.SetStateAction<WorkItem[]>) => {
-      setItemsState((prev: WorkItem[]) => {
-        const next = normalizeWorkItems(
-          typeof updater === "function" ? updater(prev) : updater
+      const prev = itemsRef.current;
+      const next = normalizeWorkItems(
+        typeof updater === "function" ? updater(prev) : updater
+      );
+      writeItems(next);
+      if (isSignedIn && convexAuthenticated) {
+        const previousById = new Map(prev.map((item) => [item.id, item]));
+        const nextIds = new Set(next.map((item) => item.id));
+        const newItems = next.filter((item) => !previousById.has(item.id));
+        const changedItems = next.filter(
+          (item) =>
+            previousById.has(item.id) &&
+            JSON.stringify(previousById.get(item.id)) !== JSON.stringify(item)
         );
-        if (isSignedIn && convexAuthenticated) {
-          const previousById = new Map(prev.map((item) => [item.id, item]));
-          const nextIds = new Set(next.map((item) => item.id));
-          const newItems = next.filter((item) => !previousById.has(item.id));
-          const changedItems = next.filter(
-            (item) =>
-              previousById.has(item.id) &&
-              JSON.stringify(previousById.get(item.id)) !== JSON.stringify(item)
-          );
-          const removedIds = [
-            ...new Set(
-              prev
-                .filter((item) => !nextIds.has(item.id))
-                .map((item) => item.id)
-            ),
-          ];
-          const writes = [
-            ...newItems.map((project) =>
-              createProject({
-                project: cloudProjectInput(
-                  project,
-                  settings.clients,
-                  salaryPlans
-                ),
-              })
-            ),
-            ...changedItems.flatMap((project) => {
-              const previous = previousById.get(project.id);
-              if (!previous) return [];
-              return [
-                updateProject({
-                  projectId: project.id,
-                  changes: cloudProjectChanges(project),
-                }),
-                ...(previous.paid !== project.paid
-                  ? [
-                      setProjectPayment({
-                        projectId: project.id,
-                        paid: Boolean(project.paid),
-                      }),
-                    ]
-                  : []),
-                ...(previous.archived !== project.archived
-                  ? [
-                      setProjectArchived({
-                        projectId: project.id,
-                        archived: project.archived ?? false,
-                      }),
-                    ]
-                  : []),
-              ];
-            }),
-            ...removedIds.map((projectId) => deleteProject({ projectId })),
-          ];
-          Promise.allSettled(writes)
-            .then((results) => {
-              const failure = results.find(
-                (result): result is PromiseRejectedResult =>
-                  result.status === "rejected"
-              );
-              if (failure) throw failure.reason;
+        const removedIds = [
+          ...new Set(
+            prev.filter((item) => !nextIds.has(item.id)).map((item) => item.id)
+          ),
+        ];
+        const writes = [
+          ...newItems.map((project) =>
+            createProject({
+              project: cloudProjectInput(
+                project,
+                settings.clients,
+                salaryPlans
+              ),
             })
-            .catch((error) => {
-              if (isProjectAuthorizationError(error)) {
-                setItemsState(prev);
-                setToast({
-                  tone: "warning",
-                  message:
-                    "Project change was not allowed by your team permissions.",
-                });
-                return;
-              }
-              writeJson(STORAGE_KEY, next);
+          ),
+          ...changedItems.flatMap((project) => {
+            const previous = previousById.get(project.id);
+            if (!previous) return [];
+            return [
+              updateProject({
+                projectId: project.id,
+                changes: cloudProjectChanges(project),
+              }),
+              ...(previous.paid !== project.paid
+                ? [
+                    setProjectPayment({
+                      projectId: project.id,
+                      paid: Boolean(project.paid),
+                    }),
+                  ]
+                : []),
+              ...(previous.archived !== project.archived
+                ? [
+                    setProjectArchived({
+                      projectId: project.id,
+                      archived: project.archived ?? false,
+                    }),
+                  ]
+                : []),
+            ];
+          }),
+          ...removedIds.map((projectId) => deleteProject({ projectId })),
+        ];
+        // The writes start here, outside React's state updater, so the batch a
+        // caller awaits after this call is the batch this call started.
+        const settled = Promise.allSettled(writes);
+        projectWritesRef.current = settled;
+        void settled
+          .then((results) => {
+            const failure = results.find(
+              (result): result is PromiseRejectedResult =>
+                result.status === "rejected"
+            );
+            if (failure) throw failure.reason;
+          })
+          .catch((error) => {
+            if (isProjectAuthorizationError(error)) {
+              writeItems(prev);
               setToast({
                 tone: "warning",
                 message:
-                  "Cloud sync failed. Projects are saved locally for now.",
+                  "Project change was not allowed by your team permissions.",
               });
+              return;
+            }
+            writeJson(STORAGE_KEY, next);
+            setToast({
+              tone: "warning",
+              message: "Cloud sync failed. Projects are saved locally for now.",
             });
-        } else {
-          writeJson(STORAGE_KEY, next);
-        }
-        return next;
-      });
+          });
+      } else {
+        writeJson(STORAGE_KEY, next);
+      }
     },
     [
       convexAuthenticated,
@@ -2094,10 +2241,11 @@ function CloudDataProvider({ children }: { children: React.ReactNode }) {
       salaryPlans,
       settings.clients,
       updateProject,
+      writeItems,
     ]
   );
 
-  // Keep network effects outside React state updaters. Retries retain only the intended edits.
+  // Retries retain only the intended edits.
   const setSettings = useCallback(
     (updater: React.SetStateAction<SettingsState>) => {
       const previous = settingsRef.current;
@@ -2256,7 +2404,7 @@ function CloudDataProvider({ children }: { children: React.ReactNode }) {
         settings,
         input
       );
-      setItemsState(nextItems);
+      writeItems(nextItems);
       setSalaryBatches(nextBatches);
       writeJson(STORAGE_KEY, nextItems);
       if (nextBatches !== salaryBatches)
@@ -2389,7 +2537,7 @@ function CloudDataProvider({ children }: { children: React.ReactNode }) {
           })
         );
       }
-      setItemsState(nextItems);
+      writeItems(nextItems);
       setSettingsState(nextSettings);
       setProjectGroupsState(nextProjectGroups);
       setResourceLinksState(nextResources);
@@ -2427,6 +2575,17 @@ function CloudDataProvider({ children }: { children: React.ReactNode }) {
       })),
     [items, settings.clients]
   );
+  const sampleWorkspace = useSampleWorkspacePort({
+    ready,
+    items,
+    clients: settings.clients,
+    resourceLinks,
+    awaitSettings: flushSettingsSave,
+    awaitProjects: awaitProjectWrites,
+    setItems,
+    setSettings,
+    setResourceLinks,
+  });
   const value: DataContextValue = {
     items: resolvedItems,
     setItems,
@@ -2446,6 +2605,7 @@ function CloudDataProvider({ children }: { children: React.ReactNode }) {
     isSignedIn: !!isSignedIn,
     isAuthLoaded: clerkLoaded && ready && (!isSignedIn || !convexAuthLoading),
     continueLocally: () => setLocalFallback(true),
+    sampleWorkspace,
     toast,
     setToast,
   };

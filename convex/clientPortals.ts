@@ -9,6 +9,7 @@ import {
 } from "./_generated/server";
 import type { Doc } from "./_generated/dataModel";
 import { recordProjectActivity } from "./projectActivity";
+import { loadRoundSummary } from "./revisionRounds";
 import {
   clientPortalStageValidator,
   deliverableStatusValidator,
@@ -32,6 +33,8 @@ const MAX_DELIVERABLES = 50;
 const MAX_PROJECT_FILES = 100;
 const MAX_PROJECT_VERSIONS = 500;
 const MAX_REVISIONS = 100;
+/** Largest revision limit an editor can set on a Project or Portal. */
+const MAX_PORTAL_REVISIONS = 20;
 const MAX_EVENTS = 100;
 const MAX_SUMMARY_LENGTH = 800;
 const MAX_NOTE_LENGTH = 2000;
@@ -85,6 +88,58 @@ async function requireProjectAccess(
 
 function cleanText(value: string, maxLength: number) {
   return value.trim().slice(0, maxLength);
+}
+
+/**
+ * Clamps an editor-set revision limit. Zero blocks every request, and the
+ * ceiling bounds what the Portal asks of a client.
+ */
+export function clampRevisionLimit(value: number) {
+  return Math.max(0, Math.min(MAX_PORTAL_REVISIONS, Math.floor(value)));
+}
+
+/**
+ * The limit in force for a Portal: its own explicit value, otherwise the
+ * Project's Max revisions, otherwise null for no limit.
+ */
+export function resolveRevisionLimit(
+  portalLimit: number | undefined,
+  projectLimit: number | undefined
+) {
+  const limit = portalLimit ?? projectLimit;
+  return limit === undefined ? null : clampRevisionLimit(limit);
+}
+
+/** The Workspace whose revision scope applies to a Project. */
+async function projectWorkspace(ctx: QueryCtx, project: Doc<"projects">) {
+  if (project.teamId) {
+    const id = ctx.db.normalizeId("teamWorkspaces", project.teamId);
+    return id ? await ctx.db.get(id) : null;
+  }
+  return await ctx.db
+    .query("teamWorkspaces")
+    .withIndex("by_ownerUserId", (q) =>
+      q.eq("ownerUserId", project.ownerUserId)
+    )
+    .unique();
+}
+
+/** Revision rounds the client's feedback produced, the count editors see. */
+async function projectRoundsUsed(ctx: QueryCtx, project: Doc<"projects">) {
+  const workspace = await projectWorkspace(ctx, project);
+  const summary = await loadRoundSummary(ctx, project, workspace);
+  return summary.roundsUsed;
+}
+
+async function revisionRequestsUsed(
+  ctx: QueryCtx | MutationCtx,
+  portalId: Doc<"clientPortals">["_id"]
+) {
+  const revisions = await ctx.db
+    .query("portalRevisions")
+    .withIndex("by_portalId_and_createdAt", (q) => q.eq("portalId", portalId))
+    .take(MAX_REVISIONS);
+  return revisions.length;
 }
 
 function normalizedExpiry(value: string | null) {
@@ -406,6 +461,10 @@ export const getForProject = query({
   handler: async (ctx, args) => {
     const portal = await portalForEditor(ctx, args.projectId);
     if (!portal) return null;
+    const project = await ctx.db
+      .query("projects")
+      .withIndex("by_projectId", (q) => q.eq("id", args.projectId))
+      .unique();
 
     const deliverables = await projectDeliverables(
       ctx,
@@ -436,7 +495,11 @@ export const getForProject = query({
         clientSummary: portal.clientSummary,
         clientNotes: portal.clientNotes,
         estimatedCompletion: portal.estimatedCompletion,
-        revisionLimit: portal.revisionLimit,
+        revisionLimit: resolveRevisionLimit(
+          portal.revisionLimit,
+          project?.maxRevisions
+        ),
+        revisionsUsed: revisions.length,
         published: portal.published,
         enabled: portal.enabled,
         expiresAt: portal.expiresAt ?? null,
@@ -458,6 +521,10 @@ export const getByToken = query({
       .withIndex("by_token", (q) => q.eq("token", args.token.trim()))
       .unique();
     if (!portal) return { access: "unavailable" as const };
+    const project = await ctx.db
+      .query("projects")
+      .withIndex("by_projectId", (q) => q.eq("id", portal.projectId))
+      .unique();
     const access = portalAccessState(portal);
     if (access === "expired") return { access: "expired" as const };
     if (access === "unavailable") return { access: "unavailable" as const };
@@ -492,7 +559,11 @@ export const getByToken = query({
       clientSummary: portal.clientSummary,
       clientNotes: portal.clientNotes,
       estimatedCompletion: portal.estimatedCompletion,
-      revisionLimit: portal.revisionLimit,
+      revisionLimit: resolveRevisionLimit(
+        portal.revisionLimit,
+        project?.maxRevisions
+      ),
+      revisionsUsed: revisions.length,
       expiresAt: portal.expiresAt ?? null,
       createdAt: portal.createdAt,
       updatedAt: portal.updatedAt,
@@ -515,13 +586,71 @@ export const getByToken = query({
   },
 });
 
+/**
+ * The Project's Max revisions and how many the client already used, so an
+ * editor sees the same allowance the Client Portal shows.
+ */
+export const getProjectRevisionLimit = query({
+  args: { projectId: v.string() },
+  returns: v.object({
+    maxRevisions: v.union(v.number(), v.null()),
+    revisionsUsed: v.number(),
+  }),
+  handler: async (ctx, { projectId }) => {
+    const { project } = await requireProjectAccess(
+      ctx,
+      projectId,
+      "viewProjects"
+    );
+    return {
+      maxRevisions: project.maxRevisions ?? null,
+      revisionsUsed: await projectRoundsUsed(ctx, project),
+    };
+  },
+});
+
+/**
+ * Sets or clears (null) the Project's Max revisions, which its Client Portals
+ * inherit.
+ */
+export const setProjectRevisionLimit = mutation({
+  args: { projectId: v.string(), maxRevisions: v.union(v.number(), v.null()) },
+  returns: v.null(),
+  handler: async (ctx, { projectId, maxRevisions }) => {
+    const { identity, project } = await requireProjectAccess(
+      ctx,
+      projectId,
+      "editProjects"
+    );
+    const limit =
+      maxRevisions === null ? null : clampRevisionLimit(maxRevisions);
+    const now = new Date().toISOString();
+    await ctx.db.patch(project._id, {
+      maxRevisions: limit ?? undefined,
+      updatedAt: now,
+    });
+    await recordProjectActivity(ctx, {
+      project,
+      actorUserId: identity.tokenIdentifier,
+      actorName: identity.name || identity.email || "Relay user",
+      kind: "client_portal_updated",
+      message:
+        limit === null
+          ? "The project revision limit was removed."
+          : `The project revision limit was set to ${limit}.`,
+      createdAt: now,
+    });
+    return null;
+  },
+});
+
 export const publish = mutation({
   args: {
     projectId: v.string(),
     clientSummary: v.string(),
     clientNotes: v.string(),
     estimatedCompletion: v.string(),
-    revisionLimit: v.number(),
+    revisionLimit: v.optional(v.union(v.number(), v.null())),
     clientStage: clientPortalStageValidator,
   },
   handler: async (ctx, args) => {
@@ -535,10 +664,10 @@ export const publish = mutation({
       .withIndex("by_projectId", (q) => q.eq("projectId", args.projectId))
       .unique();
     const now = new Date().toISOString();
-    const revisionLimit = Math.max(
-      0,
-      Math.min(20, Math.floor(args.revisionLimit))
-    );
+    const revisionLimit =
+      args.revisionLimit === undefined || args.revisionLimit === null
+        ? undefined
+        : clampRevisionLimit(args.revisionLimit);
     const clientStage = args.clientStage;
     const snapshot = {
       title: cleanText(project.title, 160),
@@ -894,17 +1023,17 @@ export const submitRevision = mutation({
     const message = cleanText(args.message, MAX_REVISION_LENGTH);
     if (!message) throw new Error("Revision request cannot be empty");
     const timecode = normalizeOptionalTimecode(args.timecode);
-    const existing = await ctx.db
-      .query("portalRevisions")
-      .withIndex("by_portalId_and_createdAt", (q) =>
-        q.eq("portalId", portal._id)
-      )
-      .take(MAX_REVISIONS);
-    const effectiveLimit = Math.min(
-      MAX_REVISIONS,
-      Math.max(0, Math.floor(portal.revisionLimit ?? MAX_REVISIONS))
-    );
-    if (existing.length >= effectiveLimit)
+    const [project, used] = await Promise.all([
+      ctx.db
+        .query("projects")
+        .withIndex("by_projectId", (q) => q.eq("id", portal.projectId))
+        .unique(),
+      revisionRequestsUsed(ctx, portal._id),
+    ]);
+    const limit =
+      resolveRevisionLimit(portal.revisionLimit, project?.maxRevisions) ??
+      MAX_REVISIONS;
+    if (used >= limit)
       throw new Error("This portal has reached its revision request limit");
     const now = new Date().toISOString();
     await ctx.db.insert("portalRevisions", {
@@ -927,10 +1056,6 @@ export const submitRevision = mutation({
         : "A new client revision request was submitted.",
       now
     );
-    const project = await ctx.db
-      .query("projects")
-      .withIndex("by_projectId", (q) => q.eq("id", portal.projectId))
-      .unique();
     if (project) {
       await recordProjectActivity(ctx, {
         project,

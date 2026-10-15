@@ -165,11 +165,11 @@ export function useProjectOutputs(project: WorkItem, editable: boolean) {
 
   const updateLocal = useCallback(
     (updater: (current: ProjectOutputSnapshot) => ProjectOutputSnapshot) => {
-      setLocal((current) => {
-        const next = updater(current);
-        writeLocalSnapshot(next);
-        return next;
-      });
+      // The Duplicate action and any other mounted panel write this same
+      // browser record, so a write starts from what it holds now.
+      const next = updater(readLocalSnapshot());
+      writeLocalSnapshot(next);
+      setLocal(next);
     },
     []
   );
@@ -400,4 +400,174 @@ export function useProjectOutputs(project: WorkItem, editable: boolean) {
     setReviewState: controller.setReviewState,
     addMediaVersion: controller.addMediaVersion,
   };
+}
+
+export type ProjectOutputCopy = {
+  id: string;
+  projectId: string;
+  title: string;
+  category: ProjectOutput["category"];
+  reviewState: ProjectOutputReviewState;
+  dueDate?: string;
+  createdAt: string;
+};
+
+/** What one copied Output starts as, from a stored Output or a planned Deliverable. */
+export type CopiedProjectOutput = {
+  title: string;
+  category: ProjectOutput["category"];
+  reviewState: ProjectOutputReviewState;
+  dueDate?: string;
+};
+
+/**
+ * The Outputs a copy of a Project starts from: the live Outputs the source holds
+ * now, or, while it holds none, the Deliverables its Template plans. The copy
+ * gets them as real Outputs, never as the Project's Template list, because a
+ * template entry the source no longer shows would be created again when the copy
+ * is opened.
+ */
+export function projectOutputPlans(
+  project: {
+    dueDate?: string;
+    templateDeliverables?: WorkItem["templateDeliverables"];
+  },
+  stored: readonly ProjectOutput[]
+): CopiedProjectOutput[] {
+  const live = stored.filter((output) => !output.archived);
+  if (live.length)
+    return live.map((output) => ({
+      title: output.title,
+      category: output.category,
+      reviewState: output.reviewState,
+      ...(output.dueDate ? { dueDate: output.dueDate } : {}),
+    }));
+  return (project.templateDeliverables ?? []).map((deliverable) => ({
+    title: deliverable.title,
+    category: deliverable.category,
+    reviewState: deliverable.initialStatus,
+    ...(project.dueDate ? { dueDate: project.dueDate } : {}),
+  }));
+}
+
+/**
+ * The Outputs a copy of a Project starts with: the same titles, categories,
+ * review states, and due dates under the copy's own Output ids.
+ */
+export function projectOutputCopies({
+  outputs,
+  targetProjectId,
+  createdAt,
+}: {
+  outputs: readonly CopiedProjectOutput[];
+  targetProjectId: string;
+  createdAt: string;
+}): ProjectOutputCopy[] {
+  return outputs.map((output, index) => ({
+    id: outputId(targetProjectId, index),
+    projectId: targetProjectId,
+    title: output.title,
+    category: output.category,
+    reviewState: output.reviewState,
+    ...(output.dueDate ? { dueDate: output.dueDate } : {}),
+    createdAt,
+  }));
+}
+
+/** Writes copies onto a Project in browser storage, on top of what it holds now. */
+function writeLocalProjectOutputCopies(
+  copies: readonly ProjectOutputCopy[]
+): number {
+  if (!copies.length) return 0;
+  const current = readLocalSnapshot();
+  const added = copies.map((copy) =>
+    setProjectOutputReviewState(
+      createProjectOutput({
+        id: copy.id,
+        projectId: copy.projectId,
+        title: copy.title,
+        category: copy.category,
+        ...(copy.dueDate ? { dueDate: copy.dueDate } : {}),
+        createdAt: copy.createdAt,
+      }),
+      copy.reviewState,
+      copy.createdAt
+    )
+  );
+  writeLocalSnapshot({ ...current, outputs: [...current.outputs, ...added] });
+  return added.length;
+}
+
+/** Copies a Project's live Outputs onto another Project in browser storage. */
+export function duplicateLocalProjectOutputs({
+  project,
+  targetProjectId,
+  createdAt,
+}: {
+  project: {
+    id: string;
+    dueDate?: string;
+    templateDeliverables?: WorkItem["templateDeliverables"];
+  };
+  targetProjectId: string;
+  createdAt: string;
+}): number {
+  const stored = readLocalSnapshot().outputs.filter(
+    (output) => output.projectId === project.id
+  );
+  return writeLocalProjectOutputCopies(
+    projectOutputCopies({
+      outputs: projectOutputPlans(project, stored),
+      targetProjectId,
+      createdAt,
+    })
+  );
+}
+
+/**
+ * Copies a Project's Outputs onto its duplicate, reading them at the moment
+ * Duplicate runs so Outputs added, renamed, or archived since the page opened
+ * are part of the copy. Every Output is created through the store the Outputs
+ * panel writes to, so a copy holds as many as the Project does.
+ */
+export function useProjectOutputDuplication(project: WorkItem) {
+  const { isSignedIn } = useData();
+  const { isAuthenticated } = useConvexAuth();
+  const cloud = isSignedIn && isAuthenticated;
+  const cloudWires = useQuery(
+    api.projectOutputs.listForProject,
+    cloud ? { projectId: project.id, includeArchived: true } : "skip"
+  );
+  const createCloud = useMutation(api.projectOutputs.create);
+
+  return useCallback(
+    async (targetProjectId: string, createdAt: string) => {
+      if (!cloud)
+        return duplicateLocalProjectOutputs({
+          project,
+          targetProjectId,
+          createdAt,
+        });
+      if (cloudWires === undefined)
+        throw new Error("The Project's Outputs are still loading.");
+      const copies = projectOutputCopies({
+        outputs: projectOutputPlans(project, wireSnapshot(cloudWires).outputs),
+        targetProjectId,
+        createdAt,
+      });
+      for (const copy of copies)
+        await createCloud({
+          projectId: copy.projectId,
+          output: {
+            id: copy.id,
+            title: copy.title,
+            category: copy.category,
+            reviewState: copy.reviewState,
+            dueDate: copy.dueDate,
+          },
+        });
+      return copies.length;
+    },
+    [cloud, cloudWires, createCloud, project]
+  );
 }
