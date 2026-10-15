@@ -82,6 +82,7 @@ import {
 } from "@/components/ui/command";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Kbd } from "@/components/ui/kbd";
+import { PageHeaderCompactContext } from "@/components/workspace-page/page-header";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -357,12 +358,23 @@ function routeIsActive(currentPage: ShellPage, item: RouteItem) {
   return hubPageForPage(currentPage) === item.page;
 }
 
+/** Hubs with more than their own page get a panel and a tab strip. */
+function hubHasPages(hub: ShellPage) {
+  return hubChildren(hub).length > 1;
+}
+
+/** Whether the shell shows a tab strip naming `page` above the content. */
+function hasContextTabs(page: ShellPage) {
+  const hub = hubPageForPage(page);
+  return (
+    hubHasPages(hub) && hubChildren(hub).some((item) => item.page === page)
+  );
+}
+
 function ContextNavigation({ page }: { page: ShellPage }) {
   const hub = hubRoutes.find((item) => item.page === hubPageForPage(page));
-  if (!hub || !contextPages[hub.page]) return null;
+  if (!hub || !hasContextTabs(page)) return null;
   const items = hubChildren(hub.page);
-  // Account and profile pages borrow the Settings hub but are not tabs there.
-  if (!items.some((item) => item.page === page)) return null;
   return (
     <nav
       aria-label={`${hub.label} navigation`}
@@ -605,7 +617,9 @@ export function WorkspaceShell({
           >
             <div className="flex min-h-full flex-col lg:h-full">
               <ContextNavigation page={page} />
-              <div className="min-h-0 flex-1">{children}</div>
+              <PageHeaderCompactContext.Provider value={hasContextTabs(page)}>
+                <div className="min-h-0 flex-1">{children}</div>
+              </PageHeaderCompactContext.Provider>
             </div>
           </main>
         </div>
@@ -701,7 +715,7 @@ const markerTransition = {
   damping: 40,
   mass: 0.8,
 } as const;
-const panelTransition = { duration: 0.16, ease: [0.22, 1, 0.36, 1] } as const;
+const panelTransition = { duration: 0.12, ease: "easeOut" } as const;
 
 const railLinkClassName =
   "group relative flex size-10 items-center justify-center rounded-[10px] outline-none transition-colors duration-150 focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)] focus-visible:ring-inset";
@@ -739,7 +753,7 @@ function DesktopSidebar({
   const show = (hub: ShellPage) => {
     if (closeTimer.current) clearTimeout(closeTimer.current);
     if (openTimer.current) clearTimeout(openTimer.current);
-    openTimer.current = setTimeout(() => setHoveredHub(hub), 90);
+    openTimer.current = setTimeout(() => setHoveredHub(hub), 60);
   };
   const hold = () => {
     if (closeTimer.current) clearTimeout(closeTimer.current);
@@ -747,7 +761,7 @@ function DesktopSidebar({
   const release = () => {
     if (openTimer.current) clearTimeout(openTimer.current);
     if (closeTimer.current) clearTimeout(closeTimer.current);
-    closeTimer.current = setTimeout(() => setHoveredHub(null), 180);
+    closeTimer.current = setTimeout(() => setHoveredHub(null), 220);
   };
 
   const panelHub = hoveredHub ?? (pinned ? activeHub : null);
@@ -781,7 +795,10 @@ function DesktopSidebar({
               active={routeIsActive(page, item)}
               showing={panelHub === item.page}
               reduceMotion={reduceMotion}
-              onIntent={() => show(item.page)}
+              hasPanel={hubHasPages(item.page)}
+              onIntent={() =>
+                hubHasPages(item.page) ? show(item.page) : release()
+              }
               onBlur={release}
             />
           ))}
@@ -829,9 +846,9 @@ function DesktopSidebar({
           <motion.section
             key="hub-panel"
             aria-label={`${panelRoute.label} pages`}
-            initial={reduceMotion ? false : { opacity: 0, x: -8 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={reduceMotion ? undefined : { opacity: 0, x: -8 }}
+            initial={reduceMotion ? false : { opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={reduceMotion ? undefined : { opacity: 0 }}
             transition={panelTransition}
             onMouseEnter={hold}
             onFocus={hold}
@@ -845,10 +862,12 @@ function DesktopSidebar({
             style={{ width: PANEL_WIDTH }}
           >
             <HubPanel
+              key={panelRoute.page}
               hub={panelRoute}
               page={page}
               pinned={pinned}
               onTogglePin={onTogglePin}
+              onNavigate={() => setHoveredHub(null)}
               reduceMotion={reduceMotion}
             />
           </motion.section>
@@ -865,6 +884,7 @@ function RailRoute({
   active,
   showing,
   reduceMotion,
+  hasPanel,
   onIntent,
   onBlur,
 }: {
@@ -873,12 +893,14 @@ function RailRoute({
   /** The panel is open for this hub. */
   showing: boolean;
   reduceMotion: boolean;
+  /** Hubs with sub-pages open the panel; the rest get a tooltip. */
+  hasPanel: boolean;
   onIntent: () => void;
   onBlur: () => void;
 }) {
   const Icon = item.icon;
   const aiHere = aiToolsForPage(item.page);
-  return (
+  const link = (
     <Link
       to={item.href}
       aria-label={item.label}
@@ -916,6 +938,13 @@ function RailRoute({
       ) : null}
     </Link>
   );
+  if (hasPanel) return link;
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>{link}</TooltipTrigger>
+      <TooltipContent side="right">{item.label}</TooltipContent>
+    </Tooltip>
+  );
 }
 
 function HubPanel({
@@ -923,18 +952,20 @@ function HubPanel({
   page,
   pinned,
   onTogglePin,
+  onNavigate,
   reduceMotion,
 }: {
   hub: RouteItem;
   page: ShellPage;
   pinned: boolean;
   onTogglePin: () => void;
+  /** Called when a page link is chosen, so a hover panel can close. */
+  onNavigate: () => void;
   reduceMotion: boolean;
 }) {
   const pages = hubChildren(hub.page);
-  const aiHere = aiToolsForPage(hub.page);
   return (
-    <>
+    <div className="motion-fade flex min-h-0 flex-1 flex-col">
       <div className="flex h-[54px] shrink-0 items-center justify-between pl-4 pr-2">
         <h2 className="truncate text-sm font-semibold">{hub.label}</h2>
         <Tooltip>
@@ -973,6 +1004,7 @@ function HubPanel({
                   key={item.page}
                   to={item.href}
                   aria-current={current ? "page" : undefined}
+                  onClick={pinned ? undefined : onNavigate}
                   className={cn(
                     "relative flex min-h-9 items-center rounded-[10px] px-3 text-[13px] font-medium outline-none transition-colors duration-150 focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)] focus-visible:ring-inset",
                     current
@@ -995,29 +1027,9 @@ function HubPanel({
               );
             })}
           </div>
-        ) : (
-          <Link
-            to={hub.href}
-            aria-current={page === hub.page ? "page" : undefined}
-            className="relative flex min-h-9 items-center rounded-[10px] bg-[var(--sidebar-active)] px-3 text-[13px] font-medium text-[var(--app-ink)] outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)] focus-visible:ring-inset"
-          >
-            Open {hub.label}
-          </Link>
-        )}
+        ) : null}
       </div>
-      {aiHere.length ? (
-        <div className="shrink-0 border-t border-[var(--app-border)] px-4 py-3">
-          <p className="text-[11px] font-medium text-[var(--app-subtle)]">
-            AI tools here
-          </p>
-          <ul className="mt-1.5 space-y-1 text-xs text-[var(--app-muted)]">
-            {aiHere.map((tool) => (
-              <li key={tool.id}>{tool.label}</li>
-            ))}
-          </ul>
-        </div>
-      ) : null}
-    </>
+    </div>
   );
 }
 
