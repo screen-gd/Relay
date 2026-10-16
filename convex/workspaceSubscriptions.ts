@@ -1,4 +1,5 @@
 import { v } from "convex/values";
+import type { UserIdentity } from "convex/server";
 import type { Doc, Id } from "./_generated/dataModel";
 import {
   internalMutation,
@@ -14,7 +15,12 @@ import {
   subscriptionPlanValidator,
   subscriptionStatusValidator,
 } from "./domainValidators";
-import { FREE_OPEN_PROJECT_LIMIT } from "../shared/subscription-plans";
+import {
+  FREE_OPEN_PROJECT_LIMIT,
+  TEAM_INCLUDED_EDITOR_SEATS,
+} from "../shared/subscription-plans";
+
+const PLAN_TESTER_CLERK_USER_ID = "user_3IPYy4knUp1jfwBnjvWtWixBN6e";
 
 export const FREE_STORAGE_QUOTA_BYTES = 0;
 export const CREATOR_STORAGE_QUOTA_BYTES = 5_000_000_000;
@@ -47,6 +53,8 @@ const entitlementValidator = v.object({
   ),
   capabilities: capabilityValidator,
   canManageBilling: v.boolean(),
+  canTestPlans: v.boolean(),
+  testPlan: v.union(subscriptionPlanValidator, v.null()),
 });
 
 const billingConfirmationValidator = v.object({
@@ -163,6 +171,25 @@ export async function currentWorkspace(
   if (!workspaceId) return null;
   const workspace = await ctx.db.get(workspaceId);
   return workspace ? { membership, workspace } : null;
+}
+
+function canTestWorkspacePlan(
+  identity: UserIdentity,
+  current: NonNullable<Awaited<ReturnType<typeof currentWorkspace>>>
+) {
+  return (
+    identity.subject === PLAN_TESTER_CLERK_USER_ID &&
+    current.membership.role === "Owner" &&
+    current.workspace.ownerUserId === identity.tokenIdentifier
+  );
+}
+
+/** An ownership transfer must not carry private test access to another owner. */
+function workspaceTestPlan(workspace: Doc<"teamWorkspaces"> | null) {
+  const override = workspace?.testPlanOverride;
+  return override && override.ownerUserId === workspace.ownerUserId
+    ? override.plan
+    : null;
 }
 
 async function projectionForWorkspace(
@@ -308,6 +335,24 @@ export async function resolveWorkspaceEntitlements(
     ...pendingFreeProjection(workspaceId),
     reconciliationState: "repair" as const,
   };
+  const testPlan = workspaceTestPlan(await ctx.db.get(workspaceId));
+  if (testPlan !== null) {
+    // Resolve test access separately so billing reconciliation and trial expiry
+    // cannot overwrite it, and restoring normal access preserves both records.
+    return entitlements({
+      ...base,
+      plan: testPlan,
+      subscriptionStatus: testPlan === "free" ? "free" : "active",
+      billingPeriod: null,
+      trialStartsAt: undefined,
+      trialEndsAt: undefined,
+      includedEditorSeatQuantity:
+        testPlan === "team" ? TEAM_INCLUDED_EDITOR_SEATS : 1,
+      purchasedExtraEditorSeatQuantity: 0,
+      storageAddonQuantity: 0,
+      reconciliationState: "synced",
+    });
+  }
   const resolved = entitlements(base);
   if (resolved.plan !== "free" || resolved.subscriptionStatus !== "free") {
     return resolved;
@@ -379,7 +424,32 @@ export const getCurrent = query({
     return {
       ...(await resolveWorkspaceEntitlements(ctx, current.workspace._id)),
       canManageBilling: current.membership.role === "Owner",
+      canTestPlans: canTestWorkspacePlan(identity, current),
+      testPlan: workspaceTestPlan(current.workspace),
     };
+  },
+});
+
+export const setTestPlan = mutation({
+  args: { plan: v.union(subscriptionPlanValidator, v.null()) },
+  returns: v.null(),
+  handler: async (ctx, { plan }) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) throw new Error("Not authenticated");
+    if (identity.subject !== PLAN_TESTER_CLERK_USER_ID) {
+      throw new Error("Private plan testing is not available to this account");
+    }
+    const current = await currentWorkspace(ctx, identity.tokenIdentifier);
+    if (!current || !canTestWorkspacePlan(identity, current)) {
+      throw new Error("Only your own Workspace can use private plan testing");
+    }
+    await ctx.db.patch(current.workspace._id, {
+      testPlanOverride:
+        plan === null
+          ? undefined
+          : { ownerUserId: identity.tokenIdentifier, plan },
+    });
+    return null;
   },
 });
 

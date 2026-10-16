@@ -161,6 +161,21 @@ and Cloudflare R2 usage and Razorpay support. No custom bundle is approved.
 
 ## Access rules
 
+### Private plan testing
+
+The designated test account can switch its own Workspace between Free, Creator,
+and Team from Plans and billing. Convex checks the authenticated Clerk account
+and Workspace ownership before saving the selection. Other accounts cannot see
+or use the switcher.
+
+Test plans have no charge or expiry. They use the existing plan capabilities,
+seat allowances, and operational storage quotas. The selection is stored
+separately from billing and trials, so reconciliation and trial expiry do not
+overwrite it. Choosing **Use normal plan** restores the underlying subscription
+or trial. Test access stops applying if Workspace ownership changes. Team
+Members use the Workspace's selected capabilities, but cannot change its test plan.
+Paid checkout remains disabled.
+
 ### Team Members
 
 - Owners and Editors are internal Workspace users.
