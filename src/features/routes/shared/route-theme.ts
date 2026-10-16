@@ -49,6 +49,8 @@ export function applyRootThemeVariables(
 // Serialize the same self-contained function so boot and runtime cannot drift.
 export const themeBootScript = `
 (function () {
+  // Route head scripts may run again; the live preference must win after boot.
+  if (document.documentElement.dataset.theme) return;
   try {
     var raw = window.localStorage.getItem("video-editing-work-tracker:settings:v1");
     var settings = raw ? JSON.parse(raw) : {};

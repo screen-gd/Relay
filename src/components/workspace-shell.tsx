@@ -595,11 +595,11 @@ export function WorkspaceShell({
             id="main-content"
             data-testid="workspace-content-surface"
             tabIndex={-1}
-            className="workspace-scrollbar-hidden h-[calc(100dvh_-_68px_-_env(safe-area-inset-bottom))] overflow-y-auto bg-[var(--app-canvas)] pt-12 outline-none lg:fixed lg:bottom-0 lg:right-0 lg:top-[54px] lg:left-[52px] lg:h-auto lg:min-h-0 lg:overscroll-contain lg:rounded-tl-2xl lg:border-l lg:border-t lg:border-[var(--app-border)] lg:pt-0"
+            className="workspace-scrollbar-hidden flex h-[calc(100dvh_-_68px_-_env(safe-area-inset-bottom))] flex-col overflow-y-auto overscroll-y-contain bg-[var(--app-canvas)] pt-12 outline-none lg:fixed lg:bottom-0 lg:right-0 lg:top-[54px] lg:left-[52px] lg:h-auto lg:min-h-0 lg:overscroll-contain lg:rounded-tl-2xl lg:border-l lg:border-t lg:border-[var(--app-border)] lg:pt-0"
           >
-            <div className="flex min-h-full flex-col lg:h-full">
+            <div className="flex min-h-0 flex-1 flex-col">
               <ContextNavigation page={page} />
-              <div className="min-h-0 flex-1">{children}</div>
+              <div className="flex min-h-0 flex-1 flex-col">{children}</div>
             </div>
           </main>
         </div>
