@@ -457,6 +457,9 @@ export default defineSchema({
     portalBrandName: v.optional(v.string()),
     portalAccentColor: v.optional(v.string()),
     aiEnabled: v.optional(v.boolean()),
+    testPlanOverride: v.optional(
+      v.object({ ownerUserId: v.string(), plan: subscriptionPlanValidator })
+    ),
   })
     .index("by_ownerUserId", ["ownerUserId"])
     .index("by_inviteCode", ["inviteCode"]),

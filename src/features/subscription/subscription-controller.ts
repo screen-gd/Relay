@@ -24,6 +24,28 @@ export function useSubscriptionController() {
   const startCreatorTrial = useMutation(api.creatorTrials.start);
   const [startingTrial, setStartingTrial] = useState(false);
   const [trialError, setTrialError] = useState("");
+  const setTestPlan = useMutation(api.workspaceSubscriptions.setTestPlan);
+  const [switchingTestPlan, setSwitchingTestPlan] = useState(false);
+  const [testPlanError, setTestPlanError] = useState("");
+
+  async function changeTestPlan(
+    plan: NonNullable<typeof subscription>["testPlan"]
+  ) {
+    if (switchingTestPlan || !subscription?.canTestPlans) return;
+    setSwitchingTestPlan(true);
+    setTestPlanError("");
+    try {
+      await setTestPlan({ plan });
+    } catch (error) {
+      setTestPlanError(
+        error instanceof Error
+          ? error.message
+          : "The test plan could not be changed."
+      );
+    } finally {
+      setSwitchingTestPlan(false);
+    }
+  }
 
   async function startTrial() {
     if (startingTrial || !trial?.canStart) return;
@@ -54,5 +76,8 @@ export function useSubscriptionController() {
     startingTrial,
     trialError,
     startTrial,
+    switchingTestPlan,
+    testPlanError,
+    changeTestPlan,
   };
 }
