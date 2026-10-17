@@ -1182,7 +1182,7 @@ function TopBar({
         {parentHref ? (
           <Link
             to={parentHref}
-            className="hidden shrink-0 rounded-inner px-1 text-text-2 transition-colors duration-(--dur-fast) hover:text-text-1 sm:inline"
+            className="max-w-28 shrink-0 truncate rounded-inner px-1 text-text-2 transition-colors duration-(--dur-fast) hover:text-text-1 sm:max-w-none"
           >
             {pageLabel}
           </Link>
@@ -1200,10 +1200,7 @@ function TopBar({
           <>
             <ChevronRight
               aria-hidden="true"
-              className={cn(
-                "size-3.5 shrink-0 text-text-3",
-                parentHref && "hidden sm:block"
-              )}
+              className="size-3.5 shrink-0 text-text-3"
             />
             <span className="min-w-0 truncate px-1 text-text-1">{trail}</span>
           </>
