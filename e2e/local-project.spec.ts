@@ -67,7 +67,7 @@ test("keeps workspace navigation accessible across routes", async ({
     await expect(page.locator("main#main-content")).toBeVisible();
   }
 
-  const profileMenu = page.getByRole("button", { name: "Open profile menu" });
+  const profileMenu = page.getByRole("button", { name: "Open workspace menu" });
   await profileMenu.click();
   await expect(page.getByRole("menu")).toBeVisible();
   await page.keyboard.press("Escape");
@@ -80,10 +80,12 @@ test("keeps workspace navigation accessible across routes", async ({
 
   await page.setViewportSize({ width: 390, height: 844 });
   await openApp(page, "/projects");
-  const more = page.getByRole("button", { name: "Open more workspace pages" });
+  const more = page.getByRole("button", { name: "Open menu" });
   await more.focus();
   await page.keyboard.press("Enter");
-  await expect(page.getByRole("dialog", { name: "Workspace" })).toBeVisible();
+  await expect(
+    page.getByRole("dialog", { name: "Workspace navigation" })
+  ).toBeVisible();
   await page.keyboard.press("Escape");
   await expect(more).toBeFocused();
 
@@ -159,7 +161,7 @@ test("creates and persists a project in local mode", async ({ page }) => {
       .getByRole("complementary", { name: "Project details" })
       .getByText("E2E Client", { exact: true })
   ).toBeVisible();
-  await detail.getByRole("button", { name: "Outputs and Versions" }).click();
+  await detail.getByRole("button", { name: "Outputs" }).click();
   await expect(
     detail.getByRole("complementary", { name: "Project details" })
   ).toHaveCount(0);
@@ -214,7 +216,7 @@ test("dismisses the project launcher with Escape and restores focus", async ({
   await trigger.focus();
   await trigger.click();
 
-  const dialog = page.getByRole("dialog", { name: "New Project" });
+  const dialog = page.getByRole("dialog", { name: "New project" });
   await expect(dialog).toBeVisible();
   await page.keyboard.press("Escape");
   await expect(dialog).toBeHidden();
@@ -240,7 +242,7 @@ test("dismisses the project launcher with Escape and restores focus", async ({
   await expect(trigger).toBeFocused();
 
   await openApp(page, "/templates");
-  const blankProject = page.getByRole("button", { name: "Blank Project" });
+  const blankProject = page.getByRole("button", { name: "Blank project" });
   await blankProject.click();
   await expect(dialog).toBeVisible();
   await page.keyboard.press("Escape");
@@ -248,7 +250,8 @@ test("dismisses the project launcher with Escape and restores focus", async ({
   await expect(blankProject).toBeFocused();
 
   const commandTrigger = page.getByRole("button", {
-    name: "Quick Search (Ctrl K)",
+    name: "Search",
+    exact: true,
   });
   await commandTrigger.click();
   await page.getByText("Create new project", { exact: true }).click();
@@ -370,7 +373,7 @@ test("shows the compact dashboard overview and links to all projects", async ({
   const search = page.getByRole("textbox", {
     name: "Search dashboard projects",
   });
-  const filters = page.getByRole("button", { name: /^Filters/ });
+  const filters = page.getByRole("button", { name: /^Filter projects/ });
   const searchBox = await search.boundingBox();
   const filterBox = await filters.boundingBox();
   expect(
@@ -390,7 +393,7 @@ test("shows the compact dashboard overview and links to all projects", async ({
 
   const ledger = page.getByRole("region", { name: "Projects" });
   await expect(ledger.getByTestId("project-row")).toHaveCount(2);
-  const viewAll = ledger.getByRole("link", { name: "View all projects" });
+  const viewAll = ledger.getByRole("link", { name: "All projects" });
   await expect(viewAll).toHaveAttribute("href", "/projects");
 
   const activity = page.getByRole("region", { name: "Activity" });
@@ -480,11 +483,13 @@ test("operates the Projects table by keyboard", async ({ page }) => {
     table.getByRole("columnheader", { name: "Client" })
   ).toBeVisible();
 
-  await page.getByRole("tab", { name: "Board", exact: true }).click();
+  await page.getByRole("button", { name: "Display options" }).click();
+  await page.getByRole("menuitemradio", { name: "Board" }).click();
   await expect(
     page.getByRole("region", { name: "Editing projects" })
   ).toBeVisible();
-  await page.getByRole("tab", { name: "Table", exact: true }).click();
+  await page.getByRole("button", { name: "Display options" }).click();
+  await page.getByRole("menuitemradio", { name: "Table" }).click();
   await expect(table).toBeVisible();
 
   const rows = table.getByTestId("project-row");

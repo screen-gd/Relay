@@ -41,14 +41,14 @@ export async function createProject(
   title: string,
   client = "E2E Client"
 ) {
-  await page.getByRole("button", { name: "Quick create project" }).click();
-  const dialog = page.getByRole("dialog", { name: "New Project" });
+  await page.getByRole("button", { name: "New project" }).first().click();
+  const dialog = page.getByRole("dialog", { name: "New project" });
   await dialog.getByLabel("Project name").fill(title);
   await dialog.getByRole("button", { name: "Create new Client" }).click();
   await dialog.getByLabel("New Client name").fill(client);
   await dialog.getByRole("button", { name: "Add Client", exact: true }).click();
   await dialog
-    .getByRole("button", { name: "Create Project", exact: true })
+    .getByRole("button", { name: "Create project", exact: true })
     .click();
   await expect(projectRow(page, title)).toBeVisible();
 }

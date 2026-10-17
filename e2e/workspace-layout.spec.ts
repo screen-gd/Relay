@@ -117,7 +117,8 @@ test("opens and filters the command menu by keyboard after navigation", async ({
   await expect(page).toHaveURL(/\/projects$/);
 
   const trigger = page.getByRole("button", {
-    name: "Quick Search (Ctrl K)",
+    name: "Search",
+    exact: true,
   });
   await trigger.focus();
   await page.keyboard.press("Control+k");
@@ -200,9 +201,10 @@ test("keeps sample dashboard and detail read-only and isolated from local data",
   await expect(
     page.getByText(layoutProject.title, { exact: true })
   ).toHaveCount(0);
-  await expect(
-    page.getByRole("button", { name: "Quick create project" })
-  ).toBeDisabled();
+  // Sample studio is read-only, so the shell offers no New project button.
+  await expect(page.getByRole("button", { name: "New project" })).toHaveCount(
+    0
+  );
 
   await sampleProject.focus();
   await page.keyboard.press("Enter");
@@ -213,9 +215,10 @@ test("keeps sample dashboard and detail read-only and isolated from local data",
     page.getByRole("heading", { name: "Summer launch film", exact: true })
   ).toBeVisible();
   await expect(sampleMode).toContainText("Read-only production data");
-  await expect(
-    page.getByRole("button", { name: "Quick create project" })
-  ).toBeDisabled();
+  // Sample studio is read-only, so the shell offers no New project button.
+  await expect(page.getByRole("button", { name: "New project" })).toHaveCount(
+    0
+  );
   await expect(
     page.getByText(layoutProject.title, { exact: true })
   ).toHaveCount(0);
@@ -238,11 +241,9 @@ test("creates a local project from the shared header launcher on another route",
     .click();
   await expect(page).toHaveURL(/\/settings$/);
 
-  const launcher = page.getByRole("button", {
-    name: "Quick create project",
-  });
+  const launcher = page.getByRole("button", { name: "New project" }).first();
   await launcher.click();
-  const dialog = page.getByRole("dialog", { name: "New Project" });
+  const dialog = page.getByRole("dialog", { name: "New project" });
   await expect(dialog).toBeVisible();
 
   const title = `Shared launcher project ${Date.now()}`;
@@ -252,7 +253,7 @@ test("creates a local project from the shared header launcher on another route",
     .getByRole("menuitem", { name: layoutClient.name, exact: true })
     .click();
   await dialog
-    .getByRole("button", { name: "Create Project", exact: true })
+    .getByRole("button", { name: "Create project", exact: true })
     .click();
 
   await primaryNavigation(page)
