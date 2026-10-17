@@ -63,7 +63,8 @@ export function AiLockedNotice({
       ) : (
         <Link
           to="/settings"
-          className="font-semibold text-text-1 hover:underline"
+          search={{ section: "ai" }}
+          className="text-text-1 underline underline-offset-4"
         >
           Turn on AI in Settings
         </Link>

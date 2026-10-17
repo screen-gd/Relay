@@ -59,7 +59,9 @@ export function AiToolsMenu() {
         <DropdownMenuSeparator />
         {hasAccount ? (
           <DropdownMenuItem
-            onSelect={() => void navigate({ href: "/settings" })}
+            onSelect={() =>
+              void navigate({ to: "/settings", search: { section: "ai" } })
+            }
           >
             <LockKeyhole aria-hidden="true" className="size-4" />
             Manage AI in Settings

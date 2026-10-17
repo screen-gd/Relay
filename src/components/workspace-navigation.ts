@@ -226,10 +226,12 @@ export const viewGroups: readonly (readonly RouteItem[])[] = [
 export const settingsSections = [
   { id: "workspace", label: "General" },
   { id: "workflow", label: "Workflow" },
+  { id: "ai", label: "AI" },
   { id: "permissions", label: "Permissions" },
   { id: "notifications", label: "Notifications" },
   { id: "appearance", label: "Appearance" },
   { id: "regional", label: "Regional" },
+  { id: "data", label: "Data and export" },
 ] as const;
 
 export type SettingsSectionId = (typeof settingsSections)[number]["id"];

@@ -1,7 +1,5 @@
 "use client";
 
-import { motion } from "motion/react";
-import { useHydratedReducedMotion } from "@/lib/motion";
 import { ContentSection } from "@/components/workspace-page";
 import { Button as OwnedButton } from "@/components/ui/button";
 
@@ -16,27 +14,16 @@ export function SettingsPanel({
   subtitle: string;
   children: React.ReactNode;
 }) {
-  const reduceMotion = useHydratedReducedMotion();
   return (
-    <motion.div
-      className="min-w-0"
-      initial={reduceMotion ? false : { opacity: 0, y: 8 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{
-        duration: reduceMotion ? 0 : 0.24,
-        ease: [0.16, 1, 0.3, 1],
-      }}
+    <ContentSection
+      id={id}
+      title={title}
+      description={subtitle}
+      className="scroll-mt-16"
+      bodyClassName="grid min-w-0 grid-cols-1 gap-4"
     >
-      <ContentSection
-        id={id}
-        title={title}
-        description={subtitle}
-        className="scroll-mt-[76px] border-0 shadow-none"
-        bodyClassName="grid min-w-0 grid-cols-1 gap-3.5 p-4 sm:p-5"
-      >
-        {children}
-      </ContentSection>
-    </motion.div>
+      {children}
+    </ContentSection>
   );
 }
 

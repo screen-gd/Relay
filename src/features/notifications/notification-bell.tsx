@@ -167,6 +167,7 @@ export function NotificationBell() {
         <div className="mx-0.5 my-1 h-px bg-line-row" />
         <Link
           to="/settings"
+          search={{ section: "notifications" }}
           onClick={() => setNotificationOpen(false)}
           className="menu-item"
         >
