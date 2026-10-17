@@ -1,6 +1,6 @@
 # Responsive behavior
 
-Supported widths run from 320px; layouts are checked at 390 and 1280.
+Supported widths run from 320px; layouts are designed against 390 and 1280.
 
 | Width         | Shell                                                                              | Pages                                                     |
 | ------------- | ---------------------------------------------------------------------------------- | --------------------------------------------------------- |
