@@ -110,7 +110,7 @@ export function TeamChatPage() {
             chatReady && teamData ? (
               <form
                 data-slot="conversation-composer"
-                className="team-chat-composer border-t border-line-row bg-well p-3 sm:p-4"
+                className="rule-top bg-page p-3 sm:p-4"
                 onSubmit={(event) => {
                   event.preventDefault();
                   void submitMessage();
@@ -284,7 +284,7 @@ export function TeamChatPage() {
                           </time>
                         </div>
                         <div
-                          className={`rounded-lg border px-3 py-2.5 ${isOwnMessage ? "border-primary bg-primary/10" : "border-border bg-muted"}`}
+                          className={`rounded-frame px-3 py-2 ${isOwnMessage ? "bg-selected" : "bg-well"}`}
                         >
                           <p className="whitespace-pre-wrap [overflow-wrap:anywhere] type-body">
                             {chatMessage.body}

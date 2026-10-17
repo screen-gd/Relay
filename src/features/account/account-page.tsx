@@ -114,7 +114,7 @@ export function AccountSettingsPage() {
                     elements: {
                       rootBox: "w-full",
                       cardBox:
-                        "w-full max-w-none rounded-md border border-line-row bg-well shadow-none",
+                        "w-full max-w-none rounded-soft bg-page shadow-none",
                       card: "shadow-none",
                       navbar: "border-line-row",
                       pageScrollBox: "py-1",
@@ -130,20 +130,19 @@ export function AccountSettingsPage() {
           title="Public profile"
           description="Keep the profile you share with clients separate from private authentication settings."
         >
-          <div className="flex flex-col justify-between gap-4 rounded-lg border border-border bg-muted/20 p-4 sm:flex-row sm:items-center">
-            <div>
-              <p className="type-label">Profile visibility and presentation</p>
-              <p className="mt-1 max-w-2xl text-muted-foreground type-body">
-                Update your public name, handle, bio, location, and published
-                work from the profile editor.
-              </p>
-            </div>
+          <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
+            <p className="max-w-2xl text-text-2 type-body-sm">
+              Change your public name, handle, bio and location in the profile
+              editor.
+            </p>
             {isSignedIn ? (
-              <OwnedButton asChild variant="outline" className="shrink-0">
-                <Link to="/profile/edit">
-                  <Pencil aria-hidden="true" />
-                  Edit public profile
-                </Link>
+              <OwnedButton
+                asChild
+                variant="outline"
+                size="sm"
+                className="shrink-0"
+              >
+                <Link to="/profile/edit">Edit public profile</Link>
               </OwnedButton>
             ) : isAuthEnabled ? (
               <OwnedButton

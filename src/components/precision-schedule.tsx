@@ -9,7 +9,6 @@ import {
   ChevronRight,
   CheckCircle2,
   Clock3,
-  Download,
   Milestone,
 } from "@/components/icons";
 import { motion } from "motion/react";
@@ -352,16 +351,13 @@ export function PrecisionCalendar({
         description="A delivery-date calendar for planned, active, and delivered work."
         actions={
           <PageActions
-            primary={
-              <Button
-                variant="outline"
-                onClick={downloadFeed}
-                disabled={!events.length}
-              >
-                <Download className="size-4" /> Export calendar
-              </Button>
-            }
-            more={[{ label: "Go to today", onSelect: jumpToToday }]}
+            more={[
+              {
+                label: "Export calendar file",
+                onSelect: downloadFeed,
+                disabled: !events.length,
+              },
+            ]}
           />
         }
       />
@@ -390,6 +386,9 @@ export function PrecisionCalendar({
                   onClick={() => shiftPeriod(1)}
                 >
                   <ChevronRight className="size-4" />
+                </Button>
+                <Button variant="ghost" size="sm" onClick={jumpToToday}>
+                  Today
                 </Button>
               </div>
               <span className="text-text-2 type-label-sm">
@@ -698,10 +697,6 @@ export function PrecisionCalendar({
                           className="flex items-center gap-1.5 type-label-sm"
                           style={{ color: projectStatusColor(project.status) }}
                         >
-                          <span
-                            aria-hidden="true"
-                            className="size-1.5 rounded-full bg-current"
-                          />
                           {project.status}
                         </span>
                       </Button>
@@ -878,26 +873,18 @@ export function PrecisionTimeline({
         description="A chronological view of project milestones, reviews, and completed deliveries."
         actions={
           <div
-            className="flex flex-wrap items-center gap-2 type-label-sm"
+            className="flex items-center gap-3 text-text-3 type-label-sm"
             aria-label="Timeline summary"
           >
-            <span className="rounded-md bg-well px-2.5 py-1.5">
-              <strong className="tabular-nums text-text-1 type-body-lg">
-                {active}
-              </strong>
-              <span className="ml-1 text-text-2">active</span>
+            <span>
+              <strong className="text-text-1 data">{active}</strong> active
             </span>
-            <span className="rounded-md bg-well px-2.5 py-1.5">
-              <strong className="tabular-nums text-warn-text type-body-lg">
-                {review}
-              </strong>
-              <span className="ml-1 text-text-2">in review</span>
+            <span>
+              <strong className="text-text-1 data">{review}</strong> in review
             </span>
-            <span className="rounded-md bg-well px-2.5 py-1.5">
-              <strong className="tabular-nums text-text-1 type-body-lg">
-                {delivered}
-              </strong>
-              <span className="ml-1 text-text-2">delivered</span>
+            <span>
+              <strong className="text-text-1 data">{delivered}</strong>{" "}
+              delivered
             </span>
           </div>
         }
