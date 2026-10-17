@@ -125,6 +125,9 @@ function WorkspaceFrame({ children }: { children: ReactNode }) {
             }
             searchRecords={searchRecords}
             notificationSlot={<NotificationBell />}
+            onThemeChange={(theme) =>
+              setSettings((current) => ({ ...current, theme }))
+            }
           >
             <div className="flex min-h-full flex-col lg:h-full">
               {sample ? (
@@ -140,10 +143,7 @@ function WorkspaceFrame({ children }: { children: ReactNode }) {
                   }}
                 />
               ) : null}
-              <div
-                ref={contentRef}
-                className="min-h-0 flex-1 bg-page text-text-1 transition-colors lg:overflow-y-auto"
-              >
+              <div ref={contentRef} className="flex min-h-0 flex-1 flex-col">
                 {children}
               </div>
             </div>

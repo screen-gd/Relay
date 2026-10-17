@@ -31,6 +31,7 @@ import {
   CloudIcon as CloudIconGlyph,
   CloudUploadIcon as CloudUploadIconGlyph,
   Comment01Icon as Comment01IconGlyph,
+  ComputerIcon as ComputerIconGlyph,
   Copy01Icon as Copy01IconGlyph,
   CreditCardIcon as CreditCardIconGlyph,
   DashboardSquare01Icon as DashboardSquare01IconGlyph,
@@ -49,7 +50,10 @@ import {
   FolderOpenIcon as FolderOpenIconGlyph,
   Globe02Icon as Globe02IconGlyph,
   GridViewIcon as GridViewIconGlyph,
+  HelpCircleIcon as HelpCircleIconGlyph,
+  Home01Icon as Home01IconGlyph,
   Image02Icon as Image02IconGlyph,
+  InboxIcon as InboxIconGlyph,
   InformationCircleIcon as InformationCircleIconGlyph,
   LeftToRightListBulletIcon as LeftToRightListBulletIconGlyph,
   LibraryIcon as LibraryIconGlyph,
@@ -61,9 +65,11 @@ import {
   Login03Icon as Login03IconGlyph,
   Logout03Icon as Logout03IconGlyph,
   Mail01Icon as Mail01IconGlyph,
+  Menu01Icon as Menu01IconGlyph,
   Message01Icon as Message01IconGlyph,
   MessageAdd01Icon as MessageAdd01IconGlyph,
   MilestoneIcon as MilestoneIconGlyph,
+  Moon02Icon as Moon02IconGlyph,
   MoreHorizontalIcon as MoreHorizontalIconGlyph,
   Note01Icon as Note01IconGlyph,
   Notification01Icon as Notification01IconGlyph,
@@ -82,6 +88,7 @@ import {
   SidebarLeft01Icon as SidebarLeft01IconGlyph,
   SlidersHorizontalIcon as SlidersHorizontalIconGlyph,
   SparklesIcon as SparklesIconGlyph,
+  Sun03Icon as Sun03IconGlyph,
   Tick02Icon as Tick02IconGlyph,
   Undo02Icon as Undo02IconGlyph,
   UnfoldMoreIcon as UnfoldMoreIconGlyph,
@@ -161,6 +168,7 @@ export const CircleUserRound = icon(UserCircleIconGlyph, "CircleUserRound");
 export const Clock3 = icon(Clock01IconGlyph, "Clock3");
 export const Cloud = icon(CloudIconGlyph, "Cloud");
 export const CloudUpload = icon(CloudUploadIconGlyph, "CloudUpload");
+export const Compose = icon(PencilEdit02IconGlyph, "Compose");
 export const Copy = icon(Copy01IconGlyph, "Copy");
 export const CreditCard = icon(CreditCardIconGlyph, "CreditCard");
 export const Database = icon(Database01IconGlyph, "Database");
@@ -177,8 +185,11 @@ export const FolderOpen = icon(FolderOpenIconGlyph, "FolderOpen");
 export const FolderPlus = icon(FolderAddIconGlyph, "FolderPlus");
 export const Globe2 = icon(Globe02IconGlyph, "Globe2");
 export const Grid2X2 = icon(GridViewIconGlyph, "Grid2X2");
+export const HelpCircle = icon(HelpCircleIconGlyph, "HelpCircle");
 export const History = icon(Clock04IconGlyph, "History");
+export const Home = icon(Home01IconGlyph, "Home");
 export const Images = icon(Image02IconGlyph, "Images");
+export const Inbox = icon(InboxIconGlyph, "Inbox");
 export const Info = icon(InformationCircleIconGlyph, "Info");
 export const LayoutDashboard = icon(
   DashboardSquare01IconGlyph,
@@ -194,6 +205,7 @@ export const LogIn = icon(Login03IconGlyph, "LogIn");
 export const LogOut = icon(Logout03IconGlyph, "LogOut");
 export const Mail = icon(Mail01IconGlyph, "Mail");
 export const MapPin = icon(Location01IconGlyph, "MapPin");
+export const Menu = icon(Menu01IconGlyph, "Menu");
 export const MessageCircle = icon(BubbleChatIconGlyph, "MessageCircle");
 export const MessageSquare = icon(Message01IconGlyph, "MessageSquare");
 export const MessageSquarePlus = icon(
@@ -202,6 +214,8 @@ export const MessageSquarePlus = icon(
 );
 export const MessageSquareText = icon(Comment01IconGlyph, "MessageSquareText");
 export const Milestone = icon(MilestoneIconGlyph, "Milestone");
+export const Monitor = icon(ComputerIconGlyph, "Monitor");
+export const Moon = icon(Moon02IconGlyph, "Moon");
 export const MoreHorizontal = icon(MoreHorizontalIconGlyph, "MoreHorizontal");
 export const Palette = icon(PaintBoardIconGlyph, "Palette");
 export const PanelLeft = icon(SidebarLeft01IconGlyph, "PanelLeft");
@@ -223,6 +237,7 @@ export const SlidersHorizontal = icon(
   "SlidersHorizontal"
 );
 export const Sparkles = icon(SparklesIconGlyph, "Sparkles");
+export const Sun = icon(Sun03IconGlyph, "Sun");
 export const Trash2 = icon(Delete02IconGlyph, "Trash2");
 export const Unplug = icon(PlugSocketIconGlyph, "Unplug");
 export const Upload = icon(Upload04IconGlyph, "Upload");

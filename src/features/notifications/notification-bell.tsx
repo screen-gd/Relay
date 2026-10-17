@@ -7,7 +7,7 @@ import {
   PopoverContent as OwnedPopoverContent,
   PopoverTrigger as OwnedPopoverTrigger,
 } from "@/components/ui/popover";
-import { Bell, Check, Settings } from "@/components/icons";
+import { Bell, Settings } from "@/components/icons";
 
 export function NotificationBell() {
   const [notificationOpen, setNotificationOpen] = useState(false);
@@ -44,34 +44,34 @@ export function NotificationBell() {
         <OwnedButton
           type="button"
           variant="ghost"
-          size="icon"
-          title="Notifications"
-          aria-label="Open notifications"
-          className="relative text-text-1 transition-colors data-[state=open]:bg-selected"
+          size="icon-sm"
+          aria-label={
+            unreadCount
+              ? `Open notifications, ${unreadCount} unread`
+              : "Open notifications"
+          }
+          className="relative data-[state=open]:bg-selected data-[state=open]:text-text-1"
         >
-          <Bell aria-hidden="true" className="size-[18px]" />
+          <Bell aria-hidden="true" />
           {unreadCount ? (
             <span
-              className={`absolute grid h-[17px] place-items-center rounded-full border-2 border-[var(--app-panel)] bg-fail text-[9px] leading-none font-extrabold text-white ${
-                unreadCount > 9
-                  ? "-right-1 top-px min-w-6 px-1"
-                  : "top-1 right-0.5 min-w-[17px]"
-              }`}
+              aria-hidden="true"
+              className="absolute -top-0.5 -right-0.5 grid h-3.5 min-w-3.5 place-items-center rounded-inner bg-ink px-0.5 text-[10px] leading-none text-text-inverse data"
             >
-              {unreadCount > 99 ? "99+" : unreadCount}
+              {unreadCount > 9 ? "9+" : unreadCount}
             </span>
           ) : null}
         </OwnedButton>
       </OwnedPopoverTrigger>
       <OwnedPopoverContent
-        align="end"
+        align="start"
         sideOffset={8}
         aria-label="Notifications"
-        className="workspace-flyout max-h-[min(32rem,calc(100dvh-4rem))] w-[min(340px,calc(100vw-1rem))] overflow-hidden rounded-xl border-line-row bg-well p-1.5 text-text-1 shadow-overlay"
+        className="max-h-[min(32rem,calc(100dvh-4rem))] w-[min(340px,calc(100vw-1rem))] overflow-hidden p-1.5"
       >
         <div className="px-2.5 py-2">
           <div className="flex items-center justify-between gap-2">
-            <h2 className="text-[13px] font-semibold">Notifications</h2>
+            <h2 className="type-label text-text-1">Notifications</h2>
             {teamData && unreadCount ? (
               <OwnedButton
                 type="button"
@@ -82,13 +82,13 @@ export function NotificationBell() {
                     teamId: teamData.workspace._id,
                   }).catch(() => undefined);
                 }}
-                className="h-auto px-0 py-0 text-[11px] font-semibold text-primary hover:bg-transparent"
+                className="h-auto px-0 py-0 text-text-2 hover:bg-transparent hover:text-text-1"
               >
                 Mark all read
               </OwnedButton>
             ) : null}
           </div>
-          <p className="mt-0.5 text-xs text-text-2">
+          <p className="mt-0.5 type-body-sm text-text-2">
             {isConvexAuthLoading
               ? "Connecting team notifications..."
               : teamNotificationSyncUnavailable
@@ -113,11 +113,9 @@ export function NotificationBell() {
             {teamNotifications.map((notification) => (
               <li
                 key={notification._id}
-                className={`rounded-lg px-2.5 py-2 transition-colors hover:bg-hover ${notification.read ? "" : "bg-selected"}`}
+                className={`rounded-soft px-2.5 py-2 transition-colors duration-(--dur-fast) hover:bg-hover ${notification.read ? "" : "bg-selected"}`}
               >
-                <p className="text-[13px] font-semibold">
-                  {notification.message}
-                </p>
+                <p className="type-label text-text-1">{notification.message}</p>
                 <p className="mt-0.5 text-xs text-text-2">
                   {new Intl.DateTimeFormat("en", {
                     month: "short",
@@ -136,7 +134,7 @@ export function NotificationBell() {
                         notificationId: notification._id,
                       }).catch(() => undefined);
                     }}
-                    className="mt-1 h-auto px-0 py-0 text-[11px] font-semibold text-primary hover:bg-transparent"
+                    className="mt-1 h-auto px-0 py-0 text-text-2 hover:bg-transparent hover:text-text-1"
                   >
                     Mark read
                   </OwnedButton>
@@ -151,7 +149,7 @@ export function NotificationBell() {
                       });
                     }
                   }}
-                  className="mt-1 inline-flex text-[11px] font-semibold text-primary outline-none hover:underline"
+                  className="mt-1 ms-3 inline-flex type-label-sm text-text-2 hover:text-text-1 hover:underline"
                 >
                   Open Team
                 </Link>
@@ -159,10 +157,9 @@ export function NotificationBell() {
             ))}
           </ul>
         ) : (
-          <div className="grid justify-items-center gap-2 px-4 py-7 text-center">
-            <Check className="size-5 text-primary" aria-hidden="true" />
-            <p className="text-[13px] font-semibold">No new notifications</p>
-            <p className="max-w-56 text-xs text-text-2">
+          <div className="grid gap-1 px-2.5 py-3">
+            <p className="type-label text-text-1">No new notifications</p>
+            <p className="type-body-sm text-text-2">
               Project updates and feedback will appear here.
             </p>
           </div>
@@ -171,7 +168,7 @@ export function NotificationBell() {
         <Link
           to="/settings"
           onClick={() => setNotificationOpen(false)}
-          className="flex h-9 items-center gap-2 rounded-lg px-2.5 text-xs font-medium outline-none transition-colors hover:bg-hover focus-visible:bg-hover"
+          className="menu-item"
         >
           <Settings className="size-4 text-text-2" aria-hidden="true" />
           Notification settings

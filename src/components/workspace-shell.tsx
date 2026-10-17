@@ -1,41 +1,34 @@
 import {
-  Accessibility,
-  Bell,
-  CalendarDays,
-  CheckSquare2,
+  ArrowLeft,
   ChevronDown,
-  CircleUserRound,
-  CreditCard,
-  Database,
+  ChevronRight,
+  Compose,
   FileText,
-  FolderKanban,
-  Images,
-  Info,
-  LayoutDashboard,
-  Library,
-  PanelLeft,
+  HelpCircle,
   LockKeyhole,
   LogIn,
   LogOut,
-  Mail,
-  MessageSquarePlus,
-  MessageSquareText,
-  MoreHorizontal,
+  Menu,
+  Monitor,
+  Moon,
+  PanelLeft,
   Plus,
   Search,
-  Settings,
   Sparkles,
-  ShieldCheck,
-  ScrollText,
-  Users,
-  UsersRound,
+  Sun,
   UserPlus,
-  Workflow,
 } from "@/components/icons";
-import { AnimatePresence, motion } from "motion/react";
-import { Link, useLocation, useNavigate } from "@tanstack/react-router";
+import { Collapsible as CollapsiblePrimitive } from "radix-ui";
+import { motion } from "motion/react";
+import {
+  Link,
+  useLocation,
+  useNavigate,
+  useSearch,
+} from "@tanstack/react-router";
 import {
   createContext,
+  useCallback,
   useContext,
   useEffect,
   useMemo,
@@ -49,28 +42,14 @@ import { useData } from "@/lib/data-context";
 import { marketingSiteUrl } from "@/lib/site";
 import { useOptionalAuth } from "@/lib/optional-auth";
 import type { SettingsState } from "@/lib/types";
-import type { FileRouteTypes } from "@/routeTree.gen";
 import type { SearchRecord } from "@/features/workspace-discovery/workspace-discovery";
 import { FeedbackDialog } from "@/features/feedback/feedback-button";
-import { AiToolsMenu } from "@/features/ai/ai-tools-menu";
-import { AiBadge, useAiAccount } from "@/features/ai/ai-availability";
-import {
-  aiToolHref,
-  aiTools,
-  aiToolsForPage,
-  featuredAiToolIds,
-} from "@/features/ai/ai-tools";
+import { useAiAccount } from "@/features/ai/ai-availability";
+import { aiToolHref, aiTools, featuredAiToolIds } from "@/features/ai/ai-tools";
 import { useHydratedReducedMotion } from "@/lib/motion";
 import { cn } from "@/lib/utils";
-import { RelayBrand } from "@/app/relay-brand";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbList,
-  BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb";
 import {
   Command,
   CommandEmpty,
@@ -89,338 +68,51 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
   DropdownMenuSeparator,
+  DropdownMenuShortcut,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import {
+  allRoutes,
+  commandGroups,
+  goShortcuts,
+  isSettingsPage,
+  primaryRoutes,
+  routes,
+  settingsAccountRoutes,
+  settingsSections,
+  settingsWorkspaceRoutes,
+  sidebarPageFor,
+  sidebarSections,
+  supportLinks,
+  viewGroupFor,
+  type RouteItem,
+  type ShellPage,
+} from "./workspace-navigation";
 
-export type ShellPage =
-  | "dashboard"
-  | "projects"
-  | "clients"
-  | "timeline"
-  | "calendar"
-  | "files"
-  | "media"
-  | "resources"
-  | "feedback"
-  | "templates"
-  | "reports"
-  | "integrations"
-  | "team"
-  | "team-chat"
-  | "settings"
-  | "account"
-  | "subscription"
-  | "profile"
-  | "profile-edit"
-  | "organization-profile";
+export { workspacePageForPath } from "./workspace-navigation";
+export type { ShellPage } from "./workspace-navigation";
 
-/** Registered routes without path params, safe to link to with `to` alone. */
-type StaticPath = Exclude<FileRouteTypes["to"], `${string}$${string}`>;
-
-type RouteItem = {
-  page: ShellPage;
-  label: string;
-  href: StaticPath;
-  icon: typeof LayoutDashboard;
-  shortcut?: string;
-};
-
-type RouteGroup = {
-  label: string;
-  items: RouteItem[];
-};
-
-const routeGroups: RouteGroup[] = [
-  {
-    label: "Overview",
-    items: [
-      {
-        page: "dashboard",
-        label: "Dashboard",
-        href: "/",
-        icon: LayoutDashboard,
-        shortcut: "G D",
-      },
-      {
-        page: "calendar",
-        label: "Calendar",
-        href: "/calendar",
-        icon: CalendarDays,
-        shortcut: "G C",
-      },
-      {
-        page: "timeline",
-        label: "Timeline",
-        href: "/timeline",
-        icon: Workflow,
-      },
-    ],
-  },
-  {
-    label: "Work",
-    items: [
-      {
-        page: "projects",
-        label: "Projects",
-        href: "/projects",
-        icon: FolderKanban,
-        shortcut: "G P",
-      },
-      { page: "clients", label: "Clients", href: "/clients", icon: UsersRound },
-      {
-        page: "feedback",
-        label: "Reviews",
-        href: "/feedback",
-        icon: MessageSquareText,
-      },
-      { page: "files", label: "Files", href: "/files", icon: FileText },
-      { page: "media", label: "Media", href: "/media", icon: Images },
-      {
-        page: "templates",
-        label: "Templates",
-        href: "/templates",
-        icon: CheckSquare2,
-      },
-    ],
-  },
-  {
-    label: "Operations",
-    items: [
-      {
-        page: "resources",
-        label: "Resources",
-        href: "/resources",
-        icon: Library,
-      },
-      {
-        page: "integrations",
-        label: "Integrations",
-        href: "/integrations",
-        icon: Sparkles,
-      },
-      {
-        page: "reports",
-        label: "Payments",
-        href: "/reports",
-        icon: CreditCard,
-        shortcut: "G R",
-      },
-    ],
-  },
-  {
-    label: "Workspace",
-    items: [
-      { page: "team", label: "Team", href: "/team", icon: Users },
-      {
-        page: "team-chat",
-        label: "Team chat",
-        href: "/team-chat",
-        icon: MessageSquareText,
-      },
-      {
-        page: "settings",
-        label: "Settings",
-        href: "/settings",
-        icon: Settings,
-        shortcut: "G S",
-      },
-    ],
-  },
-];
-
-const allRoutes = routeGroups.flatMap((group) => group.items);
-
-export function workspacePageForPath(pathname: string): ShellPage {
-  if (pathname === "/sample-studio") return "dashboard";
-  if (pathname.startsWith("/sample-studio/projects/")) return "projects";
-  if (pathname.startsWith("/projects/")) return "projects";
-  if (pathname === "/profile/edit") return "profile-edit";
-  if (pathname === "/profile") return "profile";
-  if (pathname === "/organization") return "organization-profile";
-  if (pathname === "/account") return "account";
-  if (pathname === "/subscription") return "subscription";
-  return (
-    allRoutes.find((route) => route.href === pathname)?.page ?? "dashboard"
-  );
-}
-
-/** The sidebar keeps five work hubs plus Team and Settings. */
-const sidebarGroups: RouteGroup[] = [
-  {
-    label: "Workspace",
-    items: routesFor([
-      "dashboard",
-      "projects",
-      "clients",
-      "feedback",
-      "reports",
-    ]),
-  },
-  {
-    label: "Account",
-    items: routesFor(["team", "settings"]),
-  },
-];
-
-const hubPages: ShellPage[] = sidebarGroups.flatMap((group) =>
-  group.items.map((item) => item.page)
-);
-const hubRoutes = sidebarGroups.flatMap((group) => group.items);
-const mobileRoutes = hubRoutes.filter((item) =>
-  ["dashboard", "projects", "clients", "feedback"].includes(item.page)
-);
-/** Pages that live under a hub instead of the sidebar. */
-const contextPages: Partial<Record<ShellPage, ShellPage[]>> = {
-  projects: ["projects", "calendar", "timeline", "files", "media"],
-  team: ["team", "team-chat"],
-  settings: ["settings", "integrations", "templates", "resources"],
-};
-
-function routesFor(pages: ShellPage[]): RouteItem[] {
-  return pages.flatMap((page) =>
-    allRoutes.filter((item) => item.page === page)
-  );
-}
-
-function hubPageForPage(page: ShellPage): ShellPage {
-  return (
-    hubPages.find((hub) => contextPages[hub]?.includes(page)) ??
-    ([
-      "account",
-      "subscription",
-      "profile",
-      "profile-edit",
-      "organization-profile",
-    ].includes(page)
-      ? "settings"
-      : page)
-  );
-}
-
-type SupportLink =
-  | { label: string; href: StaticPath; icon: typeof Mail; external?: false }
-  | { label: string; href: string; icon: typeof Mail; external: true };
-
-const compactSupportLinks: readonly SupportLink[] = [
-  { label: "Contact", href: "/contact", icon: Mail },
-  { label: "Privacy", href: "/privacy", icon: ShieldCheck },
-  { label: "Terms", href: "/terms", icon: ScrollText },
-  { label: "Accessibility", href: "/accessibility", icon: Accessibility },
-  {
-    label: "About",
-    href: `${marketingSiteUrl}/about`,
-    icon: Info,
-    external: true,
-  },
-  {
-    label: "Privacy & Data",
-    href: `${marketingSiteUrl}/privacy-and-data`,
-    icon: Database,
-    external: true,
-  },
-];
-
-const shellTransition = {
-  duration: 0.22,
-  ease: [0.22, 1, 0.36, 1] as const,
-};
-
-const quickRouteShortcuts: Partial<Record<string, StaticPath>> = {
-  d: "/",
-  c: "/calendar",
-  p: "/projects",
-  r: "/reports",
-  s: "/settings",
-};
-
-function initials(value: string) {
-  const parts = value.trim().split(/\s+/).filter(Boolean);
-  if (!parts.length) return "CL";
-  return parts
-    .slice(0, 2)
-    .map((part) => part[0]?.toUpperCase())
-    .join("");
-}
-
-function routeIsActive(currentPage: ShellPage, item: RouteItem) {
-  return hubPageForPage(currentPage) === item.page;
-}
-
-/** Hubs with more than their own page get a panel and a tab strip. */
-function hubHasPages(hub: ShellPage) {
-  return hubChildren(hub).length > 1;
-}
-
-/** Whether the shell shows a tab strip naming `page` above the content. */
-function hasContextTabs(page: ShellPage) {
-  const hub = hubPageForPage(page);
-  return (
-    hubHasPages(hub) && hubChildren(hub).some((item) => item.page === page)
-  );
-}
-
-function ContextNavigation({
-  page,
-  onActionsHost,
-}: {
-  page: ShellPage;
-  /** Receives the element page actions render into, or null when unmounted. */
-  onActionsHost: (element: HTMLElement | null) => void;
-}) {
-  const hub = hubRoutes.find((item) => item.page === hubPageForPage(page));
-  const items = hub && hasContextTabs(page) ? hubChildren(hub.page) : [];
-  // Keep the shell informed when the strip leaves the tree.
-  useEffect(() => {
-    if (!items.length) onActionsHost(null);
-  }, [items.length, onActionsHost]);
-  if (!hub || !items.length) return null;
-  return (
-    <div className="flex shrink-0 items-center justify-between gap-4 border-b border-line-row px-5">
-      <nav
-        aria-label={`${hub.label} navigation`}
-        className="flex min-w-0 flex-wrap gap-5"
-      >
-        {items.map((item) => (
-          <Link
-            key={item.page}
-            to={item.href}
-            aria-current={page === item.page ? "page" : undefined}
-            className={cn(
-              "-mb-px flex min-h-11 items-center border-b-2 text-[13px] font-medium outline-none transition-colors duration-150",
-              page === item.page
-                ? "border-ink text-text-1"
-                : "border-transparent text-text-2 hover:text-text-1"
-            )}
-          >
-            {item.label}
-          </Link>
-        ))}
-      </nav>
-      <div ref={onActionsHost} className="flex shrink-0 items-center py-1.5" />
-    </div>
-  );
-}
+type ThemeChoice = SettingsState["theme"];
 
 const BreadcrumbContext = createContext<(label: string | null) => void>(
   () => {}
 );
 
 /**
- * Shows `label` after the page name in the shell's top-bar breadcrumb while
- * the calling page is mounted, e.g. a project's title on its detail page.
+ * Shows `label` after the page name in the top bar while the calling page is
+ * mounted, e.g. a project's title on its detail page.
  */
 export function useWorkspaceBreadcrumb(label: string) {
   const setBreadcrumb = useContext(BreadcrumbContext);
@@ -430,11 +122,23 @@ export function useWorkspaceBreadcrumb(label: string) {
   }, [label, setBreadcrumb]);
 }
 
+const SIDEBAR_OPEN_STORAGE_KEY = "relay:sidebar-open";
+const SIDEBAR_SECTIONS_STORAGE_KEY = "relay:sidebar-sections";
+const RECENT_PROJECT_LIMIT = 5;
+
+/**
+ * The signed-in workspace frame, laid out as Linear does: a sidebar on the
+ * dark canvas and the page in a framed viewport beside it. The sidebar's
+ * toggle (or `[`) folds it to an icon rail; under 1024px it becomes a sheet
+ * behind the menu button. The top bar names the page, offers its views and
+ * holds the page's actions, so every page puts its options in one place.
+ */
 export function WorkspaceShell({
   page,
   settings,
   onNewProject,
   canCreateProject,
+  onThemeChange,
   pageTitle,
   notificationSlot,
   searchRecords = [],
@@ -444,29 +148,147 @@ export function WorkspaceShell({
   settings: SettingsState;
   onNewProject: () => void;
   canCreateProject: boolean;
+  /** Saves a theme picked from the workspace menu. */
+  onThemeChange?: (theme: ThemeChoice) => void;
   pageTitle?: string;
   notificationSlot?: ReactNode;
   searchRecords?: readonly SearchRecord[];
   children: ReactNode;
 }) {
   const [commandOpen, setCommandOpen] = useState(false);
-  const [moreOpen, setMoreOpen] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
   const [breadcrumb, setBreadcrumb] = useState<string | null>(null);
   const [sidebarOpen, toggleSidebar] = useSidebarOpen();
-  // The tab strip's right side, where page actions render.
   const [actionsHost, setActionsHost] = useState<HTMLElement | null>(null);
-  const pageHeaderContext = useMemo(() => ({ actionsHost }), [actionsHost]);
-  const goChordRef = useRef(false);
-  const goChordTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const pageHeaderContext = useMemo(
+    () => ({ actionsHost, inShell: true }),
+    [actionsHost]
+  );
   const commandReturnFocusRef = useRef<HTMLElement | null>(null);
-  const reduceMotion = useHydratedReducedMotion();
-  const navigate = useNavigate();
-  const openCommand = () => {
+  const pathname = useLocation({ select: (location) => location.pathname });
+
+  const openCommand = useCallback(() => {
     if (document.activeElement instanceof HTMLElement) {
       commandReturnFocusRef.current = document.activeElement;
     }
     setCommandOpen(true);
-  };
+  }, []);
+
+  useWorkspaceShortcuts({
+    commandOpen,
+    setCommandOpen,
+    openCommand,
+    toggleSidebar,
+    onNewProject: canCreateProject ? onNewProject : undefined,
+  });
+
+  // A route change closes the mobile sheet behind the link that was used.
+  useEffect(() => setMobileOpen(false), [pathname]);
+
+  const sidebar = (mode: SidebarMode) => (
+    <Sidebar
+      mode={mode}
+      page={page}
+      settings={settings}
+      onToggle={mode === "sheet" ? () => setMobileOpen(false) : toggleSidebar}
+      onNewProject={onNewProject}
+      canCreateProject={canCreateProject}
+      onSearch={openCommand}
+      onThemeChange={onThemeChange}
+      notificationSlot={notificationSlot}
+      searchRecords={searchRecords}
+    />
+  );
+
+  return (
+    <BreadcrumbContext.Provider value={setBreadcrumb}>
+      <div
+        data-testid="workspace-shell"
+        data-sidebar={sidebarOpen ? "open" : "rail"}
+        className="flex h-dvh overflow-hidden bg-canvas text-text-1"
+      >
+        <div
+          className={cn(
+            "hidden shrink-0 overflow-hidden transition-[width] duration-(--dur-slow) ease-(--ease-step) motion-reduce:transition-none lg:block",
+            sidebarOpen ? "w-(--sidebar)" : "w-(--sidebar-rail)"
+          )}
+        >
+          {sidebar(sidebarOpen ? "expanded" : "rail")}
+        </div>
+
+        <div className="flex min-w-0 flex-1 flex-col lg:py-2 lg:pe-2">
+          <div
+            data-slot="workspace-viewport"
+            className="flex min-h-0 flex-1 flex-col bg-page lg:rounded-frame lg:shadow-[0_0_0_1px_var(--line-frame)]"
+          >
+            <TopBar
+              page={page}
+              pathname={pathname}
+              title={pageTitle}
+              breadcrumb={breadcrumb}
+              onMenu={() => setMobileOpen(true)}
+              onActionsHost={setActionsHost}
+              onNewProject={canCreateProject ? onNewProject : undefined}
+            />
+            <main
+              id="main-content"
+              data-testid="workspace-content-surface"
+              tabIndex={-1}
+              className="min-h-0 flex-1 overflow-y-auto overscroll-contain outline-none"
+            >
+              <PageHeaderContext.Provider value={pageHeaderContext}>
+                <div className="flex min-h-full flex-col lg:h-full">
+                  {children}
+                </div>
+              </PageHeaderContext.Provider>
+            </main>
+          </div>
+        </div>
+
+        <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
+          <SheetContent
+            side="left"
+            showCloseButton={false}
+            className="w-[min(var(--sidebar),85vw)] gap-0 bg-canvas p-0 lg:hidden"
+          >
+            <SheetTitle className="sr-only">Workspace navigation</SheetTitle>
+            {sidebar("sheet")}
+          </SheetContent>
+        </Sheet>
+
+        <WorkspaceCommand
+          open={commandOpen}
+          onOpenChange={setCommandOpen}
+          onNewProject={onNewProject}
+          returnFocusRef={commandReturnFocusRef}
+          searchRecords={searchRecords}
+        />
+      </div>
+    </BreadcrumbContext.Provider>
+  );
+}
+
+/**
+ * App-wide keys: Ctrl/Cmd+K opens search, `[` folds the sidebar, `C` starts a
+ * project, and G then a letter jumps to a page. Keys typed into a field, or
+ * pressed while a dialog is open, are left alone.
+ */
+function useWorkspaceShortcuts({
+  commandOpen,
+  setCommandOpen,
+  openCommand,
+  toggleSidebar,
+  onNewProject,
+}: {
+  commandOpen: boolean;
+  setCommandOpen: (open: boolean) => void;
+  openCommand: () => void;
+  toggleSidebar: () => void;
+  onNewProject?: () => void;
+}) {
+  const navigate = useNavigate();
+  const goChordRef = useRef(false);
+  const goChordTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     const handler = (event: KeyboardEvent) => {
@@ -483,14 +305,14 @@ export function WorkspaceShell({
         target?.tagName === "INPUT" ||
         target?.tagName === "TEXTAREA" ||
         target?.tagName === "SELECT";
-
       if (isEditing || event.metaKey || event.ctrlKey || event.altKey) return;
+      if (document.querySelector("[role=dialog], [role=alertdialog]")) return;
 
       const key = event.key.toLowerCase();
       if (goChordRef.current) {
         goChordRef.current = false;
         if (goChordTimerRef.current) clearTimeout(goChordTimerRef.current);
-        const href = quickRouteShortcuts[key];
+        const href = goShortcuts[key];
         if (href) {
           event.preventDefault();
           void navigate({ to: href });
@@ -503,6 +325,12 @@ export function WorkspaceShell({
         goChordTimerRef.current = setTimeout(() => {
           goChordRef.current = false;
         }, 900);
+      } else if (event.key === "[") {
+        event.preventDefault();
+        toggleSidebar();
+      } else if (key === "c" && onNewProject) {
+        event.preventDefault();
+        onNewProject();
       }
     };
     window.addEventListener("keydown", handler);
@@ -510,172 +338,20 @@ export function WorkspaceShell({
       window.removeEventListener("keydown", handler);
       if (goChordTimerRef.current) clearTimeout(goChordTimerRef.current);
     };
-  }, [commandOpen, navigate]);
-
-  const title = useMemo(
-    () =>
-      pageTitle ??
-      (page === "subscription"
-        ? "Subscription"
-        : (allRoutes.find((route) => route.page === page)?.label ?? "Relay")),
-    [page, pageTitle]
-  );
-
-  return (
-    <BreadcrumbContext.Provider value={setBreadcrumb}>
-      <div
-        data-testid="workspace-shell"
-        data-sidebar={sidebarOpen ? "open" : "rail"}
-        className="relay-density-balanced min-h-dvh bg-page text-text-1 lg:h-dvh lg:overflow-hidden lg:bg-canvas"
-      >
-        <DesktopSidebar
-          page={page}
-          open={sidebarOpen}
-          onToggle={toggleSidebar}
-          onNewProject={onNewProject}
-          canCreateProject={canCreateProject}
-          searchRecords={searchRecords}
-        />
-
-        <div className="min-h-dvh transition-[padding] duration-200 ease-out motion-reduce:transition-none lg:pl-[var(--sidebar-width)]">
-          <header className="workspace-topbar fixed inset-x-0 top-0 z-30 flex h-[54px] items-center border-b border-line-row bg-page px-2.5 transition-[left] duration-200 ease-out motion-reduce:transition-none lg:left-[var(--sidebar-width)] lg:right-2 lg:top-2 lg:justify-between lg:rounded-t-xl lg:px-4">
-            <div className="flex h-full min-w-0 flex-1 items-center gap-2 lg:flex-none">
-              <RelayBrand compact className="lg:hidden" />
-              <p className="truncate text-sm font-semibold lg:hidden">
-                {breadcrumb ?? title}
-              </p>
-              <Breadcrumb
-                className="hidden min-w-0 lg:block"
-                aria-label={`Current location: ${breadcrumb ? `${title} / ${breadcrumb}` : title}`}
-              >
-                <BreadcrumbList className="min-w-0 flex-nowrap gap-1.5 text-xs">
-                  <BreadcrumbItem>
-                    <span className="font-medium text-text-3">Relay</span>
-                  </BreadcrumbItem>
-                  <BreadcrumbSeparator className="text-[var(--app-strong-border)]">
-                    /
-                  </BreadcrumbSeparator>
-                  <BreadcrumbItem className="min-w-0">
-                    <span
-                      className={cn(
-                        "min-w-0 truncate font-medium",
-                        breadcrumb ? "text-text-3" : "text-text-1"
-                      )}
-                    >
-                      {title}
-                    </span>
-                  </BreadcrumbItem>
-                  {breadcrumb ? (
-                    <>
-                      <BreadcrumbSeparator className="text-[var(--app-strong-border)]">
-                        /
-                      </BreadcrumbSeparator>
-                      <BreadcrumbItem className="min-w-0">
-                        <span className="max-w-[min(32vw,28rem)] truncate text-sm font-semibold text-text-1">
-                          {breadcrumb}
-                        </span>
-                      </BreadcrumbItem>
-                    </>
-                  ) : null}
-                </BreadcrumbList>
-              </Breadcrumb>
-            </div>
-
-            <Button
-              variant="outline"
-              className="absolute left-1/2 top-1/2 hidden h-9 w-[240px] -translate-x-1/2 -translate-y-1/2 justify-start rounded-lg border-line-row !bg-well px-3 text-xs text-text-2 shadow-none hover:text-text-1 active:-translate-y-1/2 active:scale-100 lg:flex"
-              onClick={openCommand}
-              aria-label="Quick Search (Ctrl K)"
-            >
-              <Search className="size-3.5 shrink-0" />
-              <span className="truncate">Quick Search</span>
-              <Kbd className="ml-auto h-auto min-w-0 rounded-none bg-transparent px-0 font-mono text-[9px] text-text-3">
-                Ctrl K
-              </Kbd>
-            </Button>
-
-            <div className="ml-3 flex h-9 items-center gap-1.5 lg:ml-0">
-              <Button
-                variant="ghost"
-                size="icon"
-                className="lg:hidden"
-                aria-label="Search pages and workspace actions (Ctrl K)"
-                onClick={openCommand}
-              >
-                <Search className="size-[18px]" />
-              </Button>
-              <div className="hidden h-9 items-center sm:flex lg:hidden">
-                <Button
-                  aria-label="Quick create project"
-                  className="h-9 px-3 text-xs shadow-none"
-                  onClick={onNewProject}
-                  disabled={!canCreateProject}
-                >
-                  <Plus className="size-3.5" />
-                  Quick create
-                </Button>
-              </div>
-              {notificationSlot ?? (
-                <Button variant="ghost" size="icon" aria-label="Notifications">
-                  <Bell className="size-[18px]" />
-                </Button>
-              )}
-              <AiToolsMenu />
-              <ProfileMenu settings={settings} compact page={page} />
-            </div>
-          </header>
-
-          <main
-            id="main-content"
-            data-testid="workspace-content-surface"
-            tabIndex={-1}
-            className="workspace-scrollbar-hidden h-[calc(100dvh_-_68px_-_env(safe-area-inset-bottom))] overflow-y-auto bg-page pt-12 outline-none transition-[left] duration-200 ease-out motion-reduce:transition-none lg:fixed lg:bottom-2 lg:right-2 lg:top-[62px] lg:left-[var(--sidebar-width)] lg:h-auto lg:min-h-0 lg:overscroll-contain lg:rounded-b-xl lg:pt-0"
-          >
-            <div className="flex min-h-full flex-col lg:h-full">
-              <ContextNavigation page={page} onActionsHost={setActionsHost} />
-              <PageHeaderContext.Provider value={pageHeaderContext}>
-                <div className="min-h-0 flex-1">{children}</div>
-              </PageHeaderContext.Provider>
-            </div>
-          </main>
-        </div>
-
-        {(page === "dashboard" || page === "projects") && canCreateProject ? (
-          <Button
-            type="button"
-            aria-label="New Project"
-            className="fixed bottom-[calc(80px+env(safe-area-inset-bottom))] right-4 z-40 flex min-h-12 items-center gap-2 rounded-md bg-primary px-4 text-sm font-semibold text-primary-foreground shadow-overlay outline-none hover:bg-primary/90 sm:hidden"
-            onClick={onNewProject}
-          >
-            <Plus className="size-4" />
-            New project
-          </Button>
-        ) : null}
-
-        <MobileNavigation
-          page={page}
-          open={moreOpen}
-          onOpenChange={setMoreOpen}
-        />
-        <WorkspaceCommand
-          open={commandOpen}
-          onOpenChange={setCommandOpen}
-          onNewProject={onNewProject}
-          returnFocusRef={commandReturnFocusRef}
-          searchRecords={searchRecords}
-        />
-      </div>
-    </BreadcrumbContext.Provider>
-  );
+  }, [
+    commandOpen,
+    navigate,
+    onNewProject,
+    openCommand,
+    setCommandOpen,
+    toggleSidebar,
+  ]);
 }
 
-const SIDEBAR_OPEN_STORAGE_KEY = "relay:sidebar-open";
-const RAIL_WIDTH = 56;
-
 /**
- * Whether the panel beside the rail is open. Open is the default; the choice
- * is remembered on this device. Read after mount so the server render and the
- * first client render agree.
+ * Whether the sidebar is open beside the page or folded to the rail. Open is
+ * the default and the choice is kept on this device. Read after mount so the
+ * server render and the first client render agree.
  */
 function useSidebarOpen() {
   const [open, setOpen] = useState(true);
@@ -686,483 +362,896 @@ function useSidebarOpen() {
       // Storage is unavailable; keep the open default.
     }
   }, []);
-  const toggle = () =>
-    setOpen((current) => {
-      const next = !current;
-      try {
-        window.localStorage.setItem(SIDEBAR_OPEN_STORAGE_KEY, next ? "1" : "0");
-      } catch {
-        // The toggle still works for this visit.
-      }
-      return next;
-    });
+  const toggle = useCallback(
+    () =>
+      setOpen((current) => {
+        const next = !current;
+        try {
+          window.localStorage.setItem(
+            SIDEBAR_OPEN_STORAGE_KEY,
+            next ? "1" : "0"
+          );
+        } catch {
+          // The toggle still works for this visit.
+        }
+        return next;
+      }),
+    []
+  );
   return [open, toggle] as const;
 }
 
-/**
- * Pages listed under a hub, in the panel and the context tabs alike. The
- * hub's own page comes first and is labelled "Overview".
- */
-function hubChildren(hub: ShellPage) {
-  return (contextPages[hub] ?? []).flatMap((page) =>
-    allRoutes
-      .filter((item) => item.page === page)
-      .map((item) => (page === hub ? { ...item, label: "Overview" } : item))
-  );
+/** Which sidebar groups are folded, remembered on this device. */
+function useFoldedSections() {
+  const [folded, setFolded] = useState<Record<string, boolean>>({});
+  useEffect(() => {
+    try {
+      const saved = window.localStorage.getItem(SIDEBAR_SECTIONS_STORAGE_KEY);
+      if (saved) setFolded(JSON.parse(saved) as Record<string, boolean>);
+    } catch {
+      // Keep every group open.
+    }
+  }, []);
+  const toggle = useCallback((id: string) => {
+    setFolded((current) => {
+      const next = { ...current, [id]: !current[id] };
+      try {
+        window.localStorage.setItem(
+          SIDEBAR_SECTIONS_STORAGE_KEY,
+          JSON.stringify(next)
+        );
+      } catch {
+        // Folding still works for this visit.
+      }
+      return next;
+    });
+  }, []);
+  return [folded, toggle] as const;
 }
 
-/** One-shot spring for the active markers; nothing loops. */
-const markerTransition = {
-  type: "spring",
-  stiffness: 520,
-  damping: 40,
-  mass: 0.8,
-} as const;
+type SidebarMode = "expanded" | "rail" | "sheet";
 
-const RECENT_PROJECT_LIMIT = 8;
-
-/**
- * Desktop navigation in two columns, as in ChatGPT and Codex: a slim rail with
- * one icon per hub, and a panel with the current hub's pages, the primary
- * action, and recent Projects. The toggle in the panel header closes it to
- * the rail alone; the rail then shows the toggle to reopen it.
- */
-function DesktopSidebar({
-  page,
-  open,
-  onToggle,
-  onNewProject,
-  canCreateProject,
-  searchRecords,
-}: {
+type SidebarProps = {
+  mode: SidebarMode;
   page: ShellPage;
-  open: boolean;
+  settings: SettingsState;
   onToggle: () => void;
   onNewProject: () => void;
   canCreateProject: boolean;
+  onSearch: () => void;
+  onThemeChange?: (theme: ThemeChoice) => void;
+  notificationSlot?: ReactNode;
   searchRecords: readonly SearchRecord[];
-}) {
-  const reduceMotion = useHydratedReducedMotion();
-  const hub = hubRoutes.find((item) => item.page === hubPageForPage(page));
-  const pages = hub ? hubChildren(hub.page) : [];
-  const pathname = useLocation({ select: (location) => location.pathname });
-  const aiHere = hub ? aiToolsForPage(hub.page) : [];
+};
+
+/**
+ * The navigation column. `expanded` and `sheet` show labels and groups;
+ * `rail` shows one icon per page with its name in a tooltip. On a settings
+ * page the column swaps to the settings groups, with a way back.
+ */
+function Sidebar(props: SidebarProps) {
+  const { mode, page } = props;
+  const rail = mode === "rail";
+  const settingsMode = isSettingsPage(page) && !rail;
+
+  return (
+    <aside
+      aria-label="Sidebar"
+      data-mode={mode}
+      className={cn(
+        "flex h-full flex-col bg-canvas",
+        rail
+          ? "w-(--sidebar-rail) items-center"
+          : "w-(--sidebar) min-w-(--sidebar) max-w-full"
+      )}
+    >
+      {settingsMode ? (
+        <SettingsSidebar page={page} />
+      ) : (
+        <WorkspaceSidebar {...props} />
+      )}
+      <SidebarFooter
+        rail={rail}
+        sheet={mode === "sheet"}
+        onToggle={props.onToggle}
+      />
+    </aside>
+  );
+}
+
+function WorkspaceSidebar({
+  mode,
+  page,
+  settings,
+  onNewProject,
+  canCreateProject,
+  onSearch,
+  onThemeChange,
+  notificationSlot,
+  searchRecords,
+}: SidebarProps) {
+  const rail = mode === "rail";
+  const [folded, toggleFolded] = useFoldedSections();
+  const activePage = sidebarPageFor(page);
   const recentProjects = searchRecords
     .filter((record) => record.kind === "project" && record.href)
     .slice(0, RECENT_PROJECT_LIMIT);
-  const toggle = (
-    <Tooltip>
-      <TooltipTrigger asChild>
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon"
-          className="size-9 text-text-2 hover:text-text-1"
-          aria-label={open ? "Close sidebar" : "Open sidebar"}
-          aria-expanded={open}
-          aria-controls="workspace-sidebar-panel"
-          onClick={onToggle}
-        >
-          <PanelLeft className="size-[18px]" />
-        </Button>
-      </TooltipTrigger>
-      <TooltipContent side="right">
-        {open ? "Close sidebar" : "Open sidebar"}
-      </TooltipContent>
-    </Tooltip>
-  );
 
   return (
-    <div className="fixed inset-y-0 left-0 z-40 hidden lg:flex">
-      <aside
-        className="flex h-full flex-col items-center bg-canvas py-2"
-        style={{ width: RAIL_WIDTH }}
+    <>
+      <div
+        className={cn(
+          "flex w-full shrink-0 gap-1 pt-3 pb-2",
+          rail ? "flex-col items-center px-1.5" : "items-center px-2"
+        )}
       >
-        <div className="flex h-[46px] items-center">
-          <RelayBrand variant="mark" compact />
-        </div>
-        <nav
-          aria-label="Primary navigation"
-          className="mt-2 flex min-h-0 flex-1 flex-col items-center gap-1"
+        <WorkspaceMenu
+          settings={settings}
+          rail={rail}
+          page={page}
+          onThemeChange={onThemeChange}
+        />
+        <div
+          className={cn(
+            "flex shrink-0 gap-0.5",
+            rail ? "mt-1 flex-col items-center" : "ms-auto items-center"
+          )}
         >
-          {hubRoutes.map((item) => (
-            <RailRoute
-              key={item.page}
-              item={item}
-              active={routeIsActive(page, item)}
-              reduceMotion={reduceMotion}
-            />
-          ))}
-        </nav>
-        <div className="pb-1">{toggle}</div>
-      </aside>
-
-      <section
-        id="workspace-sidebar-panel"
-        aria-label={hub ? `${hub.label} sidebar` : "Sidebar"}
-        hidden={!open}
-        className="flex h-full w-[248px] flex-col border-l border-line-row bg-canvas"
-      >
-        <div className="flex h-[54px] shrink-0 items-center px-4">
-          <h2 className="truncate text-sm font-semibold">
-            {hub?.label ?? "Relay"}
-          </h2>
-        </div>
-
-        <div className="workspace-scrollbar-hidden min-h-0 flex-1 overflow-y-auto px-2 pb-2">
+          {notificationSlot}
+          <IconAction
+            label="Search"
+            shortcut="Ctrl K"
+            side={rail ? "right" : "bottom"}
+            onClick={onSearch}
+          >
+            <Search />
+          </IconAction>
           {canCreateProject ? (
-            <button
-              type="button"
+            <IconAction
+              label="New project"
+              shortcut="C"
+              side={rail ? "right" : "bottom"}
               onClick={onNewProject}
-              className="flex min-h-9 w-full items-center gap-2.5 rounded-[10px] bg-selected px-3 text-[13px] font-medium text-text-1 outline-none focus-visible:focus-ring-inset"
             >
-              <Plus className="size-4 text-text-1" />
-              New project
-            </button>
+              <Compose />
+            </IconAction>
           ) : null}
+        </div>
+      </div>
 
-          {hub && pages.length > 1 ? (
-            <nav aria-label={`${hub.label} pages`} className="mt-3 space-y-0.5">
-              {pages.map((item) => {
-                const current = page === item.page;
-                return (
-                  <Link
-                    key={item.page}
-                    to={item.href}
-                    aria-current={current ? "page" : undefined}
-                    className={cn(
-                      "relative flex min-h-9 items-center rounded-[10px] px-3 text-[13px] font-medium outline-none transition-colors duration-150 focus-visible:focus-ring-inset",
-                      current ? "text-text-1" : "text-text-2 hover:text-text-1"
-                    )}
-                  >
-                    {current ? (
-                      <motion.span
-                        aria-hidden="true"
-                        layoutId="panel-active-page"
-                        transition={
-                          reduceMotion ? { duration: 0 } : markerTransition
-                        }
-                        className="absolute inset-0 rounded-[10px] bg-selected"
-                      />
-                    ) : null}
-                    <span className="relative truncate">{item.label}</span>
-                  </Link>
-                );
-              })}
-            </nav>
-          ) : null}
+      <nav
+        aria-label="Primary navigation"
+        className={cn(
+          "scrollbar-none flex min-h-0 w-full flex-1 flex-col overflow-y-auto pb-3",
+          rail ? "items-center px-1.5" : "px-2"
+        )}
+      >
+        <ul className={cn("flex flex-col gap-px", rail && "items-center")}>
+          {primaryRoutes.map((item) => (
+            <li key={item.page}>
+              <NavItem
+                item={item}
+                active={activePage === item.page}
+                rail={rail}
+              />
+            </li>
+          ))}
+        </ul>
 
-          {aiHere.length ? (
-            <nav aria-label="AI tools" className="mt-4">
-              <p className="px-3 pb-1 text-[11px] font-medium text-text-3">
-                AI
-              </p>
-              <ul className="space-y-0.5">
-                {aiHere.map((tool) => (
-                  <li key={tool.id}>
-                    <HrefLink
-                      href={aiToolHref(tool, pathname)}
-                      className="flex min-h-8 items-center gap-2.5 rounded-[10px] px-3 text-[13px] text-text-2 outline-none transition-colors duration-150 hover:text-text-1 focus-visible:focus-ring-inset"
-                    >
-                      <Sparkles className="size-4 shrink-0 text-text-1" />
-                      <span className="truncate">{tool.label}</span>
-                    </HrefLink>
-                  </li>
-                ))}
-              </ul>
-            </nav>
-          ) : null}
+        {sidebarSections.map((section) =>
+          rail ? (
+            <ul
+              key={section.id}
+              aria-label={section.label}
+              className="mt-2 flex flex-col items-center gap-px pt-2 shadow-[inset_0_1px_0_var(--line-row)]"
+            >
+              {section.items.map((item) => (
+                <li key={item.page}>
+                  <NavItem item={item} active={activePage === item.page} rail />
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <NavGroup
+              key={section.id}
+              label={section.label}
+              open={!folded[section.id]}
+              onOpenChange={() => toggleFolded(section.id)}
+            >
+              {section.items.map((item) => (
+                <li key={item.page}>
+                  <NavItem item={item} active={activePage === item.page} />
+                </li>
+              ))}
+            </NavGroup>
+          )
+        )}
 
-          {recentProjects.length ? (
-            <nav aria-label="Recent Projects" className="mt-4">
-              <p className="px-3 pb-1 text-[11px] font-medium text-text-3">
-                Recent projects
-              </p>
-              <ul className="space-y-0.5">
+        {rail ? null : (
+          <>
+            <NavGroup
+              label="AI tools"
+              open={!folded.ai}
+              onOpenChange={() => toggleFolded("ai")}
+            >
+              <AiToolLinks onMore={onSearch} onNewProject={onNewProject} />
+            </NavGroup>
+            {recentProjects.length ? (
+              <NavGroup
+                label="Recent"
+                open={!folded.recent}
+                onOpenChange={() => toggleFolded("recent")}
+              >
                 {recentProjects.map((record) => (
                   <li key={record.id}>
                     <HrefLink
                       href={record.href ?? "/projects"}
-                      className="group flex min-h-8 flex-col justify-center rounded-[10px] px-3 py-1 outline-none transition-colors duration-150 focus-visible:focus-ring-inset"
+                      className={navItemClassName(false)}
                     >
-                      <span className="truncate text-[13px] text-text-2 transition-colors group-hover:text-text-1">
-                        {record.title}
-                      </span>
-                      <span className="truncate text-[11px] text-text-3">
-                        {record.detail}
-                      </span>
+                      <FileText />
+                      <span className="min-w-0 truncate">{record.title}</span>
                     </HrefLink>
                   </li>
                 ))}
-              </ul>
-            </nav>
-          ) : null}
-        </div>
-
-        <nav
-          aria-label="Support and legal"
-          className="flex shrink-0 flex-wrap gap-x-3 gap-y-1 border-t border-line-row px-4 py-3 text-[11px] text-text-3"
-        >
-          {compactSupportLinks.map((link) =>
-            link.external ? (
-              <a
-                key={link.label}
-                href={link.href}
-                target="_blank"
-                rel="noreferrer"
-                className="rounded-sm outline-none hover:text-text-1"
-              >
-                {link.label}
-              </a>
-            ) : (
-              <Link
-                key={link.label}
-                to={link.href}
-                className="rounded-sm outline-none hover:text-text-1"
-              >
-                {link.label}
-              </Link>
-            )
-          )}
-        </nav>
-      </section>
-    </div>
+              </NavGroup>
+            ) : null}
+          </>
+        )}
+      </nav>
+    </>
   );
 }
 
-function RailRoute({
+/** The settings mode of the sidebar: workspace sections, then account pages. */
+function SettingsSidebar({ page }: { page: ShellPage }) {
+  const search = useSearch({ strict: false }) as { section?: string };
+  const activeSection =
+    page === "settings" ? (search.section ?? "workspace") : null;
+
+  return (
+    <>
+      <div className="flex w-full shrink-0 items-center px-2 pt-3 pb-2">
+        <Link
+          to="/"
+          className="flex h-(--control) items-center gap-2 rounded-soft px-2.5 type-label text-text-2 transition-colors duration-(--dur-fast) hover:bg-hover hover:text-text-1"
+        >
+          <ArrowLeft className="size-4" />
+          Back to workspace
+        </Link>
+      </div>
+      <nav
+        aria-label="Settings navigation"
+        className="scrollbar-none flex min-h-0 w-full flex-1 flex-col overflow-y-auto px-2 pb-3"
+      >
+        <NavGroup label="Workspace" open>
+          {settingsSections.map((section) => (
+            <li key={section.id}>
+              <Link
+                to="/settings"
+                search={{ section: section.id }}
+                aria-current={activeSection === section.id ? "page" : undefined}
+                className={navItemClassName(activeSection === section.id)}
+              >
+                <span className="min-w-0 truncate">{section.label}</span>
+              </Link>
+            </li>
+          ))}
+          {settingsWorkspaceRoutes.map((item) => (
+            <li key={item.page}>
+              <Link
+                to={item.href}
+                aria-current={page === item.page ? "page" : undefined}
+                className={navItemClassName(page === item.page)}
+              >
+                <span className="min-w-0 truncate">{item.label}</span>
+              </Link>
+            </li>
+          ))}
+        </NavGroup>
+        <NavGroup label="Account" open>
+          {settingsAccountRoutes.map((item) => (
+            <li key={item.page}>
+              <Link
+                to={item.href}
+                aria-current={page === item.page ? "page" : undefined}
+                className={navItemClassName(page === item.page)}
+              >
+                <span className="min-w-0 truncate">{item.label}</span>
+              </Link>
+            </li>
+          ))}
+        </NavGroup>
+      </nav>
+    </>
+  );
+}
+
+function navItemClassName(active: boolean, rail = false) {
+  return cn(
+    "group/nav relative flex items-center gap-2.5 rounded-soft type-label outline-none select-none",
+    "transition-colors duration-(--dur-fast) ease-(--ease-step) focus-visible:focus-ring-inset",
+    "[&_svg]:size-4 [&_svg]:shrink-0 [&_svg]:transition-colors [&_svg]:duration-(--dur-fast)",
+    rail ? "size-9 justify-center" : "h-7 w-full px-2.5 text-start",
+    active
+      ? "bg-selected text-text-1 [&_svg]:text-text-1"
+      : "text-text-2 hover:bg-hover hover:text-text-1 [&_svg]:text-text-3 hover:[&_svg]:text-text-2"
+  );
+}
+
+/** One page in the sidebar. In the rail it is an icon with a tooltip name. */
+function NavItem({
   item,
   active,
-  reduceMotion,
+  rail = false,
 }: {
   item: RouteItem;
   active: boolean;
-  reduceMotion: boolean;
+  rail?: boolean;
 }) {
   const Icon = item.icon;
-  const aiHere = aiToolsForPage(item.page);
+  const link = (
+    <Link
+      to={item.href}
+      aria-label={item.label}
+      aria-current={active ? "page" : undefined}
+      className={navItemClassName(active, rail)}
+    >
+      <Icon />
+      {rail ? null : <span className="min-w-0 truncate">{item.label}</span>}
+    </Link>
+  );
+  if (!rail) return link;
   return (
     <Tooltip>
-      <TooltipTrigger asChild>
-        <Link
-          to={item.href}
-          aria-label={item.label}
-          aria-current={active ? "page" : undefined}
-          className={cn(
-            "group relative flex size-10 items-center justify-center rounded-[10px] outline-none transition-colors duration-150 focus-visible:focus-ring-inset",
-            active ? "text-text-1" : "text-text-2 hover:text-text-1"
-          )}
-        >
-          {active ? (
-            <motion.span
-              aria-hidden="true"
-              layoutId="rail-active-item"
-              transition={reduceMotion ? { duration: 0 } : markerTransition}
-              className="absolute inset-0 rounded-[10px] bg-selected"
-            />
-          ) : null}
-          <Icon
-            className={cn("relative size-[18px]", active && "text-text-1")}
-          />
-          {aiHere.length ? (
-            <span
-              aria-hidden="true"
-              data-slot="ai-nav-badge"
-              className="absolute right-1.5 top-1.5 size-1.5 rounded-full bg-ink"
-            />
-          ) : null}
-        </Link>
-      </TooltipTrigger>
+      <TooltipTrigger asChild>{link}</TooltipTrigger>
       <TooltipContent side="right">{item.label}</TooltipContent>
     </Tooltip>
   );
 }
 
-function ProfileMenu({
+/** A foldable sidebar group: a quiet label with a caret, then its rows. */
+function NavGroup({
+  label,
+  open,
+  onOpenChange,
+  children,
+}: {
+  label: string;
+  open: boolean;
+  onOpenChange?: () => void;
+  children: ReactNode;
+}) {
+  return (
+    <CollapsiblePrimitive.Root
+      open={open}
+      onOpenChange={onOpenChange}
+      className="mt-4"
+    >
+      <CollapsiblePrimitive.Trigger
+        disabled={!onOpenChange}
+        className="group/group flex h-6 items-center gap-1 rounded-inner px-2.5 type-label-sm text-text-3 transition-colors duration-(--dur-fast) hover:text-text-2 focus-visible:focus-ring-inset disabled:cursor-default disabled:hover:text-text-3"
+      >
+        {label}
+        {onOpenChange ? (
+          <ChevronDown className="size-3 transition-transform duration-(--dur-base) ease-(--ease-step) group-data-[state=closed]/group:-rotate-90" />
+        ) : null}
+      </CollapsiblePrimitive.Trigger>
+      <CollapsiblePrimitive.Content className="overflow-hidden data-[state=closed]:animate-collapsible-up data-[state=open]:animate-collapsible-down">
+        <ul className="flex flex-col gap-px pt-0.5">{children}</ul>
+      </CollapsiblePrimitive.Content>
+    </CollapsiblePrimitive.Root>
+  );
+}
+
+/** The featured AI actions, then the full list through search. */
+function AiToolLinks({
+  onMore,
+  onNewProject,
+}: {
+  onMore: () => void;
+  onNewProject: () => void;
+}) {
+  const { hasAccount } = useAiAccount();
+  const pathname = useLocation({ select: (location) => location.pathname });
+  const featured = aiTools.filter((tool) =>
+    featuredAiToolIds.includes(tool.id as (typeof featuredAiToolIds)[number])
+  );
+  const Icon = hasAccount ? Sparkles : LockKeyhole;
+  return (
+    <>
+      {featured.map((tool) => (
+        <li key={tool.id}>
+          {tool.id === "brief-import" ? (
+            <button
+              type="button"
+              onClick={onNewProject}
+              className={navItemClassName(false)}
+            >
+              <Icon />
+              <span className="min-w-0 truncate">{tool.label}</span>
+            </button>
+          ) : (
+            <HrefLink
+              href={aiToolHref(tool, pathname)}
+              className={navItemClassName(false)}
+            >
+              <Icon />
+              <span className="min-w-0 truncate">{tool.label}</span>
+            </HrefLink>
+          )}
+        </li>
+      ))}
+      <li>
+        <button
+          type="button"
+          onClick={onMore}
+          className={navItemClassName(false)}
+        >
+          <Plus />
+          <span className="min-w-0 truncate">All AI tools</span>
+        </button>
+      </li>
+    </>
+  );
+}
+
+/** A sidebar icon button, named on hover with its shortcut. */
+function IconAction({
+  label,
+  shortcut,
+  side,
+  onClick,
+  children,
+}: {
+  label: string;
+  shortcut?: string;
+  side: "right" | "bottom";
+  onClick: () => void;
+  children: ReactNode;
+}) {
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon-sm"
+          aria-label={label}
+          onClick={onClick}
+        >
+          {children}
+        </Button>
+      </TooltipTrigger>
+      <TooltipContent side={side}>
+        {label}
+        {shortcut ? <Kbd>{shortcut}</Kbd> : null}
+      </TooltipContent>
+    </Tooltip>
+  );
+}
+
+/** Help, plans and the sidebar toggle, pinned to the bottom. */
+function SidebarFooter({
+  rail,
+  sheet,
+  onToggle,
+}: {
+  rail: boolean;
+  sheet: boolean;
+  onToggle: () => void;
+}) {
+  const [feedbackOpen, setFeedbackOpen] = useState(false);
+  const toggleLabel = sheet
+    ? "Close menu"
+    : rail
+      ? "Open sidebar"
+      : "Close sidebar";
+  const side = rail ? "right" : "top";
+  return (
+    <div
+      className={cn(
+        "flex w-full shrink-0 gap-0.5 pb-3",
+        rail ? "flex-col items-center px-1.5" : "items-center px-2"
+      )}
+    >
+      <FeedbackDialog open={feedbackOpen} onOpenChange={setFeedbackOpen} />
+      <DropdownMenu>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <DropdownMenuTrigger asChild>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon-sm"
+                aria-label="Help and feedback"
+              >
+                <HelpCircle />
+              </Button>
+            </DropdownMenuTrigger>
+          </TooltipTrigger>
+          <TooltipContent side={side}>Help and feedback</TooltipContent>
+        </Tooltip>
+        <DropdownMenuContent side={side} align="start" className="w-56">
+          <DropdownMenuItem onSelect={() => setFeedbackOpen(true)}>
+            Send feedback
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <nav aria-label="Support and legal">
+            {supportLinks.map((link) => (
+              <DropdownMenuItem key={link.href} asChild>
+                <Link to={link.href}>{link.label}</Link>
+              </DropdownMenuItem>
+            ))}
+            <DropdownMenuSeparator />
+            <DropdownMenuItem asChild>
+              <a
+                href={`${marketingSiteUrl}/about`}
+                target="_blank"
+                rel="noreferrer"
+              >
+                About Relay
+              </a>
+            </DropdownMenuItem>
+            <DropdownMenuItem asChild>
+              <a
+                href={`${marketingSiteUrl}/privacy-and-data`}
+                target="_blank"
+                rel="noreferrer"
+              >
+                Privacy and data
+              </a>
+            </DropdownMenuItem>
+          </nav>
+        </DropdownMenuContent>
+      </DropdownMenu>
+      {rail ? null : (
+        <Link
+          to="/subscription"
+          className="flex h-(--control-sm) items-center rounded-soft px-2 type-label-sm text-text-2 shadow-[inset_0_0_0_1px_var(--line-control)] transition-colors duration-(--dur-fast) hover:bg-hover hover:text-text-1"
+        >
+          Plans
+        </Link>
+      )}
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon-sm"
+            className={rail ? undefined : "ms-auto"}
+            aria-label={toggleLabel}
+            aria-expanded={!rail}
+            onClick={onToggle}
+          >
+            <PanelLeft />
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent side={side}>
+          {toggleLabel}
+          {sheet ? null : <Kbd>[</Kbd>}
+        </TooltipContent>
+      </Tooltip>
+    </div>
+  );
+}
+
+function initials(value: string) {
+  const parts = value.trim().split(/\s+/).filter(Boolean);
+  if (!parts.length) return "R";
+  return parts
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase())
+    .join("");
+}
+
+/**
+ * The workspace and account menu at the top of the sidebar: who is signed in,
+ * settings and the account pages, the theme, and sign in or out.
+ */
+function WorkspaceMenu({
   settings,
-  collapsed = false,
-  compact = false,
+  rail,
   page,
+  onThemeChange,
 }: {
   settings: SettingsState;
-  collapsed?: boolean;
-  compact?: boolean;
+  rail: boolean;
   page: ShellPage;
+  onThemeChange?: (theme: ThemeChoice) => void;
 }) {
   const { isAuthEnabled } = useData();
   const { isSignedIn, openSignIn, openSignUp, signOut } = useOptionalAuth();
-  const [open, setOpen] = useState(false);
-  const [feedbackOpen, setFeedbackOpen] = useState(false);
-  const reduceMotion = useHydratedReducedMotion();
+  const workspaceName = settings.studioName || "Relay";
   const name = settings.profileName || "Your profile";
   const handle = settings.profileUsername
     ? `@${settings.profileUsername.replace(/^@/, "")}`
     : settings.teamRole || "Editor";
 
   return (
-    <>
-      <FeedbackDialog open={feedbackOpen} onOpenChange={setFeedbackOpen} />
-      <DropdownMenu open={open} onOpenChange={setOpen}>
-        <DropdownMenuTrigger asChild>
-          <Button
-            type="button"
-            variant="ghost"
-            className={cn(
-              "group flex items-center rounded-md text-left outline-none transition-[background-color,box-shadow] hover:bg-hover active:translate-y-0 active:scale-100 data-[state=open]:bg-selected",
-              compact
-                ? "h-9 w-9 justify-center p-0"
-                : collapsed
-                  ? "w-full justify-center p-1"
-                  : "w-full gap-2.5 p-2"
-            )}
-            aria-label="Open profile menu"
-          >
-            <Avatar className="size-8 border border-strong bg-tile ring-1 ring-transparent transition-[border-color,box-shadow] group-data-[state=open]:border-primary">
-              <AvatarImage
-                src={settings.profileImageUrl || undefined}
-                alt={name}
-                className="object-cover"
-              />
-              <AvatarFallback className="bg-tile text-[11px] font-semibold text-text-1">
-                {initials(name)}
-              </AvatarFallback>
-            </Avatar>
-            {!collapsed && !compact ? (
-              <>
-                <span className="min-w-0 flex-1">
-                  <span className="block truncate text-[12px] font-semibold">
-                    {name}
-                  </span>
-                  <span className="block truncate text-[11px] text-text-2">
-                    {handle}
-                  </span>
-                </span>
-                <span
-                  className={cn(
-                    "flex transition-transform",
-                    open && "rotate-180"
-                  )}
-                >
-                  <ChevronDown className="size-3.5 text-text-2" />
-                </span>
-              </>
-            ) : null}
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent
-          side={compact ? "bottom" : collapsed ? "right" : "top"}
-          align={compact ? "end" : "start"}
-          sideOffset={8}
-          className="workspace-flyout w-[280px] rounded-xl border-line-row bg-well p-1.5 text-text-1 shadow-overlay [&_[data-slot=dropdown-menu-item]]:h-9 [&_[data-slot=dropdown-menu-item]]:rounded-lg [&_[data-slot=dropdown-menu-item]]:text-[13px] [&_[data-slot=dropdown-menu-item]]:transition-colors"
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <button
+          type="button"
+          aria-label="Open workspace menu"
+          className={cn(
+            "group/menu flex min-w-0 items-center gap-2 rounded-soft outline-none transition-colors duration-(--dur-fast) hover:bg-hover focus-visible:focus-ring-inset data-[state=open]:bg-selected",
+            rail ? "size-9 justify-center" : "h-(--control) flex-1 px-1.5"
+          )}
         >
-          <DropdownMenuLabel className="flex items-center gap-3 px-2.5 py-2.5">
-            <Avatar className="size-9 border border-strong bg-tile">
-              <AvatarImage
-                src={settings.profileImageUrl || undefined}
-                alt=""
-                className="object-cover"
-              />
-              <AvatarFallback className="bg-tile text-xs font-semibold text-text-1">
-                {initials(name)}
-              </AvatarFallback>
-            </Avatar>
-            <span className="min-w-0">
-              <span className="block truncate text-[13px] font-semibold">
-                {name}
-              </span>
-              <span className="block truncate text-xs font-normal text-text-2">
-                {handle}
-              </span>
-            </span>
-          </DropdownMenuLabel>
-          <DropdownMenuSeparator className="mx-0.5 bg-line-row" />
-          {!isSignedIn ? (
+          <Avatar className="size-5 rounded-inner">
+            <AvatarImage
+              src={settings.profileImageUrl || undefined}
+              alt=""
+              className="object-cover"
+            />
+            <AvatarFallback className="rounded-inner bg-inverse text-[10px] text-text-inverse">
+              {initials(workspaceName)}
+            </AvatarFallback>
+          </Avatar>
+          {rail ? null : (
             <>
-              <DropdownMenuLabel className="text-xs font-normal text-muted-foreground">
-                Local Workspace · stored in this browser
-              </DropdownMenuLabel>
-              <DropdownMenuItem
-                disabled={!isAuthEnabled}
-                onSelect={() => openSignIn()}
-                className="bg-primary text-primary-foreground focus:bg-primary/90 focus:text-primary-foreground"
-              >
-                <LogIn /> Sign in
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                disabled={!isAuthEnabled}
-                onSelect={() => openSignUp()}
-              >
-                <UserPlus /> Create account
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
+              <span className="min-w-0 truncate type-label text-text-1">
+                {workspaceName}
+              </span>
+              <ChevronDown className="size-3.5 shrink-0 text-text-3 transition-transform duration-(--dur-fast) group-data-[state=open]/menu:rotate-180" />
             </>
-          ) : null}
-          {isSignedIn ? (
-            <DropdownMenuItem asChild>
-              <Link
-                to="/subscription"
-                aria-current={page === "subscription" ? "page" : undefined}
-                className={cn(page === "subscription" && "bg-accent")}
-              >
-                <CreditCard /> Plans & billing
-              </Link>
+          )}
+        </button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent
+        side={rail ? "right" : "bottom"}
+        align="start"
+        className="w-64"
+      >
+        <DropdownMenuLabel className="flex items-center gap-2.5 pb-2">
+          <Avatar className="size-8">
+            <AvatarImage
+              src={settings.profileImageUrl || undefined}
+              alt=""
+              className="object-cover"
+            />
+            <AvatarFallback>{initials(name)}</AvatarFallback>
+          </Avatar>
+          <span className="min-w-0">
+            <span className="block truncate type-label text-text-1">
+              {name}
+            </span>
+            <span className="block truncate type-label-sm text-text-3">
+              {handle}
+            </span>
+          </span>
+        </DropdownMenuLabel>
+        <DropdownMenuSeparator />
+        {!isSignedIn ? (
+          <>
+            <DropdownMenuItem
+              disabled={!isAuthEnabled}
+              onSelect={() => openSignIn()}
+            >
+              <LogIn /> Sign in
             </DropdownMenuItem>
-          ) : null}
-          <DropdownMenuItem asChild>
-            <Link
-              to="/profile"
-              activeOptions={{ exact: true }}
-              aria-current={page === "profile" ? "page" : undefined}
-              className={cn(page === "profile" && "bg-accent")}
+            <DropdownMenuItem
+              disabled={!isAuthEnabled}
+              onSelect={() => openSignUp()}
             >
-              <CircleUserRound /> Public profile
-            </Link>
-          </DropdownMenuItem>
-          <DropdownMenuItem asChild>
-            <Link
-              to="/organization"
-              aria-current={
-                page === "organization-profile" ? "page" : undefined
-              }
-              className={cn(page === "organization-profile" && "bg-accent")}
-            >
-              <UsersRound /> Organization profile
-            </Link>
-          </DropdownMenuItem>
-          <DropdownMenuItem onSelect={() => setFeedbackOpen(true)}>
-            <MessageSquarePlus /> Send feedback
-          </DropdownMenuItem>
-          <DropdownMenuItem asChild>
-            <Link
-              to="/profile/edit"
-              aria-current={page === "profile-edit" ? "page" : undefined}
-              className={cn(page === "profile-edit" && "bg-accent")}
-            >
-              <Sparkles /> Edit profile
-            </Link>
-          </DropdownMenuItem>
-          <DropdownMenuItem asChild>
-            <Link
-              to="/account"
-              aria-current={page === "account" ? "page" : undefined}
-              className={cn(page === "account" && "bg-accent")}
-            >
-              <Settings /> Account settings
-            </Link>
-          </DropdownMenuItem>
-          <DropdownMenuSeparator />
-          {isSignedIn ? (
+              <UserPlus /> Create account
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+          </>
+        ) : null}
+        <MenuLink
+          item={routes.settings}
+          current={page === "settings"}
+          shortcut="G S"
+        />
+        <MenuLink
+          item={routes["profile-edit"]}
+          current={page === "profile-edit"}
+        />
+        <MenuLink item={routes.profile} current={page === "profile"} />
+        <MenuLink
+          item={routes["organization-profile"]}
+          current={page === "organization-profile"}
+        />
+        {isSignedIn ? (
+          <MenuLink
+            item={routes.subscription}
+            current={page === "subscription"}
+          />
+        ) : null}
+        {onThemeChange ? (
+          <DropdownMenuSub>
+            <DropdownMenuSubTrigger>Theme</DropdownMenuSubTrigger>
+            <DropdownMenuSubContent className="w-40">
+              <DropdownMenuRadioGroup
+                value={settings.theme}
+                onValueChange={(value) => onThemeChange(value as ThemeChoice)}
+              >
+                <DropdownMenuRadioItem value="Light">
+                  <Sun /> Light
+                </DropdownMenuRadioItem>
+                <DropdownMenuRadioItem value="Dark">
+                  <Moon /> Dark
+                </DropdownMenuRadioItem>
+                <DropdownMenuRadioItem value="System">
+                  <Monitor /> System
+                </DropdownMenuRadioItem>
+              </DropdownMenuRadioGroup>
+            </DropdownMenuSubContent>
+          </DropdownMenuSub>
+        ) : null}
+        {isSignedIn ? (
+          <>
+            <DropdownMenuSeparator />
             <DropdownMenuItem onSelect={() => void signOut()}>
               <LogOut /> Sign out
             </DropdownMenuItem>
-          ) : isAuthEnabled ? null : (
-            <DropdownMenuLabel className="text-xs font-normal text-muted-foreground">
+          </>
+        ) : isAuthEnabled ? null : (
+          <>
+            <DropdownMenuSeparator />
+            <DropdownMenuLabel>
               Sign-in needs Clerk and Convex configuration.
             </DropdownMenuLabel>
-          )}
-        </DropdownMenuContent>
-      </DropdownMenu>
-    </>
+          </>
+        )}
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
+
+function MenuLink({
+  item,
+  current,
+  shortcut,
+}: {
+  item: RouteItem;
+  current: boolean;
+  shortcut?: string;
+}) {
+  return (
+    <DropdownMenuItem asChild>
+      <Link
+        to={item.href}
+        activeOptions={{ exact: true }}
+        aria-current={current ? "page" : undefined}
+      >
+        {item.label}
+        {shortcut ? (
+          <DropdownMenuShortcut>{shortcut}</DropdownMenuShortcut>
+        ) : null}
+      </Link>
+    </DropdownMenuItem>
+  );
+}
+
+/**
+ * The viewport's top bar: where you are, the views of this list, and the
+ * page's actions (PageHeader renders them into the right side).
+ */
+function TopBar({
+  page,
+  pathname,
+  title,
+  breadcrumb,
+  onMenu,
+  onActionsHost,
+  onNewProject,
+}: {
+  page: ShellPage;
+  pathname: string;
+  title?: string;
+  breadcrumb: string | null;
+  onMenu: () => void;
+  onActionsHost: (element: HTMLElement | null) => void;
+  onNewProject?: () => void;
+}) {
+  const search = useSearch({ strict: false }) as { section?: string };
+  const views = viewGroupFor(page);
+  const showViews = Boolean(views?.some((item) => item.href === pathname));
+  // A view group is named by its owner page, e.g. Projects for its calendar.
+  const route = showViews
+    ? routes[sidebarPageFor(page)]
+    : allRoutes.find((item) => item.page === page);
+  const pageLabel = title ?? route?.label ?? "Relay";
+  const settingsSection =
+    page === "settings"
+      ? settingsSections.find(
+          (section) => section.id === (search.section ?? "workspace")
+        )?.label
+      : undefined;
+  const trail = breadcrumb ?? settingsSection ?? null;
+  const parentHref = breadcrumb ? route?.href : undefined;
+
+  return (
+    <header className="flex h-(--topbar) shrink-0 items-center gap-2 px-2 shadow-[inset_0_-1px_0_var(--line-row)] lg:px-4">
+      <Button
+        type="button"
+        variant="ghost"
+        size="icon-sm"
+        className="lg:hidden"
+        aria-label="Open menu"
+        onClick={onMenu}
+      >
+        <Menu />
+      </Button>
+      <nav
+        aria-label={`Current location: ${trail ? `${pageLabel} / ${trail}` : pageLabel}`}
+        className="flex min-w-0 items-center gap-1 type-label"
+      >
+        {parentHref ? (
+          <Link
+            to={parentHref}
+            className="hidden shrink-0 rounded-inner px-1 text-text-2 transition-colors duration-(--dur-fast) hover:text-text-1 sm:inline"
+          >
+            {pageLabel}
+          </Link>
+        ) : (
+          <span
+            className={cn(
+              "shrink-0 px-1",
+              trail ? "text-text-2" : "text-text-1"
+            )}
+          >
+            {pageLabel}
+          </span>
+        )}
+        {trail ? (
+          <>
+            <ChevronRight
+              aria-hidden="true"
+              className={cn(
+                "size-3.5 shrink-0 text-text-3",
+                parentHref && "hidden sm:block"
+              )}
+            />
+            <span className="min-w-0 truncate px-1 text-text-1">{trail}</span>
+          </>
+        ) : null}
+      </nav>
+      {showViews && views ? (
+        <nav
+          aria-label={`${pageLabel} views`}
+          className="ms-1 flex h-(--control-sm) shrink-0 items-stretch gap-0.5 rounded-soft bg-well p-0.5"
+        >
+          {views.map((item) => {
+            const current = item.href === pathname;
+            return (
+              <Link
+                key={item.page}
+                to={item.href}
+                aria-current={current ? "page" : undefined}
+                className={cn(
+                  "flex items-center rounded-inner px-2.5 type-label-sm transition-[background-color,color,box-shadow] duration-(--dur-fast) ease-(--ease-step)",
+                  current
+                    ? "bg-page text-text-1 control-edge"
+                    : "text-text-2 hover:text-text-1"
+                )}
+              >
+                {item.label}
+              </Link>
+            );
+          })}
+        </nav>
+      ) : null}
+      <div
+        ref={onActionsHost}
+        data-slot="topbar-actions"
+        className="ms-auto flex min-w-0 shrink-0 items-center gap-2"
+      />
+      {onNewProject ? (
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon-sm"
+          className="lg:hidden"
+          aria-label="New project"
+          onClick={onNewProject}
+        >
+          <Compose />
+        </Button>
+      ) : null}
+    </header>
   );
 }
 
@@ -1179,10 +1268,10 @@ function WorkspaceCommand({
   returnFocusRef: RefObject<HTMLElement | null>;
   searchRecords: readonly SearchRecord[];
 }) {
-  const reduceMotion = useHydratedReducedMotion();
-  const { hasAccount, signIn } = useAiAccount();
+  const { hasAccount } = useAiAccount();
   const pathname = useLocation({ select: (location) => location.pathname });
   const navigate = useNavigate();
+  const reduceMotion = useHydratedReducedMotion();
   const featuredAiTools = aiTools.filter((tool) =>
     featuredAiToolIds.includes(tool.id as (typeof featuredAiToolIds)[number])
   );
@@ -1224,38 +1313,38 @@ function WorkspaceCommand({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
-        className="overflow-hidden border-strong p-0 shadow-[0_24px_80px_color-mix(in_srgb,var(--app-ink)_18%,transparent)] sm:max-w-[620px]"
+        showCloseButton={false}
+        className="top-[18%] translate-y-0 gap-0 overflow-hidden p-0 sm:max-w-(--overlay-lg)"
         onCloseAutoFocus={(event) => {
           event.preventDefault();
           returnFocusRef.current?.focus();
         }}
       >
-        <DialogTitle className="sr-only">Workspace command menu</DialogTitle>
+        <DialogTitle className="sr-only">Search and commands</DialogTitle>
         <motion.div
-          initial={reduceMotion ? false : { opacity: 0, y: -8, scale: 0.985 }}
-          animate={{ opacity: 1, y: 0, scale: 1 }}
+          initial={reduceMotion ? false : { opacity: 0, y: -4 }}
+          animate={{ opacity: 1, y: 0 }}
           transition={{
-            duration: reduceMotion ? 0 : 0.18,
-            ease: [0.2, 0.8, 0.2, 1],
+            duration: reduceMotion ? 0 : 0.16,
+            ease: [0.2, 0, 0, 1],
           }}
         >
-          <Command className="**:data-[slot=command-input-wrapper]:pr-12">
+          <Command>
             <CommandInput
-              aria-label="Search workspace commands"
-              placeholder="Search pages and actions..."
+              aria-label="Search pages, records and actions"
+              placeholder="Search or jump to..."
             />
-            <CommandList className="max-h-[420px]">
-              <CommandEmpty>No matching workspace action found.</CommandEmpty>
-              <CommandGroup heading="Quick actions">
+            <CommandList className="max-h-[min(420px,60dvh)]">
+              <CommandEmpty>
+                Nothing matches. Try a project or page name.
+              </CommandEmpty>
+              <CommandGroup heading="Actions">
                 <CommandItem onSelect={() => runCommand(onNewProject)}>
-                  <Plus /> Create new project
+                  <Plus /> New project
+                  <CommandShortcut>C</CommandShortcut>
                 </CommandItem>
                 {featuredAiTools.map(aiCommand)}
               </CommandGroup>
-              <CommandGroup heading="AI tools">
-                {otherAiTools.map(aiCommand)}
-              </CommandGroup>
-              <CommandSeparator />
               {searchRecords.length ? (
                 <CommandGroup heading="Workspace records">
                   {searchRecords
@@ -1274,17 +1363,15 @@ function WorkspaceCommand({
                           <span className="min-w-0 flex-1 truncate">
                             {record.title}
                           </span>
-                          <span className="text-xs text-muted-foreground">
-                            {record.detail}
-                          </span>
+                          <CommandShortcut>{record.detail}</CommandShortcut>
                         </HrefLink>
                       </CommandItem>
                     ))}
                 </CommandGroup>
               ) : null}
-              {searchRecords.length ? <CommandSeparator /> : null}
-              {routeGroups.map((group) => (
-                <CommandGroup key={group.label} heading={group.label}>
+              <CommandSeparator />
+              {commandGroups.map((group) => (
+                <CommandGroup key={group.id} heading={group.label}>
                   {group.items.map((item) => {
                     const Icon = item.icon;
                     return (
@@ -1304,6 +1391,9 @@ function WorkspaceCommand({
                   })}
                 </CommandGroup>
               ))}
+              <CommandGroup heading="AI tools">
+                {otherAiTools.map(aiCommand)}
+              </CommandGroup>
             </CommandList>
           </Command>
         </motion.div>
@@ -1342,143 +1432,5 @@ function HrefLink({
         void navigate({ href });
       }}
     />
-  );
-}
-
-function MobileNavigation({
-  page,
-  open,
-  onOpenChange,
-}: {
-  page: ShellPage;
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-}) {
-  const reduceMotion = useHydratedReducedMotion();
-  const primaryRoutes = mobileRoutes;
-
-  return (
-    <nav
-      aria-label="Mobile navigation"
-      className="fixed inset-x-0 bottom-0 z-40 grid h-[calc(68px+env(safe-area-inset-bottom))] grid-cols-5 border-t border-line-row bg-[color-mix(in_srgb,var(--app-panel)_94%,transparent)] px-1 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl lg:hidden"
-    >
-      {primaryRoutes.map((item) => {
-        const Icon = item.icon;
-        const active = routeIsActive(page, item);
-        return (
-          <Link
-            key={item.page}
-            to={item.href}
-            aria-current={active ? "page" : undefined}
-            className={cn(
-              "relative flex flex-col items-center justify-center gap-1 rounded-md text-[10px] font-medium outline-none focus-visible:focus-ring-inset",
-              active ? "text-text-1" : "text-text-2"
-            )}
-          >
-            {active ? (
-              <span className="absolute inset-x-3 top-0 h-0.5 rounded-full bg-primary" />
-            ) : null}
-            <span className="flex flex-col items-center justify-center gap-1">
-              <Icon className="size-[19px]" strokeWidth={active ? 2.2 : 1.8} />
-              {item.label}
-            </span>
-          </Link>
-        );
-      })}
-      <Sheet open={open} onOpenChange={onOpenChange}>
-        <SheetTrigger asChild>
-          <Button
-            type="button"
-            variant="ghost"
-            className="h-full w-full flex-col items-center justify-center gap-1 rounded-md text-[10px] font-medium text-text-2 outline-none focus-visible:focus-ring-inset"
-            aria-label="Open more workspace pages"
-          >
-            <motion.span
-              animate={{
-                rotate: open ? 90 : 0,
-                scale: open && !reduceMotion ? 1.06 : 1,
-              }}
-              transition={{ duration: reduceMotion ? 0 : 0.16 }}
-              className="flex"
-            >
-              <MoreHorizontal className="size-[19px]" />
-            </motion.span>
-            More
-          </Button>
-        </SheetTrigger>
-        <SheetContent
-          side="bottom"
-          className="max-h-[82dvh] rounded-t-xl px-3 pb-8"
-        >
-          <SheetHeader className="px-1">
-            <SheetTitle>Workspace</SheetTitle>
-          </SheetHeader>
-          <div className="mt-3 grid grid-cols-2 gap-2">
-            {hubRoutes
-              .filter(
-                (route) =>
-                  !primaryRoutes.some((mobile) => mobile.page === route.page)
-              )
-              .map((item) => {
-                const Icon = item.icon;
-                return (
-                  <Link
-                    key={item.page}
-                    to={item.href}
-                    onClick={() => onOpenChange(false)}
-                    aria-current={
-                      routeIsActive(page, item) ? "page" : undefined
-                    }
-                    className="group flex items-center gap-3 rounded-md border border-line-row bg-well p-3 text-sm font-medium outline-none transition-[background-color,border-color] hover:border-strong hover:bg-well"
-                  >
-                    <span className="flex">
-                      <Icon className="size-[18px] text-text-2 transition-colors group-hover:text-text-1" />
-                    </span>
-                    {item.label}
-                  </Link>
-                );
-              })}
-          </div>
-          <div className="mt-4 border-t border-line-row pt-4">
-            <p className="px-1 text-xs font-semibold text-text-2">
-              Support and legal
-            </p>
-            <div className="mt-2 grid grid-cols-2 gap-2 text-sm">
-              <Link
-                className="min-h-12 rounded-md border border-line-row p-3"
-                to="/contact"
-                onClick={() => onOpenChange(false)}
-              >
-                Contact
-              </Link>
-              <Link
-                className="min-h-12 rounded-md border border-line-row p-3"
-                to="/privacy"
-                onClick={() => onOpenChange(false)}
-              >
-                Privacy
-              </Link>
-              <Link
-                className="min-h-12 rounded-md border border-line-row p-3"
-                to="/terms"
-                onClick={() => onOpenChange(false)}
-              >
-                Terms
-              </Link>
-              <Link
-                className="min-h-12 rounded-md border border-line-row p-3"
-                to="/accessibility"
-                onClick={() => onOpenChange(false)}
-              >
-                Accessibility
-              </Link>
-            </div>
-            <p className="mt-3 px-1 text-xs text-text-3">
-              © {new Date().getFullYear()} Relay
-            </p>
-          </div>
-        </SheetContent>
-      </Sheet>
-    </nav>
   );
 }

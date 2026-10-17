@@ -9,13 +9,15 @@ import { createPortal } from "react-dom";
 import { cn } from "@/lib/utils";
 
 /**
- * Where page actions render. The breadcrumb and sidebar already name the
- * page, so headers show no title; actions sit on one line at the right, and
- * when the shell renders a tab strip it offers `actionsHost` so the actions
- * share that row.
+ * Where page actions render. The top bar already names the page, so headers
+ * show no visible title; inside the workspace shell the actions render into
+ * the top bar's right side (`actionsHost`), and outside it they sit on one
+ * line at the right of the page.
  */
 export const PageHeaderContext = createContext<{
   actionsHost: HTMLElement | null;
+  /** True inside the workspace shell, whose top bar hosts the actions. */
+  inShell?: boolean;
 }>({ actionsHost: null });
 
 type PageHeaderProps = Omit<ComponentPropsWithoutRef<"header">, "title"> & {
@@ -31,14 +33,14 @@ export function PageHeader({
   className,
   ...props
 }: PageHeaderProps) {
-  const { actionsHost } = useContext(PageHeaderContext);
+  const { actionsHost, inShell } = useContext(PageHeaderContext);
   const heading = (
     <div className="sr-only">
       <h1>{title}</h1>
       {description ? <div>{description}</div> : null}
     </div>
   );
-  if (!actions) {
+  if (!actions || (inShell && !actionsHost)) {
     return (
       <header data-slot="page-header" className="sr-only" {...props}>
         {heading}
