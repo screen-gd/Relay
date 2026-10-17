@@ -197,7 +197,7 @@ export function PrecisionMedia({
                               key={item.id}
                               type="button"
                               className={cn(
-                                "relative flex h-9 w-full items-center gap-2 overflow-hidden rounded-md px-2 text-xs font-medium outline-none transition-colors focus-visible:ring-2 focus-visible:ring-[var(--app-accent)] focus-visible:ring-offset-1 focus-visible:ring-offset-[var(--app-soft-panel)]",
+                                "relative flex h-9 w-full items-center gap-2 overflow-hidden rounded-md px-2 text-xs font-medium outline-none transition-colors focus-visible:ring-2 focus-visible:ring-[var(--primary)] focus-visible:ring-offset-1 focus-visible:ring-offset-[var(--app-soft-panel)]",
                                 active
                                   ? "text-[var(--app-ink)]"
                                   : "text-[var(--app-muted)] hover:text-[var(--app-ink)]"
@@ -361,7 +361,7 @@ export function PrecisionMedia({
                                           key={project.id}
                                           type="button"
                                           className={cn(
-                                            "relative grid w-full gap-3 overflow-hidden border-b border-[var(--app-border)] px-4 py-3 text-left outline-none transition-colors hover:bg-[var(--app-hover)] focus-visible:z-20 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--app-accent)] sm:grid-cols-[68px_minmax(0,1fr)_130px_105px] sm:items-center",
+                                            "relative grid w-full gap-3 overflow-hidden border-b border-[var(--app-border)] px-4 py-3 text-left outline-none transition-colors hover:bg-[var(--app-hover)] focus-visible:z-20 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--primary)] sm:grid-cols-[68px_minmax(0,1fr)_130px_105px] sm:items-center",
                                             active && "text-[var(--app-ink)]"
                                           )}
                                           onClick={() =>
@@ -422,7 +422,7 @@ export function PrecisionMedia({
                                             </span>
                                             <span className="block h-1 overflow-hidden rounded-full bg-[var(--app-progress-track)]">
                                               <motion.span
-                                                className="block h-full origin-left bg-[var(--app-accent)]"
+                                                className="block h-full origin-left bg-[var(--primary)]"
                                                 initial={
                                                   reduceMotion
                                                     ? false
@@ -462,7 +462,7 @@ export function PrecisionMedia({
                                           key={project.id}
                                           type="button"
                                           className={cn(
-                                            "studio-motion-edge-sweep relative overflow-hidden rounded-[6px] bg-[var(--app-panel)] text-left outline-none transition-colors hover:border-[var(--app-strong-border)] hover:bg-[var(--app-hover)] focus-visible:ring-2 focus-visible:ring-[var(--app-accent)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--app-panel)]",
+                                            "studio-motion-edge-sweep relative overflow-hidden rounded-[6px] bg-[var(--app-panel)] text-left outline-none transition-colors hover:border-[var(--app-strong-border)] hover:bg-[var(--app-hover)] focus-visible:ring-2 focus-visible:ring-[var(--primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--app-panel)]",
                                             active && "border-transparent"
                                           )}
                                           onClick={() =>
@@ -503,7 +503,7 @@ export function PrecisionMedia({
                                           {active ? (
                                             <motion.span
                                               layoutId="selected-media-package"
-                                              className="pointer-events-none absolute inset-0 z-20 rounded-[6px] ring-2 ring-inset ring-[var(--app-accent)]"
+                                              className="pointer-events-none absolute inset-0 z-20 rounded-[6px] ring-2 ring-inset ring-[var(--primary)]"
                                               transition={transition}
                                             />
                                           ) : null}
@@ -718,7 +718,7 @@ function MediaPreview({
         )}
       >
         <motion.span
-          className="block h-full origin-left rounded-full bg-[var(--app-accent)]"
+          className="block h-full origin-left rounded-full bg-[var(--primary)]"
           initial={reduceMotion ? false : { scaleX: 0 }}
           animate={{ scaleX: value / 100 }}
           transition={

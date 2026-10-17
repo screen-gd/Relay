@@ -478,7 +478,7 @@ function SalaryPlanRow({
           className="h-1.5 overflow-hidden rounded-sm bg-[var(--app-progress-track)]"
         >
           <div
-            className="h-full rounded-sm bg-[var(--app-accent)]"
+            className="h-full rounded-sm bg-[var(--primary)]"
             style={{ width: `${percent}%` }}
           />
         </div>

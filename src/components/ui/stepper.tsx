@@ -254,7 +254,7 @@ function StepIndicator({
         "grid size-7 place-items-center rounded-full text-xs font-semibold tabular-nums outline-none transition-colors duration-300 focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-default",
         status === "inactive"
           ? "border border-[var(--app-border)] text-[var(--app-muted)]"
-          : "bg-[var(--app-accent)] text-[var(--app-accent-foreground)]"
+          : "bg-[var(--primary)] text-[var(--primary-foreground)]"
       )}
     >
       {status === "complete" ? (
@@ -281,7 +281,7 @@ function StepIndicator({
           />
         </svg>
       ) : status === "active" ? (
-        <span className="size-2 rounded-full bg-[var(--app-accent-foreground)]" />
+        <span className="size-2 rounded-full bg-[var(--primary-foreground)]" />
       ) : (
         number
       )}
@@ -302,7 +302,7 @@ function StepConnector({
       className="relative mx-2 h-0.5 flex-1 overflow-hidden rounded bg-[var(--app-border)]"
     >
       <motion.div
-        className="absolute inset-y-0 left-0 bg-[var(--app-accent)]"
+        className="absolute inset-y-0 left-0 bg-[var(--primary)]"
         initial={false}
         animate={{ width: complete ? "100%" : "0%" }}
         transition={{ duration: reduceMotion ? 0 : 0.4 }}

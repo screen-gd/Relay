@@ -66,7 +66,7 @@ function TabsTrigger({
     <TabsPrimitive.Trigger
       data-slot="tabs-trigger"
       className={cn(
-        "inline-flex !h-7 flex-1 items-center justify-center gap-1.5 !rounded-md !border-0 px-2.5 py-1 text-sm font-medium whitespace-nowrap text-[var(--app-muted)] !shadow-none transition-colors group-data-[orientation=vertical]/tabs:w-full group-data-[orientation=vertical]/tabs:justify-start hover:text-[var(--app-ink)] focus-visible:ring-2 focus-visible:ring-[var(--app-accent)] focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50 data-[state=active]:!bg-[var(--app-active)] data-[state=active]:!text-[var(--app-ink)] group-data-[variant=ghost]/tabs-list:!h-8 group-data-[variant=ghost]/tabs-list:flex-none group-data-[variant=ghost]/tabs-list:px-3 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+        "inline-flex !h-7 flex-1 items-center justify-center gap-1.5 !rounded-md !border-0 px-2.5 py-1 text-sm font-medium whitespace-nowrap text-[var(--app-muted)] !shadow-none transition-colors group-data-[orientation=vertical]/tabs:w-full group-data-[orientation=vertical]/tabs:justify-start hover:text-[var(--app-ink)] focus-visible:ring-2 focus-visible:ring-[var(--primary)] focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50 data-[state=active]:!bg-[var(--app-active)] data-[state=active]:!text-[var(--app-ink)] group-data-[variant=ghost]/tabs-list:!h-8 group-data-[variant=ghost]/tabs-list:flex-none group-data-[variant=ghost]/tabs-list:px-3 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
         className
       )}
       {...props}

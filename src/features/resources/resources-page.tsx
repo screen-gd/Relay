@@ -284,7 +284,7 @@ export function ResourcesDesignPage({
                 >
                   <div className="flex min-w-0 items-start gap-3">
                     <span
-                      className="grid size-9 shrink-0 place-items-center rounded-md border border-[var(--app-border)] bg-[var(--app-soft-panel)] text-[var(--app-accent)]"
+                      className="grid size-9 shrink-0 place-items-center rounded-md border border-[var(--app-border)] bg-[var(--app-soft-panel)] text-[var(--primary)]"
                       aria-hidden="true"
                     >
                       <Link2 className="size-4" />

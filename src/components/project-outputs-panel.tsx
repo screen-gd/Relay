@@ -375,7 +375,7 @@ export function ProjectOutputsPanel({
                     )}
                     {versions.length > 1 ? (
                       <Collapsible>
-                        <CollapsibleTrigger className="group inline-flex items-center gap-1 rounded-md outline-none focus-visible:ring-2 focus-visible:ring-[var(--app-accent)] text-[13px] font-medium text-muted-foreground hover:text-foreground">
+                        <CollapsibleTrigger className="group inline-flex items-center gap-1 rounded-md outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary)] text-[13px] font-medium text-muted-foreground hover:text-foreground">
                           <ChevronRight
                             aria-hidden="true"
                             className="size-3.5 shrink-0 text-muted-foreground transition-transform group-data-[state=open]:rotate-90"

@@ -57,7 +57,7 @@ export function SubscriptionPage() {
             >
               <LoaderCircle
                 aria-hidden="true"
-                className="size-7 animate-spin text-[var(--app-accent)]"
+                className="size-7 animate-spin text-[var(--primary)]"
               />
             </div>
           ) : isSignedIn ? (

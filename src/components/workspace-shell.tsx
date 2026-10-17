@@ -648,7 +648,7 @@ export function WorkspaceShell({
           <Button
             type="button"
             aria-label="New Project"
-            className="fixed bottom-[calc(80px+env(safe-area-inset-bottom))] right-4 z-40 flex min-h-12 items-center gap-2 rounded-md bg-[var(--app-accent)] px-4 text-sm font-semibold text-[var(--app-accent-foreground)] shadow-[var(--app-shadow-2)] outline-none hover:bg-[var(--app-accent)]/90 focus-visible:ring-2 focus-visible:ring-[var(--app-accent)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--app-canvas)] sm:hidden"
+            className="fixed bottom-[calc(80px+env(safe-area-inset-bottom))] right-4 z-40 flex min-h-12 items-center gap-2 rounded-md bg-[var(--primary)] px-4 text-sm font-semibold text-[var(--primary-foreground)] shadow-[var(--app-shadow-2)] outline-none hover:bg-[var(--primary)]/90 focus-visible:ring-2 focus-visible:ring-[var(--primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--app-canvas)] sm:hidden"
             onClick={onNewProject}
           >
             <Plus className="size-4" />
@@ -1019,7 +1019,7 @@ function ProfileMenu({
             type="button"
             variant="ghost"
             className={cn(
-              "group flex items-center rounded-md text-left outline-none transition-[background-color,box-shadow] hover:bg-[var(--app-hover)] active:translate-y-0 active:scale-100 focus-visible:ring-2 focus-visible:ring-[var(--app-accent)] data-[state=open]:bg-[var(--app-active)]",
+              "group flex items-center rounded-md text-left outline-none transition-[background-color,box-shadow] hover:bg-[var(--app-hover)] active:translate-y-0 active:scale-100 focus-visible:ring-2 focus-visible:ring-[var(--primary)] data-[state=open]:bg-[var(--app-active)]",
               compact
                 ? "h-9 w-9 justify-center p-0"
                 : collapsed
@@ -1028,7 +1028,7 @@ function ProfileMenu({
             )}
             aria-label="Open profile menu"
           >
-            <Avatar className="size-8 border border-[var(--app-strong-border)] bg-[var(--app-avatar-surface)] ring-1 ring-transparent transition-[border-color,box-shadow] group-data-[state=open]:border-[var(--app-accent)]">
+            <Avatar className="size-8 border border-[var(--app-strong-border)] bg-[var(--app-avatar-surface)] ring-1 ring-transparent transition-[border-color,box-shadow] group-data-[state=open]:border-[var(--primary)]">
               <AvatarImage
                 src={settings.profileImageUrl || undefined}
                 alt={name}
@@ -1382,12 +1382,12 @@ function MobileNavigation({
             to={item.href}
             aria-current={active ? "page" : undefined}
             className={cn(
-              "relative flex flex-col items-center justify-center gap-1 rounded-md text-[10px] font-medium outline-none focus-visible:ring-2 focus-visible:ring-[var(--app-accent)] focus-visible:ring-inset",
+              "relative flex flex-col items-center justify-center gap-1 rounded-md text-[10px] font-medium outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary)] focus-visible:ring-inset",
               active ? "text-[var(--app-highlight)]" : "text-[var(--app-muted)]"
             )}
           >
             {active ? (
-              <span className="absolute inset-x-3 top-0 h-0.5 rounded-full bg-[var(--app-accent)]" />
+              <span className="absolute inset-x-3 top-0 h-0.5 rounded-full bg-[var(--primary)]" />
             ) : null}
             <span className="flex flex-col items-center justify-center gap-1">
               <Icon className="size-[19px]" strokeWidth={active ? 2.2 : 1.8} />
@@ -1401,7 +1401,7 @@ function MobileNavigation({
           <Button
             type="button"
             variant="ghost"
-            className="h-full w-full flex-col items-center justify-center gap-1 rounded-md text-[10px] font-medium text-[var(--app-muted)] outline-none focus-visible:ring-2 focus-visible:ring-[var(--app-accent)] focus-visible:ring-inset"
+            className="h-full w-full flex-col items-center justify-center gap-1 rounded-md text-[10px] font-medium text-[var(--app-muted)] outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary)] focus-visible:ring-inset"
             aria-label="Open more workspace pages"
           >
             <motion.span
@@ -1440,7 +1440,7 @@ function MobileNavigation({
                     aria-current={
                       routeIsActive(page, item) ? "page" : undefined
                     }
-                    className="group flex items-center gap-3 rounded-md border border-[var(--app-border)] bg-[var(--app-panel)] p-3 text-sm font-medium outline-none transition-[background-color,border-color] hover:border-[var(--app-strong-border)] hover:bg-[var(--app-soft-panel)] focus-visible:ring-2 focus-visible:ring-[var(--app-accent)]"
+                    className="group flex items-center gap-3 rounded-md border border-[var(--app-border)] bg-[var(--app-panel)] p-3 text-sm font-medium outline-none transition-[background-color,border-color] hover:border-[var(--app-strong-border)] hover:bg-[var(--app-soft-panel)] focus-visible:ring-2 focus-visible:ring-[var(--primary)]"
                   >
                     <span className="flex">
                       <Icon className="size-[18px] text-[var(--app-muted)] transition-colors group-hover:text-[var(--app-ink)]" />

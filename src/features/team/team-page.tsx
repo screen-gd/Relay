@@ -870,7 +870,7 @@ export function TeamDesignPage({
                         className={
                           notification.read
                             ? "flex justify-between gap-3 rounded-md border border-[var(--app-border)] p-3"
-                            : "flex justify-between gap-3 rounded-md border border-[var(--app-accent)] bg-[var(--app-active)] p-3"
+                            : "flex justify-between gap-3 rounded-md border border-[var(--primary)] bg-[var(--app-active)] p-3"
                         }
                       >
                         <div className="min-w-0">
@@ -942,7 +942,7 @@ export function TeamDesignPage({
                     teamData.activity.map((activity) => (
                       <article
                         key={activity._id}
-                        className="rounded-md border-l-2 border-[var(--app-accent)] bg-[var(--app-soft-panel)] p-3"
+                        className="rounded-md border-l-2 border-[var(--primary)] bg-[var(--app-soft-panel)] p-3"
                       >
                         <p className="text-sm font-medium">
                           {activity.message}

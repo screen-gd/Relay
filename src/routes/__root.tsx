@@ -139,23 +139,15 @@ function RootDocument({ children }: { children: ReactNode }) {
         <meta
           name="theme-color"
           media="(prefers-color-scheme: light)"
-          content="#F1F4F2"
+          content="#FCFCFD"
         />
         <meta
           name="theme-color"
           media="(prefers-color-scheme: dark)"
-          content="#090C0D"
+          content="#08080A"
         />
       </head>
-      <body
-        className="antialiased"
-        style={{
-          margin: 0,
-          background: "var(--app-canvas)",
-          color: "var(--app-ink)",
-          fontFamily: "var(--font-geist-sans), Geist, sans-serif",
-        }}
-      >
+      <body className="quartz">
         <a className="skip-link" href="#main-content">
           Skip to workspace content
         </a>

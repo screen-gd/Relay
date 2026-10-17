@@ -62,7 +62,7 @@ export function AccountSettingsPage() {
               <div className="flex flex-col items-center gap-3 text-sm text-[var(--app-muted)]">
                 <LoaderCircle
                   aria-hidden="true"
-                  className="size-7 animate-spin text-[var(--app-accent)]"
+                  className="size-7 animate-spin text-[var(--primary)]"
                 />
                 <span>Loading account controls...</span>
               </div>

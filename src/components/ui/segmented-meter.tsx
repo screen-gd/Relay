@@ -17,7 +17,7 @@ type SegmentedMeterProps = {
 };
 
 function cellColor(index: number, segments: number, tone: "scale" | "accent") {
-  if (tone === "accent") return "var(--app-accent)";
+  if (tone === "accent") return "var(--primary)";
   const position = (index + 1) / segments;
   if (position <= 0.35) return "var(--status-danger)";
   if (position <= 0.65) return "var(--status-warning)";

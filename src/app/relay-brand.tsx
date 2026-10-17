@@ -38,7 +38,7 @@ export function RelayBrand({
       to="/"
       aria-label="Go to Relay dashboard"
       className={cn(
-        "flex w-fit flex-col items-start gap-1 rounded-md text-inherit no-underline outline-none focus-visible:ring-2 focus-visible:ring-[var(--app-accent)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--app-canvas)]",
+        "flex w-fit flex-col items-start gap-1 rounded-md text-inherit no-underline outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--app-canvas)]",
         className
       )}
       style={style}

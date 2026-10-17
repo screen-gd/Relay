@@ -314,7 +314,7 @@ export function TemplatesDesignPage({
             <article
               key={template.id}
               data-slot="template-card"
-              className="group flex min-h-[250px] flex-col justify-between rounded-xl border border-[var(--app-border)] bg-[var(--app-soft-panel)] p-4 text-foreground shadow-[var(--app-shadow-1)] transition-[background-color,border-color,transform,box-shadow] duration-200 hover:-translate-y-0.5 hover:border-[var(--app-strong-border)] hover:bg-[var(--app-hover)] hover:shadow-[var(--app-shadow-2)] focus-within:border-[var(--app-accent)]"
+              className="group flex min-h-[250px] flex-col justify-between rounded-xl border border-[var(--app-border)] bg-[var(--app-soft-panel)] p-4 text-foreground shadow-[var(--app-shadow-1)] transition-[background-color,border-color,transform,box-shadow] duration-200 hover:-translate-y-0.5 hover:border-[var(--app-strong-border)] hover:bg-[var(--app-hover)] hover:shadow-[var(--app-shadow-2)] focus-within:border-[var(--primary)]"
             >
               <div>
                 <header className="flex items-start justify-between gap-4">
@@ -338,7 +338,7 @@ export function TemplatesDesignPage({
                       {template.description}
                     </p>
                   </div>
-                  <span className="grid size-9 shrink-0 place-items-center rounded-md border border-[var(--app-border)] bg-[var(--app-panel)] text-[var(--app-accent)]">
+                  <span className="grid size-9 shrink-0 place-items-center rounded-md border border-[var(--app-border)] bg-[var(--app-panel)] text-[var(--primary)]">
                     <FileText aria-hidden="true" className="size-4" />
                   </span>
                 </header>

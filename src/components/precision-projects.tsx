@@ -280,7 +280,7 @@ function ProjectThumbnail({
       )}
       style={{ background: projectColor(project) }}
     >
-      <span className="absolute -right-3 top-1/2 h-[130%] w-[52%] -translate-y-1/2 rotate-12 bg-[var(--app-accent)] opacity-45" />
+      <span className="absolute -right-3 top-1/2 h-[130%] w-[52%] -translate-y-1/2 rotate-12 bg-[var(--primary)] opacity-45" />
       <span className="absolute inset-x-2 top-2 flex items-center justify-between text-[var(--app-thumb-icon)]">
         <Film className="size-3.5" />
         <span className="size-1.5 rounded-full bg-current opacity-60" />
@@ -361,7 +361,7 @@ function ProjectBoardCard({
             type="button"
             variant="ghost"
             className={cn(
-              "h-auto min-w-0 flex-1 touch-none flex-col items-start justify-start gap-0 rounded-none px-0 py-0 text-left font-normal whitespace-normal hover:bg-transparent hover:text-current dark:hover:bg-transparent focus-visible:ring-2 focus-visible:ring-[var(--app-accent)] active:translate-y-0 active:scale-100",
+              "h-auto min-w-0 flex-1 touch-none flex-col items-start justify-start gap-0 rounded-none px-0 py-0 text-left font-normal whitespace-normal hover:bg-transparent hover:text-current dark:hover:bg-transparent focus-visible:ring-2 focus-visible:ring-[var(--primary)] active:translate-y-0 active:scale-100",
               !disabled && "cursor-grab active:cursor-grabbing"
             )}
             onClick={onSelect}
@@ -1121,7 +1121,7 @@ export function PrecisionProjects(props: PrecisionProjectsProps) {
                     bodyClassName="flex min-h-0 flex-1 flex-col max-lg:flex-none max-lg:overflow-visible"
                   >
                     {isUpdating ? (
-                      <div className="absolute inset-x-0 top-0 z-20 h-0.5 bg-[var(--app-accent)]" />
+                      <div className="absolute inset-x-0 top-0 z-20 h-0.5 bg-[var(--primary)]" />
                     ) : null}
                     {tableState.view === "table" ? (
                       <header className="flex h-12 items-center justify-between border-b border-[var(--app-border)] px-4">
@@ -1225,7 +1225,7 @@ export function PrecisionProjects(props: PrecisionProjectsProps) {
                                 data-project-title={row.original.title}
                                 aria-label={`Open ${row.original.title} project details`}
                                 className={cn(
-                                  "h-auto w-full grid grid-cols-[48px_minmax(0,1fr)_auto] justify-start items-center gap-3 px-3 py-3 text-left font-normal whitespace-normal hover:bg-[var(--app-hover)] dark:hover:bg-[var(--app-hover)] focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--app-accent)] active:translate-y-0 active:scale-100",
+                                  "h-auto w-full grid grid-cols-[48px_minmax(0,1fr)_auto] justify-start items-center gap-3 px-3 py-3 text-left font-normal whitespace-normal hover:bg-[var(--app-hover)] dark:hover:bg-[var(--app-hover)] focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--primary)] active:translate-y-0 active:scale-100",
                                   selected?.id === row.original.id &&
                                     "bg-[var(--app-active)]"
                                 )}
@@ -1327,7 +1327,7 @@ export function PrecisionProjects(props: PrecisionProjectsProps) {
                                     }
                                     aria-label={`Select ${row.original.title}. ${row.original.status}. Due ${formatDate(row.original.dueDate)}.`}
                                     className={cn(
-                                      "h-[var(--workspace-row-height,70px)] cursor-pointer outline-none transition-colors hover:bg-[var(--app-hover)] focus-visible:bg-[var(--app-hover)] focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--app-accent)] active:bg-[var(--app-active)]",
+                                      "h-[var(--workspace-row-height,70px)] cursor-pointer outline-none transition-colors hover:bg-[var(--app-hover)] focus-visible:bg-[var(--app-hover)] focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--primary)] active:bg-[var(--app-active)]",
                                       selected?.id === row.original.id &&
                                         "bg-[var(--app-active)]"
                                     )}

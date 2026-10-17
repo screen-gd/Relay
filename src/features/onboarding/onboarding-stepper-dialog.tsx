@@ -406,7 +406,7 @@ function Choice({
         className={cn(
           "mt-0.5 grid size-4 shrink-0 place-items-center rounded-full border",
           selected
-            ? "border-[var(--app-accent)] bg-[var(--app-accent)] text-[var(--app-accent-foreground)]"
+            ? "border-[var(--primary)] bg-[var(--primary)] text-[var(--primary-foreground)]"
             : "border-[var(--app-border)]"
         )}
       >

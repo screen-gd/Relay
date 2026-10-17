@@ -733,7 +733,7 @@ export function PrecisionDashboard(props: DashboardProps) {
                 onChange={(event) => props.setQuery(event.target.value)}
                 placeholder="Search projects"
                 aria-label="Search dashboard projects"
-                className="h-9 rounded-lg border-[var(--app-border)] bg-[var(--app-panel)] pl-9 text-xs shadow-none focus-visible:border-[var(--app-accent)]"
+                className="h-9 rounded-lg border-[var(--app-border)] bg-[var(--app-panel)] pl-9 text-xs shadow-none focus-visible:border-[var(--primary)]"
               />
             </div>
           }
@@ -993,7 +993,7 @@ export function PrecisionDashboard(props: DashboardProps) {
                         variant="ghost"
                         className={cn(
                           sectionRowClassName,
-                          "h-auto min-h-9 w-full grid gap-3 whitespace-normal px-3 py-2 text-left font-normal hover:bg-[var(--app-hover)] dark:hover:bg-[var(--app-hover)] focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--app-accent)] active:translate-y-0 active:scale-100 sm:grid-cols-[minmax(180px,0.8fr)_minmax(220px,1.4fr)_auto] sm:items-center",
+                          "h-auto min-h-9 w-full grid gap-3 whitespace-normal px-3 py-2 text-left font-normal hover:bg-[var(--app-hover)] dark:hover:bg-[var(--app-hover)] focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--primary)] active:translate-y-0 active:scale-100 sm:grid-cols-[minmax(180px,0.8fr)_minmax(220px,1.4fr)_auto] sm:items-center",
                           selected?.id === project.id &&
                             "bg-[var(--app-active)]"
                         )}
@@ -1120,7 +1120,7 @@ export function PrecisionDashboard(props: DashboardProps) {
                                       data-testid="mobile-project-row"
                                       className={cn(
                                         sectionRowClassName,
-                                        "h-auto w-full grid grid-cols-[minmax(0,1fr)_auto] justify-start gap-3 whitespace-normal px-3 py-2 text-left font-normal hover:bg-[var(--app-hover)] dark:hover:bg-[var(--app-hover)] focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--app-accent)] active:translate-y-0 active:scale-100",
+                                        "h-auto w-full grid grid-cols-[minmax(0,1fr)_auto] justify-start gap-3 whitespace-normal px-3 py-2 text-left font-normal hover:bg-[var(--app-hover)] dark:hover:bg-[var(--app-hover)] focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--primary)] active:translate-y-0 active:scale-100",
                                         selected?.id === project.id &&
                                           "bg-[var(--app-active)]"
                                       )}
@@ -1160,7 +1160,7 @@ export function PrecisionDashboard(props: DashboardProps) {
                                         <Progress
                                           value={progress}
                                           aria-hidden="true"
-                                          className="mt-2.5 h-1 rounded-sm bg-[var(--app-progress-track)] [&_[data-slot=progress-indicator]]:rounded-sm [&_[data-slot=progress-indicator]]:bg-[var(--app-accent)]"
+                                          className="mt-2.5 h-1 rounded-sm bg-[var(--app-progress-track)] [&_[data-slot=progress-indicator]]:rounded-sm [&_[data-slot=progress-indicator]]:bg-[var(--primary)]"
                                         />
                                       </div>
                                       <span className="flex flex-col items-end justify-between">
@@ -1211,7 +1211,7 @@ export function PrecisionDashboard(props: DashboardProps) {
                                             type="button"
                                             variant="ghost"
                                             size="sm"
-                                            className="group h-auto gap-1 rounded-sm px-0 py-1 text-left text-xs hover:bg-transparent hover:text-[var(--app-ink)] dark:hover:bg-transparent focus-visible:ring-2 focus-visible:ring-[var(--app-accent)] active:translate-y-0 active:scale-100"
+                                            className="group h-auto gap-1 rounded-sm px-0 py-1 text-left text-xs hover:bg-transparent hover:text-[var(--app-ink)] dark:hover:bg-transparent focus-visible:ring-2 focus-visible:ring-[var(--primary)] active:translate-y-0 active:scale-100"
                                             onClick={header.column.getToggleSortingHandler()}
                                           >
                                             {flexRender(
@@ -1258,7 +1258,7 @@ export function PrecisionDashboard(props: DashboardProps) {
                                       }
                                       aria-label={`Select ${row.original.title}. ${row.original.status}. Due ${formatDate(row.original.dueDate, { month: "short", day: "numeric" })}.`}
                                       className={cn(
-                                        "h-[var(--workspace-row-height,58px)] cursor-pointer border-0 outline-none transition-colors hover:bg-[var(--app-hover)] focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--app-accent)]",
+                                        "h-[var(--workspace-row-height,58px)] cursor-pointer border-0 outline-none transition-colors hover:bg-[var(--app-hover)] focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--primary)]",
                                         selected?.id === row.original.id &&
                                           "bg-[var(--app-active)]"
                                       )}
@@ -1350,7 +1350,7 @@ export function PrecisionDashboard(props: DashboardProps) {
                                 </Button>
                               ) : null}
                               <Button
-                                className="h-9 rounded-lg bg-[var(--app-accent)] text-[var(--app-accent-foreground)] shadow-none hover:bg-[var(--app-accent)]/90"
+                                className="h-9 rounded-lg bg-[var(--primary)] text-[var(--primary-foreground)] shadow-none hover:bg-[var(--primary)]/90"
                                 size="sm"
                                 onClick={props.onNewProject}
                                 disabled={!props.canCreateProjects}
@@ -1615,7 +1615,7 @@ function ProjectInspector({
         <motion.div
           className={cn("flex items-start gap-3", mobile ? "p-5" : "p-3.5")}
         >
-          <span className="mt-1.5 size-1.5 shrink-0 rounded-full bg-[var(--app-accent)]" />
+          <span className="mt-1.5 size-1.5 shrink-0 rounded-full bg-[var(--primary)]" />
           <div className="min-w-0 flex-1">
             <h2 className="truncate text-[15px] font-medium tracking-[-0.02em] leading-snug">
               {project.title}
@@ -1725,7 +1725,7 @@ function ProjectInspector({
               </p>
             </div>
             <Button
-              className="h-8 rounded-md bg-[var(--app-accent)] px-3 text-[11px] font-semibold text-[var(--app-accent-foreground)] shadow-none hover:bg-[var(--app-accent)]/90"
+              className="h-8 rounded-md bg-[var(--primary)] px-3 text-[11px] font-semibold text-[var(--primary-foreground)] shadow-none hover:bg-[var(--primary)]/90"
               onClick={() => onOpen(project)}
               aria-label={`Open project ${project.title}`}
             >

@@ -517,7 +517,7 @@ export function MediaVersionComments({
               key={`${version.id}-${openByDefault}`}
               defaultOpen={openByDefault}
             >
-              <CollapsibleTrigger className="group -mx-3 flex w-[calc(100%+1.5rem)] items-center gap-1 rounded-md px-3 py-2 text-left text-sm outline-none focus-visible:ring-2 focus-visible:ring-[var(--app-accent)]">
+              <CollapsibleTrigger className="group -mx-3 flex w-[calc(100%+1.5rem)] items-center gap-1 rounded-md px-3 py-2 text-left text-sm outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary)]">
                 <ChevronRight
                   aria-hidden="true"
                   className="size-3.5 shrink-0 text-muted-foreground transition-transform group-data-[state=open]:rotate-90"

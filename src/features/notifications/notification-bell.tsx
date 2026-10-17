@@ -82,7 +82,7 @@ export function NotificationBell() {
                     teamId: teamData.workspace._id,
                   }).catch(() => undefined);
                 }}
-                className="h-auto px-0 py-0 text-[11px] font-semibold text-[var(--app-accent)] hover:bg-transparent"
+                className="h-auto px-0 py-0 text-[11px] font-semibold text-[var(--primary)] hover:bg-transparent"
               >
                 Mark all read
               </OwnedButton>
@@ -136,7 +136,7 @@ export function NotificationBell() {
                         notificationId: notification._id,
                       }).catch(() => undefined);
                     }}
-                    className="mt-1 h-auto px-0 py-0 text-[11px] font-semibold text-[var(--app-accent)] hover:bg-transparent"
+                    className="mt-1 h-auto px-0 py-0 text-[11px] font-semibold text-[var(--primary)] hover:bg-transparent"
                   >
                     Mark read
                   </OwnedButton>
@@ -151,7 +151,7 @@ export function NotificationBell() {
                       });
                     }
                   }}
-                  className="mt-1 inline-flex text-[11px] font-semibold text-[var(--app-accent)] outline-none hover:underline focus-visible:ring-2 focus-visible:ring-[var(--app-accent)]"
+                  className="mt-1 inline-flex text-[11px] font-semibold text-[var(--primary)] outline-none hover:underline focus-visible:ring-2 focus-visible:ring-[var(--primary)]"
                 >
                   Open Team
                 </Link>
@@ -161,7 +161,7 @@ export function NotificationBell() {
         ) : (
           <div className="grid justify-items-center gap-2 px-4 py-7 text-center">
             <Check
-              className="size-5 text-[var(--app-accent)]"
+              className="size-5 text-[var(--primary)]"
               aria-hidden="true"
             />
             <p className="text-[13px] font-semibold">No new notifications</p>

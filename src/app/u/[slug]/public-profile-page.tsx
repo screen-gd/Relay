@@ -34,7 +34,7 @@ export function PublicProfilePage({ slug }: { slug: string }) {
           >
             <LoaderCircle
               aria-hidden="true"
-              className="size-[30px] text-[var(--app-accent)]"
+              className="size-[30px] text-[var(--primary)]"
             />
             <p className="text-[13px]">Loading public profile...</p>
           </div>
@@ -219,7 +219,7 @@ function ProfileMetric({
 }) {
   return (
     <div className="flex flex-col rounded-md border border-[var(--app-border)] bg-[var(--app-soft-panel)] p-3">
-      <span className="text-[var(--app-accent)] [&_svg]:size-5">{icon}</span>
+      <span className="text-[var(--primary)] [&_svg]:size-5">{icon}</span>
       <dt className="order-3 mt-1 text-[11px] text-[var(--app-muted)]">
         {label}
       </dt>
@@ -231,9 +231,7 @@ function ProfileMetric({
 function InfoPill({ icon, text }: { icon: React.ReactNode; text: string }) {
   return (
     <span className="flex items-center gap-1.5 text-[13px] text-[var(--app-muted)]">
-      <span className="text-[var(--app-accent)] [&_svg]:size-[17px]">
-        {icon}
-      </span>
+      <span className="text-[var(--primary)] [&_svg]:size-[17px]">{icon}</span>
       {text}
     </span>
   );
@@ -251,7 +249,7 @@ function ProgressBar({ value, label }: { value: number; label: string }) {
       className="h-1.5 overflow-hidden rounded-full bg-[var(--app-header-panel)]"
     >
       <span
-        className="block h-full rounded-full bg-[var(--app-accent)]"
+        className="block h-full rounded-full bg-[var(--primary)]"
         style={{ width: `${boundedValue}%` }}
       />
     </div>

@@ -1,0 +1,168 @@
+/*
+ * Relay's layer on top of Quartz. Quartz (src/styles/quartz) stays as shipped;
+ * every Relay decision lives here so an upstream update is a file copy.
+ *
+ * 1. Type: Geist instead of Quartz Sans, with weights nudged up one step
+ *    because Geist draws lighter at the same number.
+ * 2. Dark chassis: near-black, neutral, as in Linear. The sidebar sits on the
+ *    canvas and the viewport is one step lighter (decisions.md, D2).
+ * 3. Legacy aliases: the pre-Quartz `--app-*`, `--surface-*` and `--status-*`
+ *    names resolve to Quartz roles so unported code still renders on system
+ *    colors. `pnpm check:design` keeps their count from growing.
+ */
+
+.quartz {
+  --font-sans:
+    "Geist Variable", "Geist Fallback", ui-sans-serif, system-ui, sans-serif;
+  --font-mono:
+    "Geist Mono Variable", "Geist Mono Fallback", ui-monospace, monospace;
+  --weight-body: 400;
+  --weight-medium: 500;
+  --weight-strong: 600;
+  --type-display-xl: 500 80px/80px var(--font-sans);
+  --type-display-lg: 500 60px/66px var(--font-sans);
+  --type-display: 500 40px/44px var(--font-sans);
+  --type-heading-lg: 500 32px/36px var(--font-sans);
+  --type-heading: 500 24px/28px var(--font-sans);
+  --type-heading-sm: 500 20px/24px var(--font-sans);
+  --type-heading-xs: 500 16px/20px var(--font-sans);
+  --type-body-lg: 400 16px/22px var(--font-sans);
+  --type-body: 400 14px/20px var(--font-sans);
+  --type-body-sm: 400 13px/18px var(--font-sans);
+  --type-button: 500 16px/20px var(--font-sans);
+  --type-label: 500 13px/16px var(--font-sans);
+  --type-label-sm: 450 12px/16px var(--font-sans);
+  --type-state-word: 500 13px/16px var(--font-sans);
+  --type-stat-xl: 500 48px/52px var(--font-sans);
+  --type-stat-lg: 500 40px/44px var(--font-sans);
+  --type-stat: 500 28px/32px var(--font-sans);
+  /* A Linear-width sidebar; the rail is the icon column alone. */
+  --sidebar: 244px;
+  --sidebar-rail: 52px;
+  --topbar: 48px;
+}
+
+/* D2: near-black neutral chassis. Same structure as Quartz dark, darker steps. */
+.quartz[data-theme="dark"],
+:where([data-theme="dark"], .dark) .quartz:not([data-theme="light"]) {
+  --ink-c: 97.5% 0.002 265;
+  --paper-c: 17% 0.004 265;
+  --grey-c: 21.5% 0.005 265;
+  --canvas-c: 13.5% 0.003 265;
+  --text-on-field-c: 20% 0.024 262;
+  --line-frame-alpha: 0.1;
+}
+
+/* The page behind the scope, seen on overscroll. Values copy --canvas-c. */
+html {
+  background: oklch(99.1% 0.002 250);
+}
+
+html.dark {
+  background: oklch(13.5% 0.003 265);
+}
+
+.quartz {
+  /* User accent: route-theme.ts writes --app-accent on <html> when someone
+     picks one. Otherwise the primary is Quartz ink. */
+  --primary: var(--app-accent, var(--button-primary));
+  --primary-foreground: var(--app-accent-foreground, var(--text-inverse));
+
+  --app-canvas: var(--surface-page);
+  --app-sidebar: var(--surface-canvas);
+  --app-panel: var(--surface-card);
+  --app-soft-panel: var(--surface-card);
+  --app-header-panel: var(--surface-card);
+  --app-active: var(--surface-selected);
+  --app-hover: var(--surface-hover);
+  --app-ink: var(--text-1);
+  --app-text: var(--text-1);
+  --app-muted: var(--text-2);
+  --app-subtle: var(--text-3);
+  --app-border: var(--line-row);
+  --app-strong-border: var(--border-strong);
+  --app-control: var(--surface-raised);
+  --app-input-border: var(--line-control);
+  --app-secondary: var(--button-secondary);
+  --app-highlight: var(--text-1);
+  --app-success: var(--text-1);
+  --app-success-bg: var(--surface-card);
+  --app-warning: var(--warn-text);
+  --app-warning-bg: var(--warn-wash);
+  --app-danger: var(--fail-text);
+  --app-danger-bg: var(--fail-wash);
+  --app-progress-track: var(--surface-tile);
+  --app-chart-grid: var(--text-3);
+  --app-avatar-surface: var(--surface-card);
+  --app-thumb-icon: var(--text-3);
+  --app-switch-thumb: var(--paper);
+  --app-shadow-1: var(--elev-none);
+  --app-shadow-2: var(--elev-overlay);
+  --sidebar-active: var(--surface-selected);
+  --surface-panel: var(--surface-card);
+  --surface-panel-raised: var(--surface-raised);
+  --surface-sunken: var(--surface-card);
+  --surface-inset: var(--surface-card);
+  --text-primary: var(--text-1);
+  --text-secondary: var(--text-2);
+  --text-muted: var(--text-2);
+  --status-info: var(--text-1);
+  --status-info-bg: var(--surface-card);
+  --status-success: var(--text-1);
+  --status-success-bg: var(--surface-card);
+  --status-warning: var(--warn-text);
+  --status-warning-bg: var(--warn-wash);
+  --status-danger: var(--fail-text);
+  --status-danger-bg: var(--fail-wash);
+  --focus-ring: var(--border-focus);
+  --selected-bg: var(--surface-selected);
+  --overlay-scrim: var(--surface-overlay);
+  --radius-panel: var(--radius-frame);
+  --radius-badge: var(--radius-inner);
+  --shadow-panel: var(--elev-none);
+  --panel-edge: transparent;
+
+  /* shadcn names, for the Radix component layer. */
+  --background: var(--surface-page);
+  --foreground: var(--text-1);
+  --card: var(--surface-card);
+  --card-foreground: var(--text-1);
+  --popover: var(--surface-raised);
+  --popover-foreground: var(--text-1);
+  --secondary: var(--button-secondary);
+  --secondary-foreground: var(--text-1);
+  --muted: var(--surface-card);
+  --muted-foreground: var(--text-2);
+  --accent: var(--surface-hover);
+  --accent-foreground: var(--text-1);
+  --destructive: var(--fail-text);
+  --border: var(--line-row);
+  --input: var(--line-control);
+  --ring: var(--border-focus);
+  --chart-1: var(--text-1);
+  --chart-2: var(--chart-ink-2);
+  --chart-3: var(--warn-mark);
+  --chart-4: var(--fail-mark);
+  --chart-5: var(--text-3);
+}
+
+/* Third-party marks and data hues that are not UI roles (decisions.md, D5). */
+.quartz {
+  --brand-google-drive: #4285f4;
+  --brand-dropbox: #0061ff;
+  --brand-slack: #4a154b;
+  --brand-frame-io: #8b5cf6;
+  --brand-one-drive: #0078d4;
+  --brand-google-calendar: #34a853;
+  --workflow-stage-1: var(--hue-1-mark);
+  --workflow-stage-2: var(--hue-5-mark);
+  --workflow-stage-3: var(--warn-mark);
+  --workflow-stage-4: var(--hue-3-mark);
+  --workflow-stage-5: var(--text-3);
+  --workflow-stage-6: var(--fail-mark);
+  --media-package-1: var(--hue-3-wash);
+  --media-package-2: var(--hue-2-wash);
+  --media-package-3: var(--hue-5-wash);
+  --media-package-4: var(--hue-4-wash);
+  --media-package-5: var(--hue-1-wash);
+}
