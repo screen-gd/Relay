@@ -1,37 +1,28 @@
 # Layout
 
-## Purpose
+## The frame
 
-Make the app shell and page geometry stable across dense work surfaces.
+- The shell is `h-dvh`: sidebar on `bg-canvas`, then the viewport, inset 8px on the top, right and bottom from 1024px up, `bg-page`, `rounded-frame`, framed by `--line-frame`.
+- The top bar is 48px (`--topbar`) and is the first row of the viewport. It holds the location, the view switcher when the page is one of several views, and the page actions.
+- `main#main-content` scrolls; nothing else on the page should scroll the whole viewport.
 
-## Anatomy
+## Page widths (`WorkspacePage family`)
 
-Use a global bar, collapsible sidebar, content rail, page header, local toolbar, section frame, and one primary surface. Compose `workspace-page` patterns: index, split pane, master-detail, and fill-viewport. Use `MasterDetail` with an inspector for three-pane work such as Media; both side rails stay 320px wide.
+| Family                                                  | Width                  | Use                                       |
+| ------------------------------------------------------- | ---------------------- | ----------------------------------------- |
+| `data-index`, `master-detail`, `canvas`, `conversation` | full                   | lists, boards, calendars, chat            |
+| `library`                                               | `--container` (1120px) | templates, resources, files, integrations |
+| `administration`                                        | `max-w-4xl`            | settings, account, profiles               |
 
-## Behavior
+`mode="fill"` pins the page to the viewport so lists scroll inside themselves; `document` lets the page scroll.
 
-Pages own content and handlers. The layout owns gutters, max width, sticky toolbar rules, panel boundaries, and scroll ownership. Use borders and surfaces before shadows. Keep one useful `h1` per route.
+## Patterns
 
-## States
+- **List page**: `PageHeader` (sr-only title, actions into the top bar), `PageToolbar` (scope, search, Filter, Display, count), then the list in one frame.
+- **List and detail**: the list, with the selection in an inspector column at 1280px and up, or in a side `Sheet` below that.
+- **Record page** (a project): `SectionNav` tabs over the main column, a 300px Properties column on the right that stays on every tab.
+- **Long pages split into views.** When a page holds more than three panels, give it `SectionNav` views (Payments, Team, Integrations) or URL sections (Settings) instead of stacking.
 
-Layout variants cover loading skeletons, empty sections, permission/read-only banners, errors, and offline/local mode. Preserve panel geometry while content loads.
+## Panels
 
-## Responsive rules
-
-Use 24px desktop and 16px small-screen gutters. Collapse navigation to a sheet, move secondary actions to overflow, and keep bounded horizontal scroll for data that cannot reflow.
-
-## Accessibility
-
-Use named `header`, `nav`, `main`, and complementary landmarks. Provide a skip link. Resizable panes need a keyboard alternative and a visible separator.
-
-## Preserved features
-
-Keep `WorkspaceShell`, command search, account and notification actions, route links, mobile project detail sheets, and current scroll behavior.
-
-## Acceptance checks
-
-- Desktop, tablet, and 320px layouts have no accidental scroll traps.
-- Sticky controls never cover focused content.
-- Each page uses an approved layout pattern and unique title/h1.
-
-Related: [workspace-page architecture](../../architecture/workspace-page-system.md).
+`ContentSection` is the Quartz panel: a grey field (`bg-well`, `rounded-frame`, 4px padding) with its title on the grey and its body on the page color inside. Panels stack with a 16px gap and never nest.

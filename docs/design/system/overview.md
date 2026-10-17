@@ -1,36 +1,25 @@
-# Design system overview
+# Overview
 
-## Purpose
+Relay should read like Linear: quiet chrome, one obvious next step per page, and nothing that has to be scrolled past to reach the work.
 
-Give every Relay surface one clear visual and interaction contract while keeping the current features and fonts. The product should feel calm, dense, and direct for video-work production.
+## Rules that decide most questions
 
-## Anatomy
+1. Accessibility and keyboard behavior come first.
+2. Tokens, never raw values. Classes name the role: `bg-page`, `text-text-2`, `rounded-soft`, `type-label`.
+3. Use the shared component before writing markup.
+4. One primary button per view. It sits in the top bar.
+5. Status is a word. Only trouble is warm: `warn-*` for warnings, `fail-*` for failures and lateness.
+6. Fields separate groups. A hairline goes only where a field cannot.
 
-The system has tokens, owned shadcn/Radix primitives, workspace-page layout patterns, feature compositions, and route-level content. Screens own data and actions; shared modules own visual rules.
+## Never
 
-## Behavior
+- Eyebrow labels above titles, capitals or tracked-out text.
+- Cards in a grid for a set of numbers; use one `MetricStrip`.
+- A box inside a box, icon tiles, status dots, side-rail bars.
+- Glass, gradients on flat things, pulse, shimmer or bounce.
+- Art in empty states.
+- Highlight fills on text boxes or controls.
 
-Use semantic tokens and composition. Keep common actions visible, move rare actions into menus or sheets, and use one primary work surface per page. Never import Convex or Clerk into visual primitives.
+## Preserved
 
-## States
-
-Every control and page defines default, hover, pressed, focus-visible, selected, disabled, loading, empty, no-results, error, success, and read-only states. See [states and feedback](states-feedback.md).
-
-## Responsive rules
-
-Use the same content at each width. Change layout, overflow, and disclosure, not meaning. Keep essential actions and data reachable at 320px and at 200% text zoom.
-
-## Accessibility
-
-Target WCAG 2.2 AA. Use semantic HTML, visible focus, named landmarks, keyboard paths, contrast checks, and reduced motion. See [accessibility](accessibility.md).
-
-## Preserved features
-
-Keep local, sample, and cloud modes; current routes and aliases; theme, accent, density, date, and currency settings; permissions; and current fonts (Space Grotesk display, Geist Sans interface/body, and Geist Mono for code and fixed-width data).
-
-## Acceptance checks
-
-- One token source serves light and dark themes.
-- Shared primitives have documented keyboard and state behavior.
-- Every route family links to a feature contract.
-- Existing UI and browser checks pass after each slice.
+Local, sample and cloud modes; every route; theme and accent settings; permissions; Geist and Geist Mono.

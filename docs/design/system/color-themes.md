@@ -1,45 +1,26 @@
 # Color and themes
 
-## Purpose
+Quartz builds every surface and text color from four oklch channels per theme: ink, paper, grey and canvas. Light uses Quartz's values. Dark is Relay's near-black chassis in `src/styles/relay-theme.css`:
 
-Use one semantic palette across light, dark, accent, status, and selection states.
+| Channel | Dark value        | Renders about | Used for                                       |
+| ------- | ----------------- | ------------- | ---------------------------------------------- |
+| canvas  | `13.5% 0.003 265` | `#080809`     | sidebar, behind the viewport                   |
+| paper   | `17% 0.004 265`   | `#0f0f11`     | the viewport, inputs, panel bodies             |
+| grey    | `21.5% 0.005 265` | `#18191c`     | panels (fields), wells, tiles                  |
+| ink     | `97.5% 0.002 265` | near white    | primary text, primary button, checked controls |
 
-## Anatomy
+## Roles
 
-Define canvas, surface, foreground, muted, border, input, primary, secondary, accent, destructive, success, warning, info, focus, and selection tokens.
+- Surfaces: `bg-canvas`, `bg-page`, `bg-well`, `bg-raised`, `bg-hover`, `bg-selected`, `bg-tile`, `bg-overlay`.
+- Text: `text-text-1`, `text-text-2`, `text-text-3`, `text-text-disabled`, `text-text-inverse`.
+- Lines: `--line-row` (row rules), `--line-frame` (panel and overlay frames), `--line-control` (field edges).
+- Trouble only: `text-warn-text`, `bg-warn-wash`, `text-fail-text`, `bg-fail-wash`, `--fail-line`.
+- `primary` is ink unless the person picks an accent in Appearance; the picked color is written to `--app-accent` on `<html>`.
 
-The Relay lime palette is dark-first. Three tone steps of one neutral make the layout: the sidebar frame (`#0a0a0b`), the content panel that holds the top bar and page (`#111112`), and cards, metric items, and fields (`#18181a`). Primary text is white. The brand accent is lime `#C6FF00` with near-black text on it; light mode uses deep lime `#4D7C0F`, because lime fails contrast on light surfaces. Success is mint (`#34D399`) so it never reads as a brand highlight; amber is warning and red is error.
+## Legacy names
 
-Content lies flat on the page. Sections are a heading and a body, separated from the next by a hairline; side-by-side columns share one vertical hairline; lists and tables use row dividers. Only objects get a surface: inputs, segmented controls, tags, the sidebar's active item, metric cards, and floating layers (menus, dialogs, sheets), which alone cast a shadow. Lime marks the primary action, the active navigation item, and the key data point in a chart; hover changes text color only.
+The pre-Quartz `--app-*`, `--surface-panel` and `--status-*` names are aliases to Quartz roles so nothing renders unstyled. New code uses the Quartz names; `pnpm check:design` keeps the count of legacy references at zero.
 
-Progress uses `SegmentedMeter` (`src/components/ui/segmented-meter.tsx`) where there is room: cells shade from danger through warning to success by position. Charts use the vendored dither kit (`src/components/dither-kit`) with the `lime` seed for the main series; chart containers take the `chart-glow` class and charts set `bloom="high"` with `bloomOnHover`, so they glow only while the pointer is over them.
+## Themes
 
-Motion is one-shot: the sidebar's active marker slides between items, dropdowns open with a short height and fade, and Radix menus, selects, and dialogs fade and scale. Nothing loops.
-
-## Behavior
-
-Feature code consumes CSS variables. Dark mode overrides the same names. Use color to reinforce status, with text, icon, label, or shape as a second cue.
-
-`globals.css` is the source of truth for theme values. Runtime theme code sets the light or dark class and may override only `--app-accent` and its contrast-safe foreground. Provider brand colors (`--brand-*`), workflow stage colors (`--workflow-stage-*`), and decorative media palettes (`--decorative-thumb-*`, `--media-package-*`) are named tokens because they carry brand or grouping meaning rather than interface state.
-
-## States
-
-Check default, hover, active, selected, disabled, error, success, warning, focus, chart, placeholder, and read-only tokens in both themes.
-
-## Responsive rules
-
-Theme changes do not alter layout. Theme and accent boot before hydration to avoid a flash.
-
-## Accessibility
-
-Meet 4.5:1 text contrast and 3:1 non-text contrast, including borders, charts, focus, and disabled-adjacent content. Never rely on color alone.
-
-## Preserved features
-
-Keep theme, accent, and stored preference boot behavior and existing brand assets.
-
-## Acceptance checks
-
-- Token audit finds no raw feature colors.
-- Light, dark, and accent captures pass contrast checks.
-- Status remains clear in grayscale and with assistive text.
+Light, Dark and System, chosen in the workspace menu or Appearance. The boot script applies the choice before first paint by toggling `.dark` and `data-theme` on `<html>`; the `.quartz` scope on `<body>` follows it.

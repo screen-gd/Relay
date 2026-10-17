@@ -616,7 +616,7 @@ html.dark {
 
 @media (max-width: 1023px) {
   .app-toast-position {
-    bottom: calc(72px + env(safe-area-inset-bottom));
+    bottom: calc(16px + env(safe-area-inset-bottom));
   }
 }
 

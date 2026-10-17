@@ -1,35 +1,30 @@
 # Navigation
 
-## Purpose
+Every destination is defined once in `src/components/workspace-navigation.ts`. The sidebar, the rail, the mobile sheet, the top bar views and the command menu all read it.
 
-Let users move among work areas, current context, saved views, and actions without losing place.
+## Sidebar
 
-## Anatomy
+From top to bottom:
 
-Desktop sidebar: Dashboard, Projects, Clients, Reviews, Payments, Team, Settings. It has two columns, as in ChatGPT and Codex: a 56px icon rail with one icon per hub and a tooltip, and a 248px panel that is open by default and closes to the rail with the toggle in its header (remembered on the device). The panel shows the current hub's name, a New project action, the hub's pages (Overview first, then Calendar, Timeline, Files, Media for Projects; Team chat for Team; Integrations, Templates, Resources for Settings), recent Projects, and the support links. The context tabs above the page list the same pages, so every page stays reachable with the panel closed. Top bar: workspace switcher, command search, notifications, help, account. Context row: breadcrumb/project, view switcher, filters, saved views.
+1. Workspace menu (avatar, workspace name): settings and account pages, theme, sign in or out. Then Notifications, Search (Ctrl K) and New project (C).
+2. Daily pages: Dashboard, Projects, Reviews.
+3. Foldable groups: **Workspace** (Clients, Files, Media, Templates, Resources, Payments) and **Team** (Members, Team chat). Folding is remembered per device.
+4. **AI tools**: the three featured actions and All AI tools, which opens search.
+5. **Recent**: the last five projects.
+6. Footer: Help and feedback (support and legal links), Plans, and the sidebar toggle.
 
-## Behavior
+The toggle, or `[`, folds the sidebar to a 52px icon rail. Rail items name themselves in a tooltip. Below 1024px the sidebar opens as a sheet from the menu button in the top bar.
 
-Use links for routes, disclosure for groups, tabs for same-context panels, and menu buttons for actions. Preserve deep links for calendar, timeline, media, feedback, resources, templates, integrations, chat, profile, portal, and support routes.
+## Settings mode
 
-## States
+On settings, integrations, account, plans and profile pages the sidebar swaps to settings navigation with Back to workspace. Workspace sections are URLs: `/settings?section=workflow`, `ai`, `permissions`, `notifications`, `appearance`, `regional`, `data`.
 
-Show active, hover, focus, collapsed, expanded, disabled, loading, and permission-limited destinations. Announce route changes and retain selected context after filters or sheets close.
+## Top bar
 
-## Responsive rules
+- Location: the page name, or `Parent › Record` with the parent as a link.
+- Views: Projects, Calendar and Timeline are three views of one list and share a segmented control here.
+- Actions: whatever the page's `PageHeader` or `TopBarActions` renders.
 
-Use a sheet on small screens with a labeled trigger. Keep title, search, and primary action available; place secondary navigation in the sheet.
+## Keys
 
-## Accessibility
-
-Use ordinary links and Radix focus management. Do not use a generic ARIA menu for navigation. Label multiple landmarks and support keyboard route access and a skip link.
-
-## Preserved features
-
-Keep existing hrefs, grouped navigation, `G` route chords, command dialog, account menu, notifications, and sample-mode marker.
-
-## Acceptance checks
-
-- Every current route remains reachable by link and command search.
-- Active state survives refresh and direct deep links.
-- Keyboard and screen-reader users can open, navigate, and close mobile navigation.
+Ctrl/Cmd K search, `[` fold the sidebar, `C` new project, `G` then `D`, `P`, `C`, `R` or `S` to jump.
