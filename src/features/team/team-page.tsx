@@ -9,18 +9,15 @@ import {
   MetricStrip,
   PageContent,
   PageHeader,
-  SplitPane,
+  SectionNav,
   WorkspacePage,
 } from "@/components/workspace-page";
 import { Button as OwnedButton } from "@/components/ui/button";
 import { Badge as OwnedBadge } from "@/components/ui/badge";
 import { FieldLayout } from "@/components/ui/field-layout";
 import { Input as OwnedInput } from "@/components/ui/input";
-import { Label as OwnedLabel } from "@/components/ui/label";
-import { Switch as OwnedSwitch } from "@/components/ui/switch";
 import { Textarea as OwnedTextarea } from "@/components/ui/textarea";
 import { trackOptionalEvent } from "@/lib/telemetry";
-import { cn } from "@/lib/utils";
 import { useTeamController } from "./team-controller";
 import {
   TEAM_INVITE_CODE_PATTERN,
@@ -41,7 +38,16 @@ import {
   LoaderCircle,
   UserRound,
   Users,
+  MoreHorizontal,
 } from "@/components/icons";
+import {
+  DropdownMenu,
+  DropdownMenuCheckboxItem,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { ProjectSelect } from "@/features/projects/project-select";
 import { useConfirm } from "@/components/confirm-dialog";
 
@@ -77,6 +83,9 @@ export function TeamDesignPage({
   const [teamError, setTeamError] = useState("");
   const [inviteCopyLabel, setInviteCopyLabel] = useState("Copy Invite Code");
   const [busyAction, setBusyAction] = useState("");
+  const [teamView, setTeamView] = useState<"members" | "comments" | "inbox">(
+    "members"
+  );
   const {
     isSignedIn,
     isUserLoaded,
@@ -195,6 +204,7 @@ export function TeamDesignPage({
   function showTeamProject(projectId?: string) {
     if (!projectId || !teamProjectTitles[projectId]) return;
     setSelectedProjectId(projectId);
+    setTeamView("comments");
   }
 
   return (
@@ -233,24 +243,12 @@ export function TeamDesignPage({
               highlighted: unreadNotifications > 0,
             },
           ].map((metric) => {
-            const Icon = metric.icon;
             return (
               <MetricItem
                 key={metric.label}
                 label={metric.label}
                 value={metric.value}
                 supporting={metric.helper}
-                action={
-                  <span
-                    className={
-                      metric.highlighted
-                        ? "rounded-md bg-primary/15 p-2 text-primary"
-                        : "rounded-md bg-muted p-2 text-muted-foreground"
-                    }
-                  >
-                    <Icon aria-hidden="true" className="size-5" />
-                  </span>
-                }
               />
             );
           })}
@@ -259,7 +257,7 @@ export function TeamDesignPage({
         {teamError ? (
           <div
             role="alert"
-            className="rounded-xl border border-destructive/50 bg-destructive/10 px-4 py-3 text-destructive shadow-sm type-label"
+            className="rounded-frame px-4 py-3 text-fail-text shadow-[0_0_0_1px_var(--fail-line)] type-label"
           >
             {teamError}
           </div>
@@ -283,7 +281,7 @@ export function TeamDesignPage({
             className="shadow-none"
           >
             <div className="max-w-3xl">
-              <h2 className="md:text-2xl type-heading">
+              <h2 className="type-heading-sm">
                 Team workspaces require an account
               </h2>
               <p className="mt-3 text-muted-foreground type-body">
@@ -317,12 +315,10 @@ export function TeamDesignPage({
             Connecting your account to Team sync...
           </ContentSection>
         ) : !isConvexAuthenticated ? (
-          <ContentSection
-            role="alert"
-            className="border-destructive/50 bg-destructive/10 text-destructive"
-            bodyClassName="p-6 shadow-sm md:p-8"
-          >
-            <h2 className="type-heading">Team sync is not connected</h2>
+          <ContentSection role="alert" bodyClassName="p-5">
+            <h2 className="text-fail-text type-heading-xs">
+              Team sync is not connected
+            </h2>
             <p className="mt-2 type-body">
               Clerk sign-in is loaded, but Convex did not receive an
               authenticated token. Check `convex/auth.config.ts`, the Clerk JWT
@@ -417,418 +413,435 @@ export function TeamDesignPage({
             </ContentSection>
           </div>
         ) : (
-          <SplitPane
+          <div
             data-slot="team-administration"
-            ratio="supporting"
-            primary={
-              <div className="grid min-w-0 content-start gap-4">
-                <ContentSection
-                  title={teamData.workspace.name}
-                  description={
-                    canManageTeam ? (
-                      <span>
-                        Invite code{" "}
-                        <span className="font-mono font-bold tracking-widest text-text-1">
-                          {teamData.workspace.inviteCode}
-                        </span>
+            className="grid min-w-0 content-start gap-4"
+          >
+            <SectionNav
+              aria-label="Team views"
+              items={[
+                { id: "members", label: "Members" },
+                { id: "comments", label: "Project comments" },
+                {
+                  id: "inbox",
+                  label: unreadNotifications
+                    ? `Inbox (${unreadNotifications})`
+                    : "Inbox",
+                },
+              ]}
+              value={teamView}
+              onValueChange={setTeamView}
+            />
+            {teamView === "members" ? (
+              <ContentSection
+                title={teamData.workspace.name}
+                description={
+                  canManageTeam ? (
+                    <span>
+                      Invite code{" "}
+                      <span className="font-mono text-text-1">
+                        {teamData.workspace.inviteCode}
                       </span>
-                    ) : (
-                      "Invite code is visible to team owners only."
-                    )
-                  }
-                  actions={
-                    <div className="flex flex-wrap items-center gap-2">
-                      <OwnedBadge variant="secondary">
-                        {displayTeamRole(teamData.currentMember.role)} access
-                      </OwnedBadge>
-                      {canManageTeam ? (
-                        <OwnedButton
-                          type="button"
-                          size="sm"
-                          variant="outline"
-                          onClick={() =>
-                            copyInviteCode(teamData.workspace.inviteCode)
-                          }
-                        >
-                          <Copy aria-hidden="true" />
-                          {inviteCopyLabel}
-                        </OwnedButton>
-                      ) : null}
-                      {canLeaveWorkspace ? (
-                        <OwnedButton
-                          type="button"
-                          size="sm"
-                          variant="outline"
-                          disabled={Boolean(busyAction)}
-                          onClick={() =>
-                            runTeamAction("leave", () =>
-                              leaveWorkspace({ teamId: teamData.workspace._id })
-                            )
-                          }
-                          className="border-destructive/50 text-destructive hover:bg-destructive/10 hover:text-destructive"
-                        >
-                          Leave Workspace
-                        </OwnedButton>
-                      ) : null}
-                    </div>
-                  }
-                  bodyMode="flush"
-                >
-                  <div className="max-h-[min(560px,calc(100dvh-21rem))] divide-y divide-line-row overflow-y-auto overscroll-contain">
-                    {teamData.members.map((member) => (
-                      <article
-                        key={member._id}
-                        className="flex flex-col justify-between gap-3 p-4 md:flex-row md:items-center"
+                    </span>
+                  ) : (
+                    "Invite code is visible to team owners only."
+                  )
+                }
+                actions={
+                  <div className="flex flex-wrap items-center gap-2">
+                    <OwnedBadge variant="secondary">
+                      {displayTeamRole(teamData.currentMember.role)} access
+                    </OwnedBadge>
+                    {canManageTeam ? (
+                      <OwnedButton
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        onClick={() =>
+                          copyInviteCode(teamData.workspace.inviteCode)
+                        }
                       >
-                        <div className="min-w-0">
-                          <div className="flex flex-wrap items-center gap-2">
-                            <h3 className="type-label">{member.name}</h3>
-                            <OwnedBadge variant="outline">
-                              {displayTeamRole(member.role)}
+                        <Copy aria-hidden="true" />
+                        {inviteCopyLabel}
+                      </OwnedButton>
+                    ) : null}
+                    {canLeaveWorkspace ? (
+                      <OwnedButton
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        disabled={Boolean(busyAction)}
+                        onClick={() =>
+                          runTeamAction("leave", () =>
+                            leaveWorkspace({ teamId: teamData.workspace._id })
+                          )
+                        }
+                      >
+                        Leave workspace
+                      </OwnedButton>
+                    ) : null}
+                  </div>
+                }
+                bodyMode="flush"
+              >
+                <div className="max-h-[min(560px,calc(100dvh-21rem))] divide-y divide-line-row overflow-y-auto overscroll-contain">
+                  {teamData.members.map((member) => (
+                    <article
+                      key={member._id}
+                      className="flex flex-col justify-between gap-3 px-4 py-3 md:flex-row md:items-center"
+                    >
+                      <div className="min-w-0">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <h3 className="type-label">{member.name}</h3>
+                          <OwnedBadge variant="outline">
+                            {displayTeamRole(member.role)}
+                          </OwnedBadge>
+                          {member.status === "active" ? null : (
+                            <OwnedBadge variant="secondary">
+                              Invite pending
                             </OwnedBadge>
-                            <OwnedBadge
-                              variant="secondary"
-                              className={cn(
-                                "",
-                                member.status === "active"
-                                  ? "bg-well text-text-1"
-                                  : "bg-warn-wash text-warn-text"
-                              )}
-                            >
-                              {member.status}
-                            </OwnedBadge>
-                          </div>
-                          <p className="mt-1 text-muted-foreground type-label-sm">
-                            {member.email || "No email on profile"}
-                          </p>
+                          )}
                         </div>
-                        <div className="flex flex-wrap items-center gap-2 md:justify-end">
-                          {canManageTeam && member.role !== "Owner" ? (
-                            <div className="w-full sm:w-40">
-                              <ProjectSelect
-                                label="Role"
-                                value={displayTeamRole(member.role)}
-                                options={teamRoleOptions
-                                  .filter((role) => role !== "Owner")
-                                  .map(displayTeamRole)}
-                                onChange={(role) =>
-                                  runTeamAction("role", () =>
-                                    updateMemberRole({
+                        <p className="mt-1 text-muted-foreground type-label-sm">
+                          {member.email || "No email on profile"}
+                        </p>
+                      </div>
+                      <div className="flex flex-wrap items-center gap-2 md:justify-end">
+                        {canManageTeam && member.role !== "Owner" ? (
+                          <div className="w-full sm:w-40">
+                            <ProjectSelect
+                              label="Role"
+                              value={displayTeamRole(member.role)}
+                              options={teamRoleOptions
+                                .filter((role) => role !== "Owner")
+                                .map(displayTeamRole)}
+                              onChange={(role) =>
+                                runTeamAction("role", () =>
+                                  updateMemberRole({
+                                    teamId: teamData.workspace._id,
+                                    memberId: member._id,
+                                    role: serverTeamRole(role),
+                                  })
+                                )
+                              }
+                              compact
+                            />
+                          </div>
+                        ) : (
+                          Object.entries(member.permissions)
+                            .filter(([, enabled]) => enabled)
+                            .slice(0, 4)
+                            .map(([permission]) => (
+                              <OwnedBadge key={permission} variant="secondary">
+                                {permission}
+                              </OwnedBadge>
+                            ))
+                        )}
+                        {canManageTeam && member.role !== "Owner" ? (
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <OwnedButton
+                                type="button"
+                                size="sm"
+                                variant="ghost"
+                                aria-label={`Permissions for ${member.name}`}
+                              >
+                                Permissions
+                              </OwnedButton>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="w-60">
+                              <DropdownMenuLabel>
+                                What {member.name} can do
+                              </DropdownMenuLabel>
+                              {TEAM_MEMBER_PERMISSION_LABELS.map(
+                                ([permission, label]) => (
+                                  <DropdownMenuCheckboxItem
+                                    key={permission}
+                                    checked={Boolean(
+                                      member.permissions[permission]
+                                    )}
+                                    onSelect={(event) => event.preventDefault()}
+                                    onCheckedChange={(checked) =>
+                                      runTeamAction("permission", () =>
+                                        updateMemberPermissions({
+                                          teamId: teamData.workspace._id,
+                                          memberId: member._id,
+                                          permissions: {
+                                            ...member.permissions,
+                                            [permission]: checked === true,
+                                          },
+                                        })
+                                      )
+                                    }
+                                  >
+                                    {label}
+                                  </DropdownMenuCheckboxItem>
+                                )
+                              )}
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        ) : null}
+                        {canManageTeam && member.role !== "Owner" ? (
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <OwnedButton
+                                type="button"
+                                size="icon-sm"
+                                variant="ghost"
+                                disabled={Boolean(busyAction)}
+                                aria-label={`More actions for ${member.name}`}
+                              >
+                                <MoreHorizontal />
+                              </OwnedButton>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              {member.status === "active" ? (
+                                <DropdownMenuItem
+                                  onSelect={async () => {
+                                    if (
+                                      await confirm({
+                                        title: `Transfer workspace ownership to ${member.name}?`,
+                                        description:
+                                          "Workspace billing will not transfer. The current owner's personal Clerk subscription remains separate; manage or cancel it in Clerk as needed.",
+                                        confirmLabel: "Transfer ownership",
+                                        destructive: true,
+                                      })
+                                    ) {
+                                      void runTeamAction("transfer", () =>
+                                        transferOwnership({
+                                          teamId: teamData.workspace._id,
+                                          memberId: member._id,
+                                        })
+                                      );
+                                    }
+                                  }}
+                                >
+                                  Transfer ownership
+                                </DropdownMenuItem>
+                              ) : null}
+                              <DropdownMenuItem
+                                variant="destructive"
+                                onSelect={() =>
+                                  runTeamAction("remove", () =>
+                                    removeMember({
                                       teamId: teamData.workspace._id,
                                       memberId: member._id,
-                                      role: serverTeamRole(role),
                                     })
                                   )
                                 }
-                                compact
-                              />
-                            </div>
-                          ) : (
-                            Object.entries(member.permissions)
-                              .filter(([, enabled]) => enabled)
-                              .slice(0, 4)
-                              .map(([permission]) => (
-                                <OwnedBadge
-                                  key={permission}
-                                  variant="secondary"
-                                >
-                                  {permission}
-                                </OwnedBadge>
-                              ))
-                          )}
-                          {canManageTeam && member.role !== "Owner" ? (
-                            <div className="grid w-full gap-2 sm:grid-cols-2">
-                              {TEAM_MEMBER_PERMISSION_LABELS.map(
-                                ([permission, label]) => (
-                                  <OwnedLabel
-                                    key={permission}
-                                    className="flex items-center gap-2 text-muted-foreground type-label-sm"
-                                  >
-                                    <OwnedSwitch
-                                      checked={Boolean(
-                                        member.permissions[permission]
-                                      )}
-                                      aria-label={`${label} for ${member.name}`}
-                                      onCheckedChange={(checked) =>
-                                        runTeamAction("permission", () =>
-                                          updateMemberPermissions({
-                                            teamId: teamData.workspace._id,
-                                            memberId: member._id,
-                                            permissions: {
-                                              ...member.permissions,
-                                              [permission]: checked,
-                                            },
-                                          })
-                                        )
-                                      }
-                                    />
-                                    {label}
-                                  </OwnedLabel>
-                                )
-                              )}
-                            </div>
-                          ) : null}
-                          {canManageTeam &&
-                          member.status === "active" &&
-                          member.role !== "Owner" ? (
-                            <OwnedButton
-                              type="button"
-                              size="sm"
-                              variant="outline"
-                              disabled={Boolean(busyAction)}
-                              onClick={async () => {
-                                if (
-                                  await confirm({
-                                    title: `Transfer workspace ownership to ${member.name}?`,
-                                    description:
-                                      "Workspace billing will not transfer. The current owner's personal Clerk subscription remains separate; manage or cancel it in Clerk as needed.",
-                                    confirmLabel: "Transfer ownership",
-                                    destructive: true,
-                                  })
-                                ) {
-                                  void runTeamAction("transfer", () =>
-                                    transferOwnership({
-                                      teamId: teamData.workspace._id,
-                                      memberId: member._id,
-                                    })
-                                  );
-                                }
-                              }}
-                            >
-                              Transfer ownership
-                            </OwnedButton>
-                          ) : null}
-                          {canManageTeam && member.role !== "Owner" ? (
-                            <OwnedButton
-                              type="button"
-                              size="sm"
-                              variant="ghost"
-                              disabled={Boolean(busyAction)}
-                              onClick={() =>
-                                runTeamAction("remove", () =>
-                                  removeMember({
-                                    teamId: teamData.workspace._id,
-                                    memberId: member._id,
-                                  })
-                                )
-                              }
-                              className="text-destructive hover:bg-destructive/10 hover:text-destructive"
-                            >
-                              {member.status === "invited"
-                                ? "Cancel Invite"
-                                : "Remove"}
-                            </OwnedButton>
-                          ) : null}
-                        </div>
-                      </article>
-                    ))}
-                  </div>
+                              >
+                                {member.status === "invited"
+                                  ? "Cancel invite"
+                                  : "Remove from workspace"}
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        ) : null}
+                      </div>
+                    </article>
+                  ))}
+                </div>
 
-                  {canManageTeam ? (
-                    <div className="border-t border-line-row p-5">
-                      <h3 className="type-label">Invite member</h3>
-                      <div className="mt-3 grid items-end gap-3 md:grid-cols-[minmax(0,1fr)_160px_120px]">
-                        <FieldLayout
-                          label="Email"
-                          error={
-                            inviteForm.email.trim() &&
-                            !isValidEmail(inviteForm.email)
-                              ? "Enter a valid email address."
-                              : undefined
-                          }
-                        >
-                          <OwnedInput
-                            type="email"
-                            value={inviteForm.email}
-                            onChange={(event) =>
-                              setInviteForm({
-                                ...inviteForm,
-                                email: event.target.value,
-                              })
-                            }
-                          />
-                        </FieldLayout>
-                        <ProjectSelect
-                          label="Role"
-                          value={inviteForm.role}
-                          options={teamRoleOptions
-                            .filter((role) => role !== "Owner")
-                            .map(displayTeamRole)}
-                          onChange={(value) =>
+                {canManageTeam ? (
+                  <div className="border-t border-line-row p-5">
+                    <h3 className="type-label">Invite member</h3>
+                    <div className="mt-3 grid items-end gap-3 md:grid-cols-[minmax(0,1fr)_160px_120px]">
+                      <FieldLayout
+                        label="Email"
+                        error={
+                          inviteForm.email.trim() &&
+                          !isValidEmail(inviteForm.email)
+                            ? "Enter a valid email address."
+                            : undefined
+                        }
+                      >
+                        <OwnedInput
+                          type="email"
+                          value={inviteForm.email}
+                          onChange={(event) =>
                             setInviteForm({
                               ...inviteForm,
-                              role: value,
+                              email: event.target.value,
                             })
                           }
                         />
+                      </FieldLayout>
+                      <ProjectSelect
+                        label="Role"
+                        value={inviteForm.role}
+                        options={teamRoleOptions
+                          .filter((role) => role !== "Owner")
+                          .map(displayTeamRole)}
+                        onChange={(value) =>
+                          setInviteForm({
+                            ...inviteForm,
+                            role: value,
+                          })
+                        }
+                      />
+                      <OwnedButton
+                        type="button"
+                        variant="outline"
+                        disabled={Boolean(busyAction) || !inviteEmailIsValid}
+                        onClick={() =>
+                          runTeamAction("invite", async () => {
+                            await inviteMember({
+                              teamId: teamData.workspace._id,
+                              email: inviteForm.email,
+                              role: serverTeamRole(inviteForm.role),
+                            });
+                            setInviteForm({ email: "", role: "Editor" });
+                          })
+                        }
+                      >
+                        Invite
+                      </OwnedButton>
+                    </div>
+                  </div>
+                ) : null}
+              </ContentSection>
+            ) : null}
+            {teamView === "comments" ? (
+              <ContentSection
+                title="Project comments"
+                description="Leave notes for the team. Use @name or @emailname to notify someone."
+                actions={
+                  <div className="w-full md:w-64">
+                    <ProjectSelect
+                      label="Project"
+                      value={selectedProject?.id ?? ""}
+                      options={teamProjects.map((project) => project.id)}
+                      labels={Object.fromEntries(
+                        teamProjects.map((project) => [
+                          project.id,
+                          project.title,
+                        ])
+                      )}
+                      onChange={setSelectedProjectId}
+                    />
+                  </div>
+                }
+                bodyClassName="grid gap-4"
+              >
+                {selectedProject ? (
+                  <div className="grid gap-4">
+                    <div className="rounded-soft bg-well px-3 py-2">
+                      <p className="type-label">{selectedProject.title}</p>
+                      <p className="mt-1 text-muted-foreground type-label-sm">
+                        {selectedProject.client || "No client"} ·{" "}
+                        {selectedProject.status} · Due{" "}
+                        {formatDate(
+                          selectedProject.dueDate,
+                          settings.dateFormat
+                        )}
+                      </p>
+                    </div>
+                    <div
+                      className="grid max-h-[min(320px,40dvh)] gap-3 overflow-y-auto overscroll-contain"
+                      aria-live="polite"
+                    >
+                      {projectComments === undefined ? (
+                        <p className="text-muted-foreground type-body">
+                          Loading comments...
+                        </p>
+                      ) : projectComments.length ? (
+                        projectComments.map((comment) => (
+                          <article key={comment._id} className="rule-row pb-3">
+                            <p className="type-label">
+                              {comment.authorName}{" "}
+                              <time className="text-muted-foreground type-label-sm">
+                                {formatActivityTime(comment.createdAt)}
+                              </time>
+                            </p>
+                            {comment.timecode ? (
+                              <span className="mt-1 inline-flex items-center gap-1 rounded-inner bg-tile px-1.5 py-0.5 font-mono text-text-1 type-label-sm">
+                                <Clock3
+                                  aria-hidden="true"
+                                  className="size-3.5"
+                                />
+                                {comment.timecode}
+                              </span>
+                            ) : null}
+                            <p className="mt-2 whitespace-pre-wrap type-body">
+                              {comment.body}
+                            </p>
+                          </article>
+                        ))
+                      ) : (
+                        <EmptyPanel
+                          title="No project comments yet"
+                          body="Team notes for this project will appear here in real time."
+                        />
+                      )}
+                    </div>
+                    {canCommentProjects ? (
+                      <div className="grid items-start gap-3 md:grid-cols-[180px_minmax(0,1fr)_112px]">
+                        <FieldLayout
+                          label="Timecode (optional)"
+                          description="MM:SS or HH:MM:SS"
+                        >
+                          <OwnedInput
+                            value={commentTimecode}
+                            placeholder="00:12"
+                            maxLength={8}
+                            inputMode="text"
+                            onChange={(event) =>
+                              setCommentTimecode(event.target.value)
+                            }
+                          />
+                        </FieldLayout>
+                        <FieldLayout
+                          label="Project comment"
+                          description={`${commentBody.length}/${TEAM_PROJECT_COMMENT_LIMIT} characters`}
+                        >
+                          <OwnedTextarea
+                            value={commentBody}
+                            rows={2}
+                            {...{ maxLength: TEAM_PROJECT_COMMENT_LIMIT }}
+                            onChange={(event) =>
+                              setCommentBody(event.target.value)
+                            }
+                          />
+                        </FieldLayout>
                         <OwnedButton
                           type="button"
-                          variant="outline"
-                          disabled={Boolean(busyAction) || !inviteEmailIsValid}
+                          className="md:mt-6"
+                          disabled={Boolean(busyAction) || !commentBody.trim()}
                           onClick={() =>
-                            runTeamAction("invite", async () => {
-                              await inviteMember({
+                            runTeamAction("comment", async () => {
+                              const normalizedTimecode =
+                                normalizeOptionalTimecode(commentTimecode);
+                              await addProjectComment({
                                 teamId: teamData.workspace._id,
-                                email: inviteForm.email,
-                                role: serverTeamRole(inviteForm.role),
+                                projectId: selectedProject.id,
+                                body: commentBody,
+                                ...(normalizedTimecode
+                                  ? { timecode: normalizedTimecode }
+                                  : {}),
                               });
-                              setInviteForm({ email: "", role: "Editor" });
+                              trackOptionalEvent("comment_added", {
+                                surface: "team",
+                              });
+                              setCommentBody("");
+                              setCommentTimecode("");
                             })
                           }
                         >
-                          Invite
+                          Post
                         </OwnedButton>
                       </div>
-                    </div>
-                  ) : null}
-                </ContentSection>
-
-                <ContentSection
-                  title="Project Comments"
-                  description="Leave notes for the team. Use @name or @emailname to notify someone."
-                  actions={
-                    <div className="w-full md:w-64">
-                      <ProjectSelect
-                        label="Project"
-                        value={selectedProject?.id ?? ""}
-                        options={teamProjects.map((project) => project.id)}
-                        labels={Object.fromEntries(
-                          teamProjects.map((project) => [
-                            project.id,
-                            project.title,
-                          ])
-                        )}
-                        onChange={setSelectedProjectId}
-                      />
-                    </div>
-                  }
-                  bodyClassName="grid gap-4"
-                >
-                  {selectedProject ? (
-                    <div className="grid gap-4">
-                      <div className="rounded-md border border-line-row bg-well p-3">
-                        <p className="type-label">{selectedProject.title}</p>
-                        <p className="mt-1 text-muted-foreground type-label-sm">
-                          {selectedProject.client || "No client"} ·{" "}
-                          {selectedProject.status} · Due{" "}
-                          {formatDate(
-                            selectedProject.dueDate,
-                            settings.dateFormat
-                          )}
-                        </p>
-                      </div>
-                      <div
-                        className="grid max-h-[min(320px,40dvh)] gap-3 overflow-y-auto overscroll-contain"
-                        aria-live="polite"
-                      >
-                        {projectComments === undefined ? (
-                          <p className="text-muted-foreground type-body">
-                            Loading comments...
-                          </p>
-                        ) : projectComments.length ? (
-                          projectComments.map((comment) => (
-                            <article
-                              key={comment._id}
-                              className="rounded-md border border-line-row bg-well p-3"
-                            >
-                              <p className="type-label">
-                                {comment.authorName}{" "}
-                                <time className="text-muted-foreground type-label-sm">
-                                  {formatActivityTime(comment.createdAt)}
-                                </time>
-                              </p>
-                              {comment.timecode ? (
-                                <span className="mt-2 inline-flex items-center gap-1 rounded-md bg-primary/15 px-2 py-1 text-primary type-label-sm">
-                                  <Clock3
-                                    aria-hidden="true"
-                                    className="size-3.5"
-                                  />
-                                  {comment.timecode}
-                                </span>
-                              ) : null}
-                              <p className="mt-2 whitespace-pre-wrap type-body">
-                                {comment.body}
-                              </p>
-                            </article>
-                          ))
-                        ) : (
-                          <EmptyPanel
-                            title="No project comments yet"
-                            body="Team notes for this project will appear here in real time."
-                          />
-                        )}
-                      </div>
-                      {canCommentProjects ? (
-                        <div className="grid items-start gap-3 md:grid-cols-[180px_minmax(0,1fr)_112px]">
-                          <FieldLayout
-                            label="Timecode (optional)"
-                            description="MM:SS or HH:MM:SS"
-                          >
-                            <OwnedInput
-                              value={commentTimecode}
-                              placeholder="00:12"
-                              maxLength={8}
-                              inputMode="text"
-                              onChange={(event) =>
-                                setCommentTimecode(event.target.value)
-                              }
-                            />
-                          </FieldLayout>
-                          <FieldLayout
-                            label="Project comment"
-                            description={`${commentBody.length}/${TEAM_PROJECT_COMMENT_LIMIT} characters`}
-                          >
-                            <OwnedTextarea
-                              value={commentBody}
-                              rows={2}
-                              {...{ maxLength: TEAM_PROJECT_COMMENT_LIMIT }}
-                              onChange={(event) =>
-                                setCommentBody(event.target.value)
-                              }
-                            />
-                          </FieldLayout>
-                          <OwnedButton
-                            type="button"
-                            className="md:mt-6"
-                            disabled={
-                              Boolean(busyAction) || !commentBody.trim()
-                            }
-                            onClick={() =>
-                              runTeamAction("comment", async () => {
-                                const normalizedTimecode =
-                                  normalizeOptionalTimecode(commentTimecode);
-                                await addProjectComment({
-                                  teamId: teamData.workspace._id,
-                                  projectId: selectedProject.id,
-                                  body: commentBody,
-                                  ...(normalizedTimecode
-                                    ? { timecode: normalizedTimecode }
-                                    : {}),
-                                });
-                                trackOptionalEvent("comment_added", {
-                                  surface: "team",
-                                });
-                                setCommentBody("");
-                                setCommentTimecode("");
-                              })
-                            }
-                          >
-                            Post
-                          </OwnedButton>
-                        </div>
-                      ) : null}
-                    </div>
-                  ) : (
-                    <EmptyPanel
-                      title="No team projects yet"
-                      body="Create a team project to start leaving shared comments."
-                    />
-                  )}
-                </ContentSection>
-              </div>
-            }
-            secondary={
-              <aside className="grid min-w-0 content-start gap-4">
+                    ) : null}
+                  </div>
+                ) : (
+                  <EmptyPanel
+                    title="No team projects yet"
+                    body="Create a team project to start leaving shared comments."
+                  />
+                )}
+              </ContentSection>
+            ) : null}
+            {teamView === "inbox" ? (
+              <div className="grid min-w-0 items-start gap-4 lg:grid-cols-2">
                 <ContentSection
                   title="Notifications"
                   description="Unread mentions and project updates that need your attention."
@@ -859,14 +872,14 @@ export function TeamDesignPage({
                         key={notification._id}
                         className={
                           notification.read
-                            ? "flex justify-between gap-3 rounded-md border border-line-row p-3"
-                            : "flex justify-between gap-3 rounded-md border border-primary bg-selected p-3"
+                            ? "flex justify-between gap-3 rule-row px-3 py-2.5"
+                            : "flex justify-between gap-3 rounded-soft bg-selected px-3 py-2.5"
                         }
                       >
                         <div className="min-w-0">
                           <p className="type-label">{notification.message}</p>
                           {notification.projectId ? (
-                            <p className="mt-1 text-primary type-label-sm">
+                            <p className="mt-1 text-text-2 type-label-sm">
                               Project:{" "}
                               {teamProjectLabel(notification.projectId)}
                             </p>
@@ -930,12 +943,12 @@ export function TeamDesignPage({
                     teamData.activity.map((activity) => (
                       <article
                         key={activity._id}
-                        className="rounded-md border-l-2 border-primary bg-well p-3"
+                        className="rule-row px-3 py-2.5"
                       >
                         <p className="type-label">{activity.message}</p>
                         {activity.projectId ? (
                           <div className="mt-1 flex flex-wrap items-center gap-2">
-                            <p className="text-primary type-label-sm">
+                            <p className="text-text-2 type-label-sm">
                               Project: {teamProjectLabel(activity.projectId)}
                             </p>
                             {teamProjectTitles[activity.projectId] ? (
@@ -965,9 +978,9 @@ export function TeamDesignPage({
                     />
                   )}
                 </ContentSection>
-              </aside>
-            }
-          />
+              </div>
+            ) : null}
+          </div>
         )}
       </PageContent>
     </WorkspacePage>
