@@ -6,13 +6,11 @@ import {
   type ChartConfig,
   type ChartType,
   type Margins,
-  useRevision,
 } from "./chart-context";
 import type { CommonChart } from "./common-context";
-import type { BloomInput } from "./dither-paint";
 import type { Seed } from "./palette";
-import { seedOfColor } from "./palette";
-import { type PieSlice, pieSlices, type RadarAxis, radarAxes } from "./polar";
+import { seedOfColor, useChartPalette } from "./palette";
+import { type PieSlice, pieSlices, radarAxes, type RadarAxis } from "./polar";
 import type { Dimensions } from "./use-chart-dimensions";
 
 type Row = Record<string, unknown>;
@@ -34,12 +32,6 @@ export type PolarChartContextValue = {
   center: { x: number; y: number };
   outerRadius: number;
   innerRadius: number;
-  animate: boolean;
-  animationDuration: number;
-  revision: number;
-  bloom: BloomInput;
-  bloomOnHover: boolean;
-
   seedOf: (key: string) => Seed;
   variantOf: (key: string) => AreaVariant;
   registerVariant: (key: string, variant: AreaVariant) => void;
@@ -99,11 +91,6 @@ export function usePolarController({
   innerRadiusRatio,
   dimensions,
   margins,
-  animate = true,
-  animationDuration = 900,
-  replayToken = 0,
-  bloom = "off",
-  bloomOnHover = false,
   defaultSelectedDataKey = null,
   onSelectionChange,
 }: {
@@ -115,11 +102,6 @@ export function usePolarController({
   innerRadiusRatio: number;
   dimensions: Dimensions;
   margins: Margins;
-  animate?: boolean;
-  animationDuration?: number;
-  replayToken?: number;
-  bloom?: BloomInput;
-  bloomOnHover?: boolean;
   defaultSelectedDataKey?: string | null;
   onSelectionChange?: (key: string | null) => void;
 }): PolarChartContextValue {
@@ -132,7 +114,7 @@ export function usePolarController({
 
   // Memoized: drives `pie`/`radar`/`common` — a fresh array would bust them.
   const configKeys = useMemo(() => Object.keys(config), [config]);
-  const revision = useRevision(data, replayToken);
+  const palette = useChartPalette();
 
   const [selectedDataKey, setSelectedDataKey] = useState<string | null>(
     defaultSelectedDataKey
@@ -194,8 +176,8 @@ export function usePolarController({
 
   // Stable so `common` and the value stay stable; re-created only on config.
   const seedOf = useCallback(
-    (key: string) => seedOfColor(config[key]?.color ?? "grey"),
-    [config]
+    (key: string) => seedOfColor(config[key]?.color ?? "neutral", palette),
+    [config, palette]
   );
   // "*" is the pie-wide variant set by <Pie>; radar registers per series key.
   const variantOf = useCallback(
@@ -323,11 +305,6 @@ export function usePolarController({
       center: { x: centerX, y: centerY },
       outerRadius,
       innerRadius,
-      animate,
-      animationDuration,
-      revision,
-      bloom,
-      bloomOnHover,
       seedOf,
       variantOf,
       registerVariant,
@@ -358,11 +335,6 @@ export function usePolarController({
       centerY,
       outerRadius,
       innerRadius,
-      animate,
-      animationDuration,
-      revision,
-      bloom,
-      bloomOnHover,
       seedOf,
       variantOf,
       registerVariant,

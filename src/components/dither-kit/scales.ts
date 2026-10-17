@@ -72,11 +72,20 @@ export function buildXScale(length: number, plotWidth: number) {
     .range([0, plotWidth]);
 }
 
-/** Banded x for bar categories — each index owns a slot of `bandwidth` width. */
+/**
+ * Banded x for bar categories — each index owns a slot of `bandwidth` width.
+ * Slots are capped so a lone category (or a few on a very wide plot) renders as
+ * a normal bar in the middle instead of a full-width block, and the band is
+ * centred on whatever width it uses.
+ */
+export const MAX_BAND_STEP = 96;
+
 export function buildBandScale(length: number, plotWidth: number) {
+  const usable = Math.min(plotWidth, Math.max(length, 1) * MAX_BAND_STEP);
+  const offset = (plotWidth - usable) / 2;
   return scaleBand<number>()
     .domain(Array.from({ length }, (_, i) => i))
-    .range([0, plotWidth])
+    .range([offset, offset + usable])
     .paddingInner(0.28)
     .paddingOuter(0.18);
 }

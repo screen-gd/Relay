@@ -1,11 +1,10 @@
 "use client";
 
-import { useConvexAuth, usePaginatedQuery } from "convex/react";
 import { History } from "@/components/icons";
-import { useMemo, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
+import { useConvexAuth, usePaginatedQuery } from "convex/react";
+import { useMemo, useState } from "react";
 
-import { api } from "../../../convex/_generated/api";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -20,6 +19,7 @@ import {
 import { money } from "@/features/routes/utils/number-utils";
 import { useData } from "@/lib/data-context";
 import { cn } from "@/lib/utils";
+import { api } from "../../../convex/_generated/api";
 import { useProjectAccess } from "./project-access";
 import { projectLink } from "./project-view";
 
@@ -97,8 +97,8 @@ export function ProjectHistoryApplication() {
         description="Delivered and paid, archived, and cancelled Projects."
         actions={
           <Button
-            variant="outline"
-            className="h-9"
+            variant="secondary"
+            className=""
             onClick={() => void navigate({ to: "/projects" })}
           >
             Projects
@@ -129,8 +129,8 @@ export function ProjectHistoryApplication() {
             footer={
               cloud && history.status !== "Exhausted" ? (
                 <Button
-                  variant="outline"
-                  className="h-9"
+                  variant="secondary"
+                  className=""
                   disabled={history.status !== "CanLoadMore"}
                   onClick={() => history.loadMore(PAGE_SIZE)}
                 >
@@ -156,24 +156,24 @@ export function ProjectHistoryApplication() {
                     }
                   >
                     <span className="min-w-0">
-                      <span className="block truncate text-sm font-medium text-foreground">
+                      <span className="block truncate text-body font-medium text-[var(--text-primary)]">
                         {project.title}
                       </span>
-                      <span className="block truncate text-xs text-muted-foreground">
+                      <span className="block truncate text-meta text-[var(--text-meta)]">
                         {(project.clientId &&
                           clientNames.get(project.clientId)) ||
                           "No client"}
                       </span>
                     </span>
-                    <span className="hidden text-xs text-muted-foreground sm:block">
+                    <span className="hidden text-meta text-[var(--text-meta)] sm:block">
                       {formatDay(project.completedAt ?? project.updatedAt)}
                     </span>
-                    <span className="hidden text-right text-sm tabular-nums text-foreground sm:block">
+                    <span className="hidden text-right text-body tabular-nums text-[var(--text-primary)] sm:block">
                       {project.earnings > 0
                         ? money(project.earnings, settings.currencyCode)
                         : ""}
                     </span>
-                    <span className="text-right text-xs text-muted-foreground">
+                    <span className="text-right text-meta text-[var(--text-meta)]">
                       {rowLabel(project)}
                     </span>
                   </button>

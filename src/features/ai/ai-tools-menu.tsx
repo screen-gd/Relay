@@ -1,7 +1,6 @@
 "use client";
 
 import { LockKeyhole, Sparkles } from "@/components/icons";
-import { useLocation, useNavigate } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -11,6 +10,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useLocation, useNavigate } from "@tanstack/react-router";
 import { AiBadge, useAiAccount } from "./ai-availability";
 import { aiToolHref, aiTools } from "./ai-tools";
 
@@ -32,9 +32,9 @@ export function AiToolsMenu() {
           size="icon"
           title="AI tools"
           aria-label="AI tools"
-          className="text-[var(--app-ink)] transition-colors data-[state=open]:bg-[var(--app-active)]"
+          className="transition-colors"
         >
-          <Sparkles aria-hidden="true" className="size-[18px]" />
+          <Sparkles aria-hidden="true" className="size-4" />
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-72">
@@ -45,12 +45,15 @@ export function AiToolsMenu() {
         {aiTools.map((tool) => (
           <DropdownMenuItem
             key={tool.id}
-            className="items-start"
+            // Two lines per row: let the item grow instead of clipping them.
+            className="h-auto items-start py-2"
             onSelect={() => void navigate({ href: aiToolHref(tool, pathname) })}
           >
             <span className="grid min-w-0 gap-0.5">
               <span className="truncate">{tool.label}</span>
-              <span className="text-xs text-muted-foreground">{tool.home}</span>
+              <span className="text-meta text-[var(--text-meta)]">
+                {tool.home}
+              </span>
             </span>
           </DropdownMenuItem>
         ))}
@@ -65,7 +68,7 @@ export function AiToolsMenu() {
         ) : (
           <DropdownMenuItem
             onSelect={() => signIn()}
-            className="font-semibold text-[var(--app-highlight)]"
+            className="font-semibold text-[var(--text-primary)]"
           >
             Sign in to use AI
           </DropdownMenuItem>

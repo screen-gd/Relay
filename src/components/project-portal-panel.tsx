@@ -1,16 +1,16 @@
 "use client";
 
-import { useEffect, useMemo, useState, type ReactNode } from "react";
-import { useMutation, useQuery } from "convex/react";
-import { api } from "../../convex/_generated/api";
 import { ChevronRight, ExternalLink, RefreshCw } from "@/components/icons";
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
+import { useMutation, useQuery } from "convex/react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { api } from "../../convex/_generated/api";
 
-import { StatusDrafts } from "@/features/client-portals/internal/status-drafts";
+import { CapabilityUpgradePrompt } from "@/components/subscription-plans";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -24,17 +24,18 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
-import { CapabilityUpgradePrompt } from "@/components/subscription-plans";
 import { ContentSection } from "@/components/workspace-page";
-import { useProjectAccess } from "@/features/projects/project-access";
-import { useProjectOutputs } from "@/lib/project-output-data";
-import type { SettingsState, WorkItem } from "@/lib/types";
 import {
   draftFromPortal,
   useProjectPortal,
   type ProjectPortalDraft,
 } from "@/features/client-portals/internal/project-portal-data";
+import { StatusDrafts } from "@/features/client-portals/internal/status-drafts";
+import { useProjectAccess } from "@/features/projects/project-access";
+import { useProjectOutputs } from "@/lib/project-output-data";
+import type { SettingsState, WorkItem } from "@/lib/types";
 
 /** Aligns each portal setting label and hint with its control. */
 function PortalSettingRow({
@@ -49,9 +50,9 @@ function PortalSettingRow({
   return (
     <div className="grid gap-2 py-2 sm:grid-cols-[minmax(9rem,0.7fr)_minmax(0,1.3fr)] sm:items-center sm:gap-6">
       <div>
-        <p className="text-sm font-medium">{label}</p>
+        <p className="text-section">{label}</p>
         {hint ? (
-          <p className="mt-0.5 text-xs text-muted-foreground">{hint}</p>
+          <p className="mt-1 text-meta text-[var(--text-meta)]">{hint}</p>
         ) : null}
       </div>
       <div className="min-w-0">{children}</div>
@@ -380,12 +381,14 @@ export function ProjectPortalPanel({
 
   if (data.loading) {
     return (
-      <p
+      <div
         role="status"
-        className="py-8 text-center text-sm text-muted-foreground"
+        aria-label="Loading client portal settings"
+        className="grid gap-3"
       >
-        Loading Client Portal settings...
-      </p>
+        <Skeleton className="h-4 w-40" />
+        <Skeleton className="h-10 w-full" />
+      </div>
     );
   }
 
@@ -398,12 +401,9 @@ export function ProjectPortalPanel({
     : "Not published";
 
   return (
-    <div data-testid="project-portal-panel" className="grid gap-4">
+    <div data-testid="project-portal-panel" className="grid gap-10">
       {data.error || formError ? (
-        <p
-          role="alert"
-          className="bg-[var(--status-danger-bg)] px-4 py-3 text-sm text-[var(--status-danger)]"
-        >
+        <p role="alert" className="text-meta text-[var(--status-danger)]">
           {formError || data.error}
         </p>
       ) : null}
@@ -412,19 +412,24 @@ export function ProjectPortalPanel({
         titleId="project-portal-title"
         title="Client Portal"
         metadata={
-          <Badge variant="secondary" className="rounded-sm">
+          <Badge
+            status={data.portal?.status === "open" ? "success" : "neutral"}
+          >
             {statusLabel}
           </Badge>
         }
         footer={
           canEdit ? (
             <>
-              <p className="text-xs text-muted-foreground">
+              <p className="text-meta text-[var(--text-meta)]">
                 Client access stays scoped to this project.
               </p>
               <Button
+                pending={busy === "save"}
+                pendingLabel="Saving..."
                 type="button"
                 size="sm"
+                variant="secondary"
                 onClick={() => void savePortal()}
                 disabled={busy !== ""}
               >
@@ -455,35 +460,37 @@ export function ProjectPortalPanel({
                       readOnly
                       value={portalUrl}
                       aria-label="Client Portal link"
-                      className="min-w-0 flex-1 font-mono text-xs"
+                      className="min-w-0 flex-1 font-mono"
                     />
                     <Button
+                      pending={busy === "copy"}
+                      pendingLabel="Copying..."
                       type="button"
-                      variant="outline"
+                      variant="secondary"
                       onClick={() => void copyPortalLink()}
                       disabled={busy !== ""}
                     >
                       {busy === "copy" ? "Copying..." : "Copy"}
                     </Button>
-                    <Button asChild type="button" variant="outline">
+                    <Button asChild type="button" variant="secondary">
                       <a href={portalUrl} target="_blank" rel="noreferrer">
                         Open <ExternalLink aria-hidden="true" />
                       </a>
                     </Button>
                   </div>
                 ) : (
-                  <p className="text-xs text-muted-foreground">
+                  <p className="text-meta text-[var(--text-meta)]">
                     Link unavailable in this browser.
                   </p>
                 )}
                 {canEdit ? (
                   <div className="flex flex-wrap gap-2">
                     <Button
+                      pending={busy === "close"}
+                      pendingLabel="Closing..."
                       type="button"
                       size="sm"
-                      variant={
-                        data.portal.status === "open" ? "outline" : "default"
-                      }
+                      variant="secondary"
                       onClick={() =>
                         void changeOpen(data.portal?.status !== "open")
                       }
@@ -498,6 +505,8 @@ export function ProjectPortalPanel({
                             : "Open portal"}
                     </Button>
                     <Button
+                      pending={busy === "regenerate"}
+                      pendingLabel="Regenerating..."
                       type="button"
                       size="sm"
                       variant="ghost"
@@ -513,7 +522,7 @@ export function ProjectPortalPanel({
                 ) : null}
               </div>
             ) : (
-              <p className="text-sm text-muted-foreground">
+              <p className="text-meta text-[var(--text-meta)]">
                 Set the options below, then publish.
               </p>
             )}
@@ -535,8 +544,8 @@ export function ProjectPortalPanel({
             label="Project dates"
             hint="Choose which dates clients can see."
           >
-            <div className="flex flex-wrap gap-x-5 gap-y-2">
-              <Label className="flex items-center gap-2 text-sm font-normal">
+            <div className="flex flex-wrap gap-x-6 gap-y-2">
+              <Label className="flex items-center gap-2 text-body font-normal">
                 <Checkbox
                   checked={draft.showStartDate}
                   onCheckedChange={(checked) =>
@@ -546,7 +555,7 @@ export function ProjectPortalPanel({
                 />
                 Start date
               </Label>
-              <Label className="flex items-center gap-2 text-sm font-normal">
+              <Label className="flex items-center gap-2 text-body font-normal">
                 <Checkbox
                   checked={draft.showDueDate}
                   onCheckedChange={(checked) =>
@@ -567,7 +576,7 @@ export function ProjectPortalPanel({
                 {outputs.map((output) => (
                   <Label
                     key={output.id}
-                    className="flex items-center gap-2 text-sm font-normal"
+                    className="flex items-center gap-2 text-body font-normal"
                   >
                     <Checkbox
                       checked={selectedOutputs.has(output.id)}
@@ -575,14 +584,14 @@ export function ProjectPortalPanel({
                       disabled={!canEdit}
                     />
                     <span className="min-w-0 truncate">{output.title}</span>
-                    <span className="shrink-0 text-xs text-muted-foreground">
+                    <span className="shrink-0 text-meta text-[var(--text-meta)]">
                       {output.hasCurrentVersion ? "Ready" : "No version"}
                     </span>
                   </Label>
                 ))}
               </div>
             ) : (
-              <p className="text-sm text-muted-foreground">
+              <p className="text-meta text-[var(--text-meta)]">
                 No outputs to share.
               </p>
             )}
@@ -636,7 +645,7 @@ export function ProjectPortalPanel({
                   (!draft.pinProtected && Boolean(data.portal?.hasPin))
                 }
               />
-              <Label className="flex items-center gap-2 text-sm font-normal">
+              <Label className="flex items-center gap-2 text-body font-normal">
                 <Checkbox
                   checked={draft.pinProtected}
                   onCheckedChange={(checked) =>
@@ -650,21 +659,21 @@ export function ProjectPortalPanel({
           </PortalSettingRow>
         </div>
         <Collapsible className="mt-3">
-          <CollapsibleTrigger className="group inline-flex items-center gap-1 rounded-md outline-none focus-visible:ring-2 focus-visible:ring-[var(--app-accent)] text-[13px] text-muted-foreground hover:text-foreground">
+          <CollapsibleTrigger className="group inline-flex items-center gap-1 rounded-md text-body text-[var(--text-primary)]">
             <ChevronRight
               aria-hidden="true"
-              className="size-3.5 shrink-0 text-muted-foreground transition-transform group-data-[state=open]:rotate-90"
+              className="size-4 shrink-0 text-[var(--text-primary)] group-data-[state=open]:rotate-90"
             />
             Preview
           </CollapsibleTrigger>
-          <CollapsibleContent className="mt-3 space-y-2 rounded-lg bg-[var(--surface-inset)] p-4 text-sm">
+          <CollapsibleContent className="mt-3 space-y-2 text-body">
             <p className="font-semibold">{project.title}</p>
             {draft.publicNotes ? (
-              <p className="whitespace-pre-wrap text-muted-foreground">
+              <p className="whitespace-pre-wrap text-[var(--text-primary)]">
                 {draft.publicNotes}
               </p>
             ) : null}
-            <p className="text-muted-foreground">
+            <p className="font-mono text-meta text-[var(--text-meta)]">
               {[
                 draft.showStartDate ? `Start ${project.startDate}` : "",
                 draft.showDueDate ? `Due ${project.dueDate}` : "",
@@ -699,7 +708,7 @@ export function ProjectPortalPanel({
                 label="Publish"
                 hint="Show this project to signed-in clients."
               >
-                <Label className="flex items-center gap-2 text-sm font-normal">
+                <Label className="flex items-center gap-2 text-body font-normal">
                   <Checkbox
                     checked={hubSettings.published}
                     onCheckedChange={(checked) =>
@@ -728,7 +737,7 @@ export function ProjectPortalPanel({
                     />
                     <Button
                       type="button"
-                      variant="outline"
+                      variant="secondary"
                       onClick={() => void saveHubBranding()}
                       disabled={!accentColor}
                     >

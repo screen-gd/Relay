@@ -1,4 +1,10 @@
 import {
+  Check,
+  ChevronsUpDown,
+  Plus,
+  MoreHorizontal as RelayActionMenuIcon,
+} from "@/components/icons";
+import {
   AlertDialog as OwnedAlertDialog,
   AlertDialogAction as OwnedAlertDialogAction,
   AlertDialogCancel as OwnedAlertDialogCancel,
@@ -18,6 +24,7 @@ import {
   CommandItem as OwnedCommandItem,
   CommandList as OwnedCommandList,
 } from "@/components/ui/command";
+import { DatePicker } from "@/components/ui/date-picker";
 import {
   Dialog as OwnedDialog,
   DialogContent as OwnedDialogContent,
@@ -26,7 +33,12 @@ import {
   DialogHeader as OwnedDialogHeader,
   DialogTitle as OwnedDialogTitle,
 } from "@/components/ui/dialog";
-import { DatePicker } from "@/components/ui/date-picker";
+import {
+  DropdownMenu as RelayActionMenu,
+  DropdownMenuContent as RelayActionMenuContent,
+  DropdownMenuItem as RelayActionMenuItem,
+  DropdownMenuTrigger as RelayActionMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { FieldLayout } from "@/components/ui/field-layout";
 import { Input as OwnedInput } from "@/components/ui/input";
 import {
@@ -35,6 +47,15 @@ import {
   PopoverTrigger as OwnedPopoverTrigger,
 } from "@/components/ui/popover";
 import { Textarea as OwnedTextarea } from "@/components/ui/textarea";
+import { ProjectSelect } from "@/features/projects/project-select";
+import { getProjectTableDeletionWarning } from "@/features/projects/project-table-domain";
+import { normalizeChecklistCompleted } from "@/features/routes/utils/project-utils";
+import {
+  canonicalClientName,
+  canonicalWorkType,
+  findExistingClientName,
+  getTypeConfig,
+} from "@/features/routes/utils/work-type-utils";
 import {
   APPROVAL_STATUS_LABELS,
   FILE_CATEGORY_VALUES,
@@ -44,18 +65,8 @@ import {
 } from "@/lib/domain-values";
 import type { SettingsState, WorkItem } from "@/lib/types";
 import { workflowStagesFromLabels } from "@/lib/workflow-templates";
-import { normalizeChecklistCompleted } from "@/features/routes/utils/project-utils";
-import {
-  canonicalClientName,
-  canonicalWorkType,
-  findExistingClientName,
-  getTypeConfig,
-} from "@/features/routes/utils/work-type-utils";
-import { Check, ChevronsUpDown, Plus, Trash2 } from "@/components/icons";
 import { useState, type RefObject } from "react";
 import type { WorkspaceMemberOption } from "./project-view";
-import { ProjectSelect } from "@/features/projects/project-select";
-import { getProjectTableDeletionWarning } from "@/features/projects/project-table-domain";
 
 const statusOptions: ProjectStatus[] = [...PROJECT_STATUS_VALUES];
 
@@ -109,14 +120,14 @@ export function ProjectDialog({
       }}
     >
       <OwnedDialogContent
-        className="max-h-[min(94dvh,900px)] overflow-y-auto border-border bg-background text-foreground sm:max-w-2xl"
+        className="max-h-[min(94dvh,900px)] overflow-y-auto sm:max-w-2xl"
         onCloseAutoFocus={(event) => {
           event.preventDefault();
           returnFocusRef.current?.focus();
         }}
       >
         <OwnedDialogHeader>
-          <OwnedDialogTitle className="text-2xl">
+          <OwnedDialogTitle className="text-title">
             {editing ? "Edit Project" : "New Project"}
           </OwnedDialogTitle>
           <OwnedDialogDescription>
@@ -124,7 +135,7 @@ export function ProjectDialog({
             project.
           </OwnedDialogDescription>
         </OwnedDialogHeader>
-        <div className="grid gap-5">
+        <div className="grid gap-4">
           <FieldLayout label="Project name">
             <OwnedInput
               value={form.title}
@@ -204,7 +215,6 @@ export function ProjectDialog({
               onChange={(event) =>
                 onFormChange({ ...form, notes: event.target.value })
               }
-              density="comfortable"
             />
           </FieldLayout>
           <TemplateSetupEditor form={form} onFormChange={onFormChange} />
@@ -218,7 +228,7 @@ export function ProjectDialog({
             />
           ) : null}
           {formError ? (
-            <p role="alert" className="text-sm text-destructive">
+            <p role="alert" className="text-body text-[var(--status-danger)]">
               {formError}
             </p>
           ) : null}
@@ -262,14 +272,16 @@ function ProjectClientCombobox({
         <OwnedPopoverTrigger asChild>
           <OwnedButton
             type="button"
-            variant="outline"
+            variant="secondary"
             role="combobox"
             disabled={disabled}
             aria-expanded={open}
-            className="w-full justify-between font-normal"
+            className="w-full justify-between"
           >
             <span
-              className={value ? "truncate" : "truncate text-muted-foreground"}
+              className={
+                value ? "truncate" : "truncate text-[var(--text-meta)]"
+              }
             >
               {value ||
                 (options.length
@@ -282,7 +294,7 @@ function ProjectClientCombobox({
       </FieldLayout>
       <OwnedPopoverContent
         align="start"
-        className="w-[var(--radix-popover-trigger-width)] p-0"
+        className="w-[var(--radix-popover-trigger-width)]"
       >
         <OwnedCommand>
           <OwnedCommandInput
@@ -343,14 +355,14 @@ function ProjectAssigneeCombobox({
         <OwnedPopoverTrigger asChild>
           <OwnedButton
             type="button"
-            variant="outline"
+            variant="secondary"
             role="combobox"
             aria-expanded={open}
-            className="h-auto min-h-9 w-full justify-between whitespace-normal font-normal"
+            className="w-full justify-between whitespace-normal"
           >
             <span
               className={
-                selected.length ? "text-left" : "text-muted-foreground"
+                selected.length ? "text-left" : "text-[var(--text-meta)]"
               }
             >
               {selected.length
@@ -365,7 +377,7 @@ function ProjectAssigneeCombobox({
       </FieldLayout>
       <OwnedPopoverContent
         align="start"
-        className="w-[var(--radix-popover-trigger-width)] p-0"
+        className="w-[var(--radix-popover-trigger-width)]"
       >
         <OwnedCommand>
           <OwnedCommandInput placeholder="Search team members..." />
@@ -394,7 +406,7 @@ function ProjectAssigneeCombobox({
                       <span className="font-medium">
                         {option.name || option.email || "Team member"}
                       </span>
-                      <span className="text-xs text-muted-foreground">
+                      <span className="text-meta text-[var(--text-meta)]">
                         {option.role} · {option.email || "No email"}
                       </span>
                     </span>
@@ -426,11 +438,11 @@ function TemplateSetupEditor({
 
   const deliverables = form.templateDeliverables ?? [];
   return (
-    <section className="rounded-md border bg-muted/20 p-4">
+    <section className="rounded-md p-4">
       <div className="flex items-start justify-between gap-3">
         <div>
           <h3 className="font-semibold">Template Setup</h3>
-          <p className="mt-1 text-xs text-muted-foreground">
+          <p className="mt-1 text-meta text-[var(--text-meta)]">
             These are suggestions, not locked rules. Edit or remove anything.
           </p>
         </div>
@@ -462,12 +474,11 @@ function TemplateSetupEditor({
                 ),
               })
             }
-            density="comfortable"
           />
         </FieldLayout>
         <div>
           <div className="mb-2 flex items-center justify-between gap-2">
-            <h4 className="text-sm font-semibold">Suggested deliverables</h4>
+            <h4 className="text-body font-semibold">Suggested deliverables</h4>
             <OwnedButton
               type="button"
               size="sm"
@@ -543,23 +554,32 @@ function TemplateSetupEditor({
                     })
                   }
                 />
-                <OwnedButton
-                  type="button"
-                  size="icon"
-                  variant="ghost"
-                  aria-label={`Remove ${deliverable.title}`}
-                  onClick={() =>
-                    onFormChange({
-                      ...form,
-                      templateDeliverables: deliverables.filter(
-                        (_, itemIndex) => itemIndex !== index
-                      ),
-                    })
-                  }
-                  className="text-destructive"
-                >
-                  <Trash2 aria-hidden="true" />
-                </OwnedButton>
+
+                <RelayActionMenu>
+                  <RelayActionMenuTrigger asChild>
+                    <OwnedButton
+                      type="button"
+                      variant="ghost"
+                      size="icon-sm"
+                      aria-label={`Remove ${deliverable.title}`}
+                    >
+                      <RelayActionMenuIcon aria-hidden="true" />
+                    </OwnedButton>
+                  </RelayActionMenuTrigger>
+                  <RelayActionMenuContent align="end">
+                    <RelayActionMenuItem
+                      variant="destructive"
+                      onSelect={() =>
+                        onFormChange({
+                          ...form,
+                          templateDeliverables: deliverables.filter(
+                            (_, itemIndex) => itemIndex !== index
+                          ),
+                        })
+                      }
+                    >{`Remove ${deliverable.title}`}</RelayActionMenuItem>
+                  </RelayActionMenuContent>
+                </RelayActionMenu>
               </div>
             ))}
           </div>
@@ -583,7 +603,6 @@ function TemplateSetupEditor({
                 ),
               });
             }}
-            density="comfortable"
           />
         </FieldLayout>
       </div>
@@ -609,7 +628,7 @@ export function DeleteProjectDialog({
     >
       <OwnedAlertDialogContent
         size="sm"
-        className="border-border bg-background text-foreground"
+        className="bg-background text-[var(--text-primary)]"
       >
         <OwnedAlertDialogHeader>
           <OwnedAlertDialogTitle>Delete project?</OwnedAlertDialogTitle>

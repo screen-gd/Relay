@@ -19,8 +19,8 @@ export function PageContent({
       className={cn(
         "min-w-0",
         mode === "document"
-          ? "space-y-4"
-          : "flex min-h-0 flex-1 flex-col gap-4",
+          ? "space-y-(--space-section)"
+          : "flex min-h-0 flex-1 flex-col gap-(--space-section)",
         className
       )}
       {...props}

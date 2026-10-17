@@ -1,35 +1,24 @@
 # Responsive behavior
 
-## Purpose
+## Breakpoints
 
-Keep work usable from a 320px phone through a wide desktop without losing key data.
+Test at 320, 390, 768, 1024 and 1440px, in landscape, with touch, keyboard, 200% zoom and reduced motion.
 
-## Anatomy
+## Rules
 
-Use fluid content rails, CSS grid/flex, container-aware components, mobile sheets, horizontal-scroll data regions, prioritized cards, and filter summaries.
+| Width                 | Shell                                                                              | Page                                                                              |
+| --------------------- | ---------------------------------------------------------------------------------- | --------------------------------------------------------------------------------- |
+| `lg` and up (1024px+) | Frame, rail, panel, inset content panel                                            | Page bar on one row; inspector card beside the content                            |
+| Below `lg`            | No frame or rail; full-bleed `--surface-page`; bottom tab bar on `--surface-frame` | Page bar wraps filters to a second line; the inspector moves into a sheet         |
+| Below `sm` (640px)    | Same                                                                               | Gutters drop to 16px; the Primary action becomes the floating accent "New" button |
 
-## Behavior
-
-Collapse the sidebar; keep title, search, and primary action; move secondary actions to overflow; use deliberate table scroll or a complete prioritized list; keep selected detail in a sheet.
-
-## States
-
-Handle loading, empty, error, and dialogs within the viewport. Focused controls must remain visible when sticky headers or footers exist.
-
-## Responsive rules
-
-Test 320, 390, 768, 1024, and 1440px, landscape, touch, keyboard, 200% zoom, and reduced motion. Complex tables may scroll in two dimensions when necessary; other content must reflow.
-
-## Accessibility
-
-Do not hide essential fields or actions only to fit width. Label scroll regions and keep focus order aligned with the task order.
-
-## Preserved features
-
-Keep mobile project inspector sheets, responsive media/project layouts, calendar/timeline behavior, and shell mobile navigation.
-
-## Acceptance checks
-
+- Segmented tabs scroll sideways rather than wrapping.
+- Data tables either scroll horizontally inside a labeled region or switch to a prioritized list. Status, due date and the row's main action stay visible.
+- Coarse pointers get 48px targets and 16px input text.
+- Dialogs and sheets fit the viewport; sheets open from the bottom on phones.
 - No accidental page-level horizontal scroll below 400px.
-- Every feature has a tested small-screen action path.
-- Data tables announce their scroll or prioritized alternative.
+- Never hide essential fields or actions to fit a width.
+
+## Preserved
+
+Mobile project inspector sheets, responsive media and project layouts, calendar and timeline behavior, and the shell's mobile navigation.

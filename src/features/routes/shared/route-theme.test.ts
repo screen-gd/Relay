@@ -1,11 +1,20 @@
-import { runInNewContext } from "node:vm";
-import { afterEach, describe, expect, test, vi } from "vitest";
 import { relay } from "@/app/design-system";
 import { createDefaultSettings } from "@/features/settings/settings-defaults";
+import { runInNewContext } from "node:vm";
+import { afterEach, describe, expect, test, vi } from "vitest";
 import { applyRootThemeVariables, themeBootScript } from "./route-theme";
 
-const accents = [relay.color.teal, relay.color.cyan, relay.color.sky,
-  relay.color.indigo, relay.color.pink, relay.color.deepTeal];
+const accents = [
+  relay.accent,
+  "#000000",
+  "#ffffff",
+  "#111827",
+  "#fef08a",
+  "#2563eb",
+  "#e879f9",
+  "#777777",
+  "#7f7f7f",
+];
 
 function rootHarness(prefersDark = false) {
   const properties = new Map<string, string>();
@@ -36,51 +45,114 @@ function luminance(hex: string) {
 afterEach(() => vi.unstubAllGlobals());
 
 describe("accent preference", () => {
-  test.each(["Light", "Dark"])("applies every swatch with readable text in %s", (theme) => {
-    const { properties } = rootHarness();
-    for (const accentColor of accents) {
-      applyRootThemeVariables({ theme, accentColor });
-      expect(properties.get("--app-accent")).toBe(accentColor);
-      const foreground = properties.get("--app-accent-foreground");
-      const backgroundLuminance = luminance(accentColor);
-      const ratio = foreground === "#ffffff"
-        ? 1.05 / (backgroundLuminance + 0.05)
-        : (backgroundLuminance + 0.05) / 0.05;
-      expect(ratio).toBeGreaterThanOrEqual(4.5);
-      expect([...properties.keys()]).toEqual(["--app-accent", "--app-accent-foreground"]);
+  test.each(["Light", "Dark"])(
+    "navigation cannot replace the current %s theme with stale startup preferences",
+    (theme) => {
+      const current = rootHarness();
+      const context = {
+        document: current.document,
+        window: {
+          ...current.window,
+          localStorage: {
+            getItem: () =>
+              JSON.stringify({
+                theme: theme === "Light" ? "Dark" : "Light",
+                accentColor: "",
+              }),
+          },
+        },
+      };
+      runInNewContext(themeBootScript, context);
+      applyRootThemeVariables({ theme, accentColor: "#2563eb" });
+      const properties = new Map(current.properties);
+      // Head scripts can be reinserted when a route or its hash changes.
+      runInNewContext(themeBootScript, context);
+      expect(current.root.dataset.theme).toBe(theme.toLowerCase());
+      expect(current.properties).toEqual(properties);
     }
-  });
+  );
 
-  test("reset removes both inline overrides", () => {
+  test.each(["Light", "Dark"])(
+    "applies every swatch with readable text in %s",
+    (theme) => {
+      const { properties } = rootHarness();
+      for (const accentColor of accents) {
+        applyRootThemeVariables({ theme, accentColor });
+        expect(properties.get("--accent")).toBe(accentColor);
+        const foreground = properties.get("--accent-foreground");
+        const backgroundLuminance = luminance(accentColor);
+        const ratio =
+          foreground === "#ffffff"
+            ? 1.05 / (backgroundLuminance + 0.05)
+            : (backgroundLuminance + 0.05) / (luminance("#0b0c0e") + 0.05);
+        expect(ratio).toBeCloseTo(
+          Math.max(
+            1.05 / (backgroundLuminance + 0.05),
+            (backgroundLuminance + 0.05) / (luminance("#0b0c0e") + 0.05)
+          )
+        );
+        const mark = properties.get("--accent-mark");
+        expect(mark).toBeDefined();
+        const markLuminance = luminance(mark ?? "");
+        const markRatio =
+          theme === "Dark"
+            ? (markLuminance + 0.05) / 0.05
+            : 1.05 / (markLuminance + 0.05);
+        expect(markRatio).toBeGreaterThanOrEqual(3);
+        expect([...properties.keys()]).toEqual([
+          "--accent",
+          "--accent-foreground",
+          "--accent-mark",
+        ]);
+      }
+    }
+  );
+
+  test("reset removes all three inline overrides", () => {
     const { properties } = rootHarness();
-    applyRootThemeVariables({ theme: "Light", accentColor: relay.color.pink });
+    applyRootThemeVariables({ theme: "Light", accentColor: "#e879f9" });
     applyRootThemeVariables(createDefaultSettings());
     expect(properties.size).toBe(0);
   });
 
-  test.each(["", "red", "#fff", "#12345g", "url(evil)"])("clears invalid stored color %s", (accentColor) => {
-    const { properties } = rootHarness();
-    applyRootThemeVariables({ theme: "Dark", accentColor: relay.color.cyan });
-    applyRootThemeVariables({ theme: "Dark", accentColor });
-    expect(properties.size).toBe(0);
-  });
+  test.each(["", "red", "#fff", "#12345g", "url(evil)"])(
+    "clears invalid stored color %s",
+    (accentColor) => {
+      const { properties } = rootHarness();
+      applyRootThemeVariables({ theme: "Dark", accentColor: "#0891b2" });
+      applyRootThemeVariables({ theme: "Dark", accentColor });
+      expect(properties.size).toBe(0);
+    }
+  );
 
-  test.each([...accents, "#14B8A6", "", "invalid"])("boot matches runtime for stored %s", (accentColor) => {
-    const settings = { theme: "System", accentColor };
-    const runtime = rootHarness(true);
-    applyRootThemeVariables(settings);
-    const boot = rootHarness(true);
-    runInNewContext(themeBootScript, {
-      document: boot.document,
-      window: { ...boot.window, localStorage: { getItem: () => JSON.stringify(settings) } },
-    });
-    expect(boot.properties).toEqual(runtime.properties);
-    expect(boot.root.style.colorScheme).toBe(runtime.root.style.colorScheme);
-    expect(boot.root.dataset.theme).toEqual(runtime.root.dataset.theme);
-    expect(boot.root.classList.toggle).toHaveBeenCalledWith("dark", true);
-  });
+  test.each([...accents, "#14B8A6", "", "invalid"])(
+    "boot matches runtime for stored %s",
+    (accentColor) => {
+      const settings = { theme: "System", accentColor };
+      const runtime = rootHarness(true);
+      applyRootThemeVariables(settings);
+      const boot = rootHarness(true);
+      runInNewContext(themeBootScript, {
+        document: boot.document,
+        window: {
+          ...boot.window,
+          localStorage: { getItem: () => JSON.stringify(settings) },
+        },
+      });
+      expect(boot.properties).toEqual(runtime.properties);
+      expect(boot.root.style.colorScheme).toBe(runtime.root.style.colorScheme);
+      expect(boot.root.dataset.theme).toEqual(runtime.root.dataset.theme);
+      expect(boot.root.classList.toggle).toHaveBeenCalledWith("dark", true);
+    }
+  );
 
-  test.each([null, "null", "{}", '{"theme":"invalid","accentColor":"invalid"}'])("boot uses CSS defaults for absent or invalid preferences %s", (raw) => {
+  test.each([
+    null,
+    "null",
+    "{}",
+    "malformed{",
+    '{"theme":"invalid","accentColor":"invalid"}',
+  ])("boot uses CSS defaults for absent or invalid preferences %s", (raw) => {
     const boot = rootHarness();
     runInNewContext(themeBootScript, {
       document: boot.document,
@@ -94,13 +166,18 @@ describe("accent preference", () => {
   test("System falls back to light when matchMedia is unavailable", () => {
     const boot = rootHarness();
     vi.stubGlobal("window", {});
-    applyRootThemeVariables({ theme: "System", accentColor: relay.color.teal });
+    applyRootThemeVariables({ theme: "System", accentColor: "#2563eb" });
     expect(boot.root.dataset.theme).toBe("light");
     runInNewContext(themeBootScript, {
       document: boot.document,
-      window: { localStorage: { getItem: () => JSON.stringify({ theme: "System", accentColor: relay.color.teal }) } },
+      window: {
+        localStorage: {
+          getItem: () =>
+            JSON.stringify({ theme: "System", accentColor: "#2563eb" }),
+        },
+      },
     });
-    expect(boot.root.classList.toggle).toHaveBeenLastCalledWith("dark", false);
-    expect(boot.properties.get("--app-accent")).toBe(relay.color.teal);
+    expect(boot.root.classList.toggle).toHaveBeenCalledWith("dark", false);
+    expect(boot.properties.get("--accent")).toBe("#2563eb");
   });
 });

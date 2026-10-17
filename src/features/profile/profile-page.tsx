@@ -1,40 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
 import { RelayBrand } from "@/app/relay-brand";
-import {
-  accent,
-  successColor,
-  warningColor,
-} from "@/features/routes/shared/route-theme";
-import type { SettingsState, WorkItem } from "@/lib/types";
-import {
-  ContentSection,
-  MasterDetail,
-  MetricItem,
-  MetricStrip,
-  PageContent,
-  PageHeader,
-  SplitPane,
-  WorkspacePage,
-} from "@/components/workspace-page";
-import { Badge as OwnedBadge } from "@/components/ui/badge";
-import { Button as OwnedButton } from "@/components/ui/button";
-import { Card as OwnedCard } from "@/components/ui/card";
-import { FieldLayout } from "@/components/ui/field-layout";
-import { Input as OwnedInput } from "@/components/ui/input";
-import {
-  ToggleGroup as OwnedToggleGroup,
-  ToggleGroupItem as OwnedToggleGroupItem,
-} from "@/components/ui/toggle-group";
-import {
-  Select as OwnedSelect,
-  SelectContent as OwnedSelectContent,
-  SelectItem as OwnedSelectItem,
-  SelectTrigger as OwnedSelectTrigger,
-  SelectValue as OwnedSelectValue,
-} from "@/components/ui/select";
-import { Textarea as OwnedTextarea } from "@/components/ui/textarea";
 import {
   BadgeDollarSign,
   Building2,
@@ -49,7 +15,33 @@ import {
   Upload,
   Users,
 } from "@/components/icons";
-import { useProfileController } from "./profile-controller";
+import { Badge as OwnedBadge } from "@/components/ui/badge";
+import { Button as OwnedButton } from "@/components/ui/button";
+import { FieldLayout } from "@/components/ui/field-layout";
+import { Input as OwnedInput } from "@/components/ui/input";
+import {
+  Select as OwnedSelect,
+  SelectContent as OwnedSelectContent,
+  SelectItem as OwnedSelectItem,
+  SelectTrigger as OwnedSelectTrigger,
+  SelectValue as OwnedSelectValue,
+} from "@/components/ui/select";
+import {
+  TabsTrigger as OwnedChoiceTab,
+  Tabs as OwnedChoiceTabs,
+  TabsList as OwnedChoiceTabsList,
+} from "@/components/ui/tabs";
+import { Textarea as OwnedTextarea } from "@/components/ui/textarea";
+import {
+  ContentSection,
+  MasterDetail,
+  MetricItem,
+  MetricStrip,
+  PageContent,
+  PageHeader,
+  SplitPane,
+  WorkspacePage,
+} from "@/components/workspace-page";
 import { copyText } from "@/features/routes/shared/clipboard";
 import {
   dateTime,
@@ -59,7 +51,6 @@ import {
   todayDate,
 } from "@/features/routes/utils/date-utils";
 import { money, publicMetric } from "@/features/routes/utils/number-utils";
-import { isDoneStatus } from "@/features/routes/utils/status-utils";
 import {
   displayUsername,
   initials,
@@ -69,19 +60,17 @@ import {
   publicProfileSlug,
   sanitizeUsername,
 } from "@/features/routes/utils/profile-utils";
+import { isDoneStatus } from "@/features/routes/utils/status-utils";
+import { projectStatusTone } from "@/lib/project-status-style";
+import type { SettingsState, WorkItem } from "@/lib/types";
+import { useRef, useState } from "react";
 import {
   ProfileDetail,
   ProfileEmptyState,
   ProfileMetric,
   PublicProfileAvatar,
 } from "./profile-components";
-
-function projectTimelineColor(status: string) {
-  if (isDoneStatus(status)) return successColor;
-  if (status === "In Progress") return accent;
-  if (status === "Planned") return "var(--app-highlight)";
-  return warningColor;
-}
+import { useProfileController } from "./profile-controller";
 
 export function OrganizationProfilePage({
   projects,
@@ -114,7 +103,7 @@ export function OrganizationProfilePage({
         title="Organization Profile"
         description="Your team, its projects, and active work."
       />
-      <PageContent className="space-y-5">
+      <PageContent className="">
         <MetricStrip columns={4} aria-label="Organization metrics">
           <MetricItem
             icon={<Building2 aria-hidden="true" />}
@@ -147,48 +136,48 @@ export function OrganizationProfilePage({
           primary={
             <section
               aria-labelledby="organization-team-heading"
-              className="rounded-xl border border-border bg-card p-5 text-card-foreground shadow-[var(--app-shadow-1)]"
+              className="rounded-md p-4 text-[var(--text-primary)]"
             >
               <div className="flex items-center gap-2">
-                <Users className="size-5 text-primary" aria-hidden="true" />
+                <Users
+                  className="size-5 text-[var(--text-primary)]"
+                  aria-hidden="true"
+                />
                 <h2
                   id="organization-team-heading"
-                  className="text-xl font-semibold tracking-tight"
+                  className="text-metric font-semibold"
                 >
                   Team access
                 </h2>
               </div>
-              <p className="mt-1.5 text-[13px] text-muted-foreground">
+              <p className="mt-2 text-body text-[var(--text-meta)]">
                 Members and permissions are stored locally for this team.
               </p>
               {settings.teamMembers.length ? (
                 <ul
                   aria-label="Organization team members"
-                  className="mt-4 max-h-[min(460px,55dvh)] space-y-2.5 overflow-y-auto overscroll-contain pr-1"
+                  className="mt-4 max-h-[min(460px,55dvh)] space-y-3 overflow-y-auto overscroll-contain pr-1"
                 >
                   {settings.teamMembers.map((member) => (
                     <li
                       key={member.id}
-                      className="grid grid-cols-[38px_minmax(0,1fr)_auto] items-center gap-3 rounded-md border border-border bg-muted/30 p-2.5"
+                      className="grid grid-cols-[38px_minmax(0,1fr)_auto] items-center gap-3 rounded-md bg-transparent p-3"
                     >
                       <span
                         aria-hidden="true"
-                        className="grid size-9 place-items-center rounded-full bg-primary/10 text-sm font-semibold text-primary"
+                        className="grid size-9 place-items-center rounded-md bg-[var(--surface-active)] text-body font-semibold text-[var(--text-primary)]"
                       >
                         {initials(member.name)}
                       </span>
                       <span className="min-w-0">
-                        <span className="block truncate text-[13px] font-semibold">
+                        <span className="block truncate text-body font-semibold">
                           {member.name}
                         </span>
-                        <span className="mt-0.5 block truncate text-xs text-muted-foreground">
+                        <span className="mt-1 block truncate text-meta text-[var(--text-meta)]">
                           {member.email || "No email saved"}
                         </span>
                       </span>
-                      <OwnedBadge
-                        variant="outline"
-                        className="rounded-md bg-card"
-                      >
+                      <OwnedBadge variant="secondary" className="">
                         {member.role}
                       </OwnedBadge>
                     </li>
@@ -206,21 +195,21 @@ export function OrganizationProfilePage({
           secondary={
             <section
               aria-labelledby="organization-work-heading"
-              className="rounded-xl border border-border bg-card p-5 text-card-foreground shadow-[var(--app-shadow-1)]"
+              className="rounded-md p-4 text-[var(--text-primary)]"
             >
               <div className="flex items-center gap-2">
                 <FolderKanban
-                  className="size-5 text-primary"
+                  className="size-5 text-[var(--text-primary)]"
                   aria-hidden="true"
                 />
                 <div>
                   <h2
                     id="organization-work-heading"
-                    className="text-xl font-semibold tracking-tight"
+                    className="text-metric font-semibold"
                   >
                     Active organization work
                   </h2>
-                  <p className="mt-1 text-[13px] text-muted-foreground">
+                  <p className="mt-1 text-body text-[var(--text-meta)]">
                     Current queue across the studio.
                   </p>
                 </div>
@@ -228,7 +217,7 @@ export function OrganizationProfilePage({
               {activeProjects.length ? (
                 <ul
                   aria-label="Active organization projects"
-                  className="mt-4 max-h-[min(460px,55dvh)] divide-y divide-border overflow-y-auto overscroll-contain pr-1"
+                  className="mt-4 max-h-[min(460px,55dvh)] overflow-y-auto overscroll-contain pr-1"
                 >
                   {activeProjects.map((project) => (
                     <li
@@ -236,16 +225,16 @@ export function OrganizationProfilePage({
                       className="grid items-center gap-2 py-3 md:grid-cols-[minmax(0,1fr)_160px_130px] md:gap-4"
                     >
                       <span className="min-w-0">
-                        <span className="block truncate text-sm font-semibold">
+                        <span className="block truncate text-body font-semibold">
                           {project.title}
                         </span>
-                        <span className="mt-1 block truncate text-xs text-muted-foreground">
+                        <span className="mt-1 block truncate text-meta text-[var(--text-meta)]">
                           {project.client || project.workType}
                         </span>
                       </span>
                       <time
                         dateTime={project.dueDate}
-                        className="text-[13px] text-muted-foreground"
+                        className="text-body text-[var(--text-meta)]"
                       >
                         {formatDate(project.dueDate, settings.dateFormat)}
                       </time>
@@ -278,13 +267,13 @@ function OrganizationEmptyState({
   body: string;
 }) {
   return (
-    <div className="mt-4 grid min-h-40 place-items-center rounded-md border border-dashed border-border bg-muted/20 p-6 text-center">
+    <div className="mt-4 grid min-h-40 place-items-center rounded-md bg-transparent p-6 text-center">
       <div>
-        <span className="mx-auto grid size-10 place-items-center rounded-full bg-primary/10 text-primary [&_svg]:size-5">
+        <span className="mx-auto grid size-11 place-items-center rounded-md bg-[var(--surface-active)] text-[var(--text-primary)] [&_svg]:size-5">
           {icon}
         </span>
-        <h3 className="mt-3 text-sm font-semibold">{title}</h3>
-        <p className="mx-auto mt-1.5 max-w-md text-[13px] leading-relaxed text-muted-foreground">
+        <h3 className="mt-3 text-body font-semibold">{title}</h3>
+        <p className="mx-auto mt-2 max-w-md text-body text-[var(--text-meta)]">
           {body}
         </p>
       </div>
@@ -302,9 +291,9 @@ function OrganizationStatusBadge({ status }: { status: string }) {
             ? "destructive"
             : status === "In Progress"
               ? "secondary"
-              : "outline"
+              : "secondary"
       }
-      className="rounded-md px-2 py-1 font-semibold"
+      className=""
     >
       {status}
     </OwnedBadge>
@@ -380,13 +369,13 @@ export function ProfileDesignPage({
   }
 
   return (
-    <div className="mx-auto min-h-dvh w-full max-w-[1480px] bg-background px-4 py-5 text-foreground md:px-8 md:py-7 xl:px-10">
-      <header className="flex flex-col items-stretch justify-between gap-4 border-b border-border pb-5 sm:flex-row sm:items-center">
+    <div className="mx-auto min-h-dvh w-full max-w-[1480px] bg-background px-4 py-4 text-[var(--text-primary)] md:px-8 md:py-8 xl:px-10">
+      <header className="flex flex-col items-stretch justify-between gap-4 pb-4 sm:flex-row sm:items-center">
         <RelayBrand compact subtitle="Video editing tracker" />
         <OwnedButton
           type="button"
-          variant="outline"
-          className="min-h-10"
+          variant="secondary"
+          className=""
           onClick={shareProfile}
         >
           <Share2 aria-hidden="true" />
@@ -397,36 +386,36 @@ export function ProfileDesignPage({
         <p
           role="status"
           aria-live="polite"
-          className={`mb-1 text-right text-[13px] ${shareMessage.startsWith("Public profile") ? "text-primary" : "text-destructive"}`}
+          className={`mb-1 text-right text-body ${shareMessage.startsWith("Public profile") ? "text-[var(--text-primary)]" : "text-[var(--status-danger)]"}`}
         >
           {shareMessage}
         </p>
       ) : null}
 
-      <main className="mt-5">
+      <main className="mt-4">
         <section
           aria-labelledby="public-profile-name"
-          className="grid items-center gap-8 rounded-2xl border border-border bg-card p-5 text-card-foreground shadow-[var(--app-shadow-1)] md:p-8 lg:grid-cols-[minmax(0,1.3fr)_minmax(420px,0.8fr)] lg:gap-14"
+          className="grid items-center gap-8 rounded-md p-4 text-[var(--text-primary)] md:p-8 lg:grid-cols-[minmax(0,1.3fr)_minmax(420px,0.8fr)] lg:gap-12"
         >
           <div className="flex flex-col items-start gap-6 sm:flex-row sm:items-center">
-            <PublicProfileAvatar settings={settings} size={128} fontSize={36} />
+            <PublicProfileAvatar settings={settings} size={128} />
             <div>
               <h1
                 id="public-profile-name"
-                className="text-[34px] font-bold leading-[1.1] tracking-[-0.03em]"
+                className="text-display font-semibold"
               >
                 {profileDisplayName(settings)}
               </h1>
               {displayUsername(settings) ? (
-                <p className="mt-1.5 text-sm font-semibold text-primary">
+                <p className="mt-2 text-body font-semibold text-[var(--text-primary)]">
                   {displayUsername(settings)}
                 </p>
               ) : null}
-              <p className="mt-2 text-[15px]">{settings.profileTitle}</p>
-              <p className="mt-4 max-w-[420px] text-sm leading-relaxed text-muted-foreground">
+              <p className="mt-2 text-body">{settings.profileTitle}</p>
+              <p className="mt-4 max-w-[420px] text-body text-[var(--text-meta)]">
                 {settings.profileBio}
               </p>
-              <div className="mt-5 flex flex-wrap gap-x-4 gap-y-2 text-muted-foreground">
+              <div className="mt-4 flex flex-wrap gap-x-4 gap-y-2 text-[var(--text-meta)]">
                 <ProfileDetail
                   icon={<MapPin />}
                   text={settings.profileLocation}
@@ -435,7 +424,7 @@ export function ProfileDesignPage({
               </div>
             </div>
           </div>
-          <dl className="grid grid-cols-3 divide-x divide-border rounded-xl border bg-muted/20 py-4">
+          <dl className="grid grid-cols-3 rounded-md bg-transparent py-4">
             <ProfileMetric
               icon={<Play />}
               label="Active"
@@ -459,16 +448,13 @@ export function ProfileDesignPage({
 
         <section
           aria-labelledby="recent-work-heading"
-          className="mt-5 grid items-start gap-6 rounded-2xl border border-border bg-card p-5 text-card-foreground shadow-[var(--app-shadow-1)] md:p-8 xl:grid-cols-[240px_minmax(0,1fr)] xl:gap-12"
+          className="mt-10 grid items-start gap-6 rounded-md p-4 text-[var(--text-primary)] md:p-8 xl:grid-cols-[240px_minmax(0,1fr)] xl:gap-12"
         >
           <div className="xl:sticky xl:top-6">
-            <h2
-              id="recent-work-heading"
-              className="text-2xl font-semibold leading-tight tracking-[-0.025em]"
-            >
+            <h2 id="recent-work-heading" className="text-metric font-semibold">
               Recent work
             </h2>
-            <p className="mt-2 max-w-[230px] text-[13px] leading-relaxed text-muted-foreground">
+            <p className="mt-2 max-w-[230px] text-body text-[var(--text-meta)]">
               Recent delivery history and near-term work from the tracker.
             </p>
           </div>
@@ -477,54 +463,42 @@ export function ProfileDesignPage({
               className="relative md:pl-6"
               aria-label="Recent project timeline"
             >
-              <span
-                aria-hidden="true"
-                className="absolute bottom-3 left-2 top-3 hidden w-0.5 rounded-full bg-border md:block"
-              />
               {timeline.map((project) => (
                 <li
                   key={project.id}
-                  className="relative grid items-start gap-3 border-b py-5 last:border-b-0 md:grid-cols-[120px_minmax(0,1fr)_130px] md:gap-5"
+                  className="relative grid items-start gap-3 py-4 last:border-b-0 md:grid-cols-[120px_minmax(0,1fr)_130px] md:gap-4"
                 >
-                  <span
-                    aria-hidden="true"
-                    className="absolute left-[-24px] top-[22px] hidden size-3.5 rounded-full border-[3px] border-card ring-1 ring-border md:block"
-                    style={{
-                      backgroundColor: projectTimelineColor(project.status),
-                    }}
-                  />
                   <div>
-                    <p
-                      className="text-xs font-semibold"
-                      style={{ color: projectTimelineColor(project.status) }}
-                    >
+                    <OwnedBadge status={projectStatusTone(project.status)}>
                       {profileStatusLabel(project.status)}
-                    </p>
+                    </OwnedBadge>
                     <time
                       dateTime={project.dueDate}
-                      className="mt-1 block text-xs text-muted-foreground"
+                      className="mt-1 block text-meta text-[var(--text-meta)]"
                     >
                       {formatDate(project.dueDate, settings.dateFormat)}
                     </time>
                   </div>
                   <div className="min-w-0">
-                    <h3 className="text-base font-semibold">{project.title}</h3>
-                    <p className="mt-1 text-[13px] text-muted-foreground">
+                    <h3 className="text-title font-semibold">
+                      {project.title}
+                    </h3>
+                    <p className="mt-1 text-body text-[var(--text-meta)]">
                       {project.client || project.workType}
                     </p>
-                    <p className="mt-2 max-w-[620px] text-[13px] leading-relaxed text-muted-foreground">
+                    <p className="mt-2 max-w-[620px] text-body text-[var(--text-meta)]">
                       {project.notes || "No notes saved for this project."}
                     </p>
                   </div>
                   <div className="md:text-right">
-                    <p className="text-[13px] font-semibold">
+                    <p className="text-body font-semibold">
                       {Math.max(
                         1,
                         daysBetween(project.startDate, project.dueDate)
                       )}{" "}
                       days
                     </p>
-                    <p className="mt-1 text-xs text-muted-foreground">
+                    <p className="mt-1 text-meta text-[var(--text-meta)]">
                       turnaround
                     </p>
                   </div>
@@ -539,7 +513,7 @@ export function ProfileDesignPage({
           )}
         </section>
       </main>
-      <footer className="mt-6 text-center text-[13px] text-muted-foreground">
+      <footer className="mt-6 text-center text-body text-[var(--text-meta)]">
         Shared from {settings.studioName} - Video Editing Tracker &nbsp; |
         &nbsp; Updated {formatDate(iso(todayDate()), settings.dateFormat)},{" "}
         {todayDate().getFullYear()}
@@ -584,12 +558,12 @@ export function ProfileEditPage({
         description="Update the identity shown on your public profile."
       />
 
-      <PageContent className="space-y-5">
+      <PageContent className="">
         <MasterDetail
           master={
-            <OwnedCard
+            <section
               aria-label="Profile photo"
-              className="p-5 shadow-[var(--app-shadow-1)] sm:p-6"
+              className="rounded-md border border-[var(--border-panel)] bg-[var(--surface-fill)] p-4 sm:p-6"
             >
               <div className="grid place-items-center">
                 <ProfileEditAvatar settings={settings} />
@@ -604,8 +578,8 @@ export function ProfileEditPage({
               <div className="mt-4 flex flex-wrap justify-center gap-2">
                 <OwnedButton
                   type="button"
-                  variant="outline"
-                  className="min-h-10"
+                  variant="secondary"
+                  className=""
                   onClick={() => fileInputRef.current?.click()}
                 >
                   <Upload aria-hidden="true" />
@@ -613,7 +587,7 @@ export function ProfileEditPage({
                 </OwnedButton>
                 <OwnedButton
                   type="button"
-                  variant="outline"
+                  variant="secondary"
                   disabled={!settings.profileImageUrl}
                   onClick={() =>
                     setSettings({ ...settings, profileImageUrl: "" })
@@ -623,14 +597,14 @@ export function ProfileEditPage({
                   Clear
                 </OwnedButton>
               </div>
-              <p className="mx-auto mt-4 max-w-[260px] text-center text-[13px] leading-relaxed text-muted-foreground">
+              <p className="mx-auto mt-4 max-w-[260px] text-center text-body text-[var(--text-meta)]">
                 Upload an image or paste an image URL below. The latest saved
                 photo will appear anywhere your profile is shown.
               </p>
-            </OwnedCard>
+            </section>
           }
           detail={
-            <OwnedCard className="grid gap-4 p-5 shadow-[var(--app-shadow-1)] sm:p-6">
+            <section className="grid gap-4 p-4 sm:p-6">
               <div className="grid gap-3 sm:grid-cols-2">
                 <FieldLayout label="Profile Name">
                   <OwnedInput
@@ -717,7 +691,7 @@ export function ProfileEditPage({
               <ContentSection
                 title="Public Profile Stats"
                 description="Shown on your public profile. They don't have to match your private totals."
-                className="shadow-none"
+                className=""
               >
                 <div className="grid gap-3 sm:grid-cols-3">
                   <FieldLayout label="Active Projects">
@@ -800,32 +774,28 @@ export function ProfileEditPage({
               </div>
 
               <fieldset>
-                <legend className="mb-2 text-sm font-medium">
+                <legend className="mb-2 text-body font-medium">
                   Week Start Day
                 </legend>
-                <OwnedToggleGroup
-                  type="single"
+                <OwnedChoiceTabs
                   value={settings.weekStart}
                   aria-label="Week Start Day"
                   onValueChange={(value) => {
                     if (value) setSettings({ ...settings, weekStart: value });
                   }}
-                  className="grid h-auto w-full grid-cols-4 gap-2 rounded-none bg-transparent p-0 sm:grid-cols-7"
                 >
-                  {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map(
-                    (day) => (
-                      <OwnedToggleGroupItem
-                        key={day}
-                        value={day}
-                        className="h-9 w-full min-w-0 border border-input bg-background px-2 text-xs text-foreground shadow-xs hover:bg-accent hover:text-accent-foreground focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--app-canvas)] data-[state=on]:border-transparent data-[state=on]:bg-primary data-[state=on]:text-primary-foreground data-[state=on]:hover:bg-primary/90 dark:data-[state=off]:bg-input/30 dark:data-[state=off]:hover:bg-input/50"
-                      >
-                        {day}
-                      </OwnedToggleGroupItem>
-                    )
-                  )}
-                </OwnedToggleGroup>
+                  <OwnedChoiceTabsList aria-label="Week start day">
+                    {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map(
+                      (day) => (
+                        <OwnedChoiceTab key={day} value={day}>
+                          {day}
+                        </OwnedChoiceTab>
+                      )
+                    )}
+                  </OwnedChoiceTabsList>
+                </OwnedChoiceTabs>
               </fieldset>
-            </OwnedCard>
+            </section>
           }
         />
       </PageContent>
@@ -837,7 +807,7 @@ function ProfileEditAvatar({ settings }: { settings: SettingsState }) {
   const imageUrl = settings.profileImageUrl.trim();
 
   return (
-    <div className="grid size-40 shrink-0 place-items-center overflow-hidden rounded-full border border-border bg-muted text-5xl font-bold text-foreground">
+    <div className="grid size-40 shrink-0 place-items-center overflow-hidden rounded-full bg-transparent text-meta font-semibold text-[var(--text-primary)]">
       {imageUrl ? (
         <img
           className="size-full object-cover"

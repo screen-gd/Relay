@@ -1,35 +1,33 @@
 # Spacing and density
 
-## Purpose
+## Density
 
-Support focused, high-volume work without making controls hard to use.
+Density is fixed. There is no user density setting, no `data-density` rules and no `density` prop.
 
-## Anatomy
+| Element                                                    | Height |
+| ---------------------------------------------------------- | ------ |
+| Default control (button, input, select, segmented control) | 36px   |
+| Small control (toolbar, dense row actions)                 | 32px   |
+| Table and list row                                         | 40px   |
+| Menu and select item                                       | 32px   |
+| Tag                                                        | 20px   |
+| Any target on a coarse pointer (phones, tablets)           | 48px   |
 
-Use a 4px base and 8px rhythm with semantic aliases: page gutter, control, row, inline, section, and panel. Start with 36px standard/32px compact controls and 44px standard/36px compact rows.
+## Spacing scale
 
-## Behavior
+All spacing sits on a 4px grid and uses only these steps: **4, 8, 12, 16, 24, 32, 40, 48**.
 
-Density changes space, not feature access, labels, or target usability. Keep flat bordered surfaces and reserve shadows for overlays.
+| Token             | Value                         | Use                                                                    |
+| ----------------- | ----------------------------- | ---------------------------------------------------------------------- |
+| `--space-gutter`  | 24px desktop, 16px below `sm` | Page padding inside the content panel                                  |
+| `--space-section` | 40px                          | Empty space between sections. No line.                                 |
+| `--space-stack`   | 12px                          | Between a title and its body; between a page bar and the first section |
+| `--space-pane`    | 24px                          | Gap between split panes and side-by-side columns                       |
+| `--space-inline`  | 8px                           | Between controls in a row                                              |
+| Card padding      | 16px                          | Metric cards and the inspector card                                    |
 
-## States
-
-Selected and focused rows retain enough inset and contrast in both density modes. Loading preserves row height.
-
-## Responsive rules
-
-Use 24px page gutters on desktop and 16px on small screens. Let content define row height when labels wrap or touch input needs more room.
+Pages never add their own outer padding. `WorkspacePage` owns the gutter.
 
 ## Accessibility
 
-Keep pointer targets at least 24x24 CSS pixels, with visible focus of 2px or more. Test touch and keyboard at each density.
-
-## Preserved features
-
-Keep the user density setting, current 4/8 rhythm, compact production tables, and existing scroll ownership.
-
-## Acceptance checks
-
-- Compact mode does not hide columns, actions, or focus rings.
-- Target-size and zoom checks pass.
-- Spacing uses tokens rather than route-local values.
+Pointer targets are at least 24×24px on desktop and 48px on touch screens. Focus indicators are never clipped by spacing or overflow.

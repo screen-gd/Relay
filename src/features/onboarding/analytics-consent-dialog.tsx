@@ -1,6 +1,5 @@
 "use client";
 
-import type { AnalyticsConsent } from "@/lib/telemetry";
 import { Button as OwnedButton } from "@/components/ui/button";
 import {
   Dialog as OwnedDialog,
@@ -10,6 +9,7 @@ import {
   DialogHeader as OwnedDialogHeader,
   DialogTitle as OwnedDialogTitle,
 } from "@/components/ui/dialog";
+import type { AnalyticsConsent } from "@/lib/telemetry";
 
 export function AnalyticsConsentDialog({
   open,
@@ -37,7 +37,7 @@ export function AnalyticsConsentDialog({
         <OwnedDialogFooter>
           <OwnedButton
             type="button"
-            variant="outline"
+            variant="secondary"
             onClick={() => onChoose("denied")}
           >
             No thanks

@@ -16,7 +16,7 @@ export function Grid({
   const { width } = ctx.plot;
 
   return (
-    <g className="stroke-border" strokeDasharray={strokeDasharray}>
+    <g className="stroke-[var(--text-meta)]" strokeDasharray={strokeDasharray}>
       {horizontal &&
         ctx.y
           .ticks(4)

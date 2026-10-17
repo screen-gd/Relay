@@ -23,14 +23,15 @@ export function WorkspacePage({
   return (
     <div
       data-slot="workspace-page"
-      data-design="studio-split"
       data-mode={mode}
       data-family={family}
       className={cn(
-        "mx-auto w-full max-w-[1920px] min-w-0 px-4 pb-8 pt-5 sm:px-5 lg:px-5 lg:pb-10 lg:pt-5",
+        // Content hugs the panel's left gutter; a wide screen grows the right
+        // margin rather than floating the page into the middle.
+        "w-full min-w-0 px-(--space-gutter) pb-10 pt-4",
         mode === "document"
-          ? ""
-          : "flex min-h-0 flex-col gap-5 lg:h-full lg:overflow-hidden lg:pb-6",
+          ? "max-w-(--page-max-width)"
+          : "max-w-(--page-max-width-wide) flex min-h-0 flex-col gap-3 lg:h-full lg:pb-6",
         className
       )}
       {...props}

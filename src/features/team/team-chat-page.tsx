@@ -1,20 +1,19 @@
 "use client";
 
-import { useId, useState } from "react";
+import { MessageSquare, Send, Users } from "@/components/icons";
+import { Badge as OwnedBadge } from "@/components/ui/badge";
+import { Button as OwnedButton } from "@/components/ui/button";
+import { Label as OwnedLabel } from "@/components/ui/label";
+import { Textarea as OwnedTextarea } from "@/components/ui/textarea";
 import {
   FillViewport,
   PageContent,
   PageHeader,
   WorkspacePage,
 } from "@/components/workspace-page";
-import { useTeamChatController } from "./team-controller";
+import { useId, useState } from "react";
 import { TEAM_CHAT_MESSAGE_LIMIT } from "./team-constants";
-import { Badge as OwnedBadge } from "@/components/ui/badge";
-import { Button as OwnedButton } from "@/components/ui/button";
-import { Card as OwnedCard } from "@/components/ui/card";
-import { Label as OwnedLabel } from "@/components/ui/label";
-import { Textarea as OwnedTextarea } from "@/components/ui/textarea";
-import { LoaderCircle, MessageSquare, Send, Users } from "@/components/icons";
+import { useTeamChatController } from "./team-controller";
 
 export function TeamChatPage() {
   const {
@@ -81,13 +80,13 @@ export function TeamChatPage() {
             chatReady && teamData ? (
               <div
                 data-slot="conversation-header"
-                className="flex flex-col justify-between gap-3 border-b border-[var(--app-border)] bg-[var(--app-panel)] px-4 py-4 sm:flex-row sm:items-center sm:px-5"
+                className="flex flex-col justify-between gap-3 bg-[var(--surface-page)] pb-3 sm:flex-row sm:items-center"
               >
                 <div>
-                  <h2 className="text-lg font-semibold">
+                  <h2 className="text-body font-medium text-[var(--text-primary)]">
                     {teamData.workspace.name}
                   </h2>
-                  <p className="mt-1 text-xs text-[var(--app-muted)]">
+                  <p className="mt-1 text-meta text-[var(--text-meta)]">
                     {
                       teamData.members.filter(
                         (member) => member.status === "active"
@@ -112,7 +111,7 @@ export function TeamChatPage() {
             chatReady && teamData ? (
               <form
                 data-slot="conversation-composer"
-                className="team-chat-composer border-t border-[var(--app-border)] bg-[var(--app-soft-panel)] p-3 sm:p-4"
+                className="team-chat-composer border-t border-[var(--border-hairline)] pt-4"
                 onSubmit={(event) => {
                   event.preventDefault();
                   void submitMessage();
@@ -121,16 +120,13 @@ export function TeamChatPage() {
                 {chatError ? (
                   <p
                     role="alert"
-                    className="mb-2 text-xs font-semibold text-destructive"
+                    className="mb-2 text-meta text-[var(--status-danger)]"
                   >
                     {chatError}
                   </p>
                 ) : null}
                 <div className="grid gap-2">
-                  <OwnedLabel
-                    htmlFor={messageInputId}
-                    className="text-sm font-medium"
-                  >
+                  <OwnedLabel htmlFor={messageInputId} className="font-medium">
                     Message
                   </OwnedLabel>
                   <div className="flex flex-col items-stretch gap-2 sm:flex-row sm:items-start">
@@ -141,7 +137,7 @@ export function TeamChatPage() {
                       value={message}
                       rows={2}
                       {...chatInputProps}
-                      className="max-h-28 min-h-10 flex-1 bg-background"
+                      className="max-h-28 flex-1"
                       onChange={(event) => {
                         setMessage(event.target.value);
                         if (chatError) setChatError("");
@@ -154,21 +150,19 @@ export function TeamChatPage() {
                       }}
                     />
                     <OwnedButton
+                      pending={sending}
+                      pendingLabel="Sending..."
                       type="submit"
                       disabled={sending || !message.trim()}
                       className="min-w-28"
                     >
-                      {sending ? (
-                        <LoaderCircle aria-hidden="true" />
-                      ) : (
-                        <Send aria-hidden="true" />
-                      )}
+                      {!sending ? <Send aria-hidden="true" /> : null}
                       {sending ? "Sending..." : "Send"}
                     </OwnedButton>
                   </div>
                   <p
                     id={messageCountId}
-                    className="text-xs text-[var(--app-muted)]"
+                    className="text-meta text-[var(--text-meta)]"
                   >
                     {message.length}/{TEAM_CHAT_MESSAGE_LIMIT} characters
                   </p>
@@ -178,102 +172,84 @@ export function TeamChatPage() {
           }
         >
           {!isUserLoaded ? (
-            <OwnedCard className="p-6 shadow-[var(--app-shadow-1)]">
+            <section className="p-6">
               <div
                 role="status"
-                className="flex items-center gap-3 text-sm text-muted-foreground"
+                className="flex items-center gap-3 text-body text-[var(--text-meta)]"
               >
-                <LoaderCircle
-                  className="size-4 animate-spin"
-                  aria-hidden="true"
-                />
                 Checking account status...
               </div>
-            </OwnedCard>
+            </section>
           ) : !isSignedIn ? (
             <div className="grid h-full min-h-72 place-items-center p-6 text-center">
               <div>
                 <MessageSquare
-                  className="mx-auto size-8 text-muted-foreground"
+                  className="mx-auto size-8 text-[var(--text-meta)]"
                   aria-hidden="true"
                 />
-                <h2 className="mt-4 text-lg font-semibold">
+                <h2 className="mt-4 text-body font-medium text-[var(--text-primary)]">
                   Team chat is coming later
                 </h2>
               </div>
             </div>
           ) : isConvexAuthLoading ? (
-            <OwnedCard className="p-6 shadow-[var(--app-shadow-1)]">
+            <section className="p-6">
               <div
                 role="status"
-                className="flex items-center gap-3 text-sm text-muted-foreground"
+                className="flex items-center gap-3 text-body text-[var(--text-meta)]"
               >
-                <LoaderCircle
-                  className="size-4 animate-spin"
-                  aria-hidden="true"
-                />
                 Connecting Team Chat...
               </div>
-            </OwnedCard>
+            </section>
           ) : !isConvexAuthenticated ? (
-            <OwnedCard
-              role="alert"
-              className="border-destructive/40 bg-destructive/10 p-6 text-destructive shadow-sm"
-            >
-              <h2 className="text-lg font-semibold">
+            <section role="alert" className="p-6 text-[var(--status-danger)]">
+              <h2 className="text-body font-medium text-[var(--text-primary)]">
                 Team Chat is not connected
               </h2>
-              <p className="mt-2 text-sm">
+              <p className="mt-2 text-body">
                 Convex has not received your Clerk session. Sign out and back
                 in, then retry.
               </p>
-            </OwnedCard>
+            </section>
           ) : teamData === undefined ? (
-            <OwnedCard className="p-6 shadow-[var(--app-shadow-1)]">
+            <section className="p-6">
               <div
                 role="status"
-                className="flex items-center gap-3 text-sm text-muted-foreground"
+                className="flex items-center gap-3 text-body text-[var(--text-meta)]"
               >
-                <LoaderCircle
-                  className="size-4 animate-spin"
-                  aria-hidden="true"
-                />
                 Loading messages...
               </div>
-            </OwnedCard>
+            </section>
           ) : !teamData ? (
-            <OwnedCard className="grid min-h-72 place-items-center p-6 text-center shadow-[var(--app-shadow-1)]">
+            <section className="grid min-h-72 place-items-center p-6 text-center">
               <div className="max-w-md">
                 <Users
-                  className="mx-auto size-8 text-muted-foreground"
+                  className="mx-auto size-8 text-[var(--text-meta)]"
                   aria-hidden="true"
                 />
-                <h2 className="mt-4 text-lg font-semibold">
+                <h2 className="mt-4 text-body font-medium text-[var(--text-primary)]">
                   No team workspace yet
                 </h2>
-                <p className="mt-2 text-sm text-muted-foreground">
+                <p className="mt-2 text-body text-[var(--text-meta)]">
                   Create or join a workspace before using Team Chat.
                 </p>
               </div>
-            </OwnedCard>
+            </section>
           ) : !canUseChat ? (
-            <OwnedCard className="p-6 shadow-[var(--app-shadow-1)]">
-              <h2 className="text-xl font-semibold">
+            <section className="p-6">
+              <h2 className="text-body font-medium text-[var(--text-primary)]">
                 Chat unavailable for your role
               </h2>
-              <p className="mt-2 text-sm text-muted-foreground">
+              <p className="mt-2 text-body text-[var(--text-meta)]">
                 Your current role can access the workspace but does not have
                 permission to view or send chat messages.
               </p>
-            </OwnedCard>
+            </section>
           ) : (
-            <div
-              data-slot="conversation-history"
-              className="min-h-full bg-[var(--app-panel)]"
-            >
+            <div data-slot="conversation-history" className="min-h-full">
               <ol
                 aria-label="Team chat messages"
-                className="flex min-h-full flex-col gap-3 px-3 py-5 md:px-5"
+                className="flex min-h-full flex-col gap-3"
               >
                 {teamData.chat.length ? (
                   teamData.chat.map((chatMessage) => {
@@ -289,18 +265,22 @@ export function TeamChatPage() {
                           className={`mb-1 flex items-center gap-2 ${isOwnMessage ? "justify-end" : "justify-between"}`}
                         >
                           {!isOwnMessage ? (
-                            <span className="text-xs font-semibold">
+                            <span className="text-meta font-medium text-[var(--text-primary)]">
                               {chatMessage.authorName}
                             </span>
                           ) : null}
-                          <time className="text-[11px] text-muted-foreground">
+                          <time className="text-meta text-[var(--text-meta)]">
                             {formatChatTime(chatMessage.createdAt)}
                           </time>
                         </div>
                         <div
-                          className={`rounded-lg border px-3 py-2.5 ${isOwnMessage ? "border-primary bg-primary/10" : "border-border bg-muted"}`}
+                          className={
+                            isOwnMessage
+                              ? "bg-[var(--surface-active)] px-3 py-2"
+                              : "border-t border-[var(--border-hairline)] pt-2"
+                          }
                         >
-                          <p className="whitespace-pre-wrap text-sm leading-relaxed [overflow-wrap:anywhere]">
+                          <p className="whitespace-pre-wrap text-body [overflow-wrap:anywhere]">
                             {chatMessage.body}
                           </p>
                         </div>
@@ -310,11 +290,13 @@ export function TeamChatPage() {
                 ) : (
                   <li className="m-auto max-w-md list-none text-center">
                     <MessageSquare
-                      className="mx-auto size-8 text-muted-foreground"
+                      className="mx-auto size-8 text-[var(--text-meta)]"
                       aria-hidden="true"
                     />
-                    <h3 className="mt-4 font-semibold">No messages yet</h3>
-                    <p className="mt-2 text-sm text-muted-foreground">
+                    <h3 className="mt-4 text-body font-medium text-[var(--text-primary)]">
+                      No messages yet
+                    </h3>
+                    <p className="mt-2 text-body text-[var(--text-meta)]">
                       Share an update, a blocker, or a delivery note.
                     </p>
                   </li>

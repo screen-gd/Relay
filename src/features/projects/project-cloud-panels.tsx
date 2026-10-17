@@ -1,3 +1,13 @@
+import { useConfirm } from "@/components/confirm-dialog";
+import {
+  Clock3,
+  Download,
+  ExternalLink,
+  History,
+  MoreHorizontal as RelayActionMenuIcon,
+  Upload,
+} from "@/components/icons";
+import { CapabilityUpgradePrompt } from "@/components/subscription-plans";
 import {
   Accordion as OwnedAccordion,
   AccordionContent as OwnedAccordionContent,
@@ -14,6 +24,12 @@ import {
   DialogHeader as OwnedDialogHeader,
   DialogTitle as OwnedDialogTitle,
 } from "@/components/ui/dialog";
+import {
+  DropdownMenu as RelayActionMenu,
+  DropdownMenuContent as RelayActionMenuContent,
+  DropdownMenuItem as RelayActionMenuItem,
+  DropdownMenuTrigger as RelayActionMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { FieldLayout } from "@/components/ui/field-layout";
 import { Input as OwnedInput } from "@/components/ui/input";
 import { Label as OwnedLabel } from "@/components/ui/label";
@@ -27,18 +43,17 @@ import {
 import { Skeleton as OwnedSkeleton } from "@/components/ui/skeleton";
 import { Switch as OwnedSwitch } from "@/components/ui/switch";
 import {
+  TabsTrigger as OwnedChoiceTab,
+  Tabs as OwnedChoiceTabs,
+  TabsList as OwnedChoiceTabsList,
   Tabs as OwnedTabs,
   TabsContent as OwnedTabsContent,
   TabsList as OwnedTabsList,
   TabsTrigger as OwnedTabsTrigger,
 } from "@/components/ui/tabs";
 import { Textarea as OwnedTextarea } from "@/components/ui/textarea";
-import {
-  ToggleGroup as OwnedToggleGroup,
-  ToggleGroupItem as OwnedToggleGroupItem,
-} from "@/components/ui/toggle-group";
 import { ContentSection } from "@/components/workspace-page";
-import { CapabilityUpgradePrompt } from "@/components/subscription-plans";
+import { ProjectSelect } from "@/features/projects/project-select";
 import {
   APPROVAL_STATUS_LABELS,
   approvalStatusLabel,
@@ -50,16 +65,9 @@ import {
 import { trackOptionalEvent } from "@/lib/telemetry";
 import { normalizeOptionalTimecode } from "@/lib/timecode";
 import type { WorkItem } from "@/lib/types";
-import { api } from "../../../convex/_generated/api";
 import { useQuery } from "convex/react";
-import {
-  Clock3,
-  Download,
-  ExternalLink,
-  History,
-  Upload,
-} from "@/components/icons";
 import { useEffect, useRef, useState } from "react";
+import { api } from "../../../convex/_generated/api";
 import {
   useProjectActivityAdapter,
   useProjectCommentsAdapter,
@@ -71,8 +79,6 @@ import type {
   ProjectActivityEvent,
   WorkspaceMemberOption,
 } from "./project-view";
-import { ProjectSelect } from "@/features/projects/project-select";
-import { useConfirm } from "@/components/confirm-dialog";
 
 const R2_STORAGE_ENABLED = false;
 const MAX_SAFE_PROJECT_FILE_BYTES = 20_000_000;
@@ -102,7 +108,7 @@ export function ProjectActivityFeed({
     <ContentSection titleId="project-activity-title" title="Project Activity">
       <div>
         {isConvexAuthLoading ? (
-          <p className="text-sm text-muted-foreground">
+          <p className="text-body text-[var(--text-meta)]">
             Connecting activity history...
           </p>
         ) : !isConvexAuthenticated ? (
@@ -170,17 +176,17 @@ function ActivityFeedItem({
   return (
     <div className="grid grid-cols-[16px_minmax(0,1fr)] gap-x-3">
       <div className="relative flex justify-center">
-        <span className="z-10 mt-[7px] size-2 rounded-sm bg-[var(--app-ink)]" />
+        <span className="z-10 mt-[7px] size-2 rounded-sm bg-[var(--text-primary)]" />
       </div>
-      <div className={last ? "" : "pb-5"}>
-        <p className="text-sm leading-6">{message}</p>
+      <div className={last ? "" : "pb-4"}>
+        <p className="text-body">{message}</p>
         {detail ? (
-          <p className="mt-1 whitespace-pre-wrap text-xs leading-relaxed text-muted-foreground">
+          <p className="mt-1 whitespace-pre-wrap text-meta text-[var(--text-meta)]">
             {detail}
           </p>
         ) : null}
         <p
-          className="mt-1 text-[11px] text-muted-foreground"
+          className="mt-1 text-meta text-[var(--text-meta)]"
           suppressHydrationWarning
         >
           {actor} {createdAt ? `· ${formatShortDateTime(createdAt)}` : ""}
@@ -498,7 +504,7 @@ export function ProjectFileManager({
         titleId="project-files-title"
         title="Project Files"
         metadata={
-          <OwnedBadge variant="secondary" className="rounded-sm">
+          <OwnedBadge variant="secondary" className="">
             {files.length} {files.length === 1 ? "file" : "files"}
           </OwnedBadge>
         }
@@ -514,14 +520,14 @@ export function ProjectFileManager({
               Upload File
             </OwnedButton>
           ) : canEdit && isConvexAuthenticated && canUploadFiles ? (
-            <OwnedButton type="button" size="sm" variant="outline" disabled>
+            <OwnedButton type="button" size="sm" variant="secondary" disabled>
               Storage limit reached
             </OwnedButton>
           ) : null
         }
       >
         {canEdit && isConvexAuthenticated && !canUploadFiles ? (
-          <div className="mb-4 rounded-lg bg-[var(--surface-inset)] p-4">
+          <div className="mb-4">
             <CapabilityUpgradePrompt capability="fileUploads" inline />
           </div>
         ) : null}
@@ -533,7 +539,7 @@ export function ProjectFileManager({
           }
           className="block"
         >
-          <OwnedTabsList variant="ghost" aria-label="Project file view">
+          <OwnedTabsList aria-label="Project file view">
             <OwnedTabsTrigger
               id="project-files-files-tab"
               value="files"
@@ -555,37 +561,41 @@ export function ProjectFileManager({
             aria-labelledby={`project-files-${view}-tab`}
           >
             {isConvexAuthLoading ? (
-              <p role="status" className="mt-4 text-sm text-muted-foreground">
+              <p
+                role="status"
+                className="mt-4 text-body text-[var(--text-meta)]"
+              >
                 Connecting project files...
               </p>
             ) : !isConvexAuthenticated ? (
-              <p className="mt-4 text-sm text-muted-foreground">
+              <p className="mt-4 text-body text-[var(--text-meta)]">
                 Sign in to upload and synchronize project files. Existing
                 integration links remain available above.
               </p>
             ) : fileData === undefined ? (
               <div className="mt-4 grid gap-2">
-                <OwnedSkeleton className="h-20 rounded-md" />
-                <OwnedSkeleton className="h-20 rounded-md" />
+                <OwnedSkeleton className="h-20" />
+                <OwnedSkeleton className="h-20" />
               </div>
             ) : view === "files" ? (
               <>
                 <div className="my-4 flex flex-wrap items-center justify-between gap-3">
-                  <OwnedToggleGroup
-                    type="single"
+                  <OwnedChoiceTabs
                     value={categoryFilter}
                     onValueChange={(value) => {
                       if (value) setCategoryFilter(value);
                     }}
                     aria-label="Filter project files by category"
                   >
-                    {["All", ...FILE_CATEGORY_VALUES].map((item) => (
-                      <OwnedToggleGroupItem key={item} value={item}>
-                        {item}
-                      </OwnedToggleGroupItem>
-                    ))}
-                  </OwnedToggleGroup>
-                  <OwnedLabel className="flex items-center gap-2 text-[13px] font-normal text-muted-foreground">
+                    <OwnedChoiceTabsList aria-label="Filter project files by category">
+                      {["All", ...FILE_CATEGORY_VALUES].map((item) => (
+                        <OwnedChoiceTab key={item} value={item}>
+                          {item}
+                        </OwnedChoiceTab>
+                      ))}
+                    </OwnedChoiceTabsList>
+                  </OwnedChoiceTabs>
+                  <OwnedLabel className="flex items-center gap-2 font-normal">
                     <OwnedSwitch
                       checked={showArchived}
                       onCheckedChange={setShowArchived}
@@ -594,7 +604,7 @@ export function ProjectFileManager({
                   </OwnedLabel>
                 </div>
                 {filteredFiles.length ? (
-                  <OwnedAccordion type="multiple" className="grid gap-0.5">
+                  <OwnedAccordion type="multiple" className="grid gap-1">
                     {filteredFiles.map((file) => {
                       const latest = file.versions[0];
                       return (
@@ -603,7 +613,7 @@ export function ProjectFileManager({
                           value={file._id}
                           data-testid="project-file-card"
                           data-file-title={file.title}
-                          className="-mx-3 rounded-lg border-b-0 px-3 transition-colors hover:bg-[var(--app-hover)] data-[state=open]:bg-[var(--app-hover)]"
+                          className="-mx-3 rounded-md border-b-0 px-3 transition-colors hover:bg-[var(--surface-fill)] data-[state=open]:bg-[var(--surface-fill)]"
                         >
                           <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
                             <OwnedAccordionTrigger className="min-w-0 flex-1 py-3 hover:no-underline">
@@ -612,16 +622,13 @@ export function ProjectFileManager({
                                   <span className="truncate font-semibold">
                                     {file.title}
                                   </span>
-                                  <OwnedBadge
-                                    variant="secondary"
-                                    className="rounded-sm"
-                                  >
+                                  <OwnedBadge variant="secondary" className="">
                                     {file.category}
                                   </OwnedBadge>
                                   {file.archived ? (
                                     <OwnedBadge
-                                      variant="outline"
-                                      className="rounded-sm"
+                                      variant="secondary"
+                                      className=""
                                     >
                                       Archived
                                     </OwnedBadge>
@@ -630,10 +637,10 @@ export function ProjectFileManager({
                                     <OwnedBadge
                                       variant={
                                         file.status === "draft"
-                                          ? "outline"
+                                          ? "secondary"
                                           : "default"
                                       }
-                                      className="rounded-sm"
+                                      className=""
                                     >
                                       {file.status === "draft"
                                         ? "Share when sent"
@@ -641,7 +648,7 @@ export function ProjectFileManager({
                                     </OwnedBadge>
                                   ) : null}
                                 </div>
-                                <p className="mt-1 truncate text-xs font-normal text-muted-foreground">
+                                <p className="mt-1 truncate text-meta font-normal text-[var(--text-meta)]">
                                   {latest
                                     ? `${latest.fileName} · v${latest.versionNumber} · ${formatFileSize(latest.size)} · ${latest.uploadedByName}`
                                     : "No versions"}
@@ -685,10 +692,7 @@ export function ProjectFileManager({
                                   </OwnedSelectContent>
                                 </OwnedSelect>
                               ) : (
-                                <OwnedBadge
-                                  variant="outline"
-                                  className="rounded-sm"
-                                >
+                                <OwnedBadge variant="secondary" className="">
                                   {approvalStatusLabel(file.status)}
                                 </OwnedBadge>
                               )}
@@ -708,23 +712,23 @@ export function ProjectFileManager({
                           </div>
                           <OwnedAccordionContent className="pb-3">
                             {file.description ? (
-                              <p className="mb-3 text-sm leading-relaxed text-muted-foreground">
+                              <p className="mb-3 text-body text-[var(--text-meta)]">
                                 {file.description}
                               </p>
                             ) : null}
-                            <div className="grid gap-1.5">
+                            <div className="grid gap-2">
                               {file.versions.map((version) => (
                                 <div
                                   key={version._id}
-                                  className="flex flex-col justify-between gap-2 rounded-lg bg-[var(--surface-inset)] px-4 py-3 sm:flex-row"
+                                  className="flex flex-col justify-between gap-2 rounded-md px-4 py-3 sm:flex-row"
                                 >
                                   <div className="min-w-0">
-                                    <p className="text-sm font-medium">
+                                    <p className="text-body font-medium">
                                       Version {version.versionNumber} ·{" "}
                                       {version.fileName}
                                     </p>
                                     <p
-                                      className="mt-1 text-xs text-muted-foreground"
+                                      className="mt-1 text-meta text-[var(--text-meta)]"
                                       suppressHydrationWarning
                                     >
                                       {providerLabel(version.provider)} ·{" "}
@@ -733,14 +737,14 @@ export function ProjectFileManager({
                                       · {version.uploadedByName}
                                     </p>
                                     <p
-                                      className={`mt-1 text-xs ${version.status ? "text-foreground" : "text-muted-foreground"}`}
+                                      className={`mt-1 text-meta ${version.status ? "text-[var(--text-primary)]" : "text-[var(--text-meta)]"}`}
                                     >
                                       {version.status
                                         ? approvalStatusLabel(version.status)
                                         : "Approval state not recorded"}
                                     </p>
                                     {version.notes ? (
-                                      <p className="mt-1 text-xs text-muted-foreground">
+                                      <p className="mt-1 text-meta text-[var(--text-meta)]">
                                         {version.notes}
                                       </p>
                                     ) : null}
@@ -773,7 +777,7 @@ export function ProjectFileManager({
                                 </OwnedButton>
                                 {file.category === "Deliverable" ? (
                                   <>
-                                    <OwnedLabel className="flex items-center gap-2 text-xs font-normal text-muted-foreground">
+                                    <OwnedLabel className="flex items-center gap-2 font-normal">
                                       <OwnedSwitch
                                         checked={file.clientVisible}
                                         onCheckedChange={(checked) =>
@@ -791,7 +795,7 @@ export function ProjectFileManager({
                                         ? "Share when sent"
                                         : "Client visible"}
                                     </OwnedLabel>
-                                    <OwnedLabel className="flex items-center gap-2 text-xs font-normal text-muted-foreground">
+                                    <OwnedLabel className="flex items-center gap-2 font-normal">
                                       <OwnedSwitch
                                         checked={file.downloadable}
                                         onCheckedChange={(checked) =>
@@ -821,18 +825,30 @@ export function ProjectFileManager({
                                   {file.archived ? "Restore" : "Archive"}
                                 </OwnedButton>
                                 {file.archived ? (
-                                  <OwnedButton
-                                    type="button"
-                                    variant="ghost"
-                                    size="sm"
-                                    className="text-destructive hover:text-destructive"
-                                    onClick={() =>
-                                      void deleteProjectFile(file._id)
-                                    }
-                                    disabled={busy === `remove-${file._id}`}
-                                  >
-                                    Delete permanently
-                                  </OwnedButton>
+                                  <RelayActionMenu>
+                                    <RelayActionMenuTrigger asChild>
+                                      <OwnedButton
+                                        type="button"
+                                        variant="ghost"
+                                        size="icon-sm"
+                                        aria-label="More actions"
+                                        disabled={busy === `remove-${file._id}`}
+                                      >
+                                        <RelayActionMenuIcon aria-hidden="true" />
+                                      </OwnedButton>
+                                    </RelayActionMenuTrigger>
+                                    <RelayActionMenuContent align="end">
+                                      <RelayActionMenuItem
+                                        variant="destructive"
+                                        disabled={busy === `remove-${file._id}`}
+                                        onSelect={() =>
+                                          void deleteProjectFile(file._id)
+                                        }
+                                      >
+                                        Delete permanently
+                                      </RelayActionMenuItem>
+                                    </RelayActionMenuContent>
+                                  </RelayActionMenu>
                                 ) : null}
                               </div>
                             ) : null}
@@ -842,7 +858,7 @@ export function ProjectFileManager({
                     })}
                   </OwnedAccordion>
                 ) : (
-                  <p className="py-2 text-sm text-muted-foreground">
+                  <p className="py-2 text-body text-[var(--text-meta)]">
                     No{" "}
                     {categoryFilter === "All"
                       ? "project files"
@@ -861,19 +877,19 @@ export function ProjectFileManager({
                     return (
                       <div
                         key={version._id}
-                        className="-mx-3 flex gap-3 rounded-lg px-3 py-3 hover:bg-[var(--app-hover)]"
+                        className="-mx-3 flex gap-3 rounded-md px-3 py-3 hover:bg-[var(--surface-fill)]"
                       >
                         <History
-                          className="mt-0.5 size-4 shrink-0 text-muted-foreground"
+                          className="mt-1 size-4 shrink-0 text-[var(--text-meta)]"
                           aria-hidden="true"
                         />
                         <div className="min-w-0 flex-1">
-                          <p className="text-sm font-medium">
+                          <p className="text-body font-medium">
                             {file?.title ?? version.fileName} · Version{" "}
                             {version.versionNumber}
                           </p>
                           <p
-                            className="mt-1 text-xs text-muted-foreground"
+                            className="mt-1 text-meta text-[var(--text-meta)]"
                             suppressHydrationWarning
                           >
                             {version.fileName} · {formatFileSize(version.size)}{" "}
@@ -881,7 +897,7 @@ export function ProjectFileManager({
                             {formatShortDateTime(version.uploadedAt)}
                           </p>
                           <p
-                            className={`mt-1 text-xs ${version.status ? "text-foreground" : "text-muted-foreground"}`}
+                            className={`mt-1 text-meta ${version.status ? "text-[var(--text-primary)]" : "text-[var(--text-meta)]"}`}
                           >
                             {version.status
                               ? approvalStatusLabel(version.status)
@@ -903,7 +919,7 @@ export function ProjectFileManager({
                     );
                   })
                 ) : (
-                  <p className="py-2 text-sm text-muted-foreground">
+                  <p className="py-2 text-body text-[var(--text-meta)]">
                     Upload history will appear after the first file or linked
                     version is added.
                   </p>
@@ -913,7 +929,10 @@ export function ProjectFileManager({
           </OwnedTabsContent>
         </OwnedTabs>
         {error && !dialogOpen ? (
-          <p role="alert" className="mt-3 text-sm text-destructive">
+          <p
+            role="alert"
+            className="mt-3 text-body text-[var(--status-danger)]"
+          >
             {error}
           </p>
         ) : null}
@@ -925,7 +944,7 @@ export function ProjectFileManager({
           if (!open) cancelUpload();
         }}
       >
-        <OwnedDialogContent className="max-h-[min(92dvh,760px)] overflow-y-auto border-border bg-background text-foreground sm:max-w-xl">
+        <OwnedDialogContent className="max-h-[min(92dvh,760px)] overflow-y-auto sm:max-w-xl">
           <OwnedDialogHeader>
             <OwnedDialogTitle>
               {targetFileId ? "Add File Version" : "Add Project File"}
@@ -969,12 +988,11 @@ export function ProjectFileManager({
                 <OwnedTextarea
                   value={description}
                   onChange={(event) => setDescription(event.target.value)}
-                  density="compact"
                 />
               </FieldLayout>
             ) : null}
 
-            <OwnedButton asChild variant="outline" className="justify-start">
+            <OwnedButton asChild variant="secondary" className="justify-start">
               <OwnedLabel>
                 <Upload aria-hidden="true" />
                 {browserFile ? browserFile.name : "Choose file"}
@@ -992,12 +1010,11 @@ export function ProjectFileManager({
               <OwnedTextarea
                 value={notes}
                 onChange={(event) => setNotes(event.target.value)}
-                density="compact"
               />
             </FieldLayout>
             {!targetFileId && category === "Deliverable" ? (
               <div className="flex flex-col gap-3 sm:flex-row sm:gap-6">
-                <OwnedLabel className="flex items-center gap-2 text-sm font-normal text-muted-foreground">
+                <OwnedLabel className="flex items-center gap-2 font-normal">
                   <OwnedSwitch
                     checked={clientVisible}
                     onCheckedChange={setClientVisible}
@@ -1011,7 +1028,7 @@ export function ProjectFileManager({
                     ? "Share when sent"
                     : "Show in Client Portal"}
                 </OwnedLabel>
-                <OwnedLabel className="flex items-center gap-2 text-sm font-normal text-muted-foreground">
+                <OwnedLabel className="flex items-center gap-2 font-normal">
                   <OwnedSwitch
                     checked={downloadable}
                     onCheckedChange={setDownloadable}
@@ -1022,7 +1039,7 @@ export function ProjectFileManager({
               </div>
             ) : null}
             {error ? (
-              <p role="alert" className="text-sm text-destructive">
+              <p role="alert" className="text-body text-[var(--status-danger)]">
                 {error}
               </p>
             ) : null}
@@ -1033,6 +1050,8 @@ export function ProjectFileManager({
               Cancel
             </OwnedButton>
             <OwnedButton
+              pending={Boolean(busy)}
+              pendingLabel="Saving..."
               type="button"
               onClick={saveFileVersion}
               disabled={Boolean(busy)}
@@ -1131,16 +1150,12 @@ export function ProjectDetailCollaborationPanel({
       actions={
         assignedMembers.length ? (
           assignedMembers.map((member) => (
-            <OwnedBadge
-              key={member.userId}
-              variant="secondary"
-              className="rounded-sm"
-            >
+            <OwnedBadge key={member.userId} variant="secondary" className="">
               {member.name || member.email}
             </OwnedBadge>
           ))
         ) : (
-          <OwnedBadge variant="outline" className="rounded-sm">
+          <OwnedBadge variant="secondary" className="">
             Unassigned
           </OwnedBadge>
         )
@@ -1148,39 +1163,38 @@ export function ProjectDetailCollaborationPanel({
     >
       <div className="mb-4 grid max-h-72 gap-2 overflow-y-auto">
         {isConvexAuthLoading ? (
-          <p className="text-sm text-muted-foreground">
+          <p className="text-body text-[var(--text-meta)]">
             Connecting Team comments...
           </p>
         ) : !isConvexAuthenticated ? (
-          <p role="alert" className="text-sm text-destructive">
+          <p role="alert" className="text-body text-[var(--status-danger)]">
             Team comments require Convex auth. Check Team sync before posting
             comments.
           </p>
         ) : projectComments === undefined ? (
-          <p className="text-sm text-muted-foreground">Loading comments...</p>
+          <p className="text-body text-[var(--text-meta)]">
+            Loading comments...
+          </p>
         ) : projectComments.length ? (
           projectComments.map((comment) => (
-            <article
-              key={comment._id}
-              className="rounded-lg bg-[var(--surface-inset)] p-3"
-            >
-              <p className="text-sm font-semibold">
+            <article key={comment._id} className="rounded-md p-3">
+              <p className="text-body font-semibold">
                 {comment.authorName}{" "}
                 <span
-                  className="text-xs font-normal text-muted-foreground"
+                  className="text-meta font-normal text-[var(--text-meta)]"
                   suppressHydrationWarning
                 >
                   {formatShortDateTime(comment.createdAt)}
                 </span>
               </p>
               <ProjectTimecodeBadge value={comment.timecode} />
-              <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed">
+              <p className="mt-2 whitespace-pre-wrap text-body">
                 {comment.body}
               </p>
             </article>
           ))
         ) : (
-          <p className="text-sm text-muted-foreground">
+          <p className="text-body text-[var(--text-meta)]">
             No comments yet. Add a note for the team or mention someone with
             @name.
           </p>
@@ -1224,7 +1238,7 @@ export function ProjectDetailCollaborationPanel({
           </OwnedButton>
         </div>
       ) : (
-        <p className="text-sm text-muted-foreground">
+        <p className="text-body text-[var(--text-meta)]">
           Your team role can view comments but cannot add new ones.
         </p>
       )}

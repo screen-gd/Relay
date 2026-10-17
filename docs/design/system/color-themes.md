@@ -2,44 +2,86 @@
 
 ## Purpose
 
-Use one semantic palette across light, dark, accent, status, and selection states.
+One semantic palette for both themes. Feature code uses token names, never hex values.
 
-## Anatomy
+## Surfaces
 
-Define canvas, surface, foreground, muted, border, input, primary, secondary, accent, destructive, success, warning, info, focus, and selection tokens.
+| Token                | Dark                | Light                  | Use                                                                  |
+| -------------------- | ------------------- | ---------------------- | -------------------------------------------------------------------- |
+| `--surface-frame`    | `#131315`           | `#ebebee`              | Sidebar rail and panel; the frame around the content panel           |
+| `--surface-page`     | `#000000`           | `#ffffff`              | The content panel and everything that lies flat on it                |
+| `--surface-fill`     | `#141416`           | `#f4f4f5`              | Controls, tags, metric cards, the inspector card, hover fill on rows |
+| `--surface-active`   | `#232326`           | `#ffffff`              | Active sidebar item, active segment, selected row                    |
+| `--surface-overlay`  | `#18181b`           | `#ffffff`              | Menus, selects, popovers, dialogs, sheets, toasts, tooltips          |
+| `--surface-skeleton` | `#1a1a1d`           | `#ececef`              | Loading placeholders                                                 |
+| `--overlay-scrim`    | `rgb(0 0 0 / 0.74)` | `rgb(24 24 27 / 0.58)` | Behind dialogs and sheets                                            |
 
-The Relay lime palette is dark-first. Three tone steps of one neutral make the layout: the sidebar frame (`#0a0a0b`), the content panel that holds the top bar and page (`#111112`), and cards, metric items, and fields (`#18181a`). Primary text is white. The brand accent is lime `#C6FF00` with near-black text on it; light mode uses deep lime `#4D7C0F`, because lime fails contrast on light surfaces. Success is mint (`#34D399`) so it never reads as a brand highlight; amber is warning and red is error.
+In light mode the active segment is white on the `#f4f4f5` track, and the active sidebar item is white on the `#ebebee` frame.
 
-Content lies flat on the page. Sections are a heading and a body, separated from the next by a hairline; side-by-side columns share one vertical hairline; lists and tables use row dividers. Only objects get a surface: inputs, segmented controls, tags, the sidebar's active item, metric cards, and floating layers (menus, dialogs, sheets), which alone cast a shadow. Lime marks the primary action, the active navigation item, and the key data point in a chart; hover changes text color only.
+## Text
 
-Progress uses `SegmentedMeter` (`src/components/ui/segmented-meter.tsx`) where there is room: cells shade from danger through warning to success by position. Charts use the vendored dither kit (`src/components/dither-kit`) with the `lime` seed for the main series; chart containers take the `chart-glow` class and charts set `bloom="high"` with `bloomOnHover`, so they glow only while the pointer is over them.
+| Token            | Dark      | Light     | Use                                                                                                                        |
+| ---------------- | --------- | --------- | -------------------------------------------------------------------------------------------------------------------------- |
+| `--text-primary` | `#ffffff` | `#0b0c0e` | Everything you read or click: titles, body, table cells, links, tabs, sidebar items, menu items, inputs, button labels     |
+| `--text-meta`    | `#9a9aa2` | `#5f5f68` | Metadata only: dates, counts, helper text, the description line under a title, column headings, placeholders, group labels |
 
-Motion is one-shot: the sidebar's active marker slides between items, dropdowns open with a short height and fade, and Radix menus, selects, and dialogs fade and scale. Nothing loops.
+`--text-meta` is never used for links, tabs, navigation, labels or anything clickable. There is no third text step: `--app-muted`, `--app-subtle`, `--text-secondary`, `--text-disabled` and `text-muted-foreground` all collapse into these two. Disabled controls use 50% opacity instead of a gray.
 
-## Behavior
+## Lines and borders
 
-Feature code consumes CSS variables. Dark mode overrides the same names. Use color to reinforce status, with text, icon, label, or shape as a second cue.
+| Token              | Dark                      | Light     | Use                                                                              |
+| ------------------ | ------------------------- | --------- | -------------------------------------------------------------------------------- |
+| `--border-control` | `rgb(255 255 255 / 0.20)` | `#d4d4d8` | Inputs, selects, textareas, Secondary buttons, segmented controls, overlay edges |
+| `--border-table`   | `rgb(255 255 255 / 0.09)` | `#ececef` | Data tables only: under the column headings and between rows                     |
 
-`globals.css` is the source of truth for theme values. Runtime theme code sets the light or dark class and may override only `--app-accent` and its contrast-safe foreground. Provider brand colors (`--brand-*`), workflow stage colors (`--workflow-stage-*`), and decorative media palettes (`--decorative-thumb-*`, `--media-package-*`) are named tokens because they carry brand or grouping meaning rather than interface state.
+No other borders exist. See [Layout](layout.md) for where lines are allowed.
 
-## States
+## Accent
 
-Check default, hover, active, selected, disabled, error, success, warning, focus, chart, placeholder, and read-only tokens in both themes.
+The accent is lime `#C6FF00` by default. Users can pick any color in Settings → Appearance, and it replaces lime everywhere. Three tokens derive from it at runtime:
 
-## Responsive rules
+| Token                 | Rule                                                                                                                                         | Default dark | Default light |
+| --------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- | ------------ | ------------- |
+| `--accent`            | The chosen color, used as a fill                                                                                                             | `#c6ff00`    | `#c6ff00`     |
+| `--accent-foreground` | Near-black (`#0b0c0e`) or white, whichever contrasts more with `--accent`                                                                    | `#0b0c0e`    | `#0b0c0e`     |
+| `--accent-mark`       | The chosen color, lightened or darkened until it reaches 3:1 against `--surface-page`. Used for lines, chart series and progress on the page | `#c6ff00`    | `#3a7500`     |
 
-Theme changes do not alter layout. Theme and accent boot before hydration to avoid a flash.
+The accent appears in exactly these places:
 
-## Accessibility
+- The fill of the page's one Primary button (and the phone "New" button).
+- The key series in a chart and the fill of a progress bar or segmented meter (`--accent-mark`).
+- Text selection, at 22% strength.
 
-Meet 4.5:1 text contrast and 3:1 non-text contrast, including borders, charts, focus, and disabled-adjacent content. Never rely on color alone.
+The accent never marks active navigation, selected rows, focus or hover. Those use tone.
 
-## Preserved features
+The client portal's branding accent is separate. It belongs to the studio's client-facing brand and does not touch workspace tokens.
 
-Keep theme, accent, and stored preference boot behavior and existing brand assets.
+## Status
 
-## Acceptance checks
+| Token              | Dark      | Light     |
+| ------------------ | --------- | --------- |
+| `--status-success` | `#34d399` | `#047857` |
+| `--status-warning` | `#fbbf24` | `#b45309` |
+| `--status-danger`  | `#f87171` | `#b91c1c` |
+| `--status-info`    | `#60a5fa` | `#2563eb` |
+| `--danger-fill`    | `#dc2626` | `#dc2626` |
 
-- Token audit finds no raw feature colors.
-- Light, dark, and accent captures pass contrast checks.
-- Status remains clear in grayscale and with assistive text.
+Status colors appear as a 6px dot inside a neutral tag, a dot in a toast, or an icon. Errors and destructive menu items are the only status-colored text (`--status-danger`). `--danger-fill` with white text is the Danger button.
+
+Project statuses map as: Delivered → success; Review, Revision, Client Review → warning; Cancelled → danger; In Progress → info; everything else → a `--text-meta` dot. Workflow stages and payment status use the same four colors plus neutral. The old `--workflow-stage-*` teal and cyan values are retired.
+
+## Charts
+
+Charts use the dither kit in `src/components/dither-kit`. The key series takes `--accent-mark`; other series take neutral steps of `--text-meta` and `--surface-active`. Charts do not glow or bloom on hover.
+
+## Named palettes
+
+Provider brand colors (`--brand-*`) and the media thumbnail palettes (`--media-package-*`, `--decorative-thumb-*`) carry identity or grouping, not interface state. They stay as named tokens and appear only on logos and thumbnails.
+
+## Shadows
+
+Only overlays cast a shadow: `0 16px 48px rgb(0 0 0 / 0.6)` in dark, `0 16px 48px rgb(11 12 14 / 0.16)` in light. Nothing at rest has a shadow.
+
+## Theme boot
+
+`globals.css` is the source for theme values. Runtime theme code sets the `light` or `dark` class and writes the three accent tokens. Theme and accent apply before hydration so the page never flashes.

@@ -1,13 +1,11 @@
-import { UserProfile, useUser } from "@clerk/tanstack-react-start";
 import { useOptionalAuth } from "@/lib/optional-auth";
-import type { FunctionReturnType } from "convex/server";
+import { UserProfile, useUser } from "@clerk/tanstack-react-start";
 import { Link } from "@tanstack/react-router";
+import type { FunctionReturnType } from "convex/server";
 import { useState } from "react";
 
-import { api } from "../../convex/_generated/api";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
@@ -17,15 +15,15 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { shouldShowSubscriptionWelcome } from "@/lib/subscription-onboarding";
-import { cn } from "@/lib/utils";
+import { api } from "../../convex/_generated/api";
 import {
-  CREATOR_MONTHLY_PRICE_USD,
-  TEAM_MONTHLY_PRICE_USD,
-  TEAM_INCLUDED_EDITOR_SEATS,
-  EXTRA_EDITOR_MONTHLY_PRICE_USD,
   CREATOR_LAUNCH_STORAGE_GB,
-  TEAM_LAUNCH_STORAGE_GB,
+  CREATOR_MONTHLY_PRICE_USD,
+  EXTRA_EDITOR_MONTHLY_PRICE_USD,
   FREE_OPEN_PROJECT_LIMIT,
+  TEAM_INCLUDED_EDITOR_SEATS,
+  TEAM_LAUNCH_STORAGE_GB,
+  TEAM_MONTHLY_PRICE_USD,
 } from "../../shared/subscription-plans";
 
 export type WorkspaceSubscriptionState = NonNullable<
@@ -44,33 +42,25 @@ const capabilityUpgradeCopy = {
 
 type PaidWorkspaceCapability = keyof typeof capabilityUpgradeCopy;
 
-/**
- * Upsell row for a locked capability. Use `inline` inside an existing panel so
- * the prompt does not become a card nested in a card.
- */
+/** A flat permission hint beside the locked capability. */
 export function CapabilityUpgradePrompt({
   capability,
-  inline = false,
 }: {
   capability: PaidWorkspaceCapability;
   inline?: boolean;
 }) {
   const name = capabilityUpgradeCopy[capability];
   return (
-    <div
-      className={cn(
-        "flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between",
-        !inline &&
-          "rounded-[var(--radius-panel)] border bg-[var(--surface-sunken)] p-4"
-      )}
-    >
+    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
       <div>
-        <p className="text-sm font-medium">Creator unlocks {name}.</p>
-        <p className="mt-1 text-xs text-muted-foreground">
+        <p className="text-meta text-[var(--text-meta)]">
+          Creator unlocks {name}.
+        </p>
+        <p className="mt-1 text-meta text-[var(--text-meta)]">
           Creator is not available yet. Paid plans are coming later.
         </p>
       </div>
-      <Button asChild size="sm" variant="outline">
+      <Button asChild size="sm" variant="secondary">
         <Link to="/subscription">View plans</Link>
       </Button>
     </div>
@@ -80,7 +70,7 @@ export function CapabilityUpgradePrompt({
 type BillingStatusContent = {
   title: string;
   body: string;
-  variant: "destructive" | "secondary";
+  status: "warning" | "neutral" | "success" | "info";
 };
 
 function getBillingStatus(
@@ -90,14 +80,14 @@ function getBillingStatus(
     return {
       title: "Payment needs attention",
       body: "Relay is using safe Free limits. Existing work is preserved.",
-      variant: "destructive",
+      status: "warning",
     };
   }
   if (subscription.subscriptionStatus === "canceled") {
     return {
       title: "Subscription canceled",
       body: "Existing work stays available. New paid access remains locked.",
-      variant: "secondary",
+      status: "neutral",
     };
   }
   if (
@@ -109,14 +99,14 @@ function getBillingStatus(
       body: subscription.trialEndsAt
         ? `Trial ends ${new Intl.DateTimeFormat(undefined, { dateStyle: "medium" }).format(new Date(subscription.trialEndsAt))}.`
         : "Creator access is available for the duration of your confirmed trial.",
-      variant: "secondary",
+      status: "neutral",
     };
   }
   if (subscription.reconciliationState === "pending") {
     return {
       title: "Setting up Workspace billing",
       body: "Free access remains available while Relay connects Clerk.",
-      variant: "secondary",
+      status: "neutral",
     };
   }
   return null;
@@ -131,20 +121,21 @@ function BillingStatus({
 
   if (!status) return null;
   return (
-    <Card role="status" className="mb-4 rounded-none">
-      <CardContent className="flex flex-col gap-3 py-3 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <p className="font-semibold">{status.title}</p>
-          <p className="text-sm text-muted-foreground">{status.body}</p>
-        </div>
-        <Badge variant={status.variant}>{subscription.plan}</Badge>
-      </CardContent>
-    </Card>
+    <section
+      role="status"
+      className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"
+    >
+      <div>
+        <p className="font-medium">{status.title}</p>
+        <p className="text-body text-[var(--text-primary)]">{status.body}</p>
+      </div>
+      <Badge status={status.status}>{subscription.plan}</Badge>
+    </section>
   );
 }
 
 /**
- * Plans and billing body. The Creator trial card only offers a trial when the
+ * Plans and billing body. Creator is offered as a trial only when the
  * backend reports trials as open; otherwise it says Creator is not available
  * yet (signed-out visitors, with no `trial`, see the same). A running trial
  * still shows as active.
@@ -164,67 +155,68 @@ export function SubscriptionPricingView({
 }) {
   const trialsOpen = trial?.open === true;
   return (
-    <div className="min-h-[calc(100dvh-15rem)] p-4 md:p-6">
-      <div className="mb-4 flex items-center gap-2">
-        <span className="text-sm text-muted-foreground">Workspace plans</span>
-        <Badge variant="outline">
+    <div className="grid gap-(--space-section) text-body text-[var(--text-primary)]">
+      <div className="flex flex-wrap items-center gap-2">
+        <Badge variant="secondary">
           {trialsOpen
             ? "Creator trial: 7 days"
             : "Paid plans: not available yet"}
         </Badge>
       </div>
-      <Card className="mb-4">
-        <CardContent className="space-y-3 py-5">
-          <h2 className="text-lg font-semibold">Start with Free</h2>
+      <section className="border-t border-[var(--border-hairline)] pt-4">
+        <h2 className="text-meta font-medium text-[var(--text-meta)]">
+          Start with Free
+        </h2>
+        <div className="mt-3 space-y-3">
           <p>
             {FREE_OPEN_PROJECT_LIMIT} Projects in progress at a time, unlimited
             Clients and Project history, basic workflow tracking, standard
             Client Portals, and client review on embedded videos.
           </p>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-body text-[var(--text-primary)]">
             Free supports one Workspace owner. Hosted uploads and paid
             capabilities remain unavailable on Free.
           </p>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-body text-[var(--text-primary)]">
             Creator is ${CREATOR_MONTHLY_PRICE_USD} per Workspace per month.
             Team is ${TEAM_MONTHLY_PRICE_USD} per Workspace per month for{" "}
             {TEAM_INCLUDED_EDITOR_SEATS} editors, including the owner, plus $
             {EXTRA_EDITOR_MONTHLY_PRICE_USD} per extra editor. Clients and Team
             viewers do not need paid seats.
           </p>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-body text-[var(--text-primary)]">
             Creator adds Client Hub, custom portal branding, custom Workflow
             Templates, advanced reports, and payment plans and batches. Batches
             from a paid plan stay visible on Free.
           </p>
-          <p role="status" className="text-sm text-muted-foreground">
+          <p role="status" className="text-body text-[var(--text-primary)]">
             Paid plans are coming later and are not available to purchase yet.
           </p>
-        </CardContent>
-      </Card>
+        </div>
+      </section>
       {trialsOpen || trial?.active ? (
-        <Card className="mb-4">
-          <CardContent className="space-y-3 py-5">
-            <h2 className="text-lg font-semibold">
-              Try Creator free for 7 days
-            </h2>
+        <section className="border-t border-[var(--border-hairline)] pt-4">
+          <h2 className="text-meta font-medium text-[var(--text-meta)]">
+            Try Creator free for 7 days
+          </h2>
+          <div className="mt-3 space-y-3">
             <p>
               Try hosted uploads, 5 GB of storage, custom Workflow Templates,
               advanced reports, Client Hub, custom portal branding, and payment
               plans and batches.
             </p>
-            <p className="text-sm text-muted-foreground">
+            <p className="text-body text-[var(--text-primary)]">
               No card required and no automatic charge. After 7 days your
               Workspace returns to Free; your existing work stays available. One
               trial per account and Workspace. Team does not include a free
               trial.
             </p>
             {trial?.active ? (
-              <p role="status" className="text-sm text-muted-foreground">
+              <p role="status" className="text-body text-[var(--text-primary)]">
                 Your Creator trial is active.
               </p>
             ) : trial?.used ? (
-              <p role="status" className="text-sm text-muted-foreground">
+              <p role="status" className="text-body text-[var(--text-primary)]">
                 This account or Workspace has already used its Creator trial.
               </p>
             ) : (
@@ -239,23 +231,23 @@ export function SubscriptionPricingView({
               </Button>
             )}
             {subscription && !subscription.canManageBilling ? (
-              <p className="text-sm text-muted-foreground">
+              <p className="text-body text-[var(--text-primary)]">
                 Only the Workspace Owner can start the trial.
               </p>
             ) : null}
             {trialError ? (
-              <p role="alert" className="text-sm text-destructive">
+              <p role="alert" className="text-meta text-[var(--status-danger)]">
                 {trialError}
               </p>
             ) : null}
-          </CardContent>
-        </Card>
+          </div>
+        </section>
       ) : (
-        <Card className="mb-4">
-          <CardContent className="space-y-3 py-5">
-            <h2 className="text-lg font-semibold">
-              Creator is not available yet
-            </h2>
+        <section className="border-t border-[var(--border-hairline)] pt-4">
+          <h2 className="text-meta font-medium text-[var(--text-meta)]">
+            Creator is not available yet
+          </h2>
+          <div className="mt-3 space-y-3">
             <p>
               Client Hub, custom portal branding, custom Workflow Templates,
               advanced reports, and payment plans and batches arrive with paid
@@ -263,14 +255,16 @@ export function SubscriptionPricingView({
               storage is {CREATOR_LAUNCH_STORAGE_GB} GB for Creator and{" "}
               {TEAM_LAUNCH_STORAGE_GB} GB shared for Team.
             </p>
-            <p role="status" className="text-sm text-muted-foreground">
+            <p role="status" className="text-body text-[var(--text-primary)]">
               Creator and Team cannot be started or purchased right now.
             </p>
-          </CardContent>
-        </Card>
+          </div>
+        </section>
       )}
       {subscription && subscription.subscriptionStatus !== "free" ? (
-        <BillingStatus subscription={subscription} />
+        <div className="border-t border-[var(--border-hairline)] pt-4">
+          <BillingStatus subscription={subscription} />
+        </div>
       ) : null}
     </div>
   );
@@ -333,12 +327,14 @@ export function FirstLoginPlanDialog() {
           </DialogDescription>
         </DialogHeader>
         {error ? (
-          <p role="alert" className="text-sm text-destructive">
+          <p role="alert" className="text-meta text-[var(--status-danger)]">
             {error}
           </p>
         ) : null}
         <DialogFooter>
           <Button
+            pending={saving}
+            pendingLabel="Starting..."
             type="button"
             disabled={saving}
             onClick={() => void continueToWorkspace()}

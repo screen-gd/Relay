@@ -4,6 +4,16 @@ import {
 } from "@/components/review-video-player";
 
 import {
+  ArrowUpRight,
+  CalendarDays,
+  Check,
+  Download,
+  FileText,
+  LockKeyhole,
+  ShieldCheck,
+} from "@/components/icons";
+import { useMutation, useQuery } from "convex/react";
+import {
   useEffect,
   useMemo,
   useRef,
@@ -11,26 +21,15 @@ import {
   type FormEvent,
   type ReactNode,
 } from "react";
-import { useMutation, useQuery } from "convex/react";
 import { api } from "../../../convex/_generated/api";
 import type { Id } from "../../../convex/_generated/dataModel";
-import {
-  ArrowUpRight,
-  CalendarDays,
-  Check,
-  Download,
-  FileText,
-  LockKeyhole,
-  LoaderCircle,
-  ShieldCheck,
-} from "@/components/icons";
 
+import { RelayBrand } from "@/app/relay-brand";
+import { PublicMediaVersionComments } from "@/components/media-version-comments";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { PublicMediaVersionComments } from "@/components/media-version-comments";
-import { normalizeMediaUrl } from "@/features/project-outputs/project-output-domain";
 import {
   RevisionAllowance,
   readRevisionAllowance,
@@ -38,9 +37,9 @@ import {
 } from "@/features/client-portals/internal/revision-allowance";
 import type { MediaVersionComment } from "@/features/media-version-comments/media-version-comments";
 import { parseMediaVersionComments } from "@/features/media-version-comments/media-version-comments-data";
+import { normalizeMediaUrl } from "@/features/project-outputs/project-output-domain";
 import { trackOptionalEvent } from "@/lib/telemetry";
 import { cn } from "@/lib/utils";
-import { RelayBrand } from "@/app/relay-brand";
 
 type PublicSource = {
   provider: "YouTube" | "Vimeo" | "Drive" | "Dropbox" | "Link";
@@ -470,9 +469,7 @@ export function ClientPortalView({ token }: { token: string }) {
       <AccessState
         title="Loading your project"
         body="Checking the shared portal link."
-      >
-        <LoaderCircle className="size-7 animate-spin" aria-hidden="true" />
-      </AccessState>
+      ></AccessState>
     );
   if (access.kind === "invalid")
     return (
@@ -516,7 +513,7 @@ export function ClientPortalView({ token }: { token: string }) {
           onSubmit={(event) => void unlock(event)}
           className="w-full max-w-sm space-y-3 text-left"
         >
-          <Label htmlFor="portal-pin" className="text-sm font-medium">
+          <Label htmlFor="portal-pin" className="font-medium">
             Portal PIN
           </Label>
           <Input
@@ -533,12 +530,12 @@ export function ClientPortalView({ token }: { token: string }) {
             autoComplete="current-password"
             autoFocus
             aria-invalid={Boolean(pinError)}
-            className="bg-background"
+            className=""
           />
           <p
             className={cn(
-              "text-xs text-muted-foreground",
-              (pinError || access.wrongPin) && "text-destructive"
+              "text-meta text-[var(--text-meta)]",
+              (pinError || access.wrongPin) && "text-[var(--status-danger)]"
             )}
             role={pinError || access.wrongPin ? "alert" : undefined}
           >
@@ -584,12 +581,12 @@ function AccessState({
   children?: ReactNode;
 }) {
   return (
-    <main className="grid min-h-dvh place-items-center bg-background px-5 py-10 text-foreground">
-      <section className="w-full max-w-lg border border-border bg-card p-6 text-card-foreground sm:p-10">
+    <main className="grid min-h-dvh place-items-center bg-background px-4 py-10 text-[var(--text-primary)]">
+      <section className="w-full max-w-lg p-6 text-[var(--text-primary)] sm:p-10">
         <RelayBrand compact />
-        <div className="mt-14 flex flex-col items-center text-center">
+        <div className="mt-12 flex flex-col items-center text-center">
           <span
-            className="grid size-14 place-items-center border border-border text-muted-foreground"
+            className="grid size-14 place-items-center text-[var(--text-meta)]"
             aria-hidden="true"
           >
             {children ? (
@@ -598,15 +595,13 @@ function AccessState({
               <ShieldCheck className="size-6" />
             )}
           </span>
-          <h1 className="mt-6 text-2xl font-semibold tracking-tight">
-            {title}
-          </h1>
-          <p className="mt-2 max-w-sm text-sm leading-6 text-muted-foreground">
+          <h1 className="mt-6 text-metric font-semibold">{title}</h1>
+          <p className="mt-2 max-w-sm text-body text-[var(--text-meta)]">
             {body}
           </p>
           {children ? <div className="mt-8 w-full">{children}</div> : null}
         </div>
-        <p className="mt-14 text-xs text-muted-foreground">
+        <p className="mt-12 text-meta text-[var(--text-meta)]">
           Private project view · No account required
         </p>
       </section>
@@ -649,12 +644,12 @@ function ActivePortal({
   const currentStage = displayStage(portal.stage);
   const currentIndex = PUBLIC_STAGES.findIndex((item) => item === currentStage);
   return (
-    <main className="min-h-dvh bg-background text-foreground">
-      <div className="mx-auto w-full max-w-3xl px-5 py-6 sm:px-8 sm:py-10">
-        <header className="flex items-center justify-between gap-4 border-b border-border pb-5">
+    <main className="min-h-dvh bg-background text-[var(--text-primary)]">
+      <div className="mx-auto w-full max-w-3xl px-4 py-6 sm:px-8 sm:py-10">
+        <header className="flex items-center justify-between gap-4 pb-4">
           {portal.branding ? (
             <span
-              className="text-base font-semibold"
+              className="text-title font-semibold"
               style={{ color: portal.branding.accentColor }}
             >
               {portal.branding.name}
@@ -662,32 +657,32 @@ function ActivePortal({
           ) : (
             <RelayBrand compact />
           )}
-          <span className="text-xs font-medium text-muted-foreground">
+          <span className="text-meta font-medium text-[var(--text-meta)]">
             Client portal
           </span>
         </header>
-        <section className="border-b border-border py-12">
-          <p className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+        <section className="py-12">
+          <p className="text-meta font-semibold text-[var(--text-meta)]">
             Shared project
           </p>
-          <h1 className="mt-3 max-w-2xl text-3xl font-semibold tracking-tight sm:text-5xl">
+          <h1 className="mt-3 max-w-2xl text-display font-semibold sm:text-display">
             {portal.title}
           </h1>
           {portal.clientName ? (
-            <p className="mt-3 text-sm text-muted-foreground">
+            <p className="mt-3 text-body text-[var(--text-meta)]">
               For {portal.clientName}
             </p>
           ) : null}
           {portal.summary ? (
-            <p className="mt-7 max-w-2xl text-base leading-7 text-muted-foreground">
+            <p className="mt-8 max-w-2xl text-title text-[var(--text-meta)]">
               {portal.summary}
             </p>
           ) : null}
-          <div className="mt-8 flex flex-wrap gap-x-8 gap-y-3 text-sm">
+          <div className="mt-8 flex flex-wrap gap-x-8 gap-y-3 text-body">
             {portal.startDate ? (
               <span className="inline-flex items-center gap-2">
                 <CalendarDays
-                  className="size-4 text-muted-foreground"
+                  className="size-4 text-[var(--text-meta)]"
                   aria-hidden="true"
                 />
                 Started {formatDate(portal.startDate)}
@@ -695,7 +690,7 @@ function ActivePortal({
             ) : null}
             <span className="inline-flex items-center gap-2">
               <CalendarDays
-                className="size-4 text-muted-foreground"
+                className="size-4 text-[var(--text-meta)]"
                 aria-hidden="true"
               />
               Due {formatDate(portal.dueDate)}
@@ -709,20 +704,17 @@ function ActivePortal({
             </span>
           </div>
         </section>
-        <section
-          aria-labelledby="progress-title"
-          className="border-b border-border py-10"
-        >
+        <section aria-labelledby="progress-title" className="py-10">
           <div className="flex items-end justify-between gap-4">
             <div>
-              <h2 id="progress-title" className="text-lg font-semibold">
+              <h2 id="progress-title" className="text-title font-semibold">
                 Project progress
               </h2>
-              <p className="mt-1 text-sm text-muted-foreground">
+              <p className="mt-1 text-body text-[var(--text-meta)]">
                 A client-safe view of the current stage.
               </p>
             </div>
-            <span className="text-2xl font-semibold tabular-nums">
+            <span className="text-metric font-semibold tabular-nums">
               {portal.progress}%
             </span>
           </div>
@@ -732,14 +724,14 @@ function ActivePortal({
             aria-valuemin={0}
             aria-valuemax={100}
             aria-valuenow={portal.progress}
-            className="mt-6 h-1.5 bg-muted"
+            className="mt-6 h-1.5 bg-transparent"
           >
             <span
               className="block h-full bg-foreground"
               style={{ width: `${portal.progress}%` }}
             />
           </div>
-          <ol className="mt-7 grid grid-cols-2 gap-y-5 sm:grid-cols-4 sm:gap-x-4">
+          <ol className="mt-8 grid grid-cols-2 gap-y-4 sm:grid-cols-4 sm:gap-x-4">
             {PUBLIC_STAGES.map((stage, index) => {
               const complete = currentIndex >= 0 && index < currentIndex;
               const current = stage === currentStage;
@@ -747,25 +739,25 @@ function ActivePortal({
                 <li
                   key={stage}
                   aria-current={current ? "step" : undefined}
-                  className="flex items-center gap-2 text-sm"
+                  className="flex items-center gap-2 text-body"
                 >
                   <span
                     className={cn(
-                      "grid size-6 shrink-0 place-items-center border text-xs",
+                      "grid size-6 shrink-0 place-items-center text-meta",
                       complete || current
-                        ? "border-foreground bg-foreground text-background"
-                        : "border-border text-muted-foreground"
+                        ? "bg-foreground text-background"
+                        : "text-[var(--text-meta)]"
                     )}
                   >
                     {complete ? (
-                      <Check className="size-3.5" aria-hidden="true" />
+                      <Check className="size-4" aria-hidden="true" />
                     ) : (
                       index + 1
                     )}
                   </span>
                   <span
                     className={cn(
-                      current ? "font-semibold" : "text-muted-foreground"
+                      current ? "font-semibold" : "text-[var(--text-meta)]"
                     )}
                   >
                     {stage}
@@ -778,18 +770,18 @@ function ActivePortal({
         <section aria-labelledby="outputs-title" className="py-10">
           <div className="flex items-end justify-between gap-4">
             <div>
-              <h2 id="outputs-title" className="text-lg font-semibold">
+              <h2 id="outputs-title" className="text-title font-semibold">
                 Shared outputs
               </h2>
-              <p className="mt-1 text-sm text-muted-foreground">
+              <p className="mt-1 text-body text-[var(--text-meta)]">
                 Only the current version shared by your editor appears here.
               </p>
               <RevisionAllowance allowance={portal.revisions} />
             </div>
-            <Badge variant="outline">{portal.outputs.length}</Badge>
+            <Badge variant="secondary">{portal.outputs.length}</Badge>
           </div>
           {portal.outputs.length ? (
-            <div className="mt-6 divide-y divide-border border-y border-border">
+            <div className="mt-6">
               {portal.outputs.map((output) => (
                 <PublicOutputRow
                   key={output.id}
@@ -807,26 +799,23 @@ function ActivePortal({
               ))}
             </div>
           ) : (
-            <div className="mt-6 border border-dashed border-border p-8 text-center text-sm text-muted-foreground">
+            <div className="mt-6 p-8 text-center text-body text-[var(--text-meta)]">
               No outputs have been shared yet.
             </div>
           )}
         </section>
         <PublicFilesSection files={files} loading={filesLoading} />
         {portal.notes ? (
-          <section
-            aria-labelledby="notes-title"
-            className="border-t border-border py-10"
-          >
-            <h2 id="notes-title" className="text-lg font-semibold">
+          <section aria-labelledby="notes-title" className="py-10">
+            <h2 id="notes-title" className="text-title font-semibold">
               Notes from your editor
             </h2>
-            <p className="mt-3 max-w-2xl whitespace-pre-wrap text-sm leading-6 text-muted-foreground">
+            <p className="mt-3 max-w-2xl whitespace-pre-wrap text-body text-[var(--text-meta)]">
               {portal.notes}
             </p>
           </section>
         ) : null}
-        <footer className="border-t border-border pt-5 text-xs text-muted-foreground">
+        <footer className="pt-4 text-meta text-[var(--text-meta)]">
           Shared securely through Relay.
         </footer>
       </div>
@@ -842,44 +831,41 @@ function PublicFilesSection({
   loading: boolean;
 }) {
   return (
-    <section
-      aria-labelledby="files-title"
-      className="border-t border-border py-10"
-    >
+    <section aria-labelledby="files-title" className="py-10">
       <div className="flex items-end justify-between gap-4">
         <div>
-          <h2 id="files-title" className="text-lg font-semibold">
+          <h2 id="files-title" className="text-title font-semibold">
             Files
           </h2>
-          <p className="mt-1 text-sm text-muted-foreground">
+          <p className="mt-1 text-body text-[var(--text-meta)]">
             Files your editor has chosen to share.
           </p>
         </div>
-        <Badge variant="outline">{loading ? "…" : files.length}</Badge>
+        <Badge variant="secondary">{loading ? "…" : files.length}</Badge>
       </div>
       {loading ? (
-        <p className="mt-6 text-sm text-muted-foreground">
+        <p className="mt-6 text-body text-[var(--text-meta)]">
           Loading shared files…
         </p>
       ) : files.length ? (
-        <div className="mt-6 divide-y divide-border border-y border-border">
+        <div className="mt-6">
           {files.map((file) => (
             <article
               key={file.id}
-              className="grid gap-3 py-5 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center"
+              className="grid gap-3 py-4 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center"
             >
               <div className="flex min-w-0 gap-3">
                 <FileText
-                  className="mt-0.5 size-4 shrink-0 text-muted-foreground"
+                  className="mt-1 size-4 shrink-0 text-[var(--text-meta)]"
                   aria-hidden="true"
                 />
                 <div className="min-w-0">
                   <h3 className="truncate font-semibold">{file.title}</h3>
-                  <p className="mt-1 truncate text-xs text-muted-foreground">
+                  <p className="mt-1 truncate text-meta text-[var(--text-meta)]">
                     {fileKind(file.mimeType)} · {file.fileName}
                   </p>
                   {file.description ? (
-                    <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-muted-foreground">
+                    <p className="mt-2 whitespace-pre-wrap text-body text-[var(--text-meta)]">
                       {file.description}
                     </p>
                   ) : null}
@@ -890,7 +876,7 @@ function PublicFilesSection({
                   href={file.url}
                   target="_blank"
                   rel="noreferrer"
-                  className="inline-flex items-center gap-2 text-sm font-medium underline decoration-border underline-offset-4 hover:decoration-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  className="inline-flex items-center gap-2 text-body font-medium underline decoration-border underline-offset-4 hover:decoration-foreground"
                 >
                   Open <ArrowUpRight className="size-4" aria-hidden="true" />
                 </a>
@@ -898,7 +884,7 @@ function PublicFilesSection({
                   <a
                     href={file.url}
                     download={file.fileName}
-                    className="inline-flex items-center gap-2 text-sm font-medium underline decoration-border underline-offset-4 hover:decoration-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    className="inline-flex items-center gap-2 text-body font-medium underline decoration-border underline-offset-4 hover:decoration-foreground"
                   >
                     Download <Download className="size-4" aria-hidden="true" />
                   </a>
@@ -908,7 +894,7 @@ function PublicFilesSection({
           ))}
         </div>
       ) : (
-        <p className="mt-6 border border-dashed border-border p-8 text-center text-sm text-muted-foreground">
+        <p className="mt-6 p-8 text-center text-body text-[var(--text-meta)]">
           No files have been shared yet.
         </p>
       )}
@@ -957,10 +943,10 @@ export function PublicOutputRow({
       ? media.value.embedUrl
       : undefined;
   return (
-    <article className="grid gap-4 py-5 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
+    <article className="grid gap-4 py-4 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
       <div className="min-w-0">
         <h3 className="font-semibold">{output.title}</h3>
-        <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
+        <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-meta text-[var(--text-meta)]">
           {state ? <span>{state}</span> : null}
           {output.dueDate ? (
             <span>Due {formatDate(output.dueDate)}</span>
@@ -977,23 +963,23 @@ export function PublicOutputRow({
           href={currentVersion.source.url}
           target="_blank"
           rel="noreferrer"
-          className="inline-flex w-fit items-center gap-2 text-sm font-medium underline decoration-border underline-offset-4 hover:decoration-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          className="inline-flex w-fit items-center gap-2 text-body font-medium underline decoration-border underline-offset-4 hover:decoration-foreground"
         >
           Open current version{" "}
           <ArrowUpRight className="size-4" aria-hidden="true" />
         </a>
       ) : (
-        <span className="text-sm text-muted-foreground">
+        <span className="text-body text-[var(--text-meta)]">
           No version shared yet
         </span>
       )}
       {currentVersion?.changelog ? (
         <section
           aria-label="What changed"
-          className="sm:col-span-2 dark:bg-black dark:text-white"
+          className="sm:col-span-2 text-[var(--text-primary)]"
         >
-          <h4 className="text-sm font-semibold">What changed</h4>
-          <p className="mt-2 whitespace-pre-wrap text-sm">
+          <h4 className="text-body font-semibold">What changed</h4>
+          <p className="mt-2 whitespace-pre-wrap text-body">
             {currentVersion.changelog}
           </p>
         </section>

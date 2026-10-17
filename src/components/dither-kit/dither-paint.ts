@@ -17,9 +17,8 @@ export const BAYER = [
 export const CELL = 2; // css px per dither cell — chunky enough to read pixelated
 export const MAX_COLS = 520;
 export const MAX_ROWS = 200;
-// Opacity of the top border outline (just under solid, so it reads as a soft
-// edge rather than a hard line). See the note on colour vs opacity below.
-export const BORDER_ALPHA = 0.72;
+// Keep the series outline at its token contrast against the page.
+export const BORDER_ALPHA = 1;
 // Opacity of a dither "off" cell relative to an "on" cell. The scatter modulates
 // between these two tiers of the *same* colour instead of leaving holes, so the
 // background never shows through as stark white on a light theme.
@@ -99,13 +98,36 @@ export function paintColumn(
 }
 
 /** Linear-resample a per-index fraction array to `cols` columns. */
-export function resample(src: number[], cols: number): number[] {
+/**
+ * Resamples a per-index series across the plot's columns. `span` limits the
+ * result to the pixels the series actually covers — columns outside it come
+ * back as NaN so the caller skips them, which stops a series that has no width
+ * of its own (a lone category) from stretching across the whole plot.
+ */
+export function resample(
+  src: number[],
+  cols: number,
+  span?: { start: number; end: number; width: number }
+): number[] {
   const out = new Array<number>(cols);
   const last = Math.max(src.length - 1, 1);
+  const plotWidth = span?.width ?? cols;
   for (let c = 0; c < cols; c++) {
-    const t = (c / Math.max(cols - 1, 1)) * last;
-    const i = Math.floor(t);
-    const f = t - i;
+    let t = c / Math.max(cols - 1, 1);
+    if (span) {
+      const px = ((c + 0.5) / cols) * plotWidth;
+      if (px < span.start || px > span.end) {
+        out[c] = Number.NaN;
+        continue;
+      }
+      t =
+        span.end === span.start
+          ? 0
+          : (px - span.start) / (span.end - span.start);
+    }
+    const position = t * last;
+    const i = Math.floor(position);
+    const f = position - i;
     const a = src[i] ?? 0;
     const b = src[Math.min(i + 1, src.length - 1)] ?? a;
     out[c] = a + (b - a) * f;
@@ -121,61 +143,4 @@ export function backingSize(width: number, height: number) {
   };
 }
 
-// Bloom — a real "shader" glow that comes from the colours themselves: a blurred
-// copy of the rendered canvas, composited additively (`plus-lighter`) so each
-// hue blooms in its own colour instead of a grey wash. Lives on a second canvas
-// layered over the crisp one (which stays sharp/pixelated).
-export type BloomLevel = "off" | "low" | "high" | "aura";
-export type BloomBlend = "plus-lighter" | "screen" | "lighten";
-export type BloomConfig = {
-  blur: number; // px
-  brightness: number; // 1 = none
-  opacity: number; // 0–1
-  /** Saturation of the glow — >1 keeps it vividly in the dither's colour
-   * instead of washing toward white. */
-  saturate?: number;
-  blend?: BloomBlend; // additive by default
-};
-/** A preset name, a full config, or "off". */
-export type BloomInput = BloomLevel | BloomConfig;
-
-const PRESET: Record<Exclude<BloomLevel, "off">, BloomConfig> = {
-  low: { blur: 3, brightness: 1.35, opacity: 0.7, saturate: 1.4 },
-  high: { blur: 5, brightness: 1.5, opacity: 0.78, saturate: 1.5 },
-  aura: { blur: 15, brightness: 2.9, opacity: 0.1, saturate: 3 },
-};
-
-export type BloomStyle = {
-  filter: string;
-  opacity: number;
-  mixBlendMode: BloomBlend;
-  imageRendering: "auto";
-};
-
-/** Style for the bloom *layer* canvas (a blurred, additive copy). null when off. */
-export function bloomLayerStyle(
-  input: BloomInput,
-  active: boolean
-): BloomStyle | null {
-  if (!active || input === "off") return null;
-  const cfg = typeof input === "string" ? PRESET[input] : input;
-  return {
-    filter: `blur(${cfg.blur}px) brightness(${cfg.brightness}) saturate(${cfg.saturate ?? 1})`,
-    opacity: cfg.opacity,
-    mixBlendMode: cfg.blend ?? "plus-lighter",
-    imageRendering: "auto",
-  };
-}
-
-// Easing — gentle start + soft settle so entrances don't feel linear.
-export const easeInOutCubic = (t: number) =>
-  t < 0.5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2;
-export const easeOutCubic = (t: number) => 1 - (1 - t) ** 3;
 export const clamp01 = (t: number) => (t < 0 ? 0 : t > 1 ? 1 : t);
-
-/** Whether the OS asks for reduced motion (snap + steady stars). */
-export function prefersReducedMotion() {
-  return (
-    window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches ?? false
-  );
-}

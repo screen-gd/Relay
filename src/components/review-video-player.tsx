@@ -136,7 +136,7 @@ export function ReviewVideoPlayer({
   return (
     <div
       ref={container}
-      className="aspect-video overflow-hidden rounded-lg bg-black sm:col-span-2"
+      className="aspect-video overflow-hidden rounded-md bg-[var(--surface-page)] sm:col-span-2"
     />
   );
 }

@@ -1,8 +1,8 @@
 import { supportEmail } from "@/lib/support-contact";
 
-import { useState, type ReactNode } from "react";
-import { Link } from "@tanstack/react-router";
 import { Check } from "@/components/icons";
+import { Link } from "@tanstack/react-router";
+import { useState, type ReactNode } from "react";
 
 import { RelayBrand } from "@/app/relay-brand";
 import { Button } from "@/components/ui/button";
@@ -126,12 +126,14 @@ export function OnboardingStepperDialog({
       <DialogContent
         showCloseButton={false}
         data-testid="onboarding-dialog"
-        className="max-h-[calc(100dvh-2rem)] gap-0 overflow-y-auto border-[var(--app-border)] bg-[var(--app-panel)] p-6 text-[var(--app-ink)] sm:max-w-lg"
+        className="max-h-[calc(100dvh-2rem)] gap-0 overflow-y-auto sm:max-w-lg"
         onEscapeKeyDown={(event) => event.preventDefault()}
         onPointerDownOutside={(event) => event.preventDefault()}
       >
         {/* One accessible title for the dialog; steps render visible headings. */}
-        <DialogTitle className="sr-only">{titles[current].title}</DialogTitle>
+        <DialogTitle className="text-title">
+          {titles[current].title}
+        </DialogTitle>
         <DialogDescription className="sr-only">
           {titles[current].description}
         </DialogDescription>
@@ -155,10 +157,10 @@ export function OnboardingStepperDialog({
           {stepIds.map((id) => (
             <Step key={id}>
               <header>
-                <h2 className="text-xl font-semibold tracking-[-0.02em]">
+                <h2 className="text-metric font-semibold">
                   {titles[id].title}
                 </h2>
-                <p className="mt-1 text-sm text-[var(--app-muted)]">
+                <p className="mt-1 text-body text-[var(--text-meta)]">
                   {titles[id].description}
                 </p>
               </header>
@@ -186,7 +188,7 @@ export function OnboardingStepperDialog({
 
 function WelcomeStep() {
   return (
-    <p className="text-sm leading-relaxed text-[var(--app-ink)]">
+    <p className="text-body text-[var(--text-primary)]">
       If you find a bug, tell us on X at{" "}
       <a
         className="font-medium underline underline-offset-4"
@@ -234,24 +236,15 @@ function ModeStep({
           body="Sync your workspace and use Team features."
         />
       </ChoiceGroup>
-      <div className="flex flex-wrap items-center justify-between gap-2 text-sm">
-        <Button
-          type="button"
-          variant="link"
-          className="h-auto px-0 text-[var(--app-ink)]"
-          onClick={onSignIn}
-        >
+      <div className="flex flex-wrap items-center justify-between gap-2 text-body">
+        <Button type="button" variant="ghost" className="" onClick={onSignIn}>
           Sign in
         </Button>
-        <Button
-          asChild
-          variant="link"
-          className="h-auto px-0 text-[var(--app-ink)]"
-        >
+        <Button asChild variant="ghost" className="">
           <Link to="/sample-studio">Open sample workspace</Link>
         </Button>
       </div>
-      <p className="text-xs leading-relaxed text-[var(--app-muted)]">
+      <p className="text-meta text-[var(--text-meta)]">
         Read the{" "}
         <Link to="/privacy" className="underline underline-offset-2">
           Privacy Policy
@@ -262,7 +255,7 @@ function ModeStep({
         </Link>
         .
       </p>
-      <p className="text-xs leading-relaxed text-[var(--app-muted)]">
+      <p className="text-meta text-[var(--text-meta)]">
         <TrustLinks />
       </p>
     </>
@@ -337,7 +330,7 @@ function AnalyticsStep({
 }) {
   return (
     <>
-      <p className="text-sm leading-relaxed text-[var(--app-ink)]">
+      <p className="text-body text-[var(--text-primary)]">
         Relay never sends client names, project names, comments, files, links,
         portal tokens, or money.
       </p>
@@ -367,13 +360,50 @@ function ChoiceGroup({
   children: ReactNode;
 }) {
   return (
-    <div role="radiogroup" aria-label={label} className="grid gap-2">
+    <div
+      role="radiogroup"
+      aria-label={label}
+      className="grid gap-2"
+      onKeyDown={(event) => {
+        if (
+          ![
+            "ArrowDown",
+            "ArrowRight",
+            "ArrowUp",
+            "ArrowLeft",
+            "Home",
+            "End",
+          ].includes(event.key)
+        )
+          return;
+        const choices = Array.from(
+          event.currentTarget.querySelectorAll<HTMLButtonElement>(
+            "button[role=radio]:not(:disabled)"
+          )
+        );
+        const current = choices.findIndex(
+          (choice) => choice === document.activeElement
+        );
+        if (current < 0 || !choices.length) return;
+        event.preventDefault();
+        const step =
+          event.key === "ArrowDown" || event.key === "ArrowRight" ? 1 : -1;
+        const next =
+          event.key === "Home"
+            ? 0
+            : event.key === "End"
+              ? choices.length - 1
+              : (current + step + choices.length) % choices.length;
+        choices[next].focus();
+        choices[next].click();
+      }}
+    >
       {children}
     </div>
   );
 }
 
-/** A selectable row in a `ChoiceGroup`, marked by its border and check. */
+/** A selectable row in a `ChoiceGroup`, marked by its fill and check. */
 function Choice({
   selected,
   onSelect,
@@ -388,41 +418,38 @@ function Choice({
   note?: string;
 }) {
   return (
-    <Button
+    <button
       type="button"
-      variant="ghost"
       role="radio"
       aria-checked={selected}
       onClick={onSelect}
       className={cn(
-        "h-auto w-full justify-start items-start gap-3 rounded-md border px-4 py-3 text-left font-normal whitespace-normal hover:bg-transparent hover:text-current dark:hover:bg-transparent focus-visible:ring-2 focus-visible:ring-ring active:translate-y-0 active:scale-100",
-        selected
-          ? "border-[var(--app-ink)]"
-          : "border-[var(--app-border)] hover:border-[var(--app-muted)]"
+        "flex min-h-10 w-full items-start gap-3 rounded-md p-3 text-left text-body text-[var(--text-primary)] hover:bg-[var(--surface-fill)]",
+        selected && "bg-[var(--surface-active)]"
       )}
     >
       <span
         aria-hidden="true"
         className={cn(
-          "mt-0.5 grid size-4 shrink-0 place-items-center rounded-full border",
+          "mt-1 grid size-4 shrink-0 place-items-center rounded-sm border border-[var(--text-meta)]",
           selected
-            ? "border-[var(--app-accent)] bg-[var(--app-accent)] text-[var(--app-accent-foreground)]"
-            : "border-[var(--app-border)]"
+            ? "bg-[var(--surface-active)] text-[var(--text-primary)]"
+            : ""
         )}
       >
         {selected ? <Check className="size-3" strokeWidth={3} /> : null}
       </span>
       <span className="min-w-0">
-        <span className="block text-sm font-medium">{title}</span>
-        <span className="mt-0.5 block text-xs text-[var(--app-muted)]">
+        <span className="block text-body font-medium">{title}</span>
+        <span className="mt-1 block text-meta text-[var(--text-meta)]">
           {body}
         </span>
         {note ? (
-          <span className="mt-1.5 block text-xs text-[var(--app-warning)]">
+          <span className="mt-2 block text-meta text-[var(--text-meta)]">
             {note}
           </span>
         ) : null}
       </span>
-    </Button>
+    </button>
   );
 }

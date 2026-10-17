@@ -1,24 +1,24 @@
 import { ArrowLeft, FlaskConical } from "@/components/icons";
-import { Link } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
 import { trackOnboardingEvent } from "@/lib/onboarding";
+import { Link } from "@tanstack/react-router";
 
 const barClassName =
-  "flex min-h-12 shrink-0 flex-col gap-3 border-b border-[var(--app-strong-border)] bg-[var(--app-active)] px-4 py-3 text-sm sm:flex-row sm:items-center sm:justify-between";
+  "flex min-h-12 shrink-0 flex-col gap-3 px-[var(--space-gutter)] py-3 text-body sm:flex-row sm:items-center sm:justify-between";
 
 export function SampleModeBar() {
   return (
     <aside className={barClassName} aria-label="Sample studio mode">
       <p className="flex items-center gap-2 font-semibold">
-        <FlaskConical className="size-4 text-[var(--app-highlight)]" />
+        <FlaskConical className="size-4 text-[var(--text-primary)]" />
         Sample studio{" "}
-        <span className="font-normal text-[var(--app-muted)]">
+        <span className="font-normal text-[var(--text-meta)]">
           Read-only production data
         </span>
       </p>
       <div className="flex items-center gap-4">
         <Link
-          className="font-semibold text-[var(--app-highlight)] hover:underline"
+          className="font-medium text-[var(--text-primary)] underline underline-offset-4"
           to="/"
           search={{ onboarding: "v2" }}
           onClick={() =>
@@ -31,7 +31,7 @@ export function SampleModeBar() {
           Start my workspace
         </Link>
         <Link
-          className="flex items-center gap-1.5 text-[var(--app-muted)] hover:text-[var(--app-ink)]"
+          className="flex items-center gap-2 text-[var(--text-primary)] underline underline-offset-4"
           to="/"
           search={{ onboarding: "v2" }}
           onClick={() =>
@@ -54,13 +54,13 @@ export function WorkspaceSampleBar({ onClear }: { onClear: () => void }) {
   return (
     <aside className={barClassName} aria-label="Sample data">
       <p className="flex items-center gap-2 font-semibold">
-        <FlaskConical className="size-4 text-[var(--app-highlight)]" />
+        <FlaskConical className="size-4 text-[var(--text-primary)]" />
         Sample data{" "}
-        <span className="font-normal text-[var(--app-muted)]">
+        <span className="font-normal text-[var(--text-meta)]">
           Demo client and projects
         </span>
       </p>
-      <Button variant="outline" size="sm" onClick={onClear}>
+      <Button variant="secondary" size="sm" onClick={onClear}>
         Clear sample data
       </Button>
     </aside>

@@ -1,4 +1,10 @@
-import type { ReactNode } from "react";
+import { RouteError } from "@/app/error-page";
+import globalsCss from "@/app/globals.css?url";
+import { NotFound } from "@/app/not-found-page";
+import { Providers } from "@/app/providers";
+import { themeBootScript } from "@/features/routes/shared/route-theme";
+import { siteUrl } from "@/lib/site";
+import { supportEmail } from "@/lib/support-contact";
 import {
   createRootRoute,
   HeadContent,
@@ -7,13 +13,7 @@ import {
 } from "@tanstack/react-router";
 import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/react";
-import { supportEmail } from "@/lib/support-contact";
-import { siteUrl } from "@/lib/site";
-import { Providers } from "@/app/providers";
-import { RouteError } from "@/app/error-page";
-import { NotFound } from "@/app/not-found-page";
-import { themeBootScript } from "@/features/routes/shared/route-theme";
-import globalsCss from "@/app/globals.css?url";
+import type { ReactNode } from "react";
 
 const siteTitle = "Relay | Video Production Workspace for Editors";
 const siteDescription =
@@ -139,20 +139,20 @@ function RootDocument({ children }: { children: ReactNode }) {
         <meta
           name="theme-color"
           media="(prefers-color-scheme: light)"
-          content="#F1F4F2"
+          content="#ffffff"
         />
         <meta
           name="theme-color"
           media="(prefers-color-scheme: dark)"
-          content="#090C0D"
+          content="#000000"
         />
       </head>
       <body
         className="antialiased"
         style={{
           margin: 0,
-          background: "var(--app-canvas)",
-          color: "var(--app-ink)",
+          background: "var(--surface-page)",
+          color: "var(--text-primary)",
           fontFamily: "var(--font-geist-sans), Geist, sans-serif",
         }}
       >

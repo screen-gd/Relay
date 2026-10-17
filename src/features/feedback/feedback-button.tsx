@@ -1,7 +1,5 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useLocation } from "@tanstack/react-router";
 import { MessageSquarePlus } from "@/components/icons";
 import { Button as OwnedButton } from "@/components/ui/button";
 import {
@@ -17,6 +15,8 @@ import { Label as OwnedLabel } from "@/components/ui/label";
 import { Textarea as OwnedTextarea } from "@/components/ui/textarea";
 import { useData } from "@/lib/data-context";
 import { supportEmail } from "@/lib/support-contact";
+import { useLocation } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
 
 /** The support inbox opens with the note and the page it was written from. */
 export function composeFeedbackMailto(note: string, pageUrl: string) {
@@ -86,17 +86,19 @@ export function FeedbackDialog({
           <OwnedLabel htmlFor="feedback-note">Note</OwnedLabel>
           <OwnedTextarea
             id="feedback-note"
-            density="compact"
+
             value={note}
             placeholder="What happened?"
             onChange={(event) => setNote(event.target.value)}
           />
-          <p className="truncate text-xs text-muted-foreground">{pageUrl}</p>
+          <p className="truncate text-meta text-[var(--text-meta)]">
+            {pageUrl}
+          </p>
         </div>
         <OwnedDialogFooter>
           <OwnedButton
             type="button"
-            variant="outline"
+            variant="ghost"
             onClick={() => setOpen(false)}
           >
             Cancel
@@ -128,9 +130,9 @@ export function FeedbackButton() {
           size="icon"
           title="Send feedback"
           aria-label="Send feedback"
-          className="text-[var(--app-ink)] transition-colors data-[state=open]:bg-[var(--app-active)]"
+          className="transition-colors"
         >
-          <MessageSquarePlus aria-hidden="true" className="size-[18px]" />
+          <MessageSquarePlus aria-hidden="true" className="size-4" />
         </OwnedButton>
       }
     />

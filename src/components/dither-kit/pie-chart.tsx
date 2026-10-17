@@ -2,7 +2,6 @@
 
 import type { ReactNode } from "react";
 import type { ChartConfig, Margins } from "./chart-context";
-import type { BloomInput } from "./dither-paint";
 import { PieCanvas } from "./pie-canvas";
 import { PolarRoot } from "./polar-root";
 
@@ -20,11 +19,6 @@ export type PieChartProps<TData extends Row> = {
   innerRadius?: number; // 0–1 ratio for a donut
   margins?: Partial<Margins>;
   className?: string;
-  animate?: boolean;
-  animationDuration?: number;
-  replayToken?: number;
-  bloom?: BloomInput;
-  bloomOnHover?: boolean;
   defaultSelectedDataKey?: string | null;
   onSelectionChange?: (key: string | null) => void;
 };

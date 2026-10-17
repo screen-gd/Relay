@@ -1,8 +1,11 @@
+import { TooltipProvider } from "@/components/ui/tooltip";
+import {
+  sampleStudioProjects,
+  sampleStudioSettings,
+} from "@/lib/sample-studio";
+import { renderWithRouter } from "@/test/render-with-router";
 import type { ReactNode } from "react";
 import { describe, expect, it, vi } from "vitest";
-import { renderWithRouter } from "@/test/render-with-router";
-import { sampleStudioSettings } from "@/lib/sample-studio";
-import { TooltipProvider } from "@/components/ui/tooltip";
 import { WorkspaceShell, workspacePageForPath } from "./workspace-shell";
 
 vi.mock("@/lib/data-context", () => ({
@@ -24,6 +27,25 @@ vi.mock("@/components/ui/dialog", async (importOriginal) => ({
   ),
 }));
 
+// Expose account content in this server-rendered navigation contract test.
+vi.mock("@/components/ui/dropdown-menu", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/components/ui/dropdown-menu")>()),
+  DropdownMenu: ({ children }: { children: ReactNode }) => <>{children}</>,
+  DropdownMenuTrigger: ({ children }: { children: ReactNode }) => (
+    <>{children}</>
+  ),
+  DropdownMenuContent: ({ children }: { children: ReactNode }) => (
+    <div data-test="account-menu">{children}</div>
+  ),
+  DropdownMenuItem: ({ children }: { children: ReactNode }) => (
+    <div>{children}</div>
+  ),
+  DropdownMenuLabel: ({ children }: { children: ReactNode }) => (
+    <span>{children}</span>
+  ),
+  DropdownMenuSeparator: () => null,
+}));
+
 // Renders the shell inside a memory router opened at `pathname`, so links
 // resolve and mark themselves active the same way they do in the app.
 function shell(pathname: string) {
@@ -32,6 +54,14 @@ function shell(pathname: string) {
       <WorkspaceShell
         page={workspacePageForPath(pathname)}
         settings={sampleStudioSettings}
+        navigationData={{
+          projects: sampleStudioProjects,
+          clients: sampleStudioSettings.clients,
+          activeTeamMembers: [],
+          outputs: [],
+          sample: pathname.startsWith("/sample-studio"),
+          canManageFinance: true,
+        }}
         onNewProject={() => undefined}
         canCreateProject={false}
         pageTitle={pathname === "/sample-studio" ? "Sample studio" : undefined}
@@ -58,7 +88,7 @@ function currentLinks(html: string) {
 }
 
 describe("Workspace hub navigation", () => {
-  it("shows seven named primary hubs for a solo workspace and preserves support links", async () => {
+  it("shows seven named routes for a solo workspace and preserves support links", async () => {
     const html = await shell("/");
     const rail = navigation(html, "Primary navigation");
     expect([...rail.matchAll(/<a /g)]).toHaveLength(7);
@@ -84,7 +114,7 @@ describe("Workspace hub navigation", () => {
       "/timeline",
     ])
       expect(rail).not.toContain(`href="${href}"`);
-    const support = navigation(html, "Support and legal");
+    const support = html.slice(html.indexOf('data-test="account-menu"'));
     for (const href of ["/contact", "/privacy", "/terms", "/accessibility"])
       expect(support).toContain(`href="${href}"`);
     for (const href of [
@@ -93,18 +123,11 @@ describe("Workspace hub navigation", () => {
     ])
       expect(support).toContain(`href="${href}"`);
     const mobile = navigation(html, "Mobile navigation");
-    for (const href of [
-      "/",
-      "/projects",
-      "/clients",
-      "/feedback",
-      "/reports",
-      "/team",
-      "/settings",
-    ])
+    for (const href of ["/", "/projects", "/clients", "/feedback", "/reports"])
       expect(mobile).toContain(`href="${href}"`);
-    expect(mobile).not.toContain('href="/calendar"');
-    expect(mobile).not.toContain('href="/files"');
+    const otherHubs = navigation(html, "Other workspace hubs");
+    expect(otherHubs).toContain('href="/team"');
+    expect(otherHubs).toContain('href="/settings"');
   });
 
   it.each([
@@ -155,8 +178,7 @@ describe("Workspace hub navigation", () => {
     "keeps %s reachable under its active hub",
     async (pathname, hub, hubHref, destinations) => {
       const html = await shell(pathname);
-      // The rail marks the hub; its pages live in the hover panel and the
-      // context tabs, so the server render carries only the hub link.
+      // The sidebar marks the route; the route detail marks the current page.
       expect(currentLinks(navigation(html, "Primary navigation"))).toEqual([
         hubHref,
       ]);
@@ -217,29 +239,17 @@ describe("Workspace hub navigation", () => {
     );
   });
 
-  it("opens the panel beside the rail with the hub's pages", async () => {
-    const html = await shell("/calendar");
-    const rail = navigation(html, "Primary navigation");
-    expect([...rail.matchAll(/<a /g)]).toHaveLength(7);
+  it("lists project pages and records in the sidebar route detail", async () => {
+    const html = await shell("/projects/sample-launch-film");
     expect(html).toContain('aria-label="Close sidebar"');
-    const panel = navigation(html, "Projects pages");
-    for (const href of [
-      "/projects",
-      "/calendar",
-      "/timeline",
-      "/files",
-      "/media",
-    ])
-      expect(panel).toContain(`href="${href}"`);
-    expect(currentLinks(panel)).toEqual(["/calendar"]);
-    // The context tabs list the same pages in the same order.
+    const panel = navigation(html, "In progress");
+    expect(panel).toContain("Summer launch film");
+    expect(panel).toContain('href="/projects/sample-launch-film"');
+    expect(currentLinks(panel)).toEqual(["/projects/sample-launch-film"]);
     const context = navigation(html, "Projects navigation");
-    expect(context).toContain(">Overview<");
     expect(
       [...context.matchAll(/href="([^"]*)"/g)].map(([, href]) => href)
-    ).toEqual([...panel.matchAll(/href="([^"]*)"/g)].map(([, href]) => href));
-    // Single-page hubs show no page list.
-    expect(await shell("/clients")).not.toContain('aria-label="Clients pages"');
+    ).toEqual(["/projects", "/calendar", "/timeline", "/files", "/media"]);
   });
 
   it("marks the hubs that hold AI tools", async () => {

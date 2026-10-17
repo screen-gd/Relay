@@ -1,5 +1,13 @@
 "use client";
 
+import { Plus } from "@/components/icons";
+import { Button } from "@/components/ui/button";
+import {
+  PageContent,
+  PageHeader,
+  WorkspacePage,
+} from "@/components/workspace-page";
+
 import { FirstRunChecklist } from "@/components/first-run-checklist";
 import { PrecisionDashboard } from "@/components/precision-dashboard";
 import { ContentSection } from "@/components/workspace-page";
@@ -9,10 +17,10 @@ import { useProjectAccess } from "@/features/projects/project-access";
 import { useProjectActions } from "@/features/projects/project-actions-provider";
 import { useProjectActivity } from "@/features/projects/project-activity";
 import { projectWorkTypeOptions } from "@/features/routes/utils/work-type-utils";
-import { DeadlineRiskRadar } from "./deadline-risk-radar";
-import { useDashboardApplicationState } from "./use-dashboard-application-state";
 import { useData } from "@/lib/data-context";
 import { useProjectHistory } from "@/lib/project-history";
+import { DeadlineRiskRadar } from "./deadline-risk-radar";
+import { useDashboardApplicationState } from "./use-dashboard-application-state";
 
 /**
  * Deadline risk scans a team Workspace's projects, so a local or signed-out
@@ -72,14 +80,27 @@ export function DashboardApplication() {
 
   return (
     <>
-      <h1 className="sr-only">
-        {access.sample ? "Sample studio" : "Dashboard"}
-      </h1>
+      <PageHeader
+        title={access.sample ? "Sample studio" : "Dashboard"}
+        actions={
+          <Button
+            onClick={() => actions.openNewProject("personal")}
+            disabled={!access.canCreateProjects}
+          >
+            <Plus />
+            New project
+          </Button>
+        }
+      />
       {access.personalProjects.length === 0 && !access.sample ? (
-        <FirstRunChecklist
-          mode={isSignedIn ? "account" : "local"}
-          onCreateProject={() => actions.openNewProject("personal")}
-        />
+        <WorkspacePage family="canvas">
+          <PageContent>
+            <FirstRunChecklist
+              mode={isSignedIn ? "account" : "local"}
+              onCreateProject={() => actions.openNewProject("personal")}
+            />
+          </PageContent>
+        </WorkspacePage>
       ) : (
         <PrecisionDashboard
           settings={settings}

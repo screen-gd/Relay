@@ -1,44 +1,80 @@
-// Shared seed palette for the dither chart family. Mirrors the seeds in
-// `dither-chart.tsx` so a series rendered through the composable engine reads
-// with the exact same fill / line / star hues as the legacy sparkline.
+import { useMemo, useSyncExternalStore } from "react";
 
 export type Rgb = [number, number, number];
-
-export type DitherColor =
-  "green" | "blue" | "purple" | "pink" | "orange" | "red" | "grey" | "lime";
-
 export type Seed = { fill: Rgb; line: Rgb; star: Rgb };
 
-// Each seed: the area-fill hue, the bright series line, and the star sparkle.
-export const PALETTE: Record<DitherColor, Seed> = {
-  green: { fill: [40, 210, 110], line: [150, 255, 180], star: [200, 255, 220] },
-  blue: { fill: [53, 143, 243], line: [150, 200, 255], star: [205, 228, 255] },
-  purple: {
-    fill: [150, 110, 255],
-    line: [200, 175, 255],
-    star: [225, 210, 255],
-  },
-  pink: { fill: [240, 90, 190], line: [255, 170, 220], star: [255, 205, 235] },
-  orange: {
-    fill: [255, 150, 50],
-    line: [255, 195, 130],
-    star: [255, 220, 175],
-  },
-  red: { fill: [240, 70, 70], line: [255, 150, 140], star: [255, 195, 185] },
-  // Relay brand lime (Relay change, not upstream).
-  lime: {
-    fill: [198, 255, 0],
-    line: [226, 255, 140],
-    star: [240, 255, 200],
-  },
-  // No-data: a muted grey so empty metrics read as "nothing here".
-  grey: { fill: [92, 92, 100], line: [140, 140, 150], star: [165, 165, 175] },
-};
+const colorTokens = {
+  accent: "--accent-mark",
+  neutral: "--text-meta",
+  muted: "--surface-active",
+  lime: "--accent-mark",
+  green: "--text-meta",
+  blue: "--text-meta",
+  purple: "--surface-active",
+  pink: "--text-meta",
+  orange: "--surface-active",
+  red: "--text-meta",
+  grey: "--text-meta",
+} as const;
+
+export type DitherColor = keyof typeof colorTokens;
 
 export const rgb = ([r, g, b]: Rgb, k = 1, a = 1) =>
   `rgba(${Math.round(r * k)},${Math.round(g * k)},${Math.round(b * k)},${a})`;
 
-export const seedOfColor = (color: DitherColor): Seed => PALETTE[color];
+export const colorVariable = (color: DitherColor) =>
+  `var(${colorTokens[color]})`;
+
+function seed(value = ""): Seed {
+  const hex = value.trim();
+  const fill: Rgb = /^#[0-9a-f]{6}$/i.test(hex)
+    ? [
+        parseInt(hex.slice(1, 3), 16),
+        parseInt(hex.slice(3, 5), 16),
+        parseInt(hex.slice(5, 7), 16),
+      ]
+    : [0, 0, 0];
+  return { fill, line: fill, star: fill };
+}
+
+function snapshot() {
+  if (typeof document === "undefined") return "";
+  const style = getComputedStyle(document.documentElement);
+  return ["--accent-mark", "--text-meta", "--surface-active"]
+    .map((token) => style.getPropertyValue(token).trim())
+    .join("|");
+}
+
+function paletteFromSnapshot(value: string) {
+  const [accent, neutral, muted] = value.split("|");
+  return {
+    "--accent-mark": seed(accent),
+    "--text-meta": seed(neutral),
+    "--surface-active": seed(muted),
+  };
+}
+
+function subscribe(onChange: () => void) {
+  const observer = new MutationObserver(onChange);
+  observer.observe(document.documentElement, {
+    attributes: true,
+    attributeFilter: ["class", "style"],
+  });
+  return () => observer.disconnect();
+}
+
+/** Canvas colors update when the theme boot or Appearance changes root tokens. */
+export function useChartPalette() {
+  const value = useSyncExternalStore(subscribe, snapshot, () => "");
+  return useMemo(() => paletteFromSnapshot(value), [value]);
+}
+
+export function seedOfColor(
+  color: DitherColor,
+  palette = paletteFromSnapshot(snapshot())
+): Seed {
+  return palette[colorTokens[color]];
+}
 
 export const isDitherColor = (value: unknown): value is DitherColor =>
-  typeof value === "string" && value in PALETTE;
+  typeof value === "string" && Object.hasOwn(colorTokens, value);

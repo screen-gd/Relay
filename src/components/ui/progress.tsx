@@ -1,18 +1,18 @@
-"use client"
+"use client";
 
-import * as React from "react"
-import { Progress as ProgressPrimitive } from "radix-ui"
+import { Progress as ProgressPrimitive } from "radix-ui";
+import * as React from "react";
 
-import { cn } from "@/lib/utils"
+import { cn } from "@/lib/utils";
 
 type ProgressProps = React.ComponentProps<typeof ProgressPrimitive.Root> & {
-  label?: React.ReactNode
-  showValue?: boolean
-  valueLabel?: string
-}
+  label?: React.ReactNode;
+  showValue?: boolean;
+  valueLabel?: string;
+};
 
 function defaultValueLabel(value: number, max: number) {
-  return `${Math.round((value / max) * 100)}%`
+  return `${Math.round((value / max) * 100)}%`;
 }
 
 function Progress({
@@ -27,24 +27,23 @@ function Progress({
   "aria-labelledby": ariaLabelledBy,
   ...props
 }: ProgressProps) {
-  const generatedId = React.useId()
-  const labelId = label ? `${generatedId}-label` : undefined
-  const normalizedMax = max > 0 ? max : 100
-  const normalizedValue =
-    value === null ? null : Math.min(normalizedMax, Math.max(0, value))
-  const formatValue = getValueLabel ?? defaultValueLabel
+  const generatedId = React.useId();
+  const labelId = label ? `${generatedId}-label` : undefined;
+  const normalizedMax = Number.isFinite(max) && max > 0 ? max : 100;
+  const normalizedValue = Math.min(
+    normalizedMax,
+    Math.max(0, typeof value === "number" && Number.isFinite(value) ? value : 0)
+  );
+  const formatValue = getValueLabel ?? defaultValueLabel;
   const displayValue =
-    valueLabel ??
-    (normalizedValue === null
-      ? "In progress"
-      : formatValue(normalizedValue, normalizedMax))
+    valueLabel ?? formatValue(normalizedValue, normalizedMax);
 
   return (
     <div data-slot="progress-group" className="w-full">
       {(label || showValue) && (
         <div
           data-slot="progress-label"
-          className="mb-1.5 flex items-center justify-between gap-3 text-sm"
+          className="mb-2 flex items-center justify-between gap-3 text-body"
         >
           {label ? (
             <span id={labelId} className="font-medium">
@@ -54,7 +53,9 @@ function Progress({
             <span className="sr-only">Progress</span>
           )}
           {showValue && (
-            <span className="text-muted-foreground">{displayValue}</span>
+            <span className="font-mono text-[var(--text-meta)]">
+              {displayValue}
+            </span>
           )}
         </div>
       )}
@@ -63,31 +64,28 @@ function Progress({
         value={normalizedValue}
         max={normalizedMax}
         getValueLabel={
-          valueLabel ? () => valueLabel : getValueLabel ?? defaultValueLabel
+          valueLabel ? () => valueLabel : (getValueLabel ?? defaultValueLabel)
         }
         aria-label={
-          ariaLabelledBy || labelId ? ariaLabel : ariaLabel ?? "Progress"
+          ariaLabelledBy || labelId ? ariaLabel : (ariaLabel ?? "Progress")
         }
         aria-labelledby={ariaLabelledBy ?? labelId}
         className={cn(
-          "group/progress relative h-2 w-full overflow-hidden rounded-full bg-primary/20",
+          "relative h-1 w-full overflow-hidden rounded-md bg-[var(--surface-active)]",
           className
         )}
         {...props}
       >
         <ProgressPrimitive.Indicator
           data-slot="progress-indicator"
-          className="h-full w-full flex-1 bg-primary transition-all group-data-[state=indeterminate]/progress:w-1/3 group-data-[state=indeterminate]/progress:animate-pulse"
+          className="h-full w-full flex-1 bg-[var(--accent-mark)]"
           style={{
-            transform:
-              normalizedValue === null
-                ? undefined
-                : `translateX(-${100 - (normalizedValue / normalizedMax) * 100}%)`,
+            transform: `translateX(-${100 - (normalizedValue / normalizedMax) * 100}%)`,
           }}
         />
       </ProgressPrimitive.Root>
     </div>
-  )
+  );
 }
 
-export { Progress }
+export { Progress };

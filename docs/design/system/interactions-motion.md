@@ -1,35 +1,41 @@
 # Interactions and motion
 
-## Purpose
+## Motion
 
-Make frequent actions fast, clear, and recoverable.
+Motion answers something the user did, runs once, and stops. Nothing loops, glows, shines or blurs.
 
-## Anatomy
+| Token                    | Value                           |
+| ------------------------ | ------------------------------- |
+| `--motion-fast`          | 120ms                           |
+| `--motion-base`          | 180ms                           |
+| `--motion-ease-standard` | `cubic-bezier(0.2, 0, 0, 1)`    |
+| `--motion-ease-out`      | `cubic-bezier(0.16, 1, 0.3, 1)` |
 
-Primary action, visible secondary action, overflow menu, confirmation dialog, inline status, toast, undo where safe, and activity history for background work.
+The complete list of allowed motion:
 
-## Behavior
+| What                                                     | How                                                                                      |
+| -------------------------------------------------------- | ---------------------------------------------------------------------------------------- |
+| Menus, selects, popovers, dialogs, sheets, tooltips open | Fade in and scale from 97%, `--motion-base`, ease-out. Close: fade out, `--motion-fast`. |
+| Segmented control                                        | The active fill slides to the new segment, `--motion-base`.                              |
+| Sidebar active item                                      | The active fill moves to the new item, `--motion-base`.                                  |
+| Sidebar panel open and close                             | Width change, `--motion-base`.                                                           |
+| Button press                                             | Moves down 1px while pressed.                                                            |
+| Hover                                                    | Fill color change, `--motion-fast`.                                                      |
+| New content after loading                                | Fades in once, `--motion-base`.                                                          |
 
-Use optimistic updates only when rollback is clear. Preserve input on failure. Separate destructive actions and confirm irreversible changes. Dragging needs button or keyboard alternatives.
+Removed: hover lift, press scale, page-enter rise (`workspace-enter`), `studio-silver-pass`, `studio-edge-sweep`, `studio-gooey-enter`, `studio-thinking-orb`, chart glow and bloom on hover, and every `backdrop-filter` blur.
 
-## States
+`prefers-reduced-motion` turns every transition and animation into an instant change.
 
-Show pending, saving, saved, retry, failure, and cancelled states. Keep focus after filtering, mutation, sheet close, and route changes.
+## Interaction rules
 
-## Responsive rules
+- One Primary action per page; other actions are Secondary or live in More.
+- Rare actions go in menus or sheets. Destructive actions are menu items with a confirm dialog.
+- Use optimistic updates only where rollback is clear. Keep input on failure.
+- Dragging always has a button or keyboard alternative.
+- Avoid hover-only actions; anything revealed on hover is also reachable by keyboard and touch.
+- Keep focus after filtering, mutations, closing a sheet and route changes.
 
-Use touch-safe targets, sheets for complex controls, and stable toolbar order. Avoid hover-only actions.
+## Preserved
 
-## Accessibility
-
-Use Radix for dialogs, menus, popovers, tabs, and tooltips. Tooltips supplement visible labels. Honor `prefers-reduced-motion`; do not let motion hide content.
-
-## Preserved features
-
-Keep Motion transitions, reduced-motion hooks, command shortcuts, toast notifications, CRUD dialogs, and existing drag/reorder behavior.
-
-## Acceptance checks
-
-- Every mutation reports pending and result.
-- Destructive actions offer cancel and recoverable errors.
-- Keyboard, touch, reduced-motion, and screen-reader paths pass.
+Command shortcuts, `G` route chords, Sonner toasts, CRUD dialogs and existing drag and reorder behavior.

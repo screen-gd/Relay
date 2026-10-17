@@ -1,24 +1,16 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import type { SavedProjectTemplate } from "@/lib/types";
+import { useConfirm } from "@/components/confirm-dialog";
+import { MoreHorizontal as RelayActionMenuIcon } from "@/components/icons";
 import {
-  validateWorkflowStages,
-  workflowStagesFromLabels,
-} from "@/lib/workflow-templates";
-import type { FileCategory, FileStatus } from "@/lib/domain-values";
-import {
-  PROJECT_TEMPLATES,
-  type ProjectTemplate,
-} from "@/lib/project-templates";
-import {
-  ContentSection,
-  PageContent,
-  PageHeader,
-  WorkspacePage,
-} from "@/components/workspace-page";
+  DropdownMenu as RelayActionMenu,
+  DropdownMenuContent as RelayActionMenuContent,
+  DropdownMenuItem as RelayActionMenuItem,
+  DropdownMenuTrigger as RelayActionMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+
+import { Copy, FileText, Pencil, Plus, Trash2 } from "@/components/icons";
 import { CapabilityUpgradePrompt } from "@/components/subscription-plans";
-import { useData } from "@/lib/data-context";
 import { Badge as OwnedBadge } from "@/components/ui/badge";
 import { Button as OwnedButton } from "@/components/ui/button";
 import {
@@ -39,7 +31,24 @@ import {
   SelectValue as OwnedSelectValue,
 } from "@/components/ui/select";
 import { Textarea as OwnedTextarea } from "@/components/ui/textarea";
-import { Copy, FileText, Pencil, Plus, Trash2 } from "@/components/icons";
+import {
+  ContentSection,
+  PageContent,
+  PageHeader,
+  WorkspacePage,
+} from "@/components/workspace-page";
+import { useData } from "@/lib/data-context";
+import type { FileCategory, FileStatus } from "@/lib/domain-values";
+import {
+  PROJECT_TEMPLATES,
+  type ProjectTemplate,
+} from "@/lib/project-templates";
+import type { SavedProjectTemplate } from "@/lib/types";
+import {
+  validateWorkflowStages,
+  workflowStagesFromLabels,
+} from "@/lib/workflow-templates";
+import { useMemo, useState } from "react";
 
 type TemplateFormState = {
   id: string;
@@ -148,6 +157,7 @@ export function TemplatesDesignPage({
   const { items, settings, setSettings } = useData();
   const [templateForm, setTemplateForm] =
     useState<TemplateFormState>(emptyTemplateForm);
+  const confirm = useConfirm();
   const [builderOpen, setBuilderOpen] = useState(false);
   const [templateError, setTemplateError] = useState("");
   const customTemplates = settings.customProjectTemplates ?? [];
@@ -218,7 +228,7 @@ export function TemplatesDesignPage({
     setBuilderOpen(false);
   }
 
-  function deleteTemplate(templateId: string) {
+  async function deleteTemplate(templateId: string) {
     if (customTemplatesLocked) return;
     if (items.some((item) => item.templateId === templateId)) {
       setTemplateError(
@@ -226,6 +236,14 @@ export function TemplatesDesignPage({
       );
       return;
     }
+    if (
+      !(await confirm({
+        title: "Delete template?",
+        confirmLabel: "Delete",
+        destructive: true,
+      }))
+    )
+      return;
     setSettings((current) => ({
       ...current,
       customProjectTemplates: (current.customProjectTemplates ?? []).filter(
@@ -272,28 +290,24 @@ export function TemplatesDesignPage({
         description="Start with a practical editing workflow, or save your own recurring setup for the next project."
         actions={
           <div className="flex flex-wrap justify-end gap-2">
+            <OwnedButton type="button" variant="secondary" onClick={onUseBlank}>
+              <Plus aria-hidden="true" />
+              Blank Project
+            </OwnedButton>
             <OwnedButton
               type="button"
-              variant="outline"
               onClick={() => openBuilder()}
               disabled={!canManageTemplates || customTemplatesLocked}
             >
               <Plus aria-hidden="true" />
               Custom Template
             </OwnedButton>
-            <OwnedButton type="button" variant="outline" onClick={onUseBlank}>
-              <Plus aria-hidden="true" />
-              Blank Project
-            </OwnedButton>
           </div>
         }
       />
-      <PageContent className="space-y-5">
+      <PageContent className="">
         {templateError && !builderOpen ? (
-          <p
-            role="alert"
-            className="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive"
-          >
+          <p role="alert" className="text-body text-[var(--status-danger)]">
             {templateError}
           </p>
         ) : null}
@@ -308,25 +322,20 @@ export function TemplatesDesignPage({
             </OwnedBadge>
           }
           aria-label="Project templates"
-          bodyClassName="grid gap-4 md:grid-cols-2 xl:grid-cols-3"
+          bodyClassName="grid"
         >
           {templates.map((template) => (
             <article
               key={template.id}
-              data-slot="template-card"
-              className="group flex min-h-[250px] flex-col justify-between rounded-xl border border-[var(--app-border)] bg-[var(--app-soft-panel)] p-4 text-foreground shadow-[var(--app-shadow-1)] transition-[background-color,border-color,transform,box-shadow] duration-200 hover:-translate-y-0.5 hover:border-[var(--app-strong-border)] hover:bg-[var(--app-hover)] hover:shadow-[var(--app-shadow-2)] focus-within:border-[var(--app-accent)]"
+              data-slot="template-row"
+              className="flex min-w-0 flex-col justify-between gap-4 border-t border-[var(--border-hairline)] px-0 py-4 first:border-t-0 first:pt-0 text-[var(--text-primary)] lg:flex-row lg:items-start"
             >
-              <div>
+              <div className="min-w-0 flex-1">
                 <header className="flex items-start justify-between gap-4">
                   <div className="min-w-0">
                     <div className="flex flex-wrap items-center gap-2">
-                      <h2 className="text-base font-semibold">
-                        {template.name}
-                      </h2>
-                      <OwnedBadge
-                        variant="secondary"
-                        className="rounded-md text-[10px] uppercase tracking-wide"
-                      >
+                      <h3 className="text-body font-medium">{template.name}</h3>
+                      <OwnedBadge variant="secondary" className="">
                         {template.archived
                           ? "Archived"
                           : template.custom
@@ -334,45 +343,48 @@ export function TemplatesDesignPage({
                             : "Built-in"}
                       </OwnedBadge>
                     </div>
-                    <p className="mt-1 max-w-lg text-sm leading-relaxed text-muted-foreground">
+                    <p className="mt-1 max-w-lg text-body text-[var(--text-meta)]">
                       {template.description}
                     </p>
                   </div>
-                  <span className="grid size-9 shrink-0 place-items-center rounded-md border border-[var(--app-border)] bg-[var(--app-panel)] text-[var(--app-accent)]">
-                    <FileText aria-hidden="true" className="size-4" />
+                  <span
+                    className="grid size-9 shrink-0 place-items-center text-[var(--text-meta)]"
+                    aria-hidden="true"
+                  >
+                    <FileText className="size-4" />
                   </span>
                 </header>
 
-                <dl className="mt-4 grid grid-cols-2 gap-3 border-y border-[var(--app-border)] py-3 text-xs">
+                <dl className="mt-3 grid grid-cols-2 gap-3 text-meta">
                   <div>
-                    <dt className="text-[10px] uppercase tracking-[0.12em] text-[var(--app-muted)]">
+                    <dt className="text-meta text-[var(--text-meta)]">
                       Project type
                     </dt>
-                    <dd className="mt-1 font-semibold text-[var(--app-highlight)]">
+                    <dd className="mt-1 font-medium text-[var(--text-primary)]">
                       {template.projectType}
                     </dd>
                   </div>
                   <div>
-                    <dt className="text-[10px] uppercase tracking-[0.12em] text-[var(--app-muted)]">
+                    <dt className="text-meta text-[var(--text-meta)]">
                       Setup time
                     </dt>
-                    <dd className="mt-1 text-foreground">
+                    <dd className="mt-1 text-[var(--text-primary)]">
                       {template.durationDays} days
                     </dd>
                   </div>
                 </dl>
 
-                <div className="mt-4">
+                <div className="mt-3">
                   <div className="flex items-center justify-between gap-2">
-                    <h3 className="text-xs font-semibold text-muted-foreground">
+                    <h4 className="text-meta font-medium text-[var(--text-meta)]">
                       Workflow preview
-                    </h3>
-                    <span className="font-mono text-[10px] text-[var(--app-muted)]">
+                    </h4>
+                    <span className="font-mono text-meta text-[var(--text-meta)]">
                       {template.workflowStages.length} stages
                     </span>
                   </div>
                   <div
-                    className="mt-2 flex flex-wrap items-center gap-1.5"
+                    className="mt-2 flex flex-wrap items-center gap-2"
                     aria-label={`${template.name} workflow stages`}
                     role="list"
                   >
@@ -390,11 +402,11 @@ export function TemplatesDesignPage({
                       .map((stage, index) => (
                         <span
                           key={`${template.id}-${stage.id}-${index}`}
-                          className="inline-flex items-center gap-1.5"
+                          className="inline-flex items-center gap-2"
                         >
                           <span
                             role="listitem"
-                            className="rounded-md border border-[var(--app-border)] bg-[var(--app-panel)] px-2 py-1 text-[11px] text-foreground"
+                            className="inline-flex h-5 items-center bg-[var(--surface-fill)] px-2 text-meta text-[var(--text-primary)]"
                           >
                             {stage.label}
                           </span>
@@ -402,7 +414,7 @@ export function TemplatesDesignPage({
                           Math.min(template.workflowStages.length, 4) - 1 ? (
                             <span
                               aria-hidden="true"
-                              className="text-[var(--app-muted)]"
+                              className="text-[var(--text-meta)]"
                             >
                               →
                             </span>
@@ -410,23 +422,24 @@ export function TemplatesDesignPage({
                         </span>
                       ))}
                     {template.workflowStages.length > 4 ? (
-                      <span className="text-[11px] text-[var(--app-muted)]">
+                      <span className="text-meta text-[var(--text-meta)]">
                         +{template.workflowStages.length - 4}
                       </span>
                     ) : null}
                   </div>
-                  <p className="mt-3 text-xs text-muted-foreground">
+                  <p className="mt-2 text-meta text-[var(--text-meta)]">
                     {template.deliverables.length} deliverables ·{" "}
                     {template.checklistItems.length} checklist items
                   </p>
                 </div>
               </div>
 
-              <footer className="mt-5 flex flex-wrap items-center justify-between gap-2">
+              <footer className="flex flex-wrap items-center justify-end gap-2 lg:shrink-0">
                 <OwnedButton
                   type="button"
-                  variant="link"
-                  className="h-auto p-0"
+                  size="sm"
+                  variant="secondary"
+                  className=""
                   onClick={() => onUseTemplate(template)}
                   disabled={
                     template.archived ||
@@ -439,7 +452,7 @@ export function TemplatesDesignPage({
                 <OwnedButton
                   type="button"
                   size="sm"
-                  variant="ghost"
+                  variant="secondary"
                   aria-label={`Copy ${template.name} template`}
                   onClick={() => copyTemplate(template)}
                   disabled={!canManageTemplates || customTemplatesLocked}
@@ -452,7 +465,7 @@ export function TemplatesDesignPage({
                     <OwnedButton
                       type="button"
                       size="sm"
-                      variant="ghost"
+                      variant="secondary"
                       aria-label={`Edit ${template.name} template`}
                       onClick={() => openBuilder(template)}
                       disabled={customTemplatesLocked}
@@ -463,24 +476,36 @@ export function TemplatesDesignPage({
                     <OwnedButton
                       type="button"
                       size="sm"
-                      variant="ghost"
+                      variant="secondary"
                       onClick={() => archiveTemplate(template)}
                       disabled={customTemplatesLocked}
                     >
                       {template.archived ? "Restore" : "Archive"}
                     </OwnedButton>
-                    <OwnedButton
-                      type="button"
-                      size="sm"
-                      variant="ghost"
-                      className="text-destructive hover:bg-destructive/10 hover:text-destructive"
-                      aria-label={`Delete ${template.name} template`}
-                      onClick={() => deleteTemplate(template.id)}
-                      disabled={customTemplatesLocked}
-                    >
-                      <Trash2 aria-hidden="true" />
-                      Delete
-                    </OwnedButton>
+
+                    <RelayActionMenu>
+                      <RelayActionMenuTrigger asChild>
+                        <OwnedButton
+                          type="button"
+                          variant="ghost"
+                          size="icon-sm"
+                          aria-label={`Delete ${template.name} template`}
+                          disabled={customTemplatesLocked}
+                        >
+                          <RelayActionMenuIcon aria-hidden="true" />
+                        </OwnedButton>
+                      </RelayActionMenuTrigger>
+                      <RelayActionMenuContent align="end">
+                        <RelayActionMenuItem
+                          variant="destructive"
+                          disabled={customTemplatesLocked}
+                          onSelect={() => deleteTemplate(template.id)}
+                        >
+                          <Trash2 aria-hidden="true" />
+                          Delete
+                        </RelayActionMenuItem>
+                      </RelayActionMenuContent>
+                    </RelayActionMenu>
                   </div>
                 ) : null}
               </footer>
@@ -501,7 +526,7 @@ export function TemplatesDesignPage({
             </OwnedDialogDescription>
           </OwnedDialogHeader>
 
-          <form className="grid gap-5" onSubmit={saveTemplate}>
+          <form className="grid gap-4" onSubmit={saveTemplate}>
             <div className="grid gap-4 md:grid-cols-2">
               <FieldLayout label="Template name" required>
                 <OwnedInput
@@ -620,14 +645,14 @@ export function TemplatesDesignPage({
             </div>
 
             {templateError ? (
-              <p role="alert" className="text-sm text-destructive">
+              <p role="alert" className="text-body text-[var(--status-danger)]">
                 {templateError}
               </p>
             ) : null}
             <OwnedDialogFooter>
               <OwnedButton
                 type="button"
-                variant="outline"
+                variant="ghost"
                 onClick={() => setBuilderOpen(false)}
               >
                 Cancel

@@ -4,13 +4,7 @@ import { useCommonChart } from "./common-context";
 import { cn } from "./lib";
 import { rgb } from "./palette";
 
-/** Series/slice legend. With `isClickable`, each entry toggles its selection.
- * Works in every chart family via the shared common context.
- *
- * Note: this is an absolute overlay pinned to the top of the plot, so it's best
- * for ≤2–3 entries. With more entries (or a narrow container) it wraps onto
- * extra rows that overlay the chart — reach for the in-flow `<BlockLegend>`
- * instead, which renders as a sibling and can't overlap at any width. */
+/** Overlay legend; use BlockLegend when wrapped entries need their own space. */
 export function Legend({
   isClickable = false,
   align = "right",
@@ -19,7 +13,6 @@ export function Legend({
   align?: "left" | "center" | "right";
 }) {
   const chart = useCommonChart();
-
   return (
     <div
       className={cn(
@@ -30,36 +23,39 @@ export function Legend({
       )}
     >
       {chart.names.map((name) => {
-        const seed = chart.seedOf(name);
-        const emphasis = chart.selectedDataKey ?? chart.focusDataKey;
-        const dimmed = emphasis !== null && emphasis !== name;
-        return (
+        const content = (
+          <>
+            <span
+              aria-hidden="true"
+              className="size-2 rounded-sm"
+              style={{ backgroundColor: rgb(chart.seedOf(name).fill) }}
+            />
+            {chart.labelOf(name)}
+          </>
+        );
+        return isClickable ? (
           <button
             key={name}
             type="button"
-            disabled={!isClickable}
+            aria-pressed={chart.selectedDataKey === name}
             onClick={() =>
               chart.selectDataKey(chart.selectedDataKey === name ? null : name)
             }
-            // Hovering an entry spotlights its series so overlapping layers
-            // (e.g. two meshed radar polygons) can be told apart at a glance.
             onPointerEnter={() => chart.setFocusDataKey(name)}
             onPointerLeave={() => chart.setFocusDataKey(null)}
             onFocus={() => chart.setFocusDataKey(name)}
             onBlur={() => chart.setFocusDataKey(null)}
-            className={cn(
-              "flex items-center gap-1.5 font-mono text-[11px] text-muted-foreground transition-opacity",
-              isClickable &&
-                "pointer-events-auto cursor-pointer hover:text-foreground",
-              dimmed && "opacity-40"
-            )}
+            className="pointer-events-auto flex min-h-6 items-center gap-2 rounded-sm px-1 text-meta text-[var(--text-primary)] hover:bg-[var(--surface-fill)]"
           >
-            <span
-              className="size-2 rounded-[1px]"
-              style={{ backgroundColor: rgb(seed.fill) }}
-            />
-            {chart.labelOf(name)}
+            {content}
           </button>
+        ) : (
+          <span
+            key={name}
+            className="flex items-center gap-2 text-meta text-[var(--text-meta)]"
+          >
+            {content}
+          </span>
         );
       })}
     </div>

@@ -1,18 +1,15 @@
 "use client";
 
-import { useState } from "react";
-import type { ResourceLink, WorkItem } from "@/lib/types";
-import { isValidIntegrationUrl } from "@/lib/integrations";
+import { useConfirm } from "@/components/confirm-dialog";
+import { MoreHorizontal as RelayActionMenuIcon } from "@/components/icons";
 import {
-  ContentSection,
-  MetricItem,
-  MetricStrip,
-  PageContent,
-  PageEmptyState,
-  PageHeader,
-  PageToolbar,
-  WorkspacePage,
-} from "@/components/workspace-page";
+  DropdownMenu as RelayActionMenu,
+  DropdownMenuContent as RelayActionMenuContent,
+  DropdownMenuItem as RelayActionMenuItem,
+  DropdownMenuTrigger as RelayActionMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+
+import { ExternalLink, Link2, Pencil, Plus } from "@/components/icons";
 import { Badge as OwnedBadge } from "@/components/ui/badge";
 import { Button as OwnedButton } from "@/components/ui/button";
 import {
@@ -33,9 +30,21 @@ import {
   SelectValue as OwnedSelectValue,
 } from "@/components/ui/select";
 import { Textarea as OwnedTextarea } from "@/components/ui/textarea";
-import { ExternalLink, Link2, Pencil, Plus, Trash2 } from "@/components/icons";
-import { createId, formatDate } from "@/features/routes/utils/date-utils";
+import {
+  ContentSection,
+  MetricItem,
+  MetricStrip,
+  PageContent,
+  PageEmptyState,
+  PageFilters,
+  PageHeader,
+  WorkspacePage,
+} from "@/components/workspace-page";
 import type { ToastState } from "@/features/routes/shared/route-types";
+import { createId, formatDate } from "@/features/routes/utils/date-utils";
+import { isValidIntegrationUrl } from "@/lib/integrations";
+import type { ResourceLink, WorkItem } from "@/lib/types";
+import { useState } from "react";
 
 const resourceCategories = [
   "Asset Folder",
@@ -58,6 +67,7 @@ export function ResourcesDesignPage({
   setResources: React.Dispatch<React.SetStateAction<ResourceLink[]>>;
   notify: (message: string, tone?: ToastState["tone"]) => void;
 }) {
+  const confirm = useConfirm();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingId, setEditingId] = useState("");
   const [form, setForm] = useState<ResourceLink>(() => emptyResourceForm());
@@ -168,7 +178,16 @@ export function ResourcesDesignPage({
     notify(editingId ? "Resource updated." : "Resource added.");
   }
 
-  function removeResource(id: string) {
+  async function removeResource(id: string) {
+    if (
+      !(await confirm({
+        title: "Delete resource?",
+        description: resources.find((resource) => resource.id === id)?.title,
+        confirmLabel: "Delete",
+        destructive: true,
+      }))
+    )
+      return;
     setResources((current) => current.filter((resource) => resource.id !== id));
     notify("Resource removed.", "warning");
   }
@@ -188,18 +207,14 @@ export function ResourcesDesignPage({
         title="Resources"
         description="Save asset folders, references, review pages, and delivery links."
         actions={
-          <OwnedButton
-            type="button"
-            variant="outline"
-            onClick={openNewResource}
-          >
+          <OwnedButton type="button" onClick={openNewResource}>
             <Plus aria-hidden="true" />
             New Resource
           </OwnedButton>
         }
       />
 
-      <PageContent className="space-y-5">
+      <PageContent className="">
         <MetricStrip columns={3}>
           <MetricItem
             label="Resources"
@@ -218,20 +233,20 @@ export function ResourcesDesignPage({
           />
         </MetricStrip>
 
-        <PageToolbar
+        <PageFilters
           data-family-toolbar="resources"
           primary={
             <div className="relative min-w-0 flex-1 sm:max-w-md">
               <Link2
                 aria-hidden="true"
-                className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-[var(--app-muted)]"
+                className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-[var(--text-meta)]"
               />
               <OwnedInput
                 aria-label="Search resources"
                 value={resourceSearch}
                 onChange={(event) => setResourceSearch(event.target.value)}
                 placeholder="Search resources, links, or projects..."
-                className="h-10 bg-[var(--app-control)] pl-9 shadow-none"
+                className="pl-8"
               />
             </div>
           }
@@ -242,7 +257,7 @@ export function ResourcesDesignPage({
             >
               <OwnedSelectTrigger
                 aria-label="Filter resources by category"
-                className="h-10 w-full sm:w-44"
+                className="w-full sm:w-44"
               >
                 <OwnedSelectValue placeholder="All categories" />
               </OwnedSelectTrigger>
@@ -266,58 +281,52 @@ export function ResourcesDesignPage({
               : "Manual links for now; this can later map to cloud storage APIs or OAuth providers."
           }
           metadata={
-            <OwnedBadge
-              variant="secondary"
-              className="self-start rounded-md bg-primary/15 text-primary sm:self-auto"
-            >
+            <OwnedBadge variant="secondary" className="self-start sm:self-auto">
               {resources.length} saved
             </OwnedBadge>
           }
           bodyMode="flush"
         >
-          <div className="divide-y divide-border">
+          <div>
             {visibleResources.length ? (
               visibleResources.map((resource) => (
                 <article
                   key={resource.id}
-                  className="grid items-start gap-4 px-4 py-4 transition-colors hover:bg-[var(--app-soft-panel)] focus-within:bg-[var(--app-soft-panel)] lg:grid-cols-[minmax(0,1.4fr)_160px_minmax(0,1fr)_140px]"
+                  className="grid items-start gap-4 border-t border-[var(--border-hairline)] py-4 transition-colors first:border-t-0 first:pt-0 hover:bg-[var(--surface-fill)] focus-within:bg-[var(--surface-fill)] lg:grid-cols-[minmax(0,1.4fr)_160px_minmax(0,1fr)_140px]"
                 >
                   <div className="flex min-w-0 items-start gap-3">
                     <span
-                      className="grid size-9 shrink-0 place-items-center rounded-md border border-[var(--app-border)] bg-[var(--app-soft-panel)] text-[var(--app-accent)]"
+                      className="grid size-9 shrink-0 place-items-center text-[var(--text-meta)]"
                       aria-hidden="true"
                     >
                       <Link2 className="size-4" />
                     </span>
                     <div className="min-w-0">
                       <div className="mb-1 flex flex-wrap items-center gap-2">
-                        <h3 className="truncate text-sm font-semibold">
+                        <h3 className="truncate text-body font-medium">
                           {resource.title}
                         </h3>
-                        <OwnedBadge
-                          variant="secondary"
-                          className="rounded-md text-[11px] font-medium"
-                        >
+                        <OwnedBadge variant="secondary" className="">
                           {resource.category}
                         </OwnedBadge>
                       </div>
-                      <p className="truncate text-xs text-[var(--app-muted)]">
+                      <p className="truncate text-meta text-[var(--text-meta)]">
                         {resource.url}
                       </p>
                       {resource.notes ? (
-                        <p className="mt-1 text-xs leading-relaxed text-[var(--app-muted)]">
+                        <p className="mt-1 text-meta text-[var(--text-meta)]">
                           {resource.notes}
                         </p>
                       ) : null}
                     </div>
                   </div>
-                  <p className="text-sm text-muted-foreground lg:text-foreground">
+                  <p className="text-body text-[var(--text-meta)] lg:text-[var(--text-primary)]">
                     {resource.projectId
                       ? projectName(resource.projectId) || "Linked project"
                       : "General"}
                   </p>
                   <time
-                    className="truncate text-xs text-[var(--app-muted)]"
+                    className="truncate text-meta text-[var(--text-meta)]"
                     dateTime={resource.updatedAt || resource.createdAt}
                   >
                     Updated{" "}
@@ -336,7 +345,7 @@ export function ResourcesDesignPage({
                       aria-label={`Open ${resource.title}`}
                       title="Open resource"
                       onClick={() => openResource(resource.url)}
-                      className="text-primary"
+                      className=""
                     >
                       <ExternalLink aria-hidden="true" />
                     </OwnedButton>
@@ -350,26 +359,47 @@ export function ResourcesDesignPage({
                     >
                       <Pencil aria-hidden="true" />
                     </OwnedButton>
-                    <OwnedButton
-                      type="button"
-                      variant="ghost"
-                      size="icon-sm"
-                      aria-label={`Delete ${resource.title}`}
-                      title="Delete resource"
-                      onClick={() => removeResource(resource.id)}
-                      className="text-destructive hover:bg-destructive/10 hover:text-destructive"
-                    >
-                      <Trash2 aria-hidden="true" />
-                    </OwnedButton>
+
+                    <RelayActionMenu>
+                      <RelayActionMenuTrigger asChild>
+                        <OwnedButton
+                          type="button"
+                          variant="ghost"
+                          size="icon-sm"
+                          aria-label={`Delete ${resource.title}`}
+                        >
+                          <RelayActionMenuIcon aria-hidden="true" />
+                        </OwnedButton>
+                      </RelayActionMenuTrigger>
+                      <RelayActionMenuContent align="end">
+                        <RelayActionMenuItem
+                          variant="destructive"
+                          onSelect={() => removeResource(resource.id)}
+                        >{`Delete ${resource.title}`}</RelayActionMenuItem>
+                      </RelayActionMenuContent>
+                    </RelayActionMenu>
                   </div>
                 </article>
               ))
             ) : (
               <PageEmptyState
-                title={
-                  resources.length
-                    ? "No matching resources"
-                    : "No resources yet"
+                title={resources.length ? "No matches" : "No resources yet"}
+                action={
+                  resources.length ? (
+                    <OwnedButton
+                      variant="ghost"
+                      onClick={() => {
+                        setResourceSearch("");
+                        setResourceCategory("all");
+                      }}
+                    >
+                      Clear filters
+                    </OwnedButton>
+                  ) : (
+                    <OwnedButton variant="secondary" onClick={openNewResource}>
+                      New resource
+                    </OwnedButton>
+                  )
                 }
                 description={
                   resources.length
@@ -489,7 +519,7 @@ export function ResourcesDesignPage({
             <OwnedDialogFooter>
               <OwnedButton
                 type="button"
-                variant="outline"
+                variant="ghost"
                 onClick={() => setDialogOpen(false)}
               >
                 Cancel

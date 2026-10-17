@@ -1,7 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import type { ReactNode } from "react";
-import { RelayBrand } from "./relay-brand";
 import styles from "./legal-page.module.css";
+import { RelayBrand } from "./relay-brand";
 
 type LegalSection = { title: string; body: ReactNode };
 type LegalPageProps = {
@@ -32,7 +32,6 @@ export function LegalPage({
 
         <article className={styles.card}>
           <div className={styles.hero}>
-            <p className={styles.eyebrow}>RELAY DOCUMENTATION</p>
             <h1>{title}</h1>
             <p className={styles.intro}>{intro}</p>
             <p className={styles.updated}>

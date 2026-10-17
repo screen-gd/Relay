@@ -1,30 +1,24 @@
 "use client";
 
-import { useState } from "react";
-import type { IntegrationConfig, SettingsState, WorkItem } from "@/lib/types";
-import type {
-  IntegrationLink,
-  IntegrationLinks,
-  IntegrationServiceId,
-} from "@/lib/integrations";
+import { useConfirm } from "@/components/confirm-dialog";
+import { MoreHorizontal as RelayActionMenuIcon } from "@/components/icons";
 import {
-  configuredIntegrationCount,
-  emptyIntegrationLink,
-  hasIntegrationLink,
-  integrationDisplayText,
-  integrationServices,
-  integrationStatusLabel,
-  isValidIntegrationUrl,
-  normalizeIntegrationLink,
-} from "@/lib/integrations";
+  DropdownMenu as RelayActionMenu,
+  DropdownMenuContent as RelayActionMenuContent,
+  DropdownMenuItem as RelayActionMenuItem,
+  DropdownMenuTrigger as RelayActionMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+
 import {
-  ContentSection,
-  PageContent,
-  PageEmptyState,
-  PageHeader,
-  PageToolbar,
-  WorkspacePage,
-} from "@/components/workspace-page";
+  Cloud,
+  ExternalLink,
+  Link2,
+  Pencil,
+  Plug,
+  Plus,
+  Trash2,
+  Unplug,
+} from "@/components/icons";
 import {
   AlertDialog as OwnedAlertDialog,
   AlertDialogAction as OwnedAlertDialogAction,
@@ -56,17 +50,32 @@ import {
 } from "@/components/ui/select";
 import { Textarea as OwnedTextarea } from "@/components/ui/textarea";
 import {
-  Cloud,
-  ExternalLink,
-  Link2,
-  Pencil,
-  Plug,
-  Plus,
-  Trash2,
-  Unplug,
-} from "@/components/icons";
-import type { ToastState } from "@/features/routes/shared/route-types";
+  ContentSection,
+  PageContent,
+  PageEmptyState,
+  PageFilters,
+  PageHeader,
+  WorkspacePage,
+} from "@/components/workspace-page";
 import { EmptyPanel } from "@/features/routes/shared/empty-panel";
+import type { ToastState } from "@/features/routes/shared/route-types";
+import type {
+  IntegrationLink,
+  IntegrationLinks,
+  IntegrationServiceId,
+} from "@/lib/integrations";
+import {
+  configuredIntegrationCount,
+  emptyIntegrationLink,
+  hasIntegrationLink,
+  integrationDisplayText,
+  integrationServices,
+  integrationStatusLabel,
+  isValidIntegrationUrl,
+  normalizeIntegrationLink,
+} from "@/lib/integrations";
+import type { IntegrationConfig, SettingsState, WorkItem } from "@/lib/types";
+import { useState } from "react";
 import {
   emptyIntegrationConfig,
   integrationColors,
@@ -199,21 +208,21 @@ export function IntegrationsDesignPage({
         title="Integrations"
         description="Save links to the tools and services you use, for the workspace or a single project."
       />
-      <PageContent className="space-y-5">
-        <PageToolbar
+      <PageContent className="">
+        <PageFilters
           data-family-toolbar="integrations"
           primary={
             <div className="relative min-w-0 flex-1 sm:max-w-md">
               <Plug
                 aria-hidden="true"
-                className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-[var(--app-muted)]"
+                className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-[var(--text-meta)]"
               />
               <OwnedInput
                 aria-label="Search integrations"
                 value={integrationSearch}
                 onChange={(event) => setIntegrationSearch(event.target.value)}
                 placeholder="Search services and project links..."
-                className="h-10 bg-[var(--app-control)] pl-9 shadow-none"
+                className="pl-8"
               />
             </div>
           }
@@ -224,7 +233,7 @@ export function IntegrationsDesignPage({
             >
               <OwnedSelectTrigger
                 aria-label="Filter integrations"
-                className="h-10 w-full sm:w-40"
+                className="w-full sm:w-40"
               >
                 <OwnedSelectValue />
               </OwnedSelectTrigger>
@@ -248,7 +257,7 @@ export function IntegrationsDesignPage({
             </OwnedBadge>
           }
         >
-          <ul className="mt-3 divide-y divide-border">
+          <ul>
             {visibleIntegrationNames.map((name) => {
               const config =
                 settings.integrationConfigs[name] ?? emptyIntegrationConfig;
@@ -257,24 +266,26 @@ export function IntegrationsDesignPage({
               return (
                 <li
                   key={name}
-                  className="flex flex-col justify-between gap-3 bg-[var(--app-soft-panel)] p-4 transition-colors hover:bg-[var(--app-hover)] focus-within:bg-[var(--app-hover)] sm:flex-row sm:items-center"
+                  className="flex flex-col justify-between gap-3 border-t border-[var(--border-hairline)] py-3 transition-colors first:border-t-0 first:pt-0 hover:bg-[var(--surface-fill)] focus-within:bg-[var(--surface-fill)] sm:flex-row sm:items-center"
                 >
                   <div className="flex min-w-0 items-center gap-3">
                     <span
                       aria-hidden="true"
-                      className="grid size-9 shrink-0 place-items-center rounded-md text-sm font-semibold text-white"
+                      className="grid size-9 shrink-0 place-items-center text-body font-semibold text-[var(--brand-foreground)]"
                       style={{ backgroundColor: integrationColors[name] }}
                     >
                       {integrationIcons[name]}
                     </span>
                     <div className="min-w-0">
                       <div className="flex flex-wrap items-center gap-2">
-                        <h3 className="text-sm font-semibold">{name}</h3>
-                        <OwnedBadge variant={connected ? "default" : "outline"}>
+                        <h3 className="text-body font-medium">{name}</h3>
+                        <OwnedBadge
+                          variant={connected ? "default" : "secondary"}
+                        >
                           {connected ? "Connected" : "Not connected"}
                         </OwnedBadge>
                       </div>
-                      <p className="mt-1 truncate text-xs text-muted-foreground">
+                      <p className="mt-1 truncate text-meta text-[var(--text-meta)]">
                         {connected
                           ? account || "Connected locally"
                           : integrationDescriptions[name]}
@@ -283,21 +294,31 @@ export function IntegrationsDesignPage({
                   </div>
                   <div className="flex flex-wrap gap-2">
                     {connected ? (
-                      <OwnedButton
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        aria-label={`Disconnect ${name}`}
-                        className="text-destructive hover:text-destructive"
-                        onClick={() => setDisconnectTarget(name)}
-                      >
-                        <Unplug aria-hidden="true" />
-                        Disconnect
-                      </OwnedButton>
+                      <RelayActionMenu>
+                        <RelayActionMenuTrigger asChild>
+                          <OwnedButton
+                            type="button"
+                            variant="ghost"
+                            size="icon-sm"
+                            aria-label={`Disconnect ${name}`}
+                          >
+                            <RelayActionMenuIcon aria-hidden="true" />
+                          </OwnedButton>
+                        </RelayActionMenuTrigger>
+                        <RelayActionMenuContent align="end">
+                          <RelayActionMenuItem
+                            variant="destructive"
+                            onSelect={() => setDisconnectTarget(name)}
+                          >
+                            <Unplug aria-hidden="true" />
+                            Disconnect
+                          </RelayActionMenuItem>
+                        </RelayActionMenuContent>
+                      </RelayActionMenu>
                     ) : null}
                     <OwnedButton
                       type="button"
-                      variant="outline"
+                      variant="secondary"
                       size="sm"
                       aria-label={`${connected ? "Manage" : "Connect"} ${name}`}
                       onClick={() => openIntegration(name)}
@@ -312,7 +333,18 @@ export function IntegrationsDesignPage({
           </ul>
           {!visibleIntegrationNames.length ? (
             <PageEmptyState
-              title="No matching services"
+              title="No matches"
+              action={
+                <OwnedButton
+                  variant="ghost"
+                  onClick={() => {
+                    setIntegrationSearch("");
+                    setIntegrationFilter("all");
+                  }}
+                >
+                  Clear filters
+                </OwnedButton>
+              }
               description="Try a different search or connection filter."
             />
           ) : null}
@@ -336,7 +368,7 @@ export function IntegrationsDesignPage({
           metadata={
             <Cloud
               aria-hidden="true"
-              className="size-4 text-muted-foreground"
+              className="size-4 text-[var(--text-meta)]"
             />
           }
           actions={<OwnedBadge variant="secondary">Upcoming</OwnedBadge>}
@@ -356,17 +388,17 @@ export function IntegrationsDesignPage({
           }
         >
           {visibleProjectLinks.length ? (
-            <ul className="mt-3 divide-y divide-border">
+            <ul>
               {visibleProjectLinks.map((project) => (
                 <li
                   key={project.id}
-                  className="flex flex-col justify-between gap-3 bg-[var(--app-soft-panel)] p-4 transition-colors hover:bg-[var(--app-hover)] focus-within:bg-[var(--app-hover)] md:flex-row md:items-center"
+                  className="flex flex-col justify-between gap-3 border-t border-[var(--border-hairline)] py-3 transition-colors first:border-t-0 first:pt-0 hover:bg-[var(--surface-fill)] focus-within:bg-[var(--surface-fill)] md:flex-row md:items-center"
                 >
                   <div className="min-w-0">
-                    <h3 className="truncate text-sm font-semibold">
+                    <h3 className="truncate text-body font-medium">
                       {project.title}
                     </h3>
-                    <p className="mt-1 text-xs text-muted-foreground">
+                    <p className="mt-1 text-meta text-[var(--text-meta)]">
                       {configuredIntegrationCount(project.integrationLinks)}{" "}
                       saved{" "}
                       {configuredIntegrationCount(project.integrationLinks) ===
@@ -374,7 +406,7 @@ export function IntegrationsDesignPage({
                         ? "link"
                         : "links"}
                     </p>
-                    <div className="mt-2 flex flex-wrap gap-1.5">
+                    <div className="mt-2 flex flex-wrap gap-2">
                       {integrationServices.map((service) =>
                         hasIntegrationLink(
                           project.integrationLinks?.[service.id]
@@ -388,7 +420,7 @@ export function IntegrationsDesignPage({
                   </div>
                   <OwnedButton
                     type="button"
-                    variant="outline"
+                    variant="secondary"
                     aria-label={`Manage integration links for ${project.title}`}
                     onClick={() => onEditProject(project)}
                   >
@@ -399,12 +431,25 @@ export function IntegrationsDesignPage({
               ))}
             </ul>
           ) : (
-            <div className="mt-3">
+            <div>
               <EmptyPanel
                 title={
                   projectLinks.length
-                    ? "No matching project links"
+                    ? "No matches"
                     : "No project integration links"
+                }
+                action={
+                  projectLinks.length ? (
+                    <OwnedButton
+                      variant="ghost"
+                      onClick={() => {
+                        setIntegrationSearch("");
+                        setIntegrationFilter("all");
+                      }}
+                    >
+                      Clear filters
+                    </OwnedButton>
+                  ) : undefined
                 }
                 body={
                   projectLinks.length
@@ -523,7 +568,7 @@ export function IntegrationsDesignPage({
             <OwnedDialogFooter>
               <OwnedButton
                 type="button"
-                variant="outline"
+                variant="ghost"
                 onClick={closeIntegrationDialog}
               >
                 Cancel
@@ -557,7 +602,7 @@ export function IntegrationsDesignPage({
           <OwnedAlertDialogFooter>
             <OwnedAlertDialogCancel>Cancel</OwnedAlertDialogCancel>
             <OwnedAlertDialogAction
-              className="bg-destructive text-white hover:bg-destructive/90"
+              variant="destructive"
               onClick={confirmDisconnect}
             >
               Disconnect
@@ -584,6 +629,7 @@ export function IntegrationLinkManager({
   emptyBody: string;
   onChange: (links: IntegrationLinks) => void;
 }) {
+  const confirm = useConfirm();
   const [editing, setEditing] = useState<{
     serviceId: IntegrationServiceId;
     link: IntegrationLink;
@@ -620,7 +666,15 @@ export function IntegrationLinkManager({
     setError("");
   }
 
-  function removeLink(serviceId: IntegrationServiceId) {
+  async function removeLink(serviceId: IntegrationServiceId) {
+    if (
+      !(await confirm({
+        title: "Remove integration link?",
+        confirmLabel: "Remove",
+        destructive: true,
+      }))
+    )
+      return;
     const next: IntegrationLinks = { ...(links ?? {}) };
     delete next[serviceId];
     onChange(next);
@@ -643,35 +697,35 @@ export function IntegrationLinkManager({
       }
     >
       {!configuredCount ? (
-        <div className="mt-3">
+        <div>
           <EmptyPanel title={emptyTitle} body={emptyBody} />
         </div>
       ) : null}
-      <ul className="mt-3 divide-y divide-border">
+      <ul>
         {integrationServices.map((service) => {
           const link = links?.[service.id];
           const linked = hasIntegrationLink(link);
           return (
             <li
               key={service.id}
-              className="flex flex-col justify-between gap-3 py-3 sm:flex-row sm:items-center"
+              className="flex flex-col justify-between gap-3 border-t border-[var(--border-hairline)] py-3 first:border-t-0 first:pt-0 sm:flex-row sm:items-center"
             >
               <div className="flex min-w-0 items-center gap-3">
                 <span
                   aria-hidden="true"
-                  className="grid size-9 shrink-0 place-items-center rounded-md text-sm font-semibold text-white"
+                  className="grid size-9 shrink-0 place-items-center text-body font-semibold text-[var(--brand-foreground)]"
                   style={{ backgroundColor: service.color }}
                 >
                   {service.icon}
                 </span>
                 <div className="min-w-0">
                   <div className="flex flex-wrap items-center gap-2">
-                    <h3 className="text-sm font-semibold">{service.name}</h3>
-                    <OwnedBadge variant={linked ? "default" : "outline"}>
+                    <h3 className="text-body font-medium">{service.name}</h3>
+                    <OwnedBadge variant={linked ? "default" : "secondary"}>
                       {integrationStatusLabel(link)}
                     </OwnedBadge>
                   </div>
-                  <p className="mt-1 max-w-xl truncate text-xs text-muted-foreground">
+                  <p className="mt-1 max-w-xl truncate text-meta text-[var(--text-meta)]">
                     {integrationDisplayText(link, service.description)}
                   </p>
                 </div>
@@ -680,7 +734,7 @@ export function IntegrationLinkManager({
                 {linked && link ? (
                   <OwnedButton
                     type="button"
-                    variant="outline"
+                    variant="secondary"
                     size="sm"
                     aria-label={`Open ${service.name} link in a new tab`}
                     onClick={() => openLink(link.url)}
@@ -690,21 +744,31 @@ export function IntegrationLinkManager({
                   </OwnedButton>
                 ) : null}
                 {linked ? (
-                  <OwnedButton
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    aria-label={`Remove ${service.name} link`}
-                    className="text-destructive hover:text-destructive"
-                    onClick={() => removeLink(service.id)}
-                  >
-                    <Trash2 aria-hidden="true" />
-                    Remove
-                  </OwnedButton>
+                  <RelayActionMenu>
+                    <RelayActionMenuTrigger asChild>
+                      <OwnedButton
+                        type="button"
+                        variant="ghost"
+                        size="icon-sm"
+                        aria-label={`Remove ${service.name} link`}
+                      >
+                        <RelayActionMenuIcon aria-hidden="true" />
+                      </OwnedButton>
+                    </RelayActionMenuTrigger>
+                    <RelayActionMenuContent align="end">
+                      <RelayActionMenuItem
+                        variant="destructive"
+                        onSelect={() => removeLink(service.id)}
+                      >
+                        <Trash2 aria-hidden="true" />
+                        Remove
+                      </RelayActionMenuItem>
+                    </RelayActionMenuContent>
+                  </RelayActionMenu>
                 ) : null}
                 <OwnedButton
                   type="button"
-                  variant="outline"
+                  variant="secondary"
                   size="sm"
                   aria-label={`${linked ? "Edit" : "Add"} ${service.name} link`}
                   onClick={() => openEditor(service.id)}
@@ -804,7 +868,7 @@ export function IntegrationLinkManager({
             <OwnedDialogFooter>
               <OwnedButton
                 type="button"
-                variant="outline"
+                variant="ghost"
                 onClick={() => {
                   setEditing(null);
                   setError("");

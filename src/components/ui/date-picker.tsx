@@ -1,9 +1,8 @@
 "use client";
 
-import * as React from "react";
 import { CalendarDays, ChevronLeft, ChevronRight } from "@/components/icons";
+import * as React from "react";
 
-import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
   Popover,
@@ -12,11 +11,12 @@ import {
 } from "@/components/ui/popover";
 import {
   formatDate,
-  iso,
   isIsoDate,
+  iso,
   todayDate,
 } from "@/features/routes/utils/date-utils";
 import { defaultSettings } from "@/features/settings/settings-defaults";
+import { cn } from "@/lib/utils";
 
 const WEEKDAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"] as const;
 
@@ -113,10 +113,10 @@ function DatePicker({
       <PopoverTrigger asChild>
         <Button
           type="button"
-          variant="outline"
+          variant="secondary"
           className={cn(
             "w-full justify-start font-normal",
-            !isIsoDate(value) && "text-muted-foreground",
+            !isIsoDate(value) && "text-[var(--text-meta)]",
             className
           )}
           {...triggerProps}
@@ -139,7 +139,7 @@ function DatePicker({
           >
             <ChevronLeft />
           </Button>
-          <strong className="text-sm font-semibold">{monthLabel}</strong>
+          <strong className="text-body font-semibold">{monthLabel}</strong>
           <Button
             type="button"
             size="icon-sm"
@@ -151,6 +151,7 @@ function DatePicker({
           </Button>
         </div>
         <div
+          data-slot="date-grid"
           className="grid grid-cols-7 gap-1"
           role="grid"
           aria-label={monthLabel}
@@ -158,7 +159,7 @@ function DatePicker({
           {orderedWeekdays(weekStart).map((day) => (
             <span
               key={day}
-              className="py-1 text-center text-[11px] font-medium text-muted-foreground"
+              className="py-1 text-center text-meta font-medium text-muted-foreground"
             >
               {day.slice(0, 2)}
             </span>
@@ -172,14 +173,15 @@ function DatePicker({
                 key={key}
                 type="button"
                 size="icon-sm"
-                variant={selected ? "default" : "ghost"}
+                variant="ghost"
                 aria-label={formatDate(key, dateFormat)}
                 aria-pressed={selected}
                 aria-current={key === today ? "date" : undefined}
                 onClick={() => choose(key)}
                 className={cn(
-                  "w-full font-normal",
-                  !inMonth && !selected && "text-muted-foreground",
+                  "w-full font-mono font-normal",
+                  selected && "bg-[var(--surface-active)]",
+                  !inMonth && !selected && "opacity-50",
                   key === today &&
                     !selected &&
                     "font-semibold underline underline-offset-4"

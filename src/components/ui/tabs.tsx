@@ -1,90 +1,102 @@
 "use client";
-
-import * as React from "react";
-import { cva, type VariantProps } from "class-variance-authority";
-import { Tabs as TabsPrimitive } from "radix-ui";
-
+import { useHydratedReducedMotion } from "@/lib/motion";
 import { cn } from "@/lib/utils";
+import { motion } from "motion/react";
+import { Tabs as TabsPrimitive } from "radix-ui";
+import {
+  createContext,
+  useContext,
+  useId,
+  useState,
+  type ComponentProps,
+} from "react";
+
+const TabsContext = createContext({ value: "", layoutId: "" });
+export const segmentedTrackClassName =
+  "workspace-scrollbar-hidden inline-flex h-9 max-w-full w-fit shrink-0 items-center overflow-x-auto rounded-md border border-[var(--border-control)] bg-[var(--surface-fill)] p-(--segment-padding)";
+export const segmentedItemClassName =
+  "relative inline-flex h-full shrink-0 items-center justify-center gap-2 rounded-sm px-3 text-body font-medium text-[var(--text-primary)] disabled:pointer-events-none disabled:opacity-50 hover:bg-[var(--surface-fill)]";
 
 function Tabs({
   className,
-  orientation = "horizontal",
+  value,
+  defaultValue,
+  onValueChange,
+  children,
   ...props
-}: React.ComponentProps<typeof TabsPrimitive.Root>) {
+}: ComponentProps<typeof TabsPrimitive.Root>) {
+  const [uncontrolledValue, setValue] = useState(defaultValue ?? "");
+  const layoutId = useId();
+  const selected = value ?? uncontrolledValue;
   return (
-    <TabsPrimitive.Root
-      data-slot="tabs"
-      data-orientation={orientation}
-      orientation={orientation}
-      className={cn(
-        "group/tabs flex gap-2 data-[orientation=horizontal]:flex-col",
-        className
-      )}
-      {...props}
-    />
+    <TabsContext.Provider value={{ value: selected, layoutId }}>
+      <TabsPrimitive.Root
+        data-slot="tabs"
+        value={selected}
+        onValueChange={(next) => {
+          setValue(next);
+          onValueChange?.(next);
+        }}
+        className={cn("flex min-w-0 flex-col gap-3", className)}
+        {...props}
+      >
+        {children}
+      </TabsPrimitive.Root>
+    </TabsContext.Provider>
   );
 }
-
-const tabsListVariants = cva(
-  "group/tabs-list inline-flex !h-9 w-fit items-center justify-center gap-0.5 !rounded-lg !border-0 !bg-[var(--surface-inset)] !p-1 text-muted-foreground group-data-[orientation=vertical]/tabs:!h-fit group-data-[orientation=vertical]/tabs:flex-col",
-  {
-    variants: {
-      variant: {
-        // Segmented control: inset track, filled active item.
-        default: "",
-        // Trackless tabs: only the active item is filled. No baseline.
-        ghost: "!h-auto justify-start gap-1 !bg-transparent !p-0",
-      },
-    },
-    defaultVariants: {
-      variant: "default",
-    },
-  }
-);
-
 function TabsList({
   className,
-  variant = "default",
   ...props
-}: React.ComponentProps<typeof TabsPrimitive.List> &
-  VariantProps<typeof tabsListVariants>) {
+}: ComponentProps<typeof TabsPrimitive.List>) {
   return (
     <TabsPrimitive.List
       data-slot="tabs-list"
-      data-variant={variant}
-      className={cn(tabsListVariants({ variant }), className)}
+      className={cn(segmentedTrackClassName, className)}
       {...props}
     />
   );
 }
-
 function TabsTrigger({
   className,
+  value,
+  children,
   ...props
-}: React.ComponentProps<typeof TabsPrimitive.Trigger>) {
+}: ComponentProps<typeof TabsPrimitive.Trigger>) {
+  const context = useContext(TabsContext);
+  const reduceMotion = useHydratedReducedMotion();
   return (
     <TabsPrimitive.Trigger
       data-slot="tabs-trigger"
-      className={cn(
-        "inline-flex !h-7 flex-1 items-center justify-center gap-1.5 !rounded-md !border-0 px-2.5 py-1 text-sm font-medium whitespace-nowrap text-[var(--app-muted)] !shadow-none transition-colors group-data-[orientation=vertical]/tabs:w-full group-data-[orientation=vertical]/tabs:justify-start hover:text-[var(--app-ink)] focus-visible:ring-2 focus-visible:ring-[var(--app-accent)] focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50 data-[state=active]:!bg-[var(--app-active)] data-[state=active]:!text-[var(--app-ink)] group-data-[variant=ghost]/tabs-list:!h-8 group-data-[variant=ghost]/tabs-list:flex-none group-data-[variant=ghost]/tabs-list:px-3 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
-        className
-      )}
+      value={value}
+      className={cn(segmentedItemClassName, className)}
       {...props}
-    />
+    >
+      {context.value === value ? (
+        <motion.span
+          aria-hidden="true"
+          layoutId={context.layoutId}
+          className="pointer-events-none absolute inset-0 rounded-sm bg-[var(--surface-active)]"
+          transition={{
+            duration: reduceMotion ? 0 : 0.18,
+            ease: [0.2, 0, 0, 1],
+          }}
+        />
+      ) : null}
+      <span className="relative flex items-center gap-2">{children}</span>
+    </TabsPrimitive.Trigger>
   );
 }
-
 function TabsContent({
   className,
   ...props
-}: React.ComponentProps<typeof TabsPrimitive.Content>) {
+}: ComponentProps<typeof TabsPrimitive.Content>) {
   return (
     <TabsPrimitive.Content
       data-slot="tabs-content"
-      className={cn("flex-1 outline-none", className)}
+      className={cn("min-w-0 flex-1", className)}
       {...props}
     />
   );
 }
-
-export { Tabs, TabsList, TabsTrigger, TabsContent, tabsListVariants };
+export { Tabs, TabsContent, TabsList, TabsTrigger };

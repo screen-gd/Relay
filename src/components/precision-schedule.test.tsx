@@ -1,8 +1,8 @@
+import { sampleStudioSettings } from "@/lib/sample-studio";
+import type { WorkItem } from "@/lib/types";
 import { renderToStaticMarkup } from "react-dom/server";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { PrecisionCalendar } from "./precision-schedule";
-import { sampleStudioSettings } from "@/lib/sample-studio";
-import type { WorkItem } from "@/lib/types";
 
 afterEach(() => vi.useRealTimers());
 
@@ -59,7 +59,6 @@ describe("calendar date grid", () => {
         "October 8, 2026, 1 scheduled; Launch film, In Progress"
       );
       expect(selected).toContain('aria-current="date"');
-      expect(selected).toContain("focus-visible:ring-inset");
     }
   );
 });

@@ -1,14 +1,14 @@
-import { Link } from "@tanstack/react-router";
-import { useState } from "react";
-import { useConvexAuth, useMutation, useQuery } from "convex/react";
-import type { FunctionReturnType } from "convex/server";
-import { api } from "../../../convex/_generated/api";
-import type { Id } from "../../../convex/_generated/dataModel";
 import { Button } from "@/components/ui/button";
 import { ContentSection } from "@/components/workspace-page";
 import { AiLockedNotice } from "@/features/ai/ai-availability";
 import { projectLink } from "@/features/projects/project-view";
 import { cn } from "@/lib/utils";
+import { Link } from "@tanstack/react-router";
+import { useConvexAuth, useMutation, useQuery } from "convex/react";
+import type { FunctionReturnType } from "convex/server";
+import { useState } from "react";
+import { api } from "../../../convex/_generated/api";
+import type { Id } from "../../../convex/_generated/dataModel";
 
 type Finding = FunctionReturnType<
   typeof api.deadlineRisk.listFindings
@@ -88,7 +88,7 @@ export function DeadlineRiskRadar({
       title="Deadline risk"
       metadata={
         radar.evaluatedOn ? (
-          <span className="text-[11px] text-foreground">
+          <span className="text-meta text-[var(--text-primary)]">
             Checked {radar.evaluatedOn}
           </span>
         ) : null
@@ -96,10 +96,10 @@ export function DeadlineRiskRadar({
       actions={
         ai && radar.findings.length ? (
           ai.enabled ? (
-            <div className="flex gap-2 [&_button]:bg-transparent [&_button:hover]:bg-transparent [&_button]:dark:text-white">
+            <div className="flex gap-2">
               <Button
                 size="sm"
-                variant="outline"
+                variant="secondary"
                 disabled={running}
                 onClick={() => void request("default")}
               >
@@ -130,11 +130,11 @@ export function DeadlineRiskRadar({
           {radar.findings.map((finding) => (
             <li
               key={finding._id}
-              className="grid gap-1 text-xs sm:grid-cols-[minmax(0,1fr)_auto] sm:items-baseline sm:gap-3"
+              className="grid gap-1 text-meta sm:grid-cols-[minmax(0,1fr)_auto] sm:items-baseline sm:gap-3"
             >
               <Link
                 {...sourceLink(finding)}
-                className="truncate font-medium text-foreground underline-offset-4 hover:underline"
+                className="truncate font-medium text-[var(--text-primary)] underline-offset-4 hover:underline"
               >
                 {finding.outputTitle
                   ? `${finding.projectTitle} · ${finding.outputTitle}`
@@ -144,8 +144,8 @@ export function DeadlineRiskRadar({
                 className={cn(
                   "font-mono tabular-nums",
                   finding.kind === "overdue"
-                    ? "text-[var(--app-danger)]"
-                    : "text-foreground"
+                    ? "text-[var(--status-danger)]"
+                    : "text-[var(--text-primary)]"
                 )}
               >
                 {kindLabel[finding.kind]} · {dueLabel(finding.daysUntilDue)}
@@ -154,41 +154,43 @@ export function DeadlineRiskRadar({
           ))}
         </ul>
       ) : (
-        <p className="text-xs text-foreground">No deadlines at risk.</p>
+        <p className="text-meta text-[var(--text-primary)]">
+          No deadlines at risk.
+        </p>
       )}
       {radar.truncated ? (
-        <p className="mt-2 text-xs text-foreground">
+        <p className="mt-2 text-meta text-[var(--text-primary)]">
           Showing the first findings only.
         </p>
       ) : null}
       {status ? (
-        <p role="status" className="mt-3 text-xs text-foreground">
+        <p role="status" className="mt-3 text-meta text-[var(--text-primary)]">
           {status}
         </p>
       ) : null}
       {error ? (
-        <p role="alert" className="mt-3 text-xs text-destructive">
+        <p role="alert" className="mt-3 text-meta text-[var(--status-danger)]">
           {error}
         </p>
       ) : null}
       {digest?.status === "succeeded" && lines.length ? (
         <div className="mt-4 grid gap-2">
-          <p className="text-xs font-medium text-foreground">
+          <p className="text-meta font-medium text-[var(--text-primary)]">
             AI-drafted · {digest.evaluatedOn}
             {digest.totalFindings > digest.items.length
               ? ` · first ${digest.items.length} of ${digest.totalFindings}`
               : ""}
           </p>
-          <ul className="grid gap-1.5">
+          <ul className="grid gap-2">
             {lines.map((item) => (
               <li
                 key={`${item.projectId}:${item.outputId ?? ""}`}
-                className="text-sm text-foreground"
+                className="text-body text-[var(--text-primary)]"
               >
                 {item.line}{" "}
                 <Link
                   {...sourceLink(item)}
-                  className="text-xs underline underline-offset-4"
+                  className="text-meta underline underline-offset-4"
                 >
                   Source
                 </Link>

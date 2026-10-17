@@ -8,8 +8,8 @@ import { usePinnedProject } from "@/lib/project-history";
 import { useProjectAccess } from "./project-access";
 import { useProjectActions } from "./project-actions-provider";
 import { useProjectActivity } from "./project-activity";
-import { ProjectWorkspace } from "./project-workspace";
 import { useProjectNavigation } from "./project-view";
+import { ProjectWorkspace } from "./project-workspace";
 import { useProjectsApplicationState } from "./use-projects-application-state";
 
 export function ProjectsApplication({
@@ -158,7 +158,7 @@ function ProjectLimitNotice() {
   if (openProjectLimit === null || openProjectCount < openProjectLimit - 2)
     return null;
   return (
-    <p className="mb-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-[13px] text-foreground">
+    <p className="mb-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-body text-[var(--text-primary)]">
       <span>
         {openProjectCount} of {openProjectLimit} Projects in progress on Free.
       </span>

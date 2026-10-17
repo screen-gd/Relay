@@ -1,91 +1,49 @@
-import React, {
-  createContext,
-  useContext,
-  useEffect,
-  useRef,
-  useState,
-  useCallback,
-  useMemo,
-} from "react";
-import { useAuth, useUser } from "@clerk/tanstack-react-start";
-import { useConvex, useConvexAuth, useMutation, useQuery } from "convex/react";
-import { api } from "../../convex/_generated/api";
-import type { Id } from "../../convex/_generated/dataModel";
-import { useWorkspaceProjectData } from "./use-workspace-project-data";
-import {
-  ProjectHistoryProvider,
-  isOpenProjectLimitError,
-  useProjectHistoryState,
-} from "./project-history";
-import { OPEN_PROJECT_LIMIT_MESSAGE } from "../../shared/subscription-plans";
-import { useOptionalAuth } from "@/lib/optional-auth";
-import type {
-  WorkItem,
-  SettingsState,
-  SalaryBatch,
-  SalaryPlan,
-  SalaryState,
-  TeamMember,
-  IntegrationConfig,
-  ResourceLink,
-  SavedProjectTemplate,
-  ProjectGroup,
-  WorkflowStage,
-  Client,
-} from "./types";
-import { WORKFLOW_STAGE_PURPOSE_VALUES } from "./types";
-import { normalizeIntegrationLinks } from "./integrations";
-import { normalizeClientRecords, projectClientName } from "./clients";
-import {
-  createWorkspaceBackup,
-  parseWorkspaceBackup,
-} from "./workspace-backup";
-import {
-  omitLegacySettings,
-  settingsPatch,
-  type SettingsSaveState,
-} from "./settings-persistence";
-import { normalizeProjectGroups } from "@/features/projects/project-domain";
-import {
-  applyLocalStageTransition,
-  previewLocalStageTransition,
-} from "@/features/projects/local-stage-transition";
-import { localDateKey } from "@/features/projects/project-domain";
-import {
-  createDefaultSettings,
-  defaultRolePermissions,
-  defaultSettings,
-} from "@/features/settings/settings-defaults";
 import {
   emptyIntegrationConfig,
   integrationNames,
 } from "@/features/integrations/integration-constants";
 import {
+  applyLocalStageTransition,
+  previewLocalStageTransition,
+} from "@/features/projects/local-stage-transition";
+import {
+  localDateKey,
+  normalizeProjectGroups,
+} from "@/features/projects/project-domain";
+import type {
+  ProjectStageTransitionResult,
+  ProjectWorkflowPort,
+} from "@/features/projects/project-workflow-port";
+import type { ToastState } from "@/features/routes/shared/route-types";
+import { iso, todayDate } from "@/features/routes/utils/date-utils";
+import { isDoneStatus } from "@/features/routes/utils/status-utils";
+import {
   isSalaryWorkType,
   normalizedSalaryBatchAmount,
   normalizedSalaryBatchSize,
 } from "@/features/routes/utils/work-type-utils";
-import { isDoneStatus } from "@/features/routes/utils/status-utils";
-import { iso, todayDate } from "@/features/routes/utils/date-utils";
-import { DEFAULT_PROFILE_ID } from "@/lib/profiles";
-import type {
-  ProjectWorkflowPort,
-  ProjectStageTransitionResult,
-} from "@/features/projects/project-workflow-port";
-import { DEFAULT_WORKFLOW_STAGES } from "./workflow-templates";
 import {
-  clearSampleWorkspace,
-  isSampleRecordId,
-  sampleStudioProjects,
-  sampleStudioResources,
-  sampleStudioSettings,
-  seedSampleWorkspace,
-} from "./sample-studio";
-
-const cloudSettingsInput = (settings: SettingsState) => ({
-  ...omitLegacySettings(settings),
-  density: "Balanced",
-});
+  createDefaultSettings,
+  defaultRolePermissions,
+  defaultSettings,
+} from "@/features/settings/settings-defaults";
+import { useOptionalAuth } from "@/lib/optional-auth";
+import { DEFAULT_PROFILE_ID } from "@/lib/profiles";
+import { useAuth, useUser } from "@clerk/tanstack-react-start";
+import { useConvex, useConvexAuth, useMutation, useQuery } from "convex/react";
+import React, {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
+import { api } from "../../convex/_generated/api";
+import type { Id } from "../../convex/_generated/dataModel";
+import { OPEN_PROJECT_LIMIT_MESSAGE } from "../../shared/subscription-plans";
+import { normalizeClientRecords, projectClientName } from "./clients";
 import {
   FILE_CATEGORY_VALUES,
   FILE_STATUS_VALUES,
@@ -95,6 +53,51 @@ import {
   type SettingsTeamRole,
   type StoredTeamRole,
 } from "./domain-values";
+import { normalizeIntegrationLinks } from "./integrations";
+import {
+  ProjectHistoryProvider,
+  isOpenProjectLimitError,
+  useProjectHistoryState,
+} from "./project-history";
+import {
+  clearSampleWorkspace,
+  isSampleRecordId,
+  sampleStudioProjects,
+  sampleStudioResources,
+  sampleStudioSettings,
+  seedSampleWorkspace,
+} from "./sample-studio";
+import {
+  omitLegacySettings,
+  settingsPatch,
+  type SettingsSaveState,
+} from "./settings-persistence";
+import type {
+  Client,
+  IntegrationConfig,
+  ProjectGroup,
+  ResourceLink,
+  SalaryBatch,
+  SalaryPlan,
+  SalaryState,
+  SavedProjectTemplate,
+  SettingsState,
+  TeamMember,
+  WorkItem,
+  WorkflowStage,
+} from "./types";
+import { WORKFLOW_STAGE_PURPOSE_VALUES } from "./types";
+import { useWorkspaceProjectData } from "./use-workspace-project-data";
+import { DEFAULT_WORKFLOW_STAGES } from "./workflow-templates";
+import {
+  createWorkspaceBackup,
+  parseWorkspaceBackup,
+} from "./workspace-backup";
+
+const cloudSettingsInput = (settings: SettingsState) => ({
+  ...omitLegacySettings(settings),
+  density: "Balanced",
+});
 
 const STORAGE_KEY = "video-editing-work-tracker:v1";
 const SALARY_STORAGE_KEY = "video-editing-work-tracker:salary-batches:v1";
@@ -117,7 +120,6 @@ const LEGACY_DEMO_SETTINGS = {
   profileLocation: "Los Angeles, CA",
 };
 
-type ToastState = { message: string; tone: "success" | "info" | "warning" };
 type ClerkGetToken = ReturnType<typeof useAuth>["getToken"];
 
 function isLegacyDemoSettings(value: unknown) {
@@ -1319,7 +1321,7 @@ function SampleDataProvider({ children }: { children: React.ReactNode }) {
   >(() => undefined, []);
 
   useEffect(() => {
-    if (!toast) return;
+    if (!toast || toast.tone === "error") return;
     const timeout = window.setTimeout(() => setToast(null), 2400);
     return () => window.clearTimeout(timeout);
   }, [toast]);
@@ -1415,7 +1417,7 @@ function LocalDataProvider({
   }, []);
 
   useEffect(() => {
-    if (!toast) return;
+    if (!toast || toast.tone === "error") return;
     const t = window.setTimeout(() => setToast(null), 2400);
     return () => window.clearTimeout(t);
   }, [toast]);
@@ -1861,7 +1863,7 @@ function CloudDataProvider({ children }: { children: React.ReactNode }) {
       setSalaryPlans([]);
       let cancelled = false;
       void diagnoseConvexAuthToken(getToken).then((message) => {
-        if (!cancelled) setToast({ tone: "warning", message });
+        if (!cancelled) setToast({ tone: "error", message });
       });
       setReady(true);
       return () => {
@@ -1999,7 +2001,7 @@ function CloudDataProvider({ children }: { children: React.ReactNode }) {
       if (syncFailed) {
         if (!cancelled) {
           setToast({
-            tone: "warning",
+            tone: "error",
             message:
               "Cloud sync is not available. Your data is still saved on this device.",
           });
@@ -2142,9 +2144,9 @@ function CloudDataProvider({ children }: { children: React.ReactNode }) {
     user,
   ]);
 
-  // Toast auto-dismiss
+  // Leave failures visible until dismissed or retried.
   useEffect(() => {
-    if (!toast) return;
+    if (!toast || toast.tone === "error") return;
     const t = window.setTimeout(() => setToast(null), 2400);
     return () => window.clearTimeout(t);
   }, [toast]);
@@ -2252,7 +2254,7 @@ function CloudDataProvider({ children }: { children: React.ReactNode }) {
             }
             writeJson(STORAGE_KEY, next);
             setToast({
-              tone: "warning",
+              tone: "error",
               message: "Cloud sync failed. Projects are saved locally for now.",
             });
           });
@@ -2313,7 +2315,7 @@ function CloudDataProvider({ children }: { children: React.ReactNode }) {
           replaceAllResources({ resources: next }).catch(() => {
             writeJson(RESOURCES_STORAGE_KEY, next);
             setToast({
-              tone: "warning",
+              tone: "error",
               message:
                 "Cloud sync failed. Resources are saved locally for now.",
             });
@@ -2402,7 +2404,7 @@ function CloudDataProvider({ children }: { children: React.ReactNode }) {
           setProjectSalaryBatchPaid({ batchId, paid }).catch(() => {
             writeJson(SALARY_STORAGE_KEY, { batches: next });
             setToast({
-              tone: "warning",
+              tone: "error",
               message:
                 "Cloud sync failed. The payout status is saved locally for now.",
             });
@@ -2474,7 +2476,7 @@ function CloudDataProvider({ children }: { children: React.ReactNode }) {
           ).catch(() => {
             writeJson(PROJECT_GROUPS_STORAGE_KEY, next);
             setToast({
-              tone: "warning",
+              tone: "error",
               message:
                 "Cloud sync failed. Project Groups are saved locally for now.",
             });

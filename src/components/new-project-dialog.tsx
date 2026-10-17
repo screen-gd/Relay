@@ -1,19 +1,6 @@
 "use client";
 
-import { useEffect, useState, type RefObject } from "react";
-import { useForm } from "@tanstack/react-form";
-import type {
-  Client,
-  ProjectGroup,
-  SalaryPlan,
-  SavedProjectTemplate,
-  SettingsState,
-} from "@/lib/types";
-import {
-  newProjectFormSchema,
-  type NewProjectFormValues,
-  type NewProjectInput,
-} from "@/features/projects/project-domain";
+import { useConfirm } from "@/components/confirm-dialog";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -23,19 +10,32 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { FieldLayout } from "@/components/ui/field-layout";
 import { Input } from "@/components/ui/input";
-import { Check, ChevronDown } from "@/components/icons";
-import { ProjectDatePicker } from "@/features/projects/project-dialogs";
-import { useConfirm } from "@/components/confirm-dialog";
-import { useOptionalAuth } from "@/lib/optional-auth";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { BriefImport } from "@/features/projects/brief-import";
+import { ProjectDatePicker } from "@/features/projects/project-dialogs";
+import {
+  newProjectFormSchema,
+  type NewProjectFormValues,
+  type NewProjectInput,
+} from "@/features/projects/project-domain";
+import { useOptionalAuth } from "@/lib/optional-auth";
+import type {
+  Client,
+  ProjectGroup,
+  SalaryPlan,
+  SavedProjectTemplate,
+  SettingsState,
+} from "@/lib/types";
+import { useForm } from "@tanstack/react-form";
+import { useEffect, useState, type RefObject } from "react";
 import type { Id } from "../../convex/_generated/dataModel";
 
 type NewProjectDialogProps = {
@@ -72,16 +72,16 @@ const defaultValues = (initialTemplateId: string): NewProjectFormValues => ({
   salaryPlanId: "",
 });
 
-type ContextMenuOption = {
+type ProjectSelectOption = {
   value: string;
   label: string;
   disabled?: boolean;
 };
 
-type ContextMenuSelectProps = {
+type ProjectSelectProps = {
   value: string;
   placeholder: string;
-  options: readonly ContextMenuOption[];
+  options: readonly ProjectSelectOption[];
   onChange: (value: string) => void;
   contentClassName?: string;
   id?: string;
@@ -94,58 +94,38 @@ type ContextMenuSelectProps = {
   "aria-label"?: string;
 };
 
-function ContextMenuSelect({
+function ProjectSelect({
   value,
   placeholder,
   options,
   onChange,
   contentClassName,
-  ...buttonProps
-}: ContextMenuSelectProps) {
-  const selectedOption = options.find((option) => option.value === value);
-
+  disabled,
+  required,
+  ...triggerProps
+}: ProjectSelectProps) {
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button
-          type="button"
-          variant="outline"
-          {...buttonProps}
-          className="w-full justify-between rounded-md border-input bg-input/30 text-left font-normal"
-        >
-          <span
-            className={
-              selectedOption ? "truncate" : "truncate text-muted-foreground"
-            }
-          >
-            {selectedOption?.label ?? placeholder}
-          </span>
-          <ChevronDown
-            className="size-4 shrink-0 opacity-50"
-            strokeWidth={1.75}
-          />
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent
-        align="start"
-        className={`min-w-[15rem] max-w-[calc(100vw-2rem)] ${contentClassName ?? ""}`}
-      >
+    <Select
+      value={value || undefined}
+      onValueChange={onChange}
+      disabled={disabled}
+      required={required}
+    >
+      <SelectTrigger {...triggerProps} className="w-full">
+        <SelectValue placeholder={placeholder} />
+      </SelectTrigger>
+      <SelectContent className={contentClassName}>
         {options.map((option) => (
-          <DropdownMenuItem
+          <SelectItem
             key={option.value}
+            value={option.value}
             disabled={option.disabled}
-            onSelect={() => onChange(option.value)}
-            className="justify-between gap-4"
           >
-            <span className="truncate">{option.label}</span>
-            <Check
-              className={`size-4 shrink-0 ${option.value === value ? "opacity-100" : "opacity-0"}`}
-              strokeWidth={1.75}
-            />
-          </DropdownMenuItem>
+            {option.label}
+          </SelectItem>
         ))}
-      </DropdownMenuContent>
-    </DropdownMenu>
+      </SelectContent>
+    </Select>
   );
 }
 
@@ -252,7 +232,7 @@ export function NewProjectDialog({
       }}
     >
       <DialogContent
-        className="max-h-[min(94dvh,900px)] overflow-y-auto border-border bg-background text-foreground sm:max-w-2xl"
+        className="overflow-y-auto sm:max-w-2xl"
         onCloseAutoFocus={(event) => {
           const target = returnFocusRef.current;
           if (!target?.isConnected) return;
@@ -261,7 +241,7 @@ export function NewProjectDialog({
         }}
       >
         <DialogHeader>
-          <DialogTitle className="text-2xl">New Project</DialogTitle>
+          <DialogTitle>New project</DialogTitle>
           <DialogDescription>
             Set the schedule, ownership, and production details for this
             project.
@@ -281,7 +261,7 @@ export function NewProjectDialog({
         ) : null}
         <form
           hidden={briefOpen}
-          className="grid gap-5"
+          className="grid gap-6"
           onSubmit={(event) => {
             event.preventDefault();
             event.stopPropagation();
@@ -313,7 +293,7 @@ export function NewProjectDialog({
                       );
                       return (
                         <>
-                          <ContextMenuSelect
+                          <ProjectSelect
                             aria-label="Client"
                             disabled={Boolean(selectedPlan)}
                             value={field.state.value}
@@ -346,10 +326,10 @@ export function NewProjectDialog({
                   <div
                     aria-hidden={!creatingClient}
                     inert={!creatingClient}
-                    className={`grid transition-[grid-template-rows,opacity] duration-300 ease-out ${creatingClient ? "grid-rows-[1fr] opacity-100" : "pointer-events-none grid-rows-[0fr] opacity-0"}`}
+                    className={creatingClient ? "block" : "hidden"}
                   >
                     <div className="min-h-0 overflow-hidden">
-                      <div className="mt-2 grid gap-2 border-l border-border pl-3">
+                      <div className="mt-2 grid gap-2">
                         <Input
                           aria-label="New Client name"
                           placeholder="Client name"
@@ -387,7 +367,10 @@ export function NewProjectDialog({
                           />
                         </div>
                         {clientError ? (
-                          <p role="alert" className="text-sm text-destructive">
+                          <p
+                            role="alert"
+                            className="text-meta text-[var(--status-danger)]"
+                          >
                             {clientError}
                           </p>
                         ) : null}
@@ -395,6 +378,7 @@ export function NewProjectDialog({
                           <Button
                             type="button"
                             size="sm"
+                            variant="secondary"
                             onClick={createClient}
                           >
                             Add Client
@@ -420,7 +404,7 @@ export function NewProjectDialog({
               <form.Field name="projectGroupId">
                 {(field) => (
                   <FieldLayout label="Project Group" description="Optional">
-                    <ContextMenuSelect
+                    <ProjectSelect
                       value={field.state.value || "none"}
                       placeholder="No Project Group"
                       options={[
@@ -465,7 +449,7 @@ export function NewProjectDialog({
                       : undefined
                   }
                 >
-                  <ContextMenuSelect
+                  <ProjectSelect
                     value={field.state.value || "none"}
                     placeholder="No Template"
                     options={[
@@ -497,7 +481,7 @@ export function NewProjectDialog({
             <form.Field name="financialType">
               {(field) => (
                 <FieldLayout label="Financial type">
-                  <ContextMenuSelect
+                  <ProjectSelect
                     placeholder="Client Project"
                     value={field.state.value}
                     options={[
@@ -530,12 +514,11 @@ export function NewProjectDialog({
                     <FieldLayout
                       label="Payment plan"
                       description="The payment plan sets the client. Pay is counted per batch, not per project."
-                      className="animate-in fade-in slide-in-from-top-2 duration-300"
                     >
-                      <ContextMenuSelect
+                      <ProjectSelect
                         value={field.state.value || "none"}
                         placeholder="Choose a Payment plan"
-                        contentClassName="min-w-[22rem]"
+                        contentClassName="min-w-80"
                         options={[
                           { value: "none", label: "Choose a Payment plan" },
                           ...activeSalaryPlans.map((plan) => {
@@ -578,7 +561,12 @@ export function NewProjectDialog({
                 <Button type="button" variant="ghost" onClick={requestClose}>
                   Cancel
                 </Button>
-                <Button type="submit" disabled={!canSubmit || isSubmitting}>
+                <Button
+                  pending={isSubmitting}
+                  pendingLabel="Creating..."
+                  type="submit"
+                  disabled={!canSubmit || isSubmitting}
+                >
                   {isSubmitting ? "Creating..." : "Create Project"}
                 </Button>
               </DialogFooter>

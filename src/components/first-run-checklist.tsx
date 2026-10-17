@@ -7,7 +7,6 @@ import {
   Sparkles,
 } from "@/components/icons";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
 import { useData } from "@/lib/data-context";
 
 export function FirstRunChecklist({
@@ -30,7 +29,8 @@ export function FirstRunChecklist({
     } catch {
       setToast({
         message: "The sample data could not be loaded. Try again.",
-        tone: "warning",
+        tone: "error",
+        retry: () => void loadSample(),
       });
     }
   }
@@ -65,75 +65,61 @@ export function FirstRunChecklist({
 
   return (
     <section
-      className="mx-auto max-w-5xl px-4 py-8 sm:px-6 sm:py-12"
+      className="grid gap-6 rounded-md border border-[var(--border-panel)] bg-[var(--surface-fill)] p-4 text-body sm:p-6"
       aria-labelledby="first-run-title"
     >
-      <Card className="p-5 shadow-[var(--app-shadow-1)] sm:p-8">
-        <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[var(--app-highlight)]">
-          Your first production
-        </p>
-        <h2
-          id="first-run-title"
-          className="mt-2 max-w-2xl text-2xl font-semibold tracking-[-0.025em] sm:text-3xl"
-        >
+      <div>
+        <h2 id="first-run-title" className="max-w-2xl text-section">
           {canLoadSample
             ? "See Relay filled with a sample production"
             : "Turn one active edit into a clear production plan"}
         </h2>
-        <p className="mt-3 max-w-2xl text-sm leading-6 text-[var(--app-muted)]">
+        <p className="mt-3 max-w-2xl text-meta text-[var(--text-meta)]">
           {canLoadSample
             ? "Demo work you can clear at any time. Nothing you add yourself is removed with it."
             : "Create a real project first. Relay will reveal the full dashboard once there is useful work to organize."}
         </p>
         <div className="mt-6 flex flex-wrap items-center gap-3">
           {canLoadSample ? (
-            <Button className="min-h-12 px-5" onClick={loadSample}>
+            <Button variant="secondary" onClick={loadSample}>
               Load sample data
             </Button>
           ) : null}
-          <Button
-            variant={canLoadSample ? "outline" : "default"}
-            className="min-h-12 px-5"
-            onClick={onCreateProject}
-          >
+          <Button variant="secondary" onClick={onCreateProject}>
             {canLoadSample ? "Create a blank project" : "Create first project"}
           </Button>
         </div>
+      </div>
+      <ol className="grid gap-6 lg:grid-cols-3">
+        {steps.map((step, index) => {
+          const Icon = step.icon;
+          return (
+            <li key={step.title} className="min-w-0">
+              <div className="flex items-center gap-3">
+                <span className="grid size-8 place-items-center text-[var(--text-primary)]">
+                  <Icon className="size-4" />
+                </span>
+                <span className="font-mono text-meta text-[var(--text-meta)]">
+                  0{index + 1}
+                </span>
+              </div>
+              <h3 className="mt-4 text-section">{step.title}</h3>
+              <p className="mt-2 text-body text-[var(--text-primary)]">
+                {step.body}
+              </p>
+            </li>
+          );
+        })}
+      </ol>
 
-        <ol className="mt-8 grid gap-3 lg:grid-cols-3">
-          {steps.map((step, index) => {
-            const Icon = step.icon;
-            return (
-              <li
-                key={step.title}
-                className="rounded-lg border border-[var(--app-border)] bg-[var(--app-soft-panel)] p-4"
-              >
-                <div className="flex items-center gap-3">
-                  <span className="grid size-9 place-items-center rounded-md bg-[var(--app-active)] text-[var(--app-highlight)]">
-                    <Icon className="size-4" />
-                  </span>
-                  <span className="font-mono text-xs text-[var(--app-subtle)]">
-                    0{index + 1}
-                  </span>
-                </div>
-                <h2 className="mt-4 text-sm font-semibold">{step.title}</h2>
-                <p className="mt-2 text-sm leading-6 text-[var(--app-muted)]">
-                  {step.body}
-                </p>
-              </li>
-            );
-          })}
-        </ol>
-
-        <div className="mt-5 flex flex-col gap-3 border-t border-[var(--app-border)] pt-5 text-sm text-[var(--app-muted)] sm:flex-row sm:items-center sm:justify-between">
-          <p className="flex items-center gap-2">
-            <LockKeyhole className="size-4" />
-            {mode === "local"
-              ? "Local mode stores this workspace in this browser."
-              : "Account mode syncs supported workspace records."}
-          </p>
-        </div>
-      </Card>
+      <div className="text-meta text-[var(--text-meta)]">
+        <p className="flex items-center gap-2">
+          <LockKeyhole className="size-4" />
+          {mode === "local"
+            ? "Local mode stores this workspace in this browser."
+            : "Account mode syncs supported workspace records."}
+        </p>
+      </div>
       <p className="sr-only">
         <Check /> The checklist completes when your first project is saved.
       </p>

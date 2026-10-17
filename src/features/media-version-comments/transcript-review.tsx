@@ -1,20 +1,20 @@
 "use client";
 
-import { createContext, useContext, useState, type ReactNode } from "react";
-import { useConvexAuth, useMutation, useQuery } from "convex/react";
-import type { FunctionReturnType } from "convex/server";
-import { api } from "../../../convex/_generated/api";
-import type { Id } from "../../../convex/_generated/dataModel";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
+import { Input } from "@/components/ui/input";
 import { AiLockedNotice, useAiAccount } from "@/features/ai/ai-availability";
-import { MAX_TRANSCRIPT_BYTES } from "./transcript-parser";
+import { useConvexAuth, useMutation, useQuery } from "convex/react";
+import type { FunctionReturnType } from "convex/server";
+import { createContext, useContext, useState, type ReactNode } from "react";
+import { api } from "../../../convex/_generated/api";
+import type { Id } from "../../../convex/_generated/dataModel";
 import { formatReviewTimestamp } from "./review-timestamps";
+import { MAX_TRANSCRIPT_BYTES } from "./transcript-parser";
 
 const TranscriptContext = createContext<{
   data: FunctionReturnType<typeof api.transcripts.get> | undefined;
@@ -39,7 +39,7 @@ export function TranscriptLine({
       return true;
     })
     .map((match) => (
-      <p key={match.segmentId} className="text-sm dark:text-white">
+      <p key={match.segmentId} className="text-body text-[var(--text-primary)]">
         {match.aiDrafted ? "AI-drafted · " : ""}
         <a
           href={`#transcript-${match.segmentId}`}
@@ -130,7 +130,7 @@ function ConnectedTranscriptReview({
   const replacing = Boolean(data?.transcript);
   // Uploading again replaces the transcript and clears its AI matches.
   const uploadControl = canEdit ? (
-    <label className="grid gap-1 text-xs">
+    <label className="grid gap-1 text-meta">
       {replacing ? "Replace transcript" : "Upload transcript"}
       <Input
         type="file"
@@ -161,25 +161,25 @@ function ConnectedTranscriptReview({
     >
       <section
         aria-label="Transcript"
-        className="grid gap-2 py-2 dark:bg-black dark:text-white [&_button]:bg-transparent [&_button:hover]:bg-transparent [&_input]:bg-transparent"
+        className="grid gap-2 py-2 text-[var(--text-primary)]"
       >
         {data?.transcript ? (
           <>
             <Collapsible open={expanded} onOpenChange={setExpanded}>
               <CollapsibleTrigger asChild>
-                <Button type="button" variant="ghost" className="px-0">
+                <Button type="button" variant="ghost" className="">
                   Transcript · {data.transcript.sourceName}
                 </Button>
               </CollapsibleTrigger>
               <CollapsibleContent>
-                <ol className="max-h-64 overflow-y-auto divide-y divide-border">
+                <ol className="max-h-64 overflow-y-auto">
                   {data.segments.map((segment) => (
                     <li
                       id={`transcript-${segment._id}`}
                       key={segment._id}
-                      className="py-2 text-sm"
+                      className="py-2 text-body"
                     >
-                      <span className="font-mono text-xs">
+                      <span className="font-mono text-meta">
                         {formatReviewTimestamp(segment.startSeconds)}
                       </span>{" "}
                       {segment.text}
@@ -192,7 +192,7 @@ function ConnectedTranscriptReview({
               <div className="flex gap-3">
                 <Button
                   type="button"
-                  variant="outline"
+                  variant="secondary"
                   size="sm"
                   disabled={running}
                   onClick={() => void request("default")}
@@ -218,7 +218,7 @@ function ConnectedTranscriptReview({
           uploadControl
         )}
         {run ? (
-          <p role="status" className="text-xs">
+          <p role="status" className="text-meta">
             {run.status === "queued" || run.status === "running"
               ? "Matching..."
               : run.status === "failed"
@@ -227,7 +227,7 @@ function ConnectedTranscriptReview({
           </p>
         ) : null}
         {error ? (
-          <p role="alert" className="text-sm text-destructive">
+          <p role="alert" className="text-body text-[var(--status-danger)]">
             {error}
           </p>
         ) : null}

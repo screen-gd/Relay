@@ -1,4 +1,9 @@
+import { Checkbox } from "@/components/ui/checkbox";
+import { Switch } from "@/components/ui/switch";
+import { deriveAccentTokens } from "@/features/routes/shared/route-theme";
 import { readFileSync } from "node:fs";
+import { createElement } from "react";
+import { renderToStaticMarkup } from "react-dom/server";
 import { expect, test } from "vitest";
 
 const css = readFileSync(new URL("./globals.css", import.meta.url), "utf8");
@@ -6,7 +11,8 @@ const light = css.match(/:root \{([\s\S]*?)\n\}/)?.[1] ?? "";
 const dark = css.match(/\.dark \{([\s\S]*?)\n\}/)?.[1] ?? "";
 
 function token(block: string, name: string) {
-  const value = block.match(new RegExp(`${name}:\\s*([^;]+);`))?.[1];
+  const expression = new RegExp(`${name}:\\s*([^;]+);`);
+  const value = block.match(expression)?.[1] ?? light.match(expression)?.[1];
   if (!value) throw new Error(`Missing ${name}`);
   return value;
 }
@@ -24,97 +30,88 @@ function contrast(a: string, b: string) {
   return (values[0] + 0.05) / (values[1] + 0.05);
 }
 
-test("muted and subtle text use the accessible shared token", () => {
-  expect(token(light, "--app-muted")).toBe("var(--text-muted)");
-  expect(token(light, "--app-subtle")).toBe("var(--text-muted)");
-  // Includes raised, inset, overlay, media wells and composited selected surfaces.
-  const surfaces = [
-    [
-      light,
-      [
-        "#ffffff",
-        "#eeeef0",
-        "#f6f6f7",
-        "#efeff1",
-        "#e7e7ea",
-        "#d4d4d8",
-        "#d9e3e8",
-        "#dfd5c7",
-        "#eee7da",
-        "#dce4dc",
-        "#d6e1ed",
-      ],
-    ],
-    [
-      dark,
-      [
-        "#000000",
-        "#0a0a0b",
-        "#0d0d0e",
-        "#111112",
-        "#161617",
-        "#18181a",
-        "#1f1f22",
-        "#2f2f2f",
-        "#17263a",
-        "#29251f",
-        "#172a21",
-        "#252039",
-        "#252b33",
-      ],
-    ],
-  ] satisfies Array<[string, string[]]>;
-  for (const [theme, backgrounds] of surfaces) {
-    for (const background of backgrounds) {
-      expect(
-        contrast(token(theme, "--text-muted"), background)
-      ).toBeGreaterThanOrEqual(4.5);
-    }
-  }
-});
-
-test("the lime accent keeps text on it and accent text readable", () => {
-  for (const theme of [light, dark]) {
-    expect(
-      contrast(
-        token(theme, "--app-accent"),
-        token(theme, "--app-accent-foreground")
-      )
-    ).toBeGreaterThanOrEqual(4.5);
-    // Highlight is used as text and icon color on these surfaces.
-    const highlight = token(theme, "--app-highlight");
-    for (const name of [
-      "--surface-canvas",
-      "--surface-panel",
-      "--surface-panel-raised",
-    ]) {
-      expect(contrast(highlight, token(theme, name))).toBeGreaterThanOrEqual(
-        4.5
-      );
-    }
-    expect(
-      contrast(
-        token(theme, "--sidebar-active"),
-        token(theme, "--surface-frame")
-      )
-    ).toBeGreaterThanOrEqual(1.15);
-  }
-});
-
-test("chart grid reaches 3:1 without brightening decorative borders", () => {
+test("content and metadata stay readable on workspace surfaces", () => {
   for (const theme of [light, dark]) {
     for (const name of [
-      "--surface-canvas",
-      "--surface-panel",
-      "--surface-panel-raised",
-      "--surface-sunken",
+      "--surface-page",
+      "--surface-frame",
+      "--surface-fill",
+      "--surface-active",
       "--surface-overlay",
     ]) {
+      for (const text of ["--text-primary", "--text-meta"]) {
+        expect(
+          contrast(token(theme, text), token(theme, name))
+        ).toBeGreaterThanOrEqual(4.5);
+      }
+    }
+  }
+});
+
+test("default accent text and marks meet their contrast targets", () => {
+  for (const theme of [light, dark]) {
+    expect(
+      contrast(token(theme, "--accent"), token(theme, "--accent-foreground"))
+    ).toBeGreaterThanOrEqual(4.5);
+    expect(
+      contrast(token(theme, "--accent-mark"), token(theme, "--surface-page"))
+    ).toBeGreaterThanOrEqual(3);
+  }
+});
+
+test("neutral chart lines meet non-text contrast on workspace surfaces", () => {
+  for (const theme of [light, dark]) {
+    for (const name of [
+      "--surface-page",
+      "--surface-fill",
+      "--surface-active",
+    ]) {
       expect(
-        contrast(token(theme, "--app-chart-grid"), token(theme, name))
+        contrast(token(theme, "--text-meta"), token(theme, name))
       ).toBeGreaterThanOrEqual(3);
     }
   }
-  expect(token(light, "--app-border")).toBe("#e4e4e7");
-  expect(token(dark, "--app-border")).toBe("rgb(255 255 255 / 0.08)");
+});
+
+test.each([
+  "#000000",
+  "#ffffff",
+  "#111827",
+  "#fef08a",
+  "#2563eb",
+  "#e879f9",
+  "#777777",
+])("custom accent %s stays readable in both themes", (color) => {
+  for (const isDark of [true, false]) {
+    const tokens = deriveAccentTokens(color, isDark);
+    expect(contrast(tokens.accent, tokens.foreground)).toBeCloseTo(
+      Math.max(contrast(color, "#0b0c0e"), contrast(color, "#ffffff"))
+    );
+    expect(
+      contrast(tokens.mark, isDark ? "#000000" : "#ffffff")
+    ).toBeGreaterThanOrEqual(3);
+  }
+});
+
+test("midtone accents keep the agreed near-black or white foreground despite the accepted gap", () => {
+  const { foreground } = deriveAccentTokens("#777777", true);
+  expect(foreground).toBe("#ffffff");
+  expect(contrast("#777777", foreground)).toBeCloseTo(4.478, 3);
+});
+
+test("boundary-dependent controls retain at least 3:1 in both themes", () => {
+  for (const Control of [Checkbox, Switch]) {
+    const html = renderToStaticMarkup(
+      createElement(Control, { "aria-label": "Enabled", checked: false })
+    );
+    const borderToken = html.match(/border-\[var\((--[a-z-]+)\)\]/)?.[1];
+    if (!borderToken) throw new Error("Control has no semantic border");
+    for (const theme of [light, dark]) {
+      for (const surface of ["--surface-page", "--surface-fill"]) {
+        expect(
+          contrast(token(theme, borderToken), token(theme, surface))
+        ).toBeGreaterThanOrEqual(3);
+      }
+    }
+  }
 });

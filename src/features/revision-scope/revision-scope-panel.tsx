@@ -1,13 +1,5 @@
 "use client";
 
-import { useState } from "react";
-import { useConvexAuth, useMutation, useQuery } from "convex/react";
-import type { FunctionReturnType } from "convex/server";
-import { api } from "../../../convex/_generated/api";
-import type { RoundBasis } from "../../../convex/revisionRoundsRules";
-import { ContentSection } from "@/components/workspace-page";
-import { AiLockedNotice } from "@/features/ai/ai-availability";
-import { projectHref } from "@/features/projects/project-view";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -17,6 +9,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { ContentSection } from "@/components/workspace-page";
+import { AiLockedNotice } from "@/features/ai/ai-availability";
+import { projectHref } from "@/features/projects/project-view";
+import { useConvexAuth, useMutation, useQuery } from "convex/react";
+import type { FunctionReturnType } from "convex/server";
+import { useState } from "react";
+import { api } from "../../../convex/_generated/api";
+import type { RoundBasis } from "../../../convex/revisionRoundsRules";
 import { ChangeOrderDraft } from "./change-order-draft";
 
 type Summary = NonNullable<
@@ -57,12 +57,12 @@ export function RoundBasisSelect({
     >
       <SelectTrigger
         size="sm"
-        className="w-40 bg-transparent dark:bg-black dark:text-white"
+        className="w-40"
         aria-label="Included rounds apply"
       >
         <SelectValue />
       </SelectTrigger>
-      <SelectContent className="dark:bg-black dark:text-white [&_[data-slot=select-item]:focus]:bg-transparent">
+      <SelectContent className="[&_[data-slot=select-item]:focus]:bg-transparent">
         {allowDefault ? (
           <SelectItem value="default">Workspace default</SelectItem>
         ) : null}
@@ -81,7 +81,7 @@ export function parseWholeNumber(text: string) {
 }
 
 const controlClassName =
-  "dark:bg-black dark:text-white [&_button]:bg-transparent [&_button:hover]:bg-transparent [&_button]:dark:text-white [&_input]:bg-transparent [&_input]:dark:bg-black [&_textarea]:dark:bg-black";
+  "dark:bg-black text-[var(--text-primary)] [&_button]:bg-transparent [&_button:hover]:bg-transparent [&_button]:text-[var(--text-primary)] [&_input]:bg-transparent [&_input]:dark:bg-black [&_textarea]:dark:bg-black";
 
 function OutputRow({
   projectId,
@@ -113,8 +113,8 @@ function OutputRow({
   }
   const parsed = parseWholeNumber(value);
   return (
-    <li className="grid gap-2 py-2.5">
-      <div className="flex flex-wrap items-baseline justify-between gap-3 text-sm">
+    <li className="grid gap-2 py-3">
+      <div className="flex flex-wrap items-baseline justify-between gap-3 text-body">
         <a
           href={`${projectHref({ projectId, view: "outputs" })}#output-${output.outputId}`}
           className="min-w-0 truncate underline-offset-4 hover:underline"
@@ -127,7 +127,7 @@ function OutputRow({
           {output.extraRounds ? ` · ${output.extraRounds} extra` : ""}
         </span>
       </div>
-      <p className="text-xs">
+      <p className="text-meta">
         {output.adjustment
           ? `Counted ${output.computed}, corrected by editor`
           : output.closingVersions.length
@@ -146,7 +146,7 @@ function OutputRow({
           <Input
             aria-label={`Rounds for ${output.title}`}
             inputMode="numeric"
-            className="h-8 w-20"
+            className="w-20"
             value={value}
             onChange={(event) => setValue(event.target.value)}
           />
@@ -182,7 +182,7 @@ function OutputRow({
         <Button
           size="sm"
           variant="ghost"
-          className="justify-self-start px-0"
+          className="justify-self-start"
           onClick={() => {
             setValue(String(output.roundsUsed));
             setEditing(true);
@@ -233,7 +233,7 @@ function LimitEditor({
         }
       }}
     >
-      <label className="text-xs" htmlFor="project-included-rounds">
+      <label className="text-meta" htmlFor="project-included-rounds">
         Included rounds
       </label>
       <Input
@@ -244,7 +244,7 @@ function LimitEditor({
             ? String(summary.includedRounds)
             : "None"
         }
-        className="h-8 w-20"
+        className="w-20"
         value={value}
         onChange={(event) => setValue(event.target.value)}
       />
@@ -293,7 +293,7 @@ export function RevisionScopePanel({ projectId }: { projectId: string }) {
     <ContentSection
       title="Revision rounds"
       metadata={
-        <span className="font-mono text-xs tabular-nums">
+        <span className="font-mono text-meta tabular-nums">
           {summary.roundsUsed}
           {summary.includedRounds === null
             ? ""
@@ -337,13 +337,13 @@ export function RevisionScopePanel({ projectId }: { projectId: string }) {
             ))}
           </ul>
         ) : (
-          <p className="text-sm">No outputs yet.</p>
+          <p className="text-body">No outputs yet.</p>
         )}
         {summary.truncated ? (
-          <p className="text-xs">Only the first 20 outputs are counted.</p>
+          <p className="text-meta">Only the first 20 outputs are counted.</p>
         ) : null}
         {error ? (
-          <p role="alert" className="text-sm">
+          <p role="alert" className="text-body">
             {error}
           </p>
         ) : null}

@@ -1,11 +1,7 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import {
-  deriveProjectGroupSummary,
-  normalizeProjectGroup,
-} from "@/features/projects/project-domain";
-import type { Client, ProjectGroup, WorkItem } from "@/lib/types";
+import { useConfirm } from "@/components/confirm-dialog";
+import { FolderPlus } from "@/components/icons";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -24,7 +20,13 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { useConfirm } from "@/components/confirm-dialog";
+import { PageEmptyState } from "@/components/workspace-page";
+import {
+  deriveProjectGroupSummary,
+  normalizeProjectGroup,
+} from "@/features/projects/project-domain";
+import type { Client, ProjectGroup, WorkItem } from "@/lib/types";
+import { useMemo, useState } from "react";
 
 type ProjectGroupsDialogProps = {
   open: boolean;
@@ -136,16 +138,16 @@ export function ProjectGroupsDialog({
         if (!next) void requestClose();
       }}
     >
-      <DialogContent className="max-h-[90dvh] overflow-y-auto border-border bg-background text-foreground sm:max-w-3xl">
+      <DialogContent className="overflow-y-auto sm:max-w-3xl">
         <DialogHeader>
-          <DialogTitle>Project Groups</DialogTitle>
+          <DialogTitle>Project groups</DialogTitle>
           <DialogDescription>
             Group related Projects for one Client. Progress and money come from
             the Projects.
           </DialogDescription>
         </DialogHeader>
-        <div className="grid gap-5 md:grid-cols-[minmax(0,1fr)_280px]">
-          <div className="divide-y divide-border border-y">
+        <div className="grid gap-6 md:grid-cols-2">
+          <div className="grid content-start gap-10">
             {visibleGroups.length ? (
               visibleGroups.map((group) => {
                 const client = clients.find(
@@ -153,13 +155,11 @@ export function ProjectGroupsDialog({
                 );
                 const summary = deriveProjectGroupSummary(group, projects);
                 return (
-                  <section key={group.id} className="py-3">
+                  <section key={group.id}>
                     <div className="flex items-start justify-between gap-3">
                       <div className="min-w-0">
-                        <h3 className="truncate text-sm font-semibold">
-                          {group.name}
-                        </h3>
-                        <p className="mt-1 text-xs text-muted-foreground">
+                        <h3 className="truncate text-section">{group.name}</h3>
+                        <p className="mt-1 text-meta text-[var(--text-meta)]">
                           {client?.name ?? "Unknown Client"}
                           {group.archived ? " · Archived" : ""}
                         </p>
@@ -181,28 +181,28 @@ export function ProjectGroupsDialog({
                         </Button>
                       </div>
                     </div>
-                    <dl className="mt-3 grid grid-cols-4 gap-2 text-xs">
+                    <dl className="mt-3 grid grid-cols-4 gap-2 text-meta">
                       <div>
-                        <dt className="text-muted-foreground">Projects</dt>
-                        <dd className="mt-1 font-semibold">
+                        <dt className="text-[var(--text-meta)]">Projects</dt>
+                        <dd className="mt-1 font-mono font-medium tabular-nums">
                           {summary.projectCount}
                         </dd>
                       </div>
                       <div>
-                        <dt className="text-muted-foreground">Progress</dt>
-                        <dd className="mt-1 font-semibold">
+                        <dt className="text-[var(--text-meta)]">Progress</dt>
+                        <dd className="mt-1 font-mono font-medium tabular-nums">
                           {Math.round(summary.progress * 100)}%
                         </dd>
                       </div>
                       <div>
-                        <dt className="text-muted-foreground">Earned</dt>
-                        <dd className="mt-1 font-semibold">
+                        <dt className="text-[var(--text-meta)]">Earned</dt>
+                        <dd className="mt-1 font-mono font-medium tabular-nums">
                           {money(summary.earned, currency)}
                         </dd>
                       </div>
                       <div>
-                        <dt className="text-muted-foreground">Unpaid</dt>
-                        <dd className="mt-1 font-semibold">
+                        <dt className="text-[var(--text-meta)]">Unpaid</dt>
+                        <dd className="mt-1 font-mono font-medium tabular-nums">
                           {money(summary.outstanding, currency)}
                         </dd>
                       </div>
@@ -211,13 +211,16 @@ export function ProjectGroupsDialog({
                 );
               })
             ) : (
-              <p className="py-8 text-center text-sm text-muted-foreground">
-                No Project Groups yet.
-              </p>
+              <PageEmptyState
+                compact
+                icon={<FolderPlus />}
+                title="No project groups yet"
+                description="Create a group for related projects."
+              />
             )}
           </div>
-          <div className="grid content-start gap-4 border-l pl-5">
-            <h3 className="text-sm font-semibold">
+          <div className="grid content-start gap-4">
+            <h3 className="text-section">
               {editing ? "Edit Project Group" : "New Project Group"}
             </h3>
             <FieldLayout label="Name">
@@ -258,7 +261,7 @@ export function ProjectGroupsDialog({
               />
             </FieldLayout>
             {error ? (
-              <p role="alert" className="text-sm text-destructive">
+              <p role="alert" className="text-meta text-[var(--status-danger)]">
                 {error}
               </p>
             ) : null}

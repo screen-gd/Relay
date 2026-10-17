@@ -1,9 +1,8 @@
 "use client";
 
-import { motion } from "motion/react";
-import { useHydratedReducedMotion } from "@/lib/motion";
-import { ContentSection } from "@/components/workspace-page";
 import { Button as OwnedButton } from "@/components/ui/button";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ContentSection } from "@/components/workspace-page";
 
 export function SettingsPanel({
   id,
@@ -16,27 +15,16 @@ export function SettingsPanel({
   subtitle: string;
   children: React.ReactNode;
 }) {
-  const reduceMotion = useHydratedReducedMotion();
   return (
-    <motion.div
-      className="min-w-0"
-      initial={reduceMotion ? false : { opacity: 0, y: 8 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{
-        duration: reduceMotion ? 0 : 0.24,
-        ease: [0.16, 1, 0.3, 1],
-      }}
+    <ContentSection
+      id={id}
+      title={title}
+      description={subtitle}
+      className="scroll-mt-12"
+      bodyClassName="grid min-w-0 grid-cols-1 gap-4"
     >
-      <ContentSection
-        id={id}
-        title={title}
-        description={subtitle}
-        className="scroll-mt-[76px] border-0 shadow-none"
-        bodyClassName="grid min-w-0 grid-cols-1 gap-3.5 p-4 sm:p-5"
-      >
-        {children}
-      </ContentSection>
-    </motion.div>
+      {children}
+    </ContentSection>
   );
 }
 
@@ -50,10 +38,10 @@ export function SettingsLink({
   return (
     <OwnedButton
       type="button"
-      variant="link"
+      variant="ghost"
       size="sm"
       onClick={onClick}
-      className="h-auto justify-self-start px-0 py-0 text-primary"
+      className="justify-self-start"
     >
       {label}
     </OwnedButton>
@@ -73,29 +61,18 @@ export function SegmentedSetting({
 }) {
   return (
     <div>
-      <p className="mb-2 text-xs font-medium text-muted-foreground">{label}</p>
-      <div
-        role="group"
-        aria-label={label}
-        className="grid max-w-[330px] overflow-hidden rounded-md border"
-        style={{
-          gridTemplateColumns: `repeat(${options.length}, minmax(0, 1fr))`,
-        }}
-      >
-        {options.map((option) => (
-          <OwnedButton
-            key={option}
-            type="button"
-            variant="ghost"
-            size="sm"
-            aria-pressed={option === active}
-            onClick={() => onChange(option)}
-            className={`rounded-none text-xs ${option === options[options.length - 1] ? "" : "border-r"} ${option === active ? "bg-[var(--app-active)] text-[var(--app-ink)] hover:text-[var(--app-ink)]" : "text-[var(--app-muted)] hover:text-[var(--app-ink)]"}`}
-          >
-            {option}
-          </OwnedButton>
-        ))}
-      </div>
+      <p className="mb-2 text-meta font-medium text-[var(--text-meta)]">
+        {label}
+      </p>
+      <Tabs value={active} onValueChange={onChange}>
+        <TabsList aria-label={label}>
+          {options.map((option) => (
+            <TabsTrigger key={option} value={option}>
+              {option}
+            </TabsTrigger>
+          ))}
+        </TabsList>
+      </Tabs>
     </div>
   );
 }

@@ -16,6 +16,7 @@ type PageAction = {
   onSelect: () => void;
   disabled?: boolean;
   checked?: boolean;
+  destructive?: boolean;
 };
 
 type PageActionsProps = {
@@ -34,15 +35,11 @@ export function PageActions({ primary, more, className }: PageActionsProps) {
       data-slot="page-actions"
       className={cn("flex shrink-0 flex-wrap items-center gap-2", className)}
     >
-      {primary}
       {more?.length ? (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button
-              variant="outline"
-              className="h-9 shrink-0 gap-2 rounded-lg !bg-[var(--app-panel)]"
-            >
-              <MoreHorizontal className="size-3.5" />
+            <Button variant="secondary">
+              <MoreHorizontal className="size-4" />
               More
             </Button>
           </DropdownMenuTrigger>
@@ -51,6 +48,7 @@ export function PageActions({ primary, more, className }: PageActionsProps) {
               item.checked === undefined ? (
                 <DropdownMenuItem
                   key={item.label}
+                  variant={item.destructive ? "destructive" : "default"}
                   disabled={item.disabled}
                   onSelect={item.onSelect}
                 >
@@ -70,6 +68,7 @@ export function PageActions({ primary, more, className }: PageActionsProps) {
           </DropdownMenuContent>
         </DropdownMenu>
       ) : null}
+      {primary}
     </div>
   );
 }

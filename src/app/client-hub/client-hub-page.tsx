@@ -1,7 +1,3 @@
-import { UserButton } from "@clerk/tanstack-react-start";
-import { useOptionalAuth } from "@/lib/optional-auth";
-import { useConvexAuth, useQuery } from "convex/react";
-import { api } from "../../../convex/_generated/api";
 import {
   Table,
   TableBody,
@@ -10,6 +6,10 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { useOptionalAuth } from "@/lib/optional-auth";
+import { UserButton } from "@clerk/tanstack-react-start";
+import { useConvexAuth, useQuery } from "convex/react";
+import { api } from "../../../convex/_generated/api";
 
 function formatDate(value: string) {
   return new Intl.DateTimeFormat(undefined, {
@@ -29,18 +29,15 @@ export function ClientHubPage() {
   const authLoading = !isLoaded || (isSignedIn && isLoading);
 
   return (
-    <main className="min-h-screen bg-black text-white">
-      <header className="border-b border-white/15 px-6 py-5 md:px-10">
+    <main className="min-h-screen bg-[var(--surface-page)] text-[var(--text-primary)]">
+      <header className="px-6 py-4 md:px-10">
         <div className="mx-auto flex max-w-6xl items-center justify-between">
-          <span className="text-lg font-semibold">Relay Client Hub</span>
+          <span className="text-title font-semibold">Relay Client Hub</span>
           {isSignedIn ? <UserButton /> : null}
         </div>
       </header>
       <div className="mx-auto max-w-6xl px-6 py-10 md:px-10">
-        <p className="text-xs font-semibold tracking-[0.16em] text-amber-400 uppercase">
-          Published work
-        </p>
-        <h1 className="mt-2 text-3xl font-semibold tracking-tight">
+        <h1 className="mt-2 text-display font-semibold">
           {hub
             ? `Good to see you, ${hub.contactName}`
             : authLoading
@@ -49,44 +46,44 @@ export function ClientHubPage() {
                 ? "Connecting your Client Hub"
                 : "Sign in to view your projects"}
         </h1>
-        <p className="mt-2 text-sm text-zinc-400">
+        <p className="mt-2 text-body text-[var(--text-meta)]">
           Only projects your Workspace has published to you appear here.
         </p>
 
-        <div className="mt-10 border-t border-white/20">
+        <div className="mt-10">
           <Table
             aria-label="Published projects"
-            className="w-full min-w-[680px] border-collapse text-left"
+            className="w-full min-w-[680px] text-left"
           >
-            <TableHeader className="text-xs tracking-wider text-zinc-500 uppercase">
-              <TableRow className="border-b border-white/15">
-                <TableHead className="h-auto px-2 py-3 font-medium text-zinc-500">
+            <TableHeader className="text-meta text-[var(--text-meta)]">
+              <TableRow className="">
+                <TableHead className="h-auto px-2 py-3 font-medium text-[var(--text-meta)]">
                   Project
                 </TableHead>
-                <TableHead className="h-auto px-2 py-3 font-medium text-zinc-500">
+                <TableHead className="h-auto px-2 py-3 font-medium text-[var(--text-meta)]">
                   Stage
                 </TableHead>
-                <TableHead className="h-auto px-2 py-3 font-medium text-zinc-500">
+                <TableHead className="h-auto px-2 py-3 font-medium text-[var(--text-meta)]">
                   Progress
                 </TableHead>
-                <TableHead className="h-auto px-2 py-3 font-medium text-zinc-500">
+                <TableHead className="h-auto px-2 py-3 font-medium text-[var(--text-meta)]">
                   Due
                 </TableHead>
               </TableRow>
             </TableHeader>
-            <TableBody className="[&_tr:last-child]:border-b">
+            <TableBody className="">
               {hub?.projects.map((project) => (
-                <TableRow key={project.id} className="border-b border-white/10">
-                  <TableCell className="px-2 py-5 font-medium">
+                <TableRow key={project.id} className="">
+                  <TableCell className="px-2 py-4 font-medium">
                     {project.title}
                   </TableCell>
-                  <TableCell className="px-2 py-5 text-zinc-300">
+                  <TableCell className="px-2 py-4 text-[var(--text-primary)]">
                     {project.status}
                   </TableCell>
-                  <TableCell className="px-2 py-5 text-zinc-300">
+                  <TableCell className="px-2 py-4 text-[var(--text-meta)]">
                     {project.progress}%
                   </TableCell>
-                  <TableCell className="px-2 py-5 text-zinc-400">
+                  <TableCell className="px-2 py-4 text-[var(--text-meta)]">
                     {formatDate(project.dueDate)}
                   </TableCell>
                 </TableRow>
@@ -94,7 +91,7 @@ export function ClientHubPage() {
             </TableBody>
           </Table>
           {hub && hub.projects.length === 0 ? (
-            <p className="py-10 text-sm text-zinc-400">
+            <p className="py-10 text-body text-[var(--text-meta)]">
               No projects have been published to you yet.
             </p>
           ) : null}

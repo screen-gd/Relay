@@ -8,7 +8,6 @@ import {
 } from "react";
 import type { ChartConfig, Margins } from "./chart-context";
 import { CommonChartContext } from "./common-context";
-import type { BloomInput } from "./dither-paint";
 import { cn } from "./lib";
 import { axisAtAngle, sliceAtAngle } from "./polar";
 import { PolarChartContext, usePolarController } from "./polar-context";
@@ -45,11 +44,6 @@ export type PolarRootProps<TData extends Row> = {
   innerRadius?: number; // 0–1 ratio (donut); pie only
   margins?: Partial<Margins>;
   className?: string;
-  animate?: boolean;
-  animationDuration?: number;
-  replayToken?: number;
-  bloom?: BloomInput;
-  bloomOnHover?: boolean;
   defaultSelectedDataKey?: string | null;
   onSelectionChange?: (key: string | null) => void;
 };
@@ -66,11 +60,6 @@ export function PolarRoot<TData extends Row>({
   innerRadius = 0,
   margins: marginsProp,
   className,
-  animate = true,
-  animationDuration = 900,
-  replayToken = 0,
-  bloom = "off",
-  bloomOnHover = false,
   defaultSelectedDataKey = null,
   onSelectionChange,
 }: PolarRootProps<TData>) {
@@ -87,11 +76,6 @@ export function PolarRoot<TData extends Row>({
     innerRadiusRatio: innerRadius,
     dimensions: size,
     margins,
-    animate,
-    animationDuration,
-    replayToken,
-    bloom,
-    bloomOnHover,
     defaultSelectedDataKey,
     onSelectionChange,
   });

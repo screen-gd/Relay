@@ -1,22 +1,41 @@
 # Relay design system
 
-This index defines the unified UI contract for the Relay workspace. It keeps the current TanStack Start, Tailwind, shadcn/ui, Radix, Hugeicons (through `src/components/icons.tsx`), Motion, TanStack Table, the dither chart kit, and existing fonts. The implementation must preserve current routes, data flows, local/cloud modes, permissions, and feature actions.
+This is the single source of truth for how the Relay workspace looks and behaves. The choices behind it are recorded in [ADR 0005](../adr/0005-adopt-the-relay-workspace-design-system.md). When the code disagrees with this document, the code is wrong.
 
-## System sections
+The stack stays as it is: TanStack Start, Tailwind, shadcn/ui on Radix, Hugeicons through `src/components/icons.tsx`, Motion, TanStack Table, and the dither chart kit. Tokens live in `src/app/globals.css`; primitives in `src/components/ui/`; page layouts in `src/components/workspace-page/`.
+
+## The rules in one page
+
+- **Shell.** The sidebar frame wraps an inset content panel. Dark: page `#000`, frame `#131315`. Light: page `#fff`, frame `#ebebee`.
+- **Density.** Fixed. Controls 36px, table and list rows 40px, menu items 32px. No density setting.
+- **Text.** Content is white in dark mode and `#0b0c0e` in light mode. A second step (`#9a9aa2` dark, `#5f5f68` light) is for metadata only. Error messages and destructive menu items are the only colored text.
+- **Surfaces.** Content lies flat on the page. Things you type into or press get a fill and a border. Things you only read get a fill. Overlays get a fill, a border and the only shadow.
+- **Cards.** Two kinds only: the metric card and the inspector card. Fill only, never nested.
+- **Accent.** Lime `#C6FF00` by default; each user may pick another color, and it replaces lime everywhere. The accent marks the page's one primary button, the key chart series and progress. Nothing else.
+- **Status.** A neutral tag with a colored dot.
+- **Type.** Geist and Geist Mono. Five sizes: 12, 13, 16, 20, 28.
+- **Radii.** Tags and menu items 4px, everything else 6px, the shell panel 8px. Circles only for avatars and status dots.
+- **Spacing.** 4px grid. Gutters 24px (16px on phones). 40px of space between sections.
+- **Lines.** Only inside data tables. Nowhere else.
+- **Motion.** One-shot, 120 or 180ms. Nothing loops, glows or blurs.
+
+## Sections
 
 - [Overview](system/overview.md)
+- [Color and themes](system/color-themes.md)
+- [Typography](system/typography.md)
+- [Spacing and density](system/spacing-density.md)
 - [Layout](system/layout.md)
 - [Navigation](system/navigation.md)
 - [Components](system/components.md)
-- [Typography](system/typography.md)
-- [Spacing and density](system/spacing-density.md)
-- [Color and themes](system/color-themes.md)
-- [Interactions and motion](system/interactions-motion.md)
 - [States and feedback](system/states-feedback.md)
+- [Interactions and motion](system/interactions-motion.md)
 - [Responsive behavior](system/responsive.md)
 - [Accessibility](system/accessibility.md)
 
 ## Feature contracts
+
+Feature contracts describe what each area must keep. They follow this system for anything visual.
 
 - [Dashboard](features/dashboard.md)
 - [Projects](features/projects.md)
@@ -30,60 +49,6 @@ This index defines the unified UI contract for the Relay workspace. It keeps the
 - [Profiles and portals](features/profiles-portals.md)
 - [Access and support](features/access-support.md)
 
----
+## Brand
 
-## Existing brand foundations
-
-The approved assets in [`docs/brand`](../brand/ASSET-GUIDE.md) define the visual identity. Product code should consume shared tokens and components instead of copying color or typography values into individual routes.
-
-## Reference-board foundations
-
-- Dark-first canvas: `#0C0F12`
-- Primary surface: `#1A1F24`
-- Primary text: `#E6E5E3`
-- Action teal: `#2D8C97`
-- Highlight cyan: `#69C4CE`
-- Success: `#23B58E`
-- Warning: `#F5A623`
-- Error: `#FF5B5B`
-- Display type: Space Grotesk, semibold or bold
-- Current UI and body type: Geist Sans, regular through semibold
-- Spacing follows a 4px/8px rhythm
-- Standard controls and panels use an 8px radius
-- Borders are cool, low-contrast, and 1px
-- Shadows are reserved for overlays and dialogs
-
-The implementation source is [`src/app/design-system.ts`](../../src/app/design-system.ts), with global tokens in [`src/app/globals.css`](../../src/app/globals.css).
-
-## Product Language
-
-- Use teal for actions, active navigation, progress, and selected states.
-- Use semantic colors only for status and feedback.
-- Keep layouts structured, information-dense, and calm.
-- Prefer flat bordered surfaces over nested elevated cards.
-- Use outline-first, geometric icons with consistent visual weight.
-- Use the Relay mark for product identity, not a generic video icon.
-- Empty states use the shared workflow-line illustration and concise guidance.
-
-## Navigation
-
-The desktop sidebar contains only primary product hubs:
-
-- Dashboard
-- Projects
-- Clients
-- Library
-- Reports
-- Team
-- Settings
-
-Related destinations remain addressable routes but appear as contextual navigation inside their parent hub. This keeps deep links intact while reducing sidebar clutter.
-
-## Shared Components
-
-- `RelayBrand` provides the product identity.
-- The `workspace-page` module provides headers, toolbars, sections, metrics, tables, pane layouts, and empty states.
-- Owned shadcn/Radix components under `src/components/ui/` provide controls, menus, dialogs, sheets, tooltips, and feedback.
-- Feature modules compose these shared parts without route-local color or spacing systems.
-
-New routes should reuse these foundations before introducing route-specific styling.
+The approved assets in [`docs/brand`](../brand/ASSET-GUIDE.md) define the Relay mark. Use the mark for identity, not a generic video icon. `src/app/design-system.ts` holds only the brand values that code needs outside CSS: the default accent.

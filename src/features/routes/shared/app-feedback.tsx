@@ -1,18 +1,10 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import { AnimatePresence, motion } from "motion/react";
-import { useHydratedReducedMotion } from "@/lib/motion";
-import { Button as OwnedButton } from "@/components/ui/button";
 import { X } from "@/components/icons";
+import { Button as OwnedButton } from "@/components/ui/button";
+import { useEffect, useId, useRef, useState } from "react";
+import { Toaster, toast as sonnerToast } from "sonner";
 import type { ToastState } from "./route-types";
-import {
-  accent,
-  activeBg,
-  border,
-  successColor,
-  warningColor,
-} from "./route-theme";
 
 export function AppToast({
   toast,
@@ -21,65 +13,106 @@ export function AppToast({
   toast: ToastState | null;
   onClose: () => void;
 }) {
-  const reduceMotion = useHydratedReducedMotion();
-  const palette =
-    toast?.tone === "warning"
-      ? {
-          bg: "var(--app-warning-bg, rgba(245,166,35,0.14))",
-          fg: warningColor,
-          border,
-        }
-      : toast?.tone === "info"
-        ? { bg: activeBg, fg: accent, border }
-        : {
-            bg: "var(--app-success-bg, rgba(35,181,142,0.14))",
-            fg: successColor,
-            border,
-          };
+  const toasterId = useId();
+  const latest = useRef({ toast, onClose });
+
+  useEffect(() => {
+    latest.current = { toast, onClose };
+  }, [toast, onClose]);
+
+  useEffect(() => {
+    if (!toast) return;
+    let active = true;
+    const close = () => {
+      if (active && latest.current.toast === toast) latest.current.onClose();
+    };
+    const id = sonnerToast.custom(
+      () => <ToastContent toast={toast} onClose={close} />,
+      {
+        toasterId,
+        // The data provider owns expiry and keeps failures until dismissed.
+        duration: Infinity,
+        onDismiss: close,
+      }
+    );
+
+    return () => {
+      active = false;
+      sonnerToast.dismiss(id);
+    };
+  }, [toast, toasterId]);
 
   return (
-    <AnimatePresence>
-      {toast ? (
-        <motion.div
-          key={toast.message}
-          initial={reduceMotion ? false : { opacity: 0, y: 12, scale: 0.98 }}
-          animate={{ opacity: 1, y: 0, scale: 1 }}
-          exit={
-            reduceMotion ? { opacity: 0 } : { opacity: 0, y: 8, scale: 0.98 }
-          }
-          transition={{
-            duration: reduceMotion ? 0 : 0.18,
-            ease: [0.16, 1, 0.3, 1],
+    <Toaster
+      id={toasterId}
+      className="app-toaster"
+      position="bottom-right"
+      visibleToasts={1}
+      swipeDirections={[]}
+      offset={16}
+      mobileOffset={16}
+      toastOptions={{ unstyled: true }}
+    />
+  );
+}
+
+function ToastContent({
+  toast,
+  onClose,
+}: {
+  toast: ToastState;
+  onClose: () => void;
+}) {
+  const dotColor =
+    toast.tone === "error"
+      ? "bg-[var(--status-danger)]"
+      : toast.tone === "warning"
+        ? "bg-[var(--status-warning)]"
+        : toast.tone === "info"
+          ? "bg-[var(--status-info)]"
+          : "bg-[var(--status-success)]";
+
+  return (
+    <div
+      role={toast.tone === "error" ? "alert" : "status"}
+      className="flex w-full items-center gap-3 rounded-md border border-[var(--border-control)] bg-[var(--surface-overlay)] px-3 py-3 text-[var(--text-primary)] shadow-[var(--shadow-overlay)]"
+    >
+      <span
+        aria-hidden="true"
+        className={`size-1.5 shrink-0 rounded-full ${dotColor}`}
+      />
+      <p
+        className={
+          toast.tone === "error"
+            ? "min-w-0 flex-1 text-body text-[var(--status-danger)]"
+            : "min-w-0 flex-1 text-body"
+        }
+      >
+        {toast.message}
+      </p>
+      {toast.tone === "error" ? (
+        <OwnedButton
+          variant="secondary"
+          size="sm"
+          onClick={() => {
+            onClose();
+            (toast.retry ?? (() => window.location.reload()))();
           }}
-          className="app-toast-position fixed right-4 z-50 w-[min(360px,calc(100vw-32px))]"
         >
-          <div
-            role="status"
-            className="flex max-w-[360px] items-center gap-3 rounded-md border px-3 py-2.5 shadow-[var(--app-shadow-2)]"
-            style={{
-              backgroundColor: palette.bg,
-              borderColor: palette.border,
-              color: palette.fg,
-            }}
-          >
-            <p className="min-w-0 flex-1 text-[13px] font-semibold">
-              {toast.message}
-            </p>
-            <OwnedButton
-              type="button"
-              variant="ghost"
-              size="icon-sm"
-              aria-label="Dismiss notification"
-              onClick={onClose}
-              className="shrink-0 hover:bg-current/10"
-              style={{ color: palette.fg }}
-            >
-              <X aria-hidden="true" className="size-4" />
-            </OwnedButton>
-          </div>
-        </motion.div>
+          Retry
+        </OwnedButton>
       ) : null}
-    </AnimatePresence>
+      <OwnedButton
+        type="button"
+        variant="ghost"
+        size="icon-sm"
+        aria-label="Dismiss notification"
+        onClick={onClose}
+        className="shrink-0"
+      >
+        <X aria-hidden="true" className="size-4" />
+      </OwnedButton>
+    </div>
   );
 }
 
@@ -121,7 +154,7 @@ export function AuthLoadingGate({
     return (
       <div
         role="status"
-        className="fixed inset-0 z-[1450] grid place-items-center bg-[var(--app-canvas)] text-sm text-[var(--app-muted)]"
+        className="fixed inset-0 z-[1450] grid place-items-center bg-[var(--surface-page)] text-body text-[var(--text-meta)]"
       >
         Loading Relay…
       </div>
@@ -129,7 +162,7 @@ export function AuthLoadingGate({
   }
 
   return (
-    <div className="fixed inset-0 z-[1450] grid place-items-center bg-[var(--app-canvas)] p-6">
+    <div className="fixed inset-0 z-[1450] grid place-items-center bg-[var(--surface-page)] p-6">
       <div
         role="alert"
         aria-labelledby="auth-gate-title"
@@ -137,11 +170,11 @@ export function AuthLoadingGate({
       >
         <h2
           id="auth-gate-title"
-          className="text-lg font-semibold text-[var(--app-ink)]"
+          className="text-title font-semibold text-[var(--text-primary)]"
         >
           Sign-in is unavailable
         </h2>
-        <p className="text-sm leading-6 text-[var(--app-muted)]">
+        <p className="text-body text-[var(--text-meta)]">
           {clerkStatus === "error"
             ? "Relay could not start account sign-in."
             : "Account sign-in is taking too long."}{" "}
@@ -151,15 +184,15 @@ export function AuthLoadingGate({
           <OwnedButton
             ref={retryRef}
             type="button"
-            className="min-h-11"
+            className=""
             onClick={() => window.location.reload()}
           >
             Retry
           </OwnedButton>
           <OwnedButton
             type="button"
-            variant="outline"
-            className="min-h-11"
+            variant="secondary"
+            className=""
             onClick={onContinueLocally}
           >
             Use Local Mode

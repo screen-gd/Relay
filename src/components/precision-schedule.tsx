@@ -1,41 +1,19 @@
 "use client";
 
-import type { ReactNode } from "react";
 import { getProjectProgress } from "@/features/projects/project-domain";
+import type { ReactNode } from "react";
 
 import {
   ArrowRight,
+  CheckCircle2,
   ChevronLeft,
   ChevronRight,
-  CheckCircle2,
   Clock3,
   Download,
   Milestone,
 } from "@/components/icons";
-import { motion } from "motion/react";
-import {
-  useLayoutEffect,
-  useMemo,
-  useRef,
-  useState,
-  type KeyboardEvent,
-} from "react";
-import { calendarDateForKey } from "@/features/schedule/calendar-keyboard";
-import type { SettingsState, WorkItem } from "@/lib/types";
-import { useHydratedReducedMotion } from "@/lib/motion";
-import {
-  projectStatusColor,
-  projectStatusTone,
-} from "@/lib/project-status-style";
-import { cn } from "@/lib/utils";
-import {
-  calendarFeedIcs,
-  deriveCalendarEvents,
-  type WorkspaceOutput,
-} from "@/features/workspace-discovery/workspace-discovery";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ButtonGroup } from "@/components/ui/button-group";
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -43,14 +21,33 @@ import {
   FillViewport,
   PageActions,
   PageContent,
-  PageHeader,
-  PageToolbar,
   PageEmptyState,
-  SplitPane,
+  PageFilters,
+  PageHeader,
   sectionListClassName,
   sectionRowClassName,
+  SplitPane,
   WorkspacePage,
 } from "@/components/workspace-page";
+import { calendarDateForKey } from "@/features/schedule/calendar-keyboard";
+import {
+  calendarFeedIcs,
+  deriveCalendarEvents,
+  type WorkspaceOutput,
+} from "@/features/workspace-discovery/workspace-discovery";
+import {
+  projectStatusColor,
+  projectStatusTone,
+} from "@/lib/project-status-style";
+import type { SettingsState, WorkItem } from "@/lib/types";
+import { cn } from "@/lib/utils";
+import {
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+  type KeyboardEvent,
+} from "react";
 
 function parseDate(value: string) {
   const date = new Date(`${value}T00:00:00`);
@@ -80,9 +77,6 @@ function daysUntil(value: string) {
   today.setHours(0, 0, 0, 0);
   return Math.round((date.getTime() - today.getTime()) / 86_400_000);
 }
-
-const revealTransition = { duration: 0.22, ease: [0.22, 1, 0.36, 1] } as const;
-const MotionButton = motion.create(Button);
 
 function weekdayIndex(day: string) {
   const index = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].indexOf(day);
@@ -187,7 +181,6 @@ export function PrecisionCalendar({
   const [viewMode, setViewMode] = useState<"month" | "week" | "agenda">(
     "month"
   );
-  const reduceMotion = useHydratedReducedMotion();
   useLayoutEffect(() => {
     if (moveFocus.current) {
       focusedDay.current?.focus();
@@ -354,7 +347,7 @@ export function PrecisionCalendar({
           <PageActions
             primary={
               <Button
-                variant="outline"
+                variant="secondary"
                 onClick={downloadFeed}
                 disabled={!events.length}
               >
@@ -367,11 +360,11 @@ export function PrecisionCalendar({
       />
 
       <PageContent mode="fill">
-        <PageToolbar
+        <PageFilters
           data-family-toolbar="calendar"
           primary={
             <>
-              <h2 className="min-w-[9.5rem] text-base font-semibold text-[var(--app-ink)]">
+              <h2 className="min-w-[9.5rem] text-title font-semibold text-[var(--text-primary)]">
                 {viewMode === "week" ? weekLabel : monthLabel}
               </h2>
               <div className="flex items-center">
@@ -392,7 +385,7 @@ export function PrecisionCalendar({
                   <ChevronRight className="size-4" />
                 </Button>
               </div>
-              <span className="text-xs text-[var(--app-muted)]">
+              <span className="text-meta text-[var(--text-meta)]">
                 {viewMode === "week" ? weekEventCount : monthEventCount}{" "}
                 scheduled
               </span>
@@ -408,17 +401,14 @@ export function PrecisionCalendar({
               }
               className="block"
             >
-              <TabsList
-                aria-label="Calendar view"
-                className="h-9 rounded-md bg-[var(--app-soft-panel)] p-0.5"
-              >
+              <TabsList aria-label="Calendar view">
                 {(["month", "week", "agenda"] as const).map((mode) => (
                   <TabsTrigger
                     key={mode}
                     id={`calendar-${mode}-tab`}
                     aria-controls="calendar-view-panel"
                     value={mode}
-                    className="h-8 px-3 text-xs capitalize"
+                    className="h-8 px-3 text-meta capitalize"
                   >
                     {mode}
                   </TabsTrigger>
@@ -447,17 +437,14 @@ export function PrecisionCalendar({
                   <div
                     role="grid"
                     aria-label={monthLabel}
-                    className="flex min-h-0 flex-1 flex-col"
+                    className="flex min-h-0 min-w-0 flex-1 flex-col overflow-x-auto p-1"
                   >
-                    <div
-                      role="row"
-                      className="grid grid-cols-7 border-b border-[var(--app-border)]"
-                    >
+                    <div role="row" className="grid min-w-90 grid-cols-7">
                       {weekdays.map((day) => (
                         <div
                           role="columnheader"
                           key={day}
-                          className="px-3 py-2 text-xs font-medium text-[var(--app-muted)]"
+                          className="px-3 py-2 text-meta font-medium text-[var(--text-meta)]"
                         >
                           {day}
                         </div>
@@ -465,7 +452,7 @@ export function PrecisionCalendar({
                     </div>
                     <div
                       role="rowgroup"
-                      className="grid min-h-0 flex-1 gap-px bg-[var(--app-border)]"
+                      className="grid min-h-0 min-w-90 flex-1 gap-1"
                       style={{
                         gridTemplateRows: `repeat(${weeks.length}, minmax(6.5rem, 1fr))`,
                       }}
@@ -474,7 +461,7 @@ export function PrecisionCalendar({
                         <div
                           key={iso(week[0].date)}
                           role="row"
-                          className="grid min-h-0 grid-cols-7 gap-px"
+                          className="grid min-h-0 grid-cols-7 gap-1"
                         >
                           {week.map((day) => {
                             const key = iso(day.date);
@@ -491,14 +478,13 @@ export function PrecisionCalendar({
                                 aria-selected={isSelected}
                                 className="min-h-0 min-w-0"
                               >
-                                <Button
+                                <button
                                   ref={
                                     key === monthFocusKey
                                       ? focusedDay
                                       : undefined
                                   }
                                   type="button"
-                                  variant="ghost"
                                   aria-label={`${formatDate(key, { month: "long", day: "numeric", year: "numeric" })}, ${dayEvents.length} scheduled${eventStatusLabel(dayEvents)}`}
                                   aria-pressed={isSelected}
                                   aria-current={isToday ? "date" : undefined}
@@ -509,20 +495,20 @@ export function PrecisionCalendar({
                                   }
                                   onClick={() => selectDay(key)}
                                   className={cn(
-                                    "h-full min-h-0 w-full min-w-0 flex-col items-stretch justify-start gap-1.5 overflow-hidden rounded-none p-2 text-left font-normal whitespace-normal focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--app-highlight)] active:translate-y-0 active:scale-100",
+                                    "flex h-full min-h-0 w-full min-w-0 flex-col items-stretch justify-start gap-2 overflow-hidden rounded-none p-2 text-left font-normal whitespace-normal text-[var(--text-primary)] min-h-10",
                                     isSelected
-                                      ? "bg-[var(--app-active)] hover:bg-[var(--app-active)] dark:hover:bg-[var(--app-active)]"
-                                      : "bg-[var(--app-panel)] hover:bg-[var(--app-hover)] dark:hover:bg-[var(--app-hover)]"
+                                      ? "bg-[var(--surface-active)] hover:bg-[var(--surface-active)] dark:hover:bg-[var(--surface-active)] text-[var(--text-primary)] min-h-10"
+                                      : "bg-[var(--surface-fill)] hover:bg-[var(--surface-fill)] dark:hover:bg-[var(--surface-fill)] text-[var(--text-primary)] min-h-10"
                                   )}
                                 >
                                   <span
                                     className={cn(
-                                      "grid size-6 place-items-center rounded-full text-xs font-semibold tabular-nums",
+                                      "grid size-6 place-items-center rounded-md text-meta font-medium tabular-nums",
                                       isToday
-                                        ? "bg-foreground text-background"
+                                        ? "bg-[var(--surface-active)] text-[var(--text-primary)]"
                                         : isCurrentMonth
-                                          ? "text-[var(--app-ink)]"
-                                          : "text-[var(--app-muted)]"
+                                          ? "text-[var(--text-primary)]"
+                                          : "text-[var(--text-meta)]"
                                     )}
                                   >
                                     {day.date.getDate()}
@@ -530,7 +516,7 @@ export function PrecisionCalendar({
                                   {dayEvents.slice(0, 3).map((event) => (
                                     <span
                                       key={event.id}
-                                      className="flex min-w-0 items-center gap-1.5 text-xs text-[var(--app-ink)]"
+                                      className="flex min-w-0 items-center gap-2 text-meta text-[var(--text-primary)]"
                                     >
                                       <span
                                         aria-hidden="true"
@@ -548,11 +534,11 @@ export function PrecisionCalendar({
                                     </span>
                                   ))}
                                   {dayEvents.length > 3 ? (
-                                    <span className="text-xs text-[var(--app-muted)]">
+                                    <span className="text-meta text-[var(--text-meta)]">
                                       +{dayEvents.length - 3} more
                                     </span>
                                   ) : null}
-                                </Button>
+                                </button>
                               </div>
                             );
                           })}
@@ -570,11 +556,11 @@ export function PrecisionCalendar({
                   <div
                     role="grid"
                     aria-label={weekLabel}
-                    className="flex min-h-0 flex-1"
+                    className="flex min-h-0 min-w-0 flex-1 overflow-x-auto p-1"
                   >
                     <div
                       role="row"
-                      className="grid min-h-0 flex-1 grid-cols-7 gap-px bg-[var(--app-border)]"
+                      className="grid min-h-0 min-w-118 flex-1 grid-cols-7 gap-1"
                     >
                       {selectedWeekDays.map((date) => {
                         const key = iso(date);
@@ -590,14 +576,13 @@ export function PrecisionCalendar({
                             className={cn(
                               "flex min-h-[18rem] min-w-0 flex-col gap-1 p-2",
                               isSelected
-                                ? "bg-[var(--app-active)]"
-                                : "bg-[var(--app-panel)]"
+                                ? "bg-[var(--surface-active)]"
+                                : "bg-transparent"
                             )}
                           >
-                            <Button
+                            <button
                               ref={key === focusedDate ? focusedDay : undefined}
                               type="button"
-                              variant="ghost"
                               aria-label={`${formatDate(key, { weekday: "long", month: "long", day: "numeric" })}, ${dayEvents.length} scheduled${eventStatusLabel(dayEvents)}`}
                               aria-pressed={isSelected}
                               aria-current={isToday ? "date" : undefined}
@@ -605,29 +590,28 @@ export function PrecisionCalendar({
                               onFocus={() => setFocusedDate(key)}
                               onKeyDown={(event) => navigateDay(event, date)}
                               onClick={() => selectDay(key)}
-                              className="h-auto justify-start gap-2 px-1 py-1 font-normal hover:bg-transparent dark:hover:bg-transparent focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--app-highlight)] active:translate-y-0 active:scale-100"
+                              className="flex h-auto justify-start gap-2 px-1 py-1 font-normal hover:bg-transparent dark:hover:bg-transparent text-[var(--text-primary)] min-h-10"
                             >
-                              <span className="text-xs text-[var(--app-muted)]">
+                              <span className="text-meta text-[var(--text-meta)]">
                                 {formatDate(key, { weekday: "short" })}
                               </span>
                               <span
                                 className={cn(
-                                  "grid size-7 place-items-center rounded-full text-sm font-semibold tabular-nums",
+                                  "grid size-8 place-items-center rounded-md text-section tabular-nums",
                                   isToday
-                                    ? "bg-foreground text-background"
-                                    : "text-[var(--app-ink)]"
+                                    ? "bg-[var(--surface-active)] text-[var(--text-primary)]"
+                                    : "text-[var(--text-primary)]"
                                 )}
                               >
                                 {date.getDate()}
                               </span>
-                            </Button>
+                            </button>
                             {dayEvents.map((event) => {
                               const project = projectsById.get(event.projectId);
                               return (
-                                <Button
+                                <button
                                   key={event.id}
                                   type="button"
-                                  variant="ghost"
                                   aria-label={`${event.title}, ${project?.status ?? "Planned"}, ${event.detail ?? event.kind}`}
                                   disabled={!project}
                                   onClick={(clickEvent) => {
@@ -635,9 +619,9 @@ export function PrecisionCalendar({
                                     selectDay(key);
                                     if (project) onViewProject(project);
                                   }}
-                                  className="h-auto w-full min-w-0 flex-col items-stretch gap-0.5 rounded-md px-2 py-1.5 text-left font-normal whitespace-normal hover:bg-[var(--app-hover)] dark:hover:bg-[var(--app-hover)] active:translate-y-0 active:scale-100"
+                                  className="flex h-auto w-full min-w-0 flex-col items-stretch gap-1 rounded-md px-2 py-2 text-left font-normal whitespace-normal hover:bg-[var(--surface-fill)] dark:hover:bg-[var(--surface-fill)] text-[var(--text-primary)] min-h-10 disabled:opacity-50"
                                 >
-                                  <span className="flex min-w-0 items-center gap-1.5">
+                                  <span className="flex min-w-0 items-center gap-2">
                                     <span
                                       aria-hidden="true"
                                       className="size-1.5 shrink-0 rounded-full"
@@ -647,14 +631,14 @@ export function PrecisionCalendar({
                                         ),
                                       }}
                                     />
-                                    <span className="truncate text-xs font-semibold text-[var(--app-ink)]">
+                                    <span className="truncate text-meta font-medium text-[var(--text-primary)]">
                                       {event.title}
                                     </span>
                                   </span>
-                                  <span className="truncate pl-3 text-[11px] text-[var(--app-muted)] capitalize">
+                                  <span className="truncate pl-3 text-meta text-[var(--text-meta)] capitalize">
                                     {event.detail ?? event.kind}
                                   </span>
-                                </Button>
+                                </button>
                               );
                             })}
                           </div>
@@ -667,24 +651,23 @@ export function PrecisionCalendar({
                 <ContentSection
                   bodyMode="flush"
                   className="h-full"
-                  bodyClassName="min-h-0 flex-1 overflow-y-auto pt-1.5"
+                  bodyClassName="min-h-0 flex-1 overflow-y-auto pt-2"
                 >
                   <div className={sectionListClassName}>
                     {visibleMonthProjects.map((project) => (
-                      <Button
+                      <button
                         key={project.id}
                         type="button"
-                        variant="ghost"
                         onClick={() => {
                           selectDay(project.dueDate);
                           onViewProject(project);
                         }}
                         className={cn(
                           sectionRowClassName,
-                          "h-auto w-full grid justify-start gap-3 text-left font-normal whitespace-normal dark:hover:bg-[var(--app-hover)] focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--app-highlight)] active:translate-y-0 active:scale-100 sm:grid-cols-[120px_minmax(0,1fr)_120px] sm:items-center"
+                          "min-h-10 w-full grid justify-start gap-3 text-left font-normal whitespace-normal dark:hover:bg-[var(--surface-fill)] sm:grid-cols-[120px_minmax(0,1fr)_120px] sm:items-center text-[var(--text-primary)] min-h-10"
                         )}
                       >
-                        <span className="text-xs font-medium text-[var(--app-muted)]">
+                        <span className="text-meta font-medium text-[var(--text-meta)]">
                           {formatDate(project.dueDate, {
                             weekday: "short",
                             month: "short",
@@ -692,27 +675,20 @@ export function PrecisionCalendar({
                           })}
                         </span>
                         <span className="min-w-0">
-                          <span className="block truncate text-sm font-semibold">
+                          <span className="block truncate text-section">
                             {project.title}
                           </span>
-                          <span className="mt-0.5 block truncate text-xs text-[var(--app-muted)]">
+                          <span className="mt-1 block truncate text-meta text-[var(--text-meta)]">
                             {project.client || project.workType}
                           </span>
                         </span>
-                        <span
-                          className="flex items-center gap-1.5 text-xs"
-                          style={{ color: projectStatusColor(project.status) }}
-                        >
-                          <span
-                            aria-hidden="true"
-                            className="size-1.5 rounded-full bg-current"
-                          />
+                        <Badge status={projectStatusTone(project.status)}>
                           {project.status}
-                        </span>
-                      </Button>
+                        </Badge>
+                      </button>
                     ))}
                     {!visibleMonthProjects.length ? (
-                      <p className="px-3 py-2 text-sm text-[var(--app-muted)]">
+                      <p className="px-3 py-2 text-body text-[var(--text-meta)]">
                         Nothing due this month. Give a project a due date to
                         schedule it.
                       </p>
@@ -734,48 +710,42 @@ export function PrecisionCalendar({
                       const project = projectsById.get(event.projectId);
                       if (!project) return null;
                       return (
-                        <MotionButton
+                        <button
                           key={event.id}
                           type="button"
-                          variant="ghost"
-                          initial={reduceMotion ? false : { opacity: 0, y: 4 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={
-                            reduceMotion ? { duration: 0 } : revealTransition
-                          }
                           onClick={() => onViewProject(project)}
                           className={cn(
                             sectionRowClassName,
-                            "h-auto w-full flex-col items-stretch gap-2 text-left font-normal whitespace-normal dark:hover:bg-[var(--app-hover)] focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--app-highlight)] active:translate-y-0 active:scale-100"
+                            "flex min-h-10 w-full flex-col items-stretch gap-2 text-left font-normal whitespace-normal dark:hover:bg-[var(--surface-fill)] text-[var(--text-primary)] min-h-10"
                           )}
                         >
                           <span className="flex items-center gap-2">
                             <span
                               aria-hidden="true"
-                              className="size-2 shrink-0 rounded-full"
+                              className="size-1.5 shrink-0 rounded-full"
                               style={{
                                 background: projectStatusColor(project.status),
                               }}
                             />
-                            <span className="min-w-0 flex-1 truncate text-sm font-semibold">
+                            <span className="min-w-0 flex-1 truncate text-section">
                               {event.title}
                             </span>
-                            <ArrowRight className="size-3.5 shrink-0 text-[var(--app-muted)]" />
+                            <ArrowRight className="size-4 shrink-0 text-[var(--text-meta)]" />
                           </span>
-                          <span className="truncate pl-4 text-xs text-[var(--app-muted)] capitalize">
+                          <span className="truncate pl-4 text-meta text-[var(--text-meta)] capitalize">
                             {event.detail ?? event.kind}
                           </span>
                           <Progress
                             value={getProjectProgress(project)}
                             aria-hidden="true"
-                            className="ml-4 h-1 w-auto rounded-full bg-[var(--app-progress-track)] [&_[data-slot=progress-indicator]]:rounded-full [&_[data-slot=progress-indicator]]:bg-[var(--app-highlight)]"
+                            className="ml-4 w-auto"
                           />
-                        </MotionButton>
+                        </button>
                       );
                     })}
                   </div>
                 ) : (
-                  <p className="px-4 pb-4 text-sm text-[var(--app-muted)]">
+                  <p className="px-4 pb-4 text-body text-[var(--text-meta)]">
                     Nothing due on this day. Pick another day, or give a project
                     this due date.
                   </p>
@@ -808,7 +778,6 @@ export function PrecisionTimeline({
   const [filter, setFilter] = useState<
     "All" | "Active" | "Review" | "Delivered"
   >("All");
-  const reduceMotion = useHydratedReducedMotion();
   const visibleProjects = useMemo(
     () =>
       projects.filter((project) => {
@@ -883,26 +852,26 @@ export function PrecisionTimeline({
         description="A chronological view of project milestones, reviews, and completed deliveries."
         actions={
           <div
-            className="flex flex-wrap items-center gap-2 text-xs"
+            className="flex flex-wrap items-center gap-2 text-meta"
             aria-label="Timeline summary"
           >
-            <span className="rounded-md bg-[var(--app-soft-panel)] px-2.5 py-1.5">
-              <strong className="text-base tabular-nums text-[var(--app-ink)]">
+            <span className="rounded-md bg-[var(--surface-fill)] px-3 py-2">
+              <strong className="text-title tabular-nums text-[var(--text-primary)]">
                 {active}
               </strong>
-              <span className="ml-1 text-[var(--app-muted)]">active</span>
+              <span className="ml-1 text-[var(--text-meta)]">active</span>
             </span>
-            <span className="rounded-md bg-[var(--app-soft-panel)] px-2.5 py-1.5">
-              <strong className="text-base tabular-nums text-[var(--app-warning)]">
+            <span className="rounded-md bg-[var(--surface-fill)] px-3 py-2">
+              <strong className="text-title tabular-nums text-[var(--text-primary)]">
                 {review}
               </strong>
-              <span className="ml-1 text-[var(--app-muted)]">in review</span>
+              <span className="ml-1 text-[var(--text-meta)]">in review</span>
             </span>
-            <span className="rounded-md bg-[var(--app-soft-panel)] px-2.5 py-1.5">
-              <strong className="text-base tabular-nums text-[var(--app-success)]">
+            <span className="rounded-md bg-[var(--surface-fill)] px-3 py-2">
+              <strong className="text-title tabular-nums text-[var(--text-primary)]">
                 {delivered}
               </strong>
-              <span className="ml-1 text-[var(--app-muted)]">delivered</span>
+              <span className="ml-1 text-[var(--text-meta)]">delivered</span>
             </span>
           </div>
         }
@@ -910,45 +879,43 @@ export function PrecisionTimeline({
 
       <PageContent>
         {notice}
-        <PageToolbar
+        <PageFilters
           primary={
-            <ButtonGroup
-              className="flex w-fit flex-wrap items-center gap-1 [&>*:not(:first-child)]:!rounded-l-md [&>*:not(:last-child)]:!rounded-r-md"
-              aria-label="Filter timeline"
-            >
-              {(["All", "Active", "Review", "Delivered"] as const).map(
-                (option) => (
-                  <Button
-                    key={option}
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    aria-pressed={filter === option}
-                    onClick={() => setFilter(option)}
-                    className={cn(
-                      "h-8 gap-0 rounded-md px-3 text-xs text-[var(--app-muted)] hover:bg-[var(--app-hover)] hover:text-[var(--app-ink)] dark:hover:bg-[var(--app-hover)] focus-visible:ring-2 focus-visible:ring-[var(--app-highlight)] active:translate-y-0 active:scale-100",
-                      filter === option &&
-                        "bg-[var(--app-active)] text-[var(--app-highlight)]"
-                    )}
-                  >
-                    <span>{option}</span>
-                    <span className="ml-1 text-[10px] tabular-nums opacity-70">
-                      {option === "All"
-                        ? projects.length
-                        : option === "Active"
-                          ? active
-                          : option === "Review"
-                            ? review
-                            : delivered}
-                    </span>
-                  </Button>
+            <Tabs
+              value={filter}
+              onValueChange={(value) =>
+                setFilter(
+                  value === "Active" ||
+                    value === "Review" ||
+                    value === "Delivered"
+                    ? value
+                    : "All"
                 )
-              )}
-            </ButtonGroup>
+              }
+            >
+              <TabsList aria-label="Filter timeline">
+                {(["All", "Active", "Review", "Delivered"] as const).map(
+                  (option) => (
+                    <TabsTrigger key={option} value={option}>
+                      {option}
+                      <span className="font-mono text-meta">
+                        {option === "All"
+                          ? projects.length
+                          : option === "Active"
+                            ? active
+                            : option === "Review"
+                              ? review
+                              : delivered}
+                      </span>
+                    </TabsTrigger>
+                  )
+                )}
+              </TabsList>
+            </Tabs>
           }
           secondary={
             <span
-              className="text-[10px] text-[var(--app-muted)]"
+              className="text-meta text-[var(--text-meta)]"
               aria-live="polite"
             >
               {visibleProjects.length} milestones shown
@@ -957,64 +924,37 @@ export function PrecisionTimeline({
         />
 
         {groups.length ? (
-          <motion.div
-            key={filter}
-            initial={reduceMotion ? false : { opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={reduceMotion ? { duration: 0 } : { duration: 0.18 }}
-            className="mt-6 space-y-8"
-          >
+          <div key={filter} className="space-y-10">
             {groups.map((group, groupIndex) => (
-              <motion.section
-                key={group.key}
-                initial={reduceMotion ? false : { opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={
-                  reduceMotion
-                    ? { duration: 0 }
-                    : { ...revealTransition, delay: groupIndex * 0.035 }
-                }
-                className="grid gap-4"
-              >
-                <div className="relative border-l border-[var(--app-strong-border)] pl-6">
+              <section key={group.key} className="grid gap-4">
+                <div className="relative pl-6">
                   <ContentSection
                     title={group.label}
                     description={`${group.projects.length} milestone${group.projects.length === 1 ? "" : "s"}`}
                     bodyMode="flush"
                     className="overflow-visible"
                   >
-                    <div className="divide-y divide-[var(--app-border)]">
+                    <div className="">
                       {group.projects.map((project, projectIndex) => (
-                        <MotionButton
+                        <button
                           key={project.id}
                           type="button"
-                          variant="ghost"
-                          initial={reduceMotion ? false : { opacity: 0, x: -5 }}
-                          animate={{ opacity: 1, x: 0 }}
-                          transition={
-                            reduceMotion
-                              ? { duration: 0 }
-                              : {
-                                  ...revealTransition,
-                                  delay:
-                                    groupIndex * 0.035 + projectIndex * 0.025,
-                                }
-                          }
                           aria-label={`${project.title}, ${project.status}, due ${formatDate(project.dueDate, { month: "long", day: "numeric", year: "numeric" })}`}
-                          className="relative h-auto w-full grid justify-start gap-3 px-4 py-4 text-left font-normal whitespace-normal hover:bg-[var(--app-hover)] dark:hover:bg-[var(--app-hover)] focus-visible:z-10 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--app-highlight)] active:translate-y-0 active:scale-100 sm:grid-cols-[120px_minmax(0,1fr)_120px_90px] sm:items-center"
+                          className="relative h-auto w-full grid justify-start gap-3 px-4 py-4 text-left font-normal whitespace-normal hover:bg-[var(--surface-fill)] dark:hover:bg-[var(--surface-fill)] focus-visible:z-10 sm:grid-cols-[120px_minmax(0,1fr)_120px_90px] sm:items-center text-[var(--text-primary)] min-h-10"
                           onClick={() => onViewProject(project)}
                         >
                           <span
-                            className="absolute -left-[31px] top-1/2 grid size-3 -translate-y-1/2 place-items-center rounded-full border-2 border-[var(--app-panel)]"
+                            aria-hidden="true"
+                            className="absolute left-0 top-1/2 size-1.5 -translate-y-1/2 rounded-full"
                             style={{
                               background: projectStatusColor(project.status),
                             }}
                           />
                           <span>
-                            <span className="block text-[11px] font-semibold text-[var(--app-subtle)]">
+                            <span className="block text-meta font-medium text-[var(--text-meta)]">
                               {isDelivered(project) ? "Delivered" : "Expected"}
                             </span>
-                            <span className="mt-1 block text-xs font-medium">
+                            <span className="mt-1 block text-meta font-medium">
                               {formatDate(project.dueDate, {
                                 month: "short",
                                 day: "numeric",
@@ -1022,28 +962,25 @@ export function PrecisionTimeline({
                             </span>
                           </span>
                           <span className="min-w-0">
-                            <span className="block truncate text-[13px] font-semibold">
+                            <span className="block truncate text-section">
                               {project.title}
                             </span>
-                            <span className="mt-1 block truncate text-[11px] text-[var(--app-muted)]">
+                            <span className="mt-1 block truncate text-meta text-[var(--text-meta)]">
                               {project.client || project.workType} ·{" "}
                               {project.notes || "No note"}
                             </span>
                           </span>
                           <Badge
-                            variant="outline"
-                            className={cn(
-                              "h-5 w-fit rounded px-1.5 text-[10px]",
-                              projectStatusTone(project.status)
-                            )}
+                            variant="secondary"
+                            status={projectStatusTone(project.status)}
                           >
                             {project.status}
                           </Badge>
-                          <span className="flex items-center justify-end gap-1 text-[10px] text-[var(--app-muted)]">
+                          <span className="flex items-center justify-end gap-1 text-meta text-[var(--text-meta)]">
                             {isDelivered(project) ? (
-                              <CheckCircle2 className="size-3.5 text-[var(--app-success)]" />
+                              <CheckCircle2 className="size-4 text-[var(--text-primary)]" />
                             ) : (
-                              <Clock3 className="size-3.5" />
+                              <Clock3 className="size-4" />
                             )}
                             {isDelivered(project)
                               ? "Complete"
@@ -1051,18 +988,18 @@ export function PrecisionTimeline({
                                 ? "Overdue"
                                 : `${Math.max(0, daysUntil(project.dueDate))}d`}
                           </span>
-                        </MotionButton>
+                        </button>
                       ))}
                     </div>
                   </ContentSection>
                 </div>
-              </motion.section>
+              </section>
             ))}
-          </motion.div>
+          </div>
         ) : (
           <ContentSection className="mt-6">
             <PageEmptyState
-              icon={<Milestone className="size-5" />}
+              icon={<Milestone className="size-4" />}
               title={emptyTimeline.title}
               description={emptyTimeline.description}
             />

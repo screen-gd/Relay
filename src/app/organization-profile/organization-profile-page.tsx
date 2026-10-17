@@ -1,9 +1,17 @@
 import { UserBillingProfile } from "@/components/subscription-plans";
+import {
+  PageContent,
+  PageHeader,
+  WorkspacePage,
+} from "@/components/workspace-page";
 
 export function OrganizationProfilePage() {
   return (
-    <main className="min-h-dvh bg-black p-4 text-white md:p-8">
-      <UserBillingProfile />
-    </main>
+    <WorkspacePage family="administration">
+      <PageHeader title="Organization profile" />
+      <PageContent>
+        <UserBillingProfile />
+      </PageContent>
+    </WorkspacePage>
   );
 }

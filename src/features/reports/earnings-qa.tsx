@@ -1,14 +1,14 @@
-import { Link } from "@tanstack/react-router";
-import { useState } from "react";
-import { useConvexAuth, useMutation, useQuery } from "convex/react";
-import type { FunctionReturnType } from "convex/server";
-import { api } from "../../../convex/_generated/api";
-import type { Id } from "../../../convex/_generated/dataModel";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ContentSection } from "@/components/workspace-page";
 import { AiLockedNotice } from "@/features/ai/ai-availability";
 import { projectLink } from "@/features/projects/project-view";
+import { Link } from "@tanstack/react-router";
+import { useConvexAuth, useMutation, useQuery } from "convex/react";
+import type { FunctionReturnType } from "convex/server";
+import { useState } from "react";
+import { api } from "../../../convex/_generated/api";
+import type { Id } from "../../../convex/_generated/dataModel";
 
 type Question = FunctionReturnType<typeof api.earningsQa.recent>[number];
 
@@ -39,20 +39,22 @@ function AnswerRow({
   const status = runStatus(question);
   return (
     <li className="grid gap-2 py-3">
-      <p className="text-sm font-medium text-foreground">{question.question}</p>
+      <p className="text-body font-medium text-[var(--text-primary)]">
+        {question.question}
+      </p>
       {status ? (
-        <p role="status" className="text-xs text-foreground">
+        <p role="status" className="text-meta text-[var(--text-primary)]">
           {status}
         </p>
       ) : null}
       {question.answer ? (
         <>
-          <p className="text-xs text-foreground">AI-drafted</p>
-          <p className="whitespace-pre-wrap text-sm text-foreground">
+          <p className="text-meta text-[var(--text-primary)]">AI-drafted</p>
+          <p className="whitespace-pre-wrap text-body text-[var(--text-primary)]">
             {question.answer.text}
           </p>
           {question.answer.citations.length ? (
-            <ul className="grid gap-1 text-xs text-foreground">
+            <ul className="grid gap-1 text-meta text-[var(--text-primary)]">
               {question.answer.citations.map((citation, index) => (
                 <li
                   key={`${citation.label}:${index}`}
@@ -153,7 +155,7 @@ export function EarningsQa({
 
   return (
     <ContentSection title="Ask about earnings">
-      <div className="[&_button]:bg-transparent [&_button:hover]:bg-transparent [&_button]:dark:text-white [&_input]:dark:bg-black">
+      <div className="">
         <form
           className="flex flex-col gap-2 sm:flex-row"
           onSubmit={(event) => {
@@ -170,14 +172,17 @@ export function EarningsQa({
           />
           <Button
             size="sm"
-            variant="outline"
+            variant="secondary"
             disabled={running || question.trim().length < 3}
           >
             Ask about your earnings
           </Button>
         </form>
         {error ? (
-          <p role="alert" className="mt-2 text-xs text-destructive">
+          <p
+            role="alert"
+            className="mt-2 text-meta text-[var(--status-danger)]"
+          >
             {error}
           </p>
         ) : null}

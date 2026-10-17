@@ -1,29 +1,29 @@
-import { useEffect, useMemo, useRef, type ReactNode } from "react";
-import { useLocation } from "@tanstack/react-router";
-import {
-  WorkspaceShell,
-  workspacePageForPath,
-} from "@/components/workspace-shell";
 import {
   SampleModeBar,
   WorkspaceSampleBar,
 } from "@/components/sample-mode-bar";
-import { useData, useProjectGroups } from "@/lib/data-context";
-import { useOptionalAuth } from "@/lib/optional-auth";
+import {
+  WorkspaceShell,
+  workspacePageForPath,
+} from "@/components/workspace-shell";
 import { useClientActions } from "@/features/clients/use-client-actions";
+import { NotificationBell } from "@/features/notifications/notification-bell";
+import { useProjectAccess } from "@/features/projects/project-access";
 import {
   ProjectActionsProvider,
   useProjectActions,
 } from "@/features/projects/project-actions-provider";
-import { useProjectAccess } from "@/features/projects/project-access";
-import { useWorkspaceDiscovery } from "@/features/workspace-discovery/use-workspace-discovery";
-import { buildWorkspaceSearchIndex } from "@/features/workspace-discovery/workspace-discovery";
 import {
   AppToast,
   AuthLoadingGate,
 } from "@/features/routes/shared/app-feedback";
 import { applyRootThemeVariables } from "@/features/routes/shared/route-theme";
-import { NotificationBell } from "@/features/notifications/notification-bell";
+import { useWorkspaceDiscovery } from "@/features/workspace-discovery/use-workspace-discovery";
+import { buildWorkspaceSearchIndex } from "@/features/workspace-discovery/workspace-discovery";
+import { useData, useProjectGroups } from "@/lib/data-context";
+import { useOptionalAuth } from "@/lib/optional-auth";
+import { useLocation } from "@tanstack/react-router";
+import { useEffect, useMemo, useRef, type ReactNode } from "react";
 import { WorkspaceOnboarding } from "./workspace-onboarding";
 
 export function WorkspaceRuntime({
@@ -53,7 +53,14 @@ function WorkspaceFrame({ children }: { children: ReactNode }) {
     setToast,
   } = useData();
   const { status: clerkStatus } = useOptionalAuth();
-  const { sample, projects, teamData, canCreateProjects } = useProjectAccess();
+  const {
+    sample,
+    projects,
+    teamData,
+    activeTeamMembers,
+    canCreateProjects,
+    canManageFinance,
+  } = useProjectAccess();
   const { openNewProject } = useProjectActions();
   const { groups } = useProjectGroups();
   const { clientRecords } = useClientActions();
@@ -70,7 +77,14 @@ function WorkspaceFrame({ children }: { children: ReactNode }) {
     [clientRecords, groups, projects, discovery]
   );
 
-  useEffect(() => applyRootThemeVariables(settings), [settings]);
+  useEffect(() => {
+    applyRootThemeVariables(settings);
+    if (settings.theme !== "System") return;
+    const query = window.matchMedia("(prefers-color-scheme: dark)");
+    const update = () => applyRootThemeVariables(settings);
+    query.addEventListener("change", update);
+    return () => query.removeEventListener("change", update);
+  }, [settings]);
 
   const teamWorkspace = teamData?.workspace;
   useEffect(() => {
@@ -109,7 +123,7 @@ function WorkspaceFrame({ children }: { children: ReactNode }) {
       {/* The covered workspace stays out of the Tab order until auth resolves. */}
       <div className="contents" inert={!isAuthLoaded}>
         {standalone ? (
-          <div className="motion-enter min-h-dvh bg-[var(--app-canvas)] text-[var(--app-ink)] transition-colors">
+          <div className="min-h-dvh bg-[var(--surface-page)] text-[var(--text-primary)] transition-colors">
             {children}
           </div>
         ) : (
@@ -124,9 +138,17 @@ function WorkspaceFrame({ children }: { children: ReactNode }) {
                 : undefined
             }
             searchRecords={searchRecords}
+            navigationData={{
+              projects,
+              activeTeamMembers,
+              canManageFinance,
+              sample,
+              clients: clientRecords,
+              outputs: discovery?.outputs ?? [],
+            }}
             notificationSlot={<NotificationBell />}
           >
-            <div className="flex min-h-full flex-col lg:h-full">
+            <div className="flex min-h-0 flex-1 flex-col">
               {sample ? (
                 <SampleModeBar />
               ) : sampleWorkspace.loaded ? (
@@ -142,7 +164,7 @@ function WorkspaceFrame({ children }: { children: ReactNode }) {
               ) : null}
               <div
                 ref={contentRef}
-                className="min-h-0 flex-1 bg-[var(--app-canvas)] text-[var(--app-ink)] transition-colors lg:overflow-y-auto"
+                className="min-h-0 flex-1 bg-[var(--surface-page)] text-[var(--text-primary)] transition-colors"
               >
                 {children}
               </div>

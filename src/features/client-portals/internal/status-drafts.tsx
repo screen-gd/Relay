@@ -1,13 +1,6 @@
 "use client";
 
-import { useState } from "react";
-import { useConvexAuth, useMutation, useQuery } from "convex/react";
-import { api } from "../../../../convex/_generated/api";
-import type { Doc, Id } from "../../../../convex/_generated/dataModel";
-import { projectHref } from "@/features/projects/project-view";
-import { AiLockedNotice, useAiAccount } from "@/features/ai/ai-availability";
 import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
@@ -15,6 +8,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
+import { AiLockedNotice, useAiAccount } from "@/features/ai/ai-availability";
+import { projectHref } from "@/features/projects/project-view";
+import { useConvexAuth, useMutation, useQuery } from "convex/react";
+import { useState } from "react";
+import { api } from "../../../../convex/_generated/api";
+import type { Doc, Id } from "../../../../convex/_generated/dataModel";
 
 function DraftEditor({
   draft,
@@ -45,7 +45,7 @@ function DraftEditor({
   }
   return (
     <div className="mt-3 grid gap-2">
-      <p className="text-xs">
+      <p className="text-meta">
         AI-drafted ·{" "}
         {draft.channel === "whatsapp"
           ? "WhatsApp"
@@ -96,7 +96,7 @@ function DraftEditor({
           </Button>
         ) : null}
       </div>
-      <p className="text-xs">
+      <p className="text-meta">
         Sources:{" "}
         <a
           className="underline"
@@ -124,7 +124,7 @@ function DraftEditor({
         ))}
       </p>
       {message ? (
-        <p role="status" className="text-sm">
+        <p role="status" className="text-body">
           {message}
         </p>
       ) : null}
@@ -133,7 +133,7 @@ function DraftEditor({
 }
 
 const sectionClassName =
-  "py-3 dark:bg-black dark:text-white [&_button]:bg-transparent [&_button:hover]:bg-transparent [&_textarea]:dark:bg-black [&_button]:dark:text-white";
+  "py-3 dark:bg-black text-[var(--text-primary)] [&_button]:bg-transparent [&_button:hover]:bg-transparent [&_textarea]:dark:bg-black [&_button]:text-[var(--text-primary)]";
 
 /** Reviews channel-specific updates; copying and portal publishing require a click. */
 export function StatusDrafts({
@@ -179,7 +179,7 @@ export function StatusDrafts({
   if (!isAuthenticated) {
     return (
       <section aria-label="Client status draft" className={sectionClassName}>
-        <h4 className="mb-2 text-sm font-semibold">Client update</h4>
+        <h4 className="mb-2 text-body font-semibold">Client update</h4>
         <AiLockedNotice
           feature="Draft a client status update"
           access={hasAccount ? "settings" : "signIn"}
@@ -193,7 +193,7 @@ export function StatusDrafts({
     drafts?.find((d) => d.channel === channel);
   return (
     <section aria-label="Client status draft" className={sectionClassName}>
-      <h4 className="mb-2 text-sm font-semibold">Client update</h4>
+      <h4 className="mb-2 text-body font-semibold">Client update</h4>
       <div className="flex flex-wrap items-center gap-2">
         {aiEnabled || drafts?.length ? (
           <Select
@@ -208,13 +208,10 @@ export function StatusDrafts({
             }}
             disabled={running}
           >
-            <SelectTrigger
-              className="w-36 bg-transparent dark:bg-black dark:text-white"
-              aria-label="Update channel"
-            >
+            <SelectTrigger className="w-36" aria-label="Update channel">
               <SelectValue />
             </SelectTrigger>
-            <SelectContent className="dark:bg-black dark:text-white [&_[data-slot=select-item]:focus]:bg-transparent">
+            <SelectContent className="[&_[data-slot=select-item]:focus]:bg-transparent">
               <SelectItem value="portal">Portal note</SelectItem>
               <SelectItem value="email">Email</SelectItem>
               <SelectItem value="whatsapp">WhatsApp</SelectItem>
@@ -252,7 +249,7 @@ export function StatusDrafts({
         )}
       </div>
       {run ? (
-        <p role="status" className="mt-2 text-xs">
+        <p role="status" className="mt-2 text-meta">
           {run.status === "queued"
             ? "Queued"
             : run.status === "running"
@@ -263,7 +260,7 @@ export function StatusDrafts({
         </p>
       ) : null}
       {error ? (
-        <p role="alert" className="mt-2 text-sm">
+        <p role="alert" className="mt-2 text-body">
           {error}
         </p>
       ) : null}

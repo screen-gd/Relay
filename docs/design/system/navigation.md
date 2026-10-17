@@ -1,35 +1,43 @@
 # Navigation
 
-## Purpose
+## Desktop sidebar
 
-Let users move among work areas, current context, saved views, and actions without losing place.
+The sidebar has two columns on `--surface-frame`, as in ChatGPT and Codex.
 
-## Anatomy
+**Rail (56px).** One icon per hub, each with a tooltip: Dashboard, Projects, Clients, Reviews, Payments, Team, Settings. The active hub's icon sits on a `--surface-active` square. The rail is always visible.
 
-Desktop sidebar: Dashboard, Projects, Clients, Reviews, Payments, Team, Settings. It has two columns, as in ChatGPT and Codex: a 56px icon rail with one icon per hub and a tooltip, and a 248px panel that is open by default and closes to the rail with the toggle in its header (remembered on the device). The panel shows the current hub's name, a New project action, the hub's pages (Overview first, then Calendar, Timeline, Files, Media for Projects; Team chat for Team; Integrations, Templates, Resources for Settings), recent Projects, and the support links. The context tabs above the page list the same pages, so every page stays reachable with the panel closed. Top bar: workspace switcher, command search, notifications, help, account. Context row: breadcrumb/project, view switcher, filters, saved views.
+**Panel (248px).** Open by default; the toggle in its header closes it to the rail, and the choice is remembered on the device. The panel lists the **items** in the current hub, not its pages:
+
+| Hub       | Panel contents                                     |
+| --------- | -------------------------------------------------- |
+| Projects  | New project, projects in progress, recent projects |
+| Clients   | Clients                                            |
+| Reviews   | Open reviews                                       |
+| Payments  | Unpaid invoices                                    |
+| Team      | Members, team chat                                 |
+| Settings  | Its sections (Settings has no items)               |
+| Dashboard | Recent projects                                    |
+
+- Panel items are 13px `--text-primary`, 6px radius. The active item gets `--surface-active`; hover gets `--surface-fill`. No accent marker.
+- Group labels ("In progress", "Recent") use `text-meta`. They are not eyebrows: no caps, no tracking.
+- "New project" is a Ghost item, not an accent button. The accent belongs to the page's own Primary button.
+- Support links (help, feedback, trust, legal) live in the account menu. The panel has no footer and no lines.
+
+## Pages
+
+A hub's pages (for Projects: Overview, Calendar, Timeline, Files, Media) appear only as segmented tabs in the page bar. A project's views use the same segmented tabs. See [Layout](layout.md).
+
+## Top bar
+
+Breadcrumb (hub, then the current item), command search (`Ctrl K`), notifications, help, account. Every breadcrumb segment uses `--text-primary`, including earlier segments that are links.
+
+## Phones
+
+- A bottom tab bar with the five main hubs on a solid `--surface-frame` background. No blur.
+- The active tab gets `--surface-active` behind its icon and label. No accent bar.
+- The page's Primary action is the floating accent "New" button.
+- The sidebar panel's contents open in a sheet.
 
 ## Behavior
 
-Use links for routes, disclosure for groups, tabs for same-context panels, and menu buttons for actions. Preserve deep links for calendar, timeline, media, feedback, resources, templates, integrations, chat, profile, portal, and support routes.
-
-## States
-
-Show active, hover, focus, collapsed, expanded, disabled, loading, and permission-limited destinations. Announce route changes and retain selected context after filters or sheets close.
-
-## Responsive rules
-
-Use a sheet on small screens with a labeled trigger. Keep title, search, and primary action available; place secondary navigation in the sheet.
-
-## Accessibility
-
-Use ordinary links and Radix focus management. Do not use a generic ARIA menu for navigation. Label multiple landmarks and support keyboard route access and a skip link.
-
-## Preserved features
-
-Keep existing hrefs, grouped navigation, `G` route chords, command dialog, account menu, notifications, and sample-mode marker.
-
-## Acceptance checks
-
-- Every current route remains reachable by link and command search.
-- Active state survives refresh and direct deep links.
-- Keyboard and screen-reader users can open, navigate, and close mobile navigation.
+Use links for routes, segmented tabs for a hub's pages, and menu buttons for actions. Do not use an ARIA menu for navigation. Keep every current href and alias, `G` route chords, the command dialog, the account menu, notifications and the sample-mode marker. Active state survives refresh and deep links.

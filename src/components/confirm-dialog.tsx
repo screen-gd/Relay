@@ -49,6 +49,7 @@ export function useConfirm() {
 export function ConfirmProvider({ children }: { children: ReactNode }) {
   const [options, setOptions] = useState<ConfirmOptions | null>(null);
   const resolveRef = useRef<((confirmed: boolean) => void) | null>(null);
+  const returnFocusRef = useRef<HTMLElement | null>(null);
 
   const settle = useCallback((confirmed: boolean) => {
     resolveRef.current?.(confirmed);
@@ -59,6 +60,22 @@ export function ConfirmProvider({ children }: { children: ReactNode }) {
   const confirm = useCallback<Confirm>((next) => {
     // A newer request cancels one that is still open.
     resolveRef.current?.(false);
+    if (
+      typeof document !== "undefined" &&
+      document.activeElement instanceof HTMLElement
+    ) {
+      const active = document.activeElement;
+      const menu = active.closest<HTMLElement>(
+        "[data-slot=dropdown-menu-content]"
+      );
+      returnFocusRef.current = menu
+        ? (Array.from(
+            document.querySelectorAll<HTMLElement>("[aria-controls]")
+          ).find(
+            (element) => element.getAttribute("aria-controls") === menu.id
+          ) ?? active)
+        : active;
+    }
     setOptions(next);
     return new Promise<boolean>((resolve) => {
       resolveRef.current = resolve;
@@ -76,7 +93,12 @@ export function ConfirmProvider({ children }: { children: ReactNode }) {
       >
         <AlertDialogContent
           size="sm"
-          className="border-border bg-background text-foreground"
+          onCloseAutoFocus={(event) => {
+            event.preventDefault();
+            if (returnFocusRef.current?.isConnected)
+              returnFocusRef.current.focus();
+            else document.getElementById("main-content")?.focus();
+          }}
         >
           <AlertDialogHeader>
             <AlertDialogTitle>{options?.title}</AlertDialogTitle>

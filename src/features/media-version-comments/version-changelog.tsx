@@ -1,12 +1,12 @@
 "use client";
 
-import { useState } from "react";
-import { useConvexAuth, useMutation, useQuery } from "convex/react";
-import { api } from "../../../convex/_generated/api";
-import type { Doc, Id } from "../../../convex/_generated/dataModel";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { AiLockedNotice, useAiAccount } from "@/features/ai/ai-availability";
+import { useConvexAuth, useMutation, useQuery } from "convex/react";
+import { useState } from "react";
+import { api } from "../../../convex/_generated/api";
+import type { Doc, Id } from "../../../convex/_generated/dataModel";
 
 function ChangelogEditor({ row }: { row: Doc<"versionChangelogs"> }) {
   const [text, setText] = useState(row.text);
@@ -29,7 +29,7 @@ function ChangelogEditor({ row }: { row: Doc<"versionChangelogs"> }) {
   }
   return (
     <div className="mt-3 grid gap-2">
-      <p className="text-xs">
+      <p className="text-meta">
         AI-drafted
         {row.approvedText ? " · Approved copy in portal" : " · Private draft"}
       </p>
@@ -58,7 +58,7 @@ function ChangelogEditor({ row }: { row: Doc<"versionChangelogs"> }) {
           Approve for portal
         </Button>
       </div>
-      <div className="flex flex-wrap gap-3 text-xs">
+      <div className="flex flex-wrap gap-3 text-meta">
         {row.sourceRevisionIds.map((id, index) => (
           <a key={id} className="underline" href={`#revision-${id}`}>
             Revision {index + 1}
@@ -66,7 +66,7 @@ function ChangelogEditor({ row }: { row: Doc<"versionChangelogs"> }) {
         ))}
       </div>
       {message ? (
-        <p role="status" className="text-sm">
+        <p role="status" className="text-body">
           {message}
         </p>
       ) : null}
@@ -130,10 +130,10 @@ export function VersionChangelog({
   return (
     <section
       aria-label="Version changelog"
-      className="mt-4 dark:bg-black dark:text-white [&_button]:bg-transparent [&_button:hover]:bg-transparent [&_button]:dark:text-white [&_textarea]:dark:bg-black"
+      className="mt-4 text-[var(--text-primary)]"
     >
       <div className="flex flex-wrap items-center gap-2">
-        <h4 className="text-sm font-semibold">What changed</h4>
+        <h4 className="text-body font-semibold">What changed</h4>
         <Button
           variant="ghost"
           size="sm"
@@ -154,7 +154,7 @@ export function VersionChangelog({
         ) : null}
       </div>
       {run ? (
-        <p role="status" className="mt-2 text-xs">
+        <p role="status" className="mt-2 text-meta">
           {run.status === "queued"
             ? "Queued"
             : run.status === "running"
@@ -165,7 +165,7 @@ export function VersionChangelog({
         </p>
       ) : null}
       {error ? (
-        <p role="alert" className="mt-2 text-sm">
+        <p role="alert" className="mt-2 text-body">
           {error}
         </p>
       ) : null}

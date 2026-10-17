@@ -1,5 +1,5 @@
-import type { CSSProperties } from "react";
 import { Link } from "@tanstack/react-router";
+import type { CSSProperties } from "react";
 
 import { cn } from "@/lib/utils";
 
@@ -38,7 +38,7 @@ export function RelayBrand({
       to="/"
       aria-label="Go to Relay dashboard"
       className={cn(
-        "flex w-fit flex-col items-start gap-1 rounded-md text-inherit no-underline outline-none focus-visible:ring-2 focus-visible:ring-[var(--app-accent)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--app-canvas)]",
+        "flex w-fit flex-col items-start gap-1 rounded-md text-inherit no-underline",
         className
       )}
       style={style}
@@ -72,7 +72,7 @@ export function RelayBrand({
         />
       </span>
       {subtitle ? (
-        <span className="pl-0.5 text-[10px] font-semibold uppercase tracking-[0.11em] text-[var(--app-muted)]">
+        <span className="pl-1 text-meta font-semibold text-[var(--text-meta)]">
           {subtitle}
         </span>
       ) : null}

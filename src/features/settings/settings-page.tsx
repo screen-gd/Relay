@@ -1,19 +1,22 @@
 "use client";
 
-import { Fragment, useEffect, useRef, useState } from "react";
-import type { SalaryBatch, SettingsState, WorkItem } from "@/lib/types";
-import { PROJECT_TEMPLATES } from "@/lib/project-templates";
-import { getAnalyticsConsent, setAnalyticsConsent } from "@/lib/telemetry";
-import { downloadWorkspaceCsv, type CsvDataset } from "@/lib/export-csv";
-import { relay } from "@/app/design-system";
+import { useConfirm } from "@/components/confirm-dialog";
+import { MoreHorizontal as RelayActionMenuIcon } from "@/components/icons";
 import {
-  FillViewport,
-  MasterDetail,
-  PageContent,
-  PageHeader,
-  PageToolbar,
-  WorkspacePage,
-} from "@/components/workspace-page";
+  DropdownMenu as RelayActionMenu,
+  DropdownMenuContent as RelayActionMenuContent,
+  DropdownMenuItem as RelayActionMenuItem,
+  DropdownMenuTrigger as RelayActionMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+
+import {
+  Check,
+  CircleCheckBig,
+  Download,
+  Plus,
+  Upload,
+} from "@/components/icons";
+import { AccentPicker } from "@/components/ui/accent-picker";
 import { Button as OwnedButton } from "@/components/ui/button";
 import { FieldLayout } from "@/components/ui/field-layout";
 import { Input as OwnedInput } from "@/components/ui/input";
@@ -27,61 +30,56 @@ import {
 } from "@/components/ui/select";
 import { Switch as OwnedSwitch } from "@/components/ui/switch";
 import {
-  ToggleGroup as OwnedToggleGroup,
-  ToggleGroupItem as OwnedToggleGroupItem,
-} from "@/components/ui/toggle-group";
-import {
-  Bell,
-  Check,
-  CircleCheckBig,
-  Download,
-  FolderKanban,
-  Globe2,
-  History,
-  LockKeyhole,
-  Palette,
-  Plus,
-  Trash2,
-  Upload,
-} from "@/components/icons";
+  PageActions,
+  PageContent,
+  PageFilters,
+  PageHeader,
+  WorkspacePage,
+} from "@/components/workspace-page";
+import { notificationCopy } from "@/features/notifications/notification-copy";
 import { ProjectSelect } from "@/features/projects/project-select";
-import { cn } from "@/lib/utils";
-import { useSettingsController } from "./settings-controller";
-import { WorkspaceAiSettings } from "./workspace-ai-settings";
 import { RevisionScopeSettings } from "@/features/revision-scope/revision-scope-settings";
 import {
-  currencyLabels,
+  successColor,
+  warningColor,
+} from "@/features/routes/shared/route-theme";
+import type { ToastState } from "@/features/routes/shared/route-types";
+import { money } from "@/features/routes/utils/number-utils";
+import {
+  canonicalWorkType,
+  normalizedSalaryBatchAmount,
+  normalizedSalaryBatchSize,
+} from "@/features/routes/utils/work-type-utils";
+import type { TeamWorkspaceContract } from "@/features/team/team-types";
+import { downloadWorkspaceCsv, type CsvDataset } from "@/lib/export-csv";
+import { PROJECT_TEMPLATES } from "@/lib/project-templates";
+import { getAnalyticsConsent, setAnalyticsConsent } from "@/lib/telemetry";
+import type { SalaryBatch, SettingsState, WorkItem } from "@/lib/types";
+import { cn } from "@/lib/utils";
+import { useLocation, useNavigate } from "@tanstack/react-router";
+import { useEffect, useRef, useState } from "react";
+import {
+  SegmentedSetting,
+  SettingsLink,
+  SettingsPanel,
+} from "./settings-components";
+import { useSettingsController } from "./settings-controller";
+import {
   createDefaultSettings,
+  currencyLabels,
   currencyOptions,
   defaultSalaryBatchAmount,
   defaultSalaryBatchSize,
   defaultSettings,
 } from "./settings-defaults";
+import { settingsNavigation } from "./settings-navigation";
 import {
   nextProjectTagName,
   nextStageName,
   projectStageIssues,
   projectTagIssues,
 } from "./settings-utils";
-import { notificationCopy } from "@/features/notifications/notification-copy";
-import {
-  canonicalWorkType,
-  normalizedSalaryBatchAmount,
-  normalizedSalaryBatchSize,
-} from "@/features/routes/utils/work-type-utils";
-import { money } from "@/features/routes/utils/number-utils";
-import type { ToastState } from "@/features/routes/shared/route-types";
-import {
-  accent,
-  successColor,
-  warningColor,
-} from "@/features/routes/shared/route-theme";
-import type { TeamWorkspaceContract } from "@/features/team/team-types";
-import {
-  SegmentedSetting,
-  SettingsPanel,
-  SettingsLink,
-} from "./settings-components";
+import { WorkspaceAiSettings } from "./workspace-ai-settings";
 
 export function SettingsDesignPage({
   settings,
@@ -104,6 +102,7 @@ export function SettingsDesignPage({
   salaryBatches: readonly SalaryBatch[];
   canManageFinance: boolean;
 }) {
+  const confirm = useConfirm();
   const {
     exportBackup,
     importBackup,
@@ -123,22 +122,23 @@ export function SettingsDesignPage({
       teamWorkspace?.defaultWorkflowTemplateId ?? "relay-default-workflow",
     allowAllTeamProjects: teamWorkspace?.allowAllTeamProjects ?? false,
   }));
-  const [activeSection, setActiveSection] = useState<
-    | "workspace"
-    | "workflow"
-    | "notifications"
-    | "permissions"
-    | "integrations"
-    | "appearance"
-    | "regional"
-  >("workspace");
+  const [activeSection, setActiveSection] =
+    useState<(typeof settingsNavigation)[number]["id"]>("workspace");
+  const sectionHash = useLocation({ select: (location) => location.hash });
+  const navigate = useNavigate();
+  useEffect(() => {
+    const section =
+      settingsNavigation.find(({ id }) => id === sectionHash) ??
+      settingsNavigation[0];
+    setActiveSection(section.id);
+  }, [sectionHash]);
   const stageColors = [
-    "var(--workflow-stage-1)",
-    "var(--workflow-stage-2)",
-    "var(--workflow-stage-3)",
-    "var(--workflow-stage-4)",
-    "var(--workflow-stage-5)",
-    "var(--workflow-stage-6)",
+    "var(--status-info)",
+    "var(--status-warning)",
+    "var(--status-success)",
+    "var(--status-danger)",
+    "var(--text-meta)",
+    "var(--text-meta)",
   ];
   const stageIssues = projectStageIssues(settings.projectStages);
   const tagIssues = projectTagIssues(settings.projectTags);
@@ -224,14 +224,6 @@ export function SettingsDesignPage({
       );
     }
   }
-  const settingsNavigation = [
-    { id: "workspace" as const, label: "Workspace", icon: FolderKanban },
-    { id: "workflow" as const, label: "Workflow", icon: History },
-    { id: "permissions" as const, label: "Permissions", icon: LockKeyhole },
-    { id: "notifications" as const, label: "Notifications", icon: Bell },
-    { id: "appearance" as const, label: "Appearance", icon: Palette },
-    { id: "regional" as const, label: "Regional", icon: Globe2 },
-  ];
 
   function updateNotification(name: string, enabled: boolean) {
     setSettings({
@@ -250,7 +242,16 @@ export function SettingsDesignPage({
     setSettings({ ...settings, projectStages });
   }
 
-  function removeStage(index: number) {
+  async function removeStage(index: number) {
+    if (
+      !(await confirm({
+        title: "Remove workflow stage?",
+        description: settings.projectStages[index],
+        confirmLabel: "Remove",
+        destructive: true,
+      }))
+    )
+      return;
     setSettings({
       ...settings,
       projectStages: settings.projectStages.filter(
@@ -284,7 +285,16 @@ export function SettingsDesignPage({
     });
   }
 
-  function removeProjectTag(index: number) {
+  async function removeProjectTag(index: number) {
+    if (
+      !(await confirm({
+        title: "Remove project tag?",
+        description: settings.projectTags[index],
+        confirmLabel: "Remove",
+        destructive: true,
+      }))
+    )
+      return;
     const removed = settings.projectTags[index];
     const projectTags = settings.projectTags.filter(
       (_, tagIndex) => tagIndex !== index
@@ -314,7 +324,17 @@ export function SettingsDesignPage({
     });
   }
 
-  function resetSettings() {
+  async function resetSettings() {
+    if (
+      !(await confirm({
+        title: "Reset settings?",
+        description:
+          "Appearance, workflow and saved integrations will return to defaults.",
+        confirmLabel: "Reset",
+        destructive: true,
+      }))
+    )
+      return;
     setSettings({
       ...createDefaultSettings(),
       customClients: settings.customClients,
@@ -362,15 +382,15 @@ export function SettingsDesignPage({
   }
 
   return (
-    <WorkspacePage family="administration" mode="fill">
+    <WorkspacePage family="administration">
       <PageHeader
         title="Settings"
         description="Your workspace details, project defaults, and preferences."
         actions={
           <div className="flex flex-wrap justify-end gap-2">
-            <span className="inline-flex h-9 items-center gap-2 rounded-md px-3 text-xs font-medium text-[var(--app-muted)]">
+            <span className="inline-flex h-9 items-center gap-2 rounded-md px-3 text-meta font-medium text-[var(--text-meta)]">
               {settingsSaveState === "saved" ? (
-                <CircleCheckBig className="size-4 text-[var(--app-success)]" />
+                <CircleCheckBig className="size-4 text-[var(--status-success)]" />
               ) : null}
               <span role="status">
                 {settingsSaveState === "saving"
@@ -383,20 +403,36 @@ export function SettingsDesignPage({
               </span>
             </span>
             {settingsSaveState === "error" ? (
-              <OwnedButton variant="outline" onClick={retrySettingsSave}>
+              <OwnedButton variant="secondary" onClick={retrySettingsSave}>
                 Retry save
               </OwnedButton>
             ) : null}
+            <PageActions
+              more={[
+                {
+                  label: "Reset preferences",
+                  onSelect: resetSettings,
+                  destructive: true,
+                },
+              ]}
+            />
           </div>
         }
       />
-      <PageContent mode="fill" className="min-h-0">
-        <PageToolbar className="lg:hidden" data-family-toolbar="settings">
+      <PageContent>
+        <PageFilters className="lg:hidden" data-family-toolbar="settings">
           <OwnedSelect
             value={activeSection}
             onValueChange={(value) => {
               const section = settingsNavigation.find(({ id }) => id === value);
-              if (section) setActiveSection(section.id);
+              if (section) {
+                setActiveSection(section.id);
+                void navigate({
+                  to: "/settings",
+                  hash: section.id,
+                  replace: true,
+                });
+              }
             }}
           >
             <OwnedSelectTrigger
@@ -413,685 +449,599 @@ export function SettingsDesignPage({
               ))}
             </OwnedSelectContent>
           </OwnedSelect>
-        </PageToolbar>
-        <FillViewport
-          className="h-full min-h-0"
-          bodyLabel="Settings workspace"
-          bodyClassName="min-h-0 overflow-auto lg:overflow-hidden"
+        </PageFilters>
+
+        <section
+          aria-label={`${settingsNavigation.find((item) => item.id === activeSection)?.label} settings`}
+          className="grid min-w-0 content-start gap-(--space-section)"
+          tabIndex={0}
         >
-          <MasterDetail
-            className="h-full min-h-0 gap-0 overflow-hidden lg:gap-5"
-            master={
-              <nav
-                aria-label="Settings sections"
-                data-slot="settings-navigation"
-                data-navigation-kind="icon-index"
-                className="hidden h-full min-h-0 overflow-hidden text-card-foreground lg:flex lg:flex-col"
+          {activeSection === "workspace" ? (
+            <>
+              <SettingsPanel
+                id="workspace-profile"
+                title="Workspace profile"
+                subtitle="Shown on your projects, team pages, and client pages."
               >
-                <div className="grid flex-1 content-start gap-0.5 overflow-y-auto p-3">
-                  {settingsNavigation.map(({ id, label, icon: Icon }) => (
-                    <Fragment key={id}>
-                      {id === "workspace" || id === "notifications" ? (
-                        <p className="px-3 pt-4 pb-1.5 text-[11px] font-medium text-muted-foreground first:pt-1">
-                          {id === "workspace"
-                            ? "Workspace defaults"
-                            : "Personal preferences"}
-                        </p>
-                      ) : null}
-                      <OwnedButton
-                        key={id}
-                        type="button"
-                        variant="ghost"
-                        aria-current={activeSection === id ? "page" : undefined}
-                        onClick={() => setActiveSection(id)}
-                        className={cn(
-                          "h-9 w-full justify-start gap-3 rounded-md px-3 text-left text-[13px] font-medium",
-                          activeSection === id
-                            ? "bg-[var(--app-active)] text-foreground"
-                            : "text-muted-foreground hover:text-foreground"
-                        )}
-                      >
-                        <Icon className="size-4 shrink-0" aria-hidden="true" />
-                        {label}
-                      </OwnedButton>
-                    </Fragment>
-                  ))}
-                </div>
-                <div className="border-t border-border p-3">
-                  <OwnedButton
-                    variant="ghost"
-                    className="h-9 w-full justify-start px-3 text-[13px] text-destructive"
-                    onClick={resetSettings}
-                  >
-                    Reset preferences
-                  </OwnedButton>
-                </div>
-              </nav>
-            }
-            detail={
-              <section
-                aria-label={`${settingsNavigation.find((item) => item.id === activeSection)?.label} settings`}
-                className={cn(
-                  "grid h-full min-h-0 min-w-0 content-start overflow-y-auto p-3 sm:p-5 [&_[data-slot=content-section]]:border-0 [&_[data-slot=content-section]]:shadow-none",
-                  "gap-3"
-                )}
-                tabIndex={0}
-              >
-                {activeSection === "workspace" ? (
-                  <>
-                    <SettingsPanel
-                      id="workspace-profile"
-                      title="Workspace profile"
-                      subtitle="Shown on your projects, team pages, and client pages."
-                    >
-                      <div className="grid gap-3 sm:grid-cols-2">
-                        <FieldLayout label="Workspace name">
-                          <OwnedInput
-                            value={
-                              teamWorkspace
-                                ? workspaceDraft.name
-                                : settings.studioName
-                            }
-                            disabled={
-                              Boolean(teamWorkspace) && !canManageWorkspace
-                            }
-                            onChange={(event) =>
-                              teamWorkspace
-                                ? setWorkspaceDraft((current) => ({
-                                    ...current,
-                                    name: event.target.value,
-                                  }))
-                                : setSettings({
-                                    ...settings,
-                                    studioName: event.target.value,
-                                  })
-                            }
-                            onBlur={() => {
-                              if (teamWorkspace && canManageWorkspace)
-                                void saveWorkspaceSettings();
-                            }}
-                          />
-                        </FieldLayout>
-                        <FieldLayout label="Workspace owner">
-                          <OwnedInput
-                            value={settings.profileName}
-                            onChange={(event) =>
-                              setSettings({
-                                ...settings,
-                                profileName: event.target.value,
-                              })
-                            }
-                          />
-                        </FieldLayout>
-                        <FieldLayout
-                          label="Workspace role"
-                          className="sm:col-span-2"
-                        >
-                          <OwnedInput
-                            value={settings.profileTitle}
-                            onChange={(event) =>
-                              setSettings({
-                                ...settings,
-                                profileTitle: event.target.value,
-                              })
-                            }
-                          />
-                        </FieldLayout>
-                      </div>
-                      {teamWorkspace ? (
-                        <div className="mt-4 grid gap-3 sm:grid-cols-2">
-                          <ProjectSelect
-                            label="Workspace currency"
-                            value={workspaceDraft.currencyCode}
-                            options={["USD", "EUR", "GBP", "INR", "AED", "SAR"]}
-                            disabled={!canManageWorkspace}
-                            onChange={(value) => {
-                              setWorkspaceDraft((current) => ({
-                                ...current,
-                                currencyCode: value,
-                              }));
-                              if (canManageWorkspace)
-                                void saveWorkspaceSettings({
-                                  currencyCode: value,
-                                });
-                            }}
-                          />
-                          <FieldLayout label="Time zone">
-                            <OwnedInput
-                              value={workspaceDraft.timeZone}
-                              disabled={!canManageWorkspace}
-                              onChange={(event) =>
-                                setWorkspaceDraft((current) => ({
-                                  ...current,
-                                  timeZone: event.target.value,
-                                }))
-                              }
-                              onBlur={() => {
-                                if (canManageWorkspace)
-                                  void saveWorkspaceSettings();
-                              }}
-                            />
-                          </FieldLayout>
-                          <ProjectSelect
-                            label="Default workflow template"
-                            value={
-                              workflowTemplateIds.includes(
-                                workspaceDraft.defaultWorkflowTemplateId
-                              )
-                                ? workspaceDraft.defaultWorkflowTemplateId
-                                : (workflowTemplateIds[0] ??
-                                  "relay-default-workflow")
-                            }
-                            options={
-                              workflowTemplateIds.length
-                                ? workflowTemplateIds
-                                : ["relay-default-workflow"]
-                            }
-                            labels={workflowTemplateLabels}
-                            disabled={!canManageWorkspace}
-                            onChange={(value) => {
-                              setWorkspaceDraft((current) => ({
-                                ...current,
-                                defaultWorkflowTemplateId: value,
-                              }));
-                              if (canManageWorkspace)
-                                void saveWorkspaceSettings({
-                                  defaultWorkflowTemplateId: value,
-                                });
-                            }}
-                          />
-                          <OwnedLabel className="flex items-center justify-between gap-3 rounded-md border border-border px-3 py-2 text-sm font-normal">
-                            <span>
-                              <span className="block font-medium">
-                                Editors see all Team Projects
-                              </span>
-                              <span className="mt-0.5 block text-xs text-muted-foreground">
-                                Otherwise Editors see owned or assigned work.
-                              </span>
-                            </span>
-                            <OwnedSwitch
-                              checked={workspaceDraft.allowAllTeamProjects}
-                              disabled={!canManageWorkspace}
-                              aria-label="Editors see all Team Projects"
-                              onCheckedChange={(checked) => {
-                                setWorkspaceDraft((current) => ({
-                                  ...current,
-                                  allowAllTeamProjects: checked,
-                                }));
-                                if (canManageWorkspace)
-                                  void saveWorkspaceSettings({
-                                    allowAllTeamProjects: checked,
-                                  });
-                              }}
-                            />
-                          </OwnedLabel>
-                        </div>
-                      ) : null}
-                    </SettingsPanel>
-                    <WorkspaceAiSettings
-                      workspaceId={teamWorkspace?._id}
-                      notify={notify}
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <FieldLayout label="Workspace name">
+                    <OwnedInput
+                      value={
+                        teamWorkspace
+                          ? workspaceDraft.name
+                          : settings.studioName
+                      }
+                      disabled={Boolean(teamWorkspace) && !canManageWorkspace}
+                      onChange={(event) =>
+                        teamWorkspace
+                          ? setWorkspaceDraft((current) => ({
+                              ...current,
+                              name: event.target.value,
+                            }))
+                          : setSettings({
+                              ...settings,
+                              studioName: event.target.value,
+                            })
+                      }
+                      onBlur={() => {
+                        if (teamWorkspace && canManageWorkspace)
+                          void saveWorkspaceSettings();
+                      }}
                     />
-                    <RevisionScopeSettings
-                      workspaceId={teamWorkspace?._id}
-                      templates={workflowTemplateOptions}
-                      notify={notify}
-                    />
-                    <SettingsPanel
-                      id="workspace-backup"
-                      title="Backup and restore"
-                      subtitle="Export local Workspace data without account or connected-service details."
-                    >
-                      <div className="flex flex-wrap gap-2">
-                        <OwnedButton
-                          type="button"
-                          variant="outline"
-                          onClick={downloadBackup}
-                        >
-                          <Download aria-hidden="true" /> Export backup
-                        </OwnedButton>
-                        <OwnedButton
-                          type="button"
-                          variant="outline"
-                          onClick={() => backupInputRef.current?.click()}
-                        >
-                          <Upload aria-hidden="true" /> Import backup
-                        </OwnedButton>
-                        <OwnedInput
-                          ref={backupInputRef}
-                          type="file"
-                          accept="application/json,.json"
-                          className="sr-only"
-                          aria-label="Choose Relay backup"
-                          onChange={(event) => {
-                            const file = event.target.files?.[0];
-                            if (file) void restoreBackup(file);
-                          }}
-                        />
-                      </div>
-                      <p className="mt-3 text-xs text-muted-foreground">
-                        Import replaces Local Mode data. Cloud import works only
-                        when the Workspace has no projects, files, or Salary
-                        Batches.
-                      </p>
-                    </SettingsPanel>
-                    <SettingsPanel
-                      id="workspace-csv-export"
-                      title="Export CSV"
-                      subtitle="Spreadsheet files for projects, clients, and payments, ready to open in Excel or Sheets."
-                    >
-                      <div className="flex flex-wrap gap-2">
-                        <OwnedButton
-                          type="button"
-                          variant="outline"
-                          onClick={() => exportCsv("projects")}
-                        >
-                          <Download aria-hidden="true" /> Export projects CSV
-                        </OwnedButton>
-                        <OwnedButton
-                          type="button"
-                          variant="outline"
-                          onClick={() => exportCsv("clients")}
-                        >
-                          <Download aria-hidden="true" /> Export clients CSV
-                        </OwnedButton>
-                        <OwnedButton
-                          type="button"
-                          variant="outline"
-                          onClick={() => exportCsv("payments")}
-                        >
-                          <Download aria-hidden="true" /> Export payments CSV
-                        </OwnedButton>
-                      </div>
-                    </SettingsPanel>
-                    <SettingsPanel
-                      id="project-rules"
-                      title="Project defaults"
-                      subtitle="Project tags and payment batch settings for Local mode. Signed-in owners set salary terms under Reports > Payments."
-                    >
-                      <div className="grid gap-3">
-                        {settings.projectTags.map((tag, index) => (
-                          <div
-                            key={`project-tag-${index}`}
-                            className="flex min-w-0 items-end gap-3"
-                          >
-                            <FieldLayout
-                              label={`Tag ${index + 1}`}
-                              className="min-w-0 flex-1"
-                            >
-                              <OwnedInput
-                                value={tag}
-                                aria-label={`Project tag ${index + 1}`}
-                                aria-invalid={Boolean(tagIssues && !tag.trim())}
-                                onChange={(event) =>
-                                  updateProjectTag(index, event.target.value)
-                                }
-                              />
-                            </FieldLayout>
-                            <OwnedButton
-                              type="button"
-                              variant="ghost"
-                              size="icon"
-                              aria-label={`Remove project tag ${index + 1}`}
-                              title="Remove tag"
-                              disabled={settings.projectTags.length <= 1}
-                              onClick={() => removeProjectTag(index)}
-                              className="text-destructive hover:text-destructive"
-                            >
-                              <Trash2 aria-hidden="true" />
-                            </OwnedButton>
-                          </div>
-                        ))}
-                        <OwnedButton
-                          type="button"
-                          variant="outline"
-                          onClick={addProjectTag}
-                          className="justify-self-start"
-                        >
-                          <Plus aria-hidden="true" />
-                          Add Tag
-                        </OwnedButton>
-                        {tagIssues ? (
-                          <p role="alert" className="text-sm text-destructive">
-                            {tagIssues}
-                          </p>
-                        ) : null}
-                        <div className="grid gap-3 pt-1 md:grid-cols-3">
-                          <ProjectSelect
-                            label="Salary Tag"
-                            value={canonicalWorkType(
-                              settings.salaryWorkType,
-                              settings.projectTags
-                            )}
-                            options={settings.projectTags}
-                            onChange={(value) =>
-                              setSettings({
-                                ...settings,
-                                salaryWorkType: value,
-                              })
-                            }
-                          />
-                          <FieldLayout label="Videos per batch">
-                            <OwnedInput
-                              type="number"
-                              value={normalizedSalaryBatchSize(
-                                settings.salaryBatchSize
-                              )}
-                              min={1}
-                              step={1}
-                              onChange={(event) =>
-                                updateSalaryBatchSize(event.target.value)
-                              }
-                            />
-                          </FieldLayout>
-                          <FieldLayout label="Salary per batch">
-                            <OwnedInput
-                              type="number"
-                              value={normalizedSalaryBatchAmount(
-                                settings.salaryBatchAmount
-                              )}
-                              min={1}
-                              step={1}
-                              onChange={(event) =>
-                                updateSalaryBatchAmount(event.target.value)
-                              }
-                            />
-                          </FieldLayout>
-                        </div>
-                        <p className="text-xs text-muted-foreground">
-                          Completed projects tagged "
-                          {canonicalWorkType(
-                            settings.salaryWorkType,
-                            settings.projectTags
-                          )}
-                          " count toward{" "}
-                          {normalizedSalaryBatchSize(settings.salaryBatchSize)}{" "}
-                          videos per payment batch worth{" "}
-                          {money(
-                            normalizedSalaryBatchAmount(
-                              settings.salaryBatchAmount
-                            ),
-                            settings.currencyCode
-                          )}
-                          .
-                        </p>
-                      </div>
-                    </SettingsPanel>
-                  </>
-                ) : null}
-                {activeSection === "workflow" ? (
-                  <SettingsPanel
-                    id="workflow"
-                    title="Project Stages"
-                    subtitle="Default workflow stages for new work."
-                  >
-                    {settings.projectStages.map((stage, index) => (
-                      <div
-                        key={`project-stage-${index}`}
-                        className="flex items-center gap-3"
-                      >
-                        <span
-                          aria-hidden="true"
-                          className="size-2.5 shrink-0 rounded-full"
-                          style={{
-                            backgroundColor:
-                              stageColors[index % stageColors.length],
-                          }}
-                        />
-                        <OwnedInput
-                          value={stage}
-                          aria-label={`Workflow stage ${index + 1}`}
-                          aria-invalid={Boolean(stageIssues && !stage.trim())}
-                          onChange={(event) =>
-                            updateStage(index, event.target.value)
-                          }
-                          className="min-w-0 flex-1"
-                        />
-                        <OwnedButton
-                          type="button"
-                          variant="ghost"
-                          size="icon"
-                          aria-label={`Remove workflow stage ${index + 1}`}
-                          title="Remove stage"
-                          disabled={settings.projectStages.length <= 1}
-                          onClick={() => removeStage(index)}
-                          className="text-destructive hover:text-destructive"
-                        >
-                          <Trash2 aria-hidden="true" />
-                        </OwnedButton>
-                      </div>
-                    ))}
-                    <OwnedButton
-                      type="button"
-                      variant="outline"
-                      onClick={() =>
+                  </FieldLayout>
+                  <FieldLayout label="Workspace owner">
+                    <OwnedInput
+                      value={settings.profileName}
+                      onChange={(event) =>
                         setSettings({
                           ...settings,
-                          projectStages: [
-                            ...settings.projectStages,
-                            nextStageName(settings.projectStages),
-                          ],
+                          profileName: event.target.value,
                         })
                       }
-                      className="justify-self-start"
-                    >
-                      <Plus aria-hidden="true" />
-                      Add Stage
-                    </OwnedButton>
-                    {stageIssues ? (
-                      <p role="alert" className="text-sm text-destructive">
-                        {stageIssues}
-                      </p>
-                    ) : null}
-                  </SettingsPanel>
-                ) : null}
-                {activeSection === "notifications" ? (
-                  <SettingsPanel
-                    id="notifications"
-                    title="Notifications"
-                    subtitle="Choose which project and team updates notify you."
-                  >
-                    {Object.keys(defaultSettings.notifications).map((item) => (
-                      <div
-                        key={item}
-                        className="flex items-center justify-between gap-4 border-b py-3"
-                      >
-                        <div>
-                          <p className="text-sm font-semibold text-foreground">
-                            {item}
-                          </p>
-                          <p className="mt-0.5 text-xs text-muted-foreground">
-                            {notificationCopy(item)}
-                          </p>
-                        </div>
-                        <OwnedSwitch
-                          checked={Boolean(settings.notifications[item])}
-                          aria-label={`${item} notifications`}
-                          onCheckedChange={(checked) =>
-                            updateNotification(item, checked)
-                          }
-                        />
-                      </div>
-                    ))}
-                    <SettingsLink
-                      label="Toggle weekly summary"
-                      onClick={() =>
-                        updateNotification(
-                          "Weekly summary",
-                          !settings.notifications["Weekly summary"]
-                        )
+                    />
+                  </FieldLayout>
+                  <FieldLayout label="Workspace role" className="sm:col-span-2">
+                    <OwnedInput
+                      value={settings.profileTitle}
+                      onChange={(event) =>
+                        setSettings({
+                          ...settings,
+                          profileTitle: event.target.value,
+                        })
                       }
                     />
-                    <div className="flex items-center justify-between gap-4 border-t pt-4">
-                      <div>
-                        <p className="text-sm font-semibold">
-                          Optional product analytics
-                        </p>
-                        <p className="mt-0.5 text-xs text-muted-foreground">
-                          Anonymous feature-use events only. Work content and
-                          money never leave the privacy boundary.
-                        </p>
-                      </div>
+                  </FieldLayout>
+                </div>
+                {teamWorkspace ? (
+                  <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                    <ProjectSelect
+                      label="Workspace currency"
+                      value={workspaceDraft.currencyCode}
+                      options={["USD", "EUR", "GBP", "INR", "AED", "SAR"]}
+                      disabled={!canManageWorkspace}
+                      onChange={(value) => {
+                        setWorkspaceDraft((current) => ({
+                          ...current,
+                          currencyCode: value,
+                        }));
+                        if (canManageWorkspace)
+                          void saveWorkspaceSettings({
+                            currencyCode: value,
+                          });
+                      }}
+                    />
+                    <FieldLayout label="Time zone">
+                      <OwnedInput
+                        value={workspaceDraft.timeZone}
+                        disabled={!canManageWorkspace}
+                        onChange={(event) =>
+                          setWorkspaceDraft((current) => ({
+                            ...current,
+                            timeZone: event.target.value,
+                          }))
+                        }
+                        onBlur={() => {
+                          if (canManageWorkspace) void saveWorkspaceSettings();
+                        }}
+                      />
+                    </FieldLayout>
+                    <ProjectSelect
+                      label="Default workflow template"
+                      value={
+                        workflowTemplateIds.includes(
+                          workspaceDraft.defaultWorkflowTemplateId
+                        )
+                          ? workspaceDraft.defaultWorkflowTemplateId
+                          : (workflowTemplateIds[0] ?? "relay-default-workflow")
+                      }
+                      options={
+                        workflowTemplateIds.length
+                          ? workflowTemplateIds
+                          : ["relay-default-workflow"]
+                      }
+                      labels={workflowTemplateLabels}
+                      disabled={!canManageWorkspace}
+                      onChange={(value) => {
+                        setWorkspaceDraft((current) => ({
+                          ...current,
+                          defaultWorkflowTemplateId: value,
+                        }));
+                        if (canManageWorkspace)
+                          void saveWorkspaceSettings({
+                            defaultWorkflowTemplateId: value,
+                          });
+                      }}
+                    />
+                    <OwnedLabel className="flex items-center justify-between gap-3 font-normal">
+                      <span>
+                        <span className="block font-medium">
+                          Editors see all Team Projects
+                        </span>
+                        <span className="mt-1 block text-meta text-[var(--text-meta)]">
+                          Otherwise Editors see owned or assigned work.
+                        </span>
+                      </span>
                       <OwnedSwitch
-                        checked={optionalAnalytics}
-                        aria-label="Optional product analytics"
+                        checked={workspaceDraft.allowAllTeamProjects}
+                        disabled={!canManageWorkspace}
+                        aria-label="Editors see all Team Projects"
                         onCheckedChange={(checked) => {
-                          setOptionalAnalytics(checked);
-                          setAnalyticsConsent(checked ? "granted" : "denied");
+                          setWorkspaceDraft((current) => ({
+                            ...current,
+                            allowAllTeamProjects: checked,
+                          }));
+                          if (canManageWorkspace)
+                            void saveWorkspaceSettings({
+                              allowAllTeamProjects: checked,
+                            });
                         }}
                       />
-                    </div>
-                  </SettingsPanel>
+                    </OwnedLabel>
+                  </div>
                 ) : null}
-                {activeSection === "permissions" ? (
-                  <SettingsPanel
-                    id="permissions"
-                    title="Team Roles & Permissions"
-                    subtitle="Convex enforces these fixed workspace roles on every shared action."
+              </SettingsPanel>
+              <WorkspaceAiSettings
+                workspaceId={teamWorkspace?._id}
+                notify={notify}
+              />
+              <RevisionScopeSettings
+                workspaceId={teamWorkspace?._id}
+                templates={workflowTemplateOptions}
+                notify={notify}
+              />
+              <SettingsPanel
+                id="workspace-backup"
+                title="Backup and restore"
+                subtitle="Export local Workspace data without account or connected-service details."
+              >
+                <div className="flex flex-wrap gap-2">
+                  <OwnedButton
+                    type="button"
+                    variant="secondary"
+                    onClick={downloadBackup}
                   >
-                    <div className="grid gap-3 lg:grid-cols-3">
-                      {rolePolicy.map(({ role, permissions }) => (
-                        <div
-                          key={role}
-                          className="border-t-2 bg-muted p-4"
-                          style={{
-                            borderTopColor:
-                              role === "Owner"
-                                ? accent
-                                : role === "Editor"
-                                  ? warningColor
-                                  : successColor,
-                          }}
-                        >
-                          <div className="flex items-center gap-2">
-                            <span
-                              aria-hidden="true"
-                              className="size-2 rounded-full"
-                              style={{
-                                backgroundColor:
-                                  role === "Owner"
-                                    ? accent
-                                    : role === "Editor"
-                                      ? warningColor
-                                      : successColor,
-                              }}
-                            />
-                            <h3 className="text-sm font-semibold text-foreground">
-                              {role}
-                            </h3>
-                          </div>
-                          <ul className="mt-3 grid gap-2">
-                            {permissions.map((permission) => (
-                              <li
-                                key={permission}
-                                className="flex items-start gap-2 text-xs leading-5 text-muted-foreground"
-                              >
-                                <Check
-                                  aria-hidden="true"
-                                  className="mt-0.5 size-4 shrink-0 text-primary"
-                                />
-                                <span>{permission}</span>
-                              </li>
-                            ))}
-                          </ul>
-                        </div>
-                      ))}
-                    </div>
-                    <p className="text-xs text-muted-foreground">
-                      Clients collaborate through private Client Portal links
-                      and are not workspace members.
-                    </p>
-                  </SettingsPanel>
-                ) : null}
-                {activeSection === "appearance" ? (
-                  <SettingsPanel
-                    id="appearance"
-                    title="Appearance"
-                    subtitle="Customize how Relay looks and feels for your tracker."
+                    <Download aria-hidden="true" /> Export backup
+                  </OwnedButton>
+                  <OwnedButton
+                    type="button"
+                    variant="secondary"
+                    onClick={() => backupInputRef.current?.click()}
                   >
-                    <div className="grid items-end gap-5 md:grid-cols-2">
-                      <SegmentedSetting
-                        label="Theme"
-                        options={["Light", "Dark", "System"]}
-                        active={settings.theme}
-                        onChange={(value) =>
-                          setSettings({ ...settings, theme: value })
-                        }
-                      />
-                      <div>
-                        <p className="mb-2 text-xs font-medium text-muted-foreground">
-                          Accent Color
-                        </p>
-                        <OwnedToggleGroup
-                          type="single"
-                          value={settings.accentColor}
-                          aria-label="Accent Color"
-                          onValueChange={(color) => {
-                            if (color)
-                              setSettings({ ...settings, accentColor: color });
-                          }}
-                          className="h-auto gap-3 rounded-none bg-transparent p-0"
-                        >
-                          {[
-                            relay.color.lime,
-                            relay.color.teal,
-                            relay.color.cyan,
-                            relay.color.sky,
-                            relay.color.indigo,
-                            relay.color.pink,
-                            relay.color.deepTeal,
-                          ].map((color) => (
-                            <OwnedToggleGroupItem
-                              key={color}
-                              value={color}
-                              aria-label={`Use accent color ${color}`}
-                              className="size-7 cursor-pointer rounded-full border p-0 transition-shadow hover:opacity-90 data-[state=on]:border-foreground data-[state=on]:ring-2 data-[state=on]:ring-foreground data-[state=on]:ring-offset-2 data-[state=on]:ring-offset-card data-[state=off]:border-border"
-                              style={{ backgroundColor: color }}
-                            />
-                          ))}
-                        </OwnedToggleGroup>
-                      </div>
-                    </div>
-                  </SettingsPanel>
-                ) : null}
-                {activeSection === "regional" ? (
-                  <SettingsPanel
-                    id="regional"
-                    title="Regional Preferences"
-                    subtitle="Choose the currency used for earnings and payout totals."
+                    <Upload aria-hidden="true" /> Import backup
+                  </OwnedButton>
+                  <OwnedInput
+                    ref={backupInputRef}
+                    type="file"
+                    accept="application/json,.json"
+                    className="sr-only"
+                    aria-label="Choose Relay backup"
+                    onChange={(event) => {
+                      const file = event.target.files?.[0];
+                      if (file) void restoreBackup(file);
+                    }}
+                  />
+                </div>
+                <p className="mt-3 text-meta text-[var(--text-meta)]">
+                  Import replaces Local Mode data. Cloud import works only when
+                  the Workspace has no projects, files, or Salary Batches.
+                </p>
+              </SettingsPanel>
+              <SettingsPanel
+                id="workspace-csv-export"
+                title="Export CSV"
+                subtitle="Spreadsheet files for projects, clients, and payments, ready to open in Excel or Sheets."
+              >
+                <div className="flex flex-wrap gap-2">
+                  <OwnedButton
+                    type="button"
+                    variant="secondary"
+                    onClick={() => exportCsv("projects")}
                   >
-                    <div className="grid gap-5 md:grid-cols-2">
-                      <ProjectSelect
-                        label="Currency"
-                        value={
-                          currencyLabels[settings.currencyCode] ??
-                          settings.currencyCode
-                        }
-                        options={currencyOptions.map(
-                          (code) => currencyLabels[code]
-                        )}
-                        onChange={(value) => {
-                          const nextCode =
-                            Object.entries(currencyLabels).find(
-                              ([, label]) => label === value
-                            )?.[0] ?? settings.currencyCode;
-                          setSettings({ ...settings, currencyCode: nextCode });
-                          notify(`Currency changed to ${nextCode}.`, "info");
-                        }}
-                      />
-                      <FieldLayout label="Preview">
+                    <Download aria-hidden="true" /> Export projects CSV
+                  </OwnedButton>
+                  <OwnedButton
+                    type="button"
+                    variant="secondary"
+                    onClick={() => exportCsv("clients")}
+                  >
+                    <Download aria-hidden="true" /> Export clients CSV
+                  </OwnedButton>
+                  <OwnedButton
+                    type="button"
+                    variant="secondary"
+                    onClick={() => exportCsv("payments")}
+                  >
+                    <Download aria-hidden="true" /> Export payments CSV
+                  </OwnedButton>
+                </div>
+              </SettingsPanel>
+              <SettingsPanel
+                id="project-rules"
+                title="Project defaults"
+                subtitle="Project tags and payment batch settings for Local mode. Signed-in owners set salary terms under Reports > Payments."
+              >
+                <div className="grid gap-3">
+                  {settings.projectTags.map((tag, index) => (
+                    <div
+                      key={`project-tag-${index}`}
+                      className="flex min-w-0 items-end gap-3"
+                    >
+                      <FieldLayout
+                        label={`Tag ${index + 1}`}
+                        className="min-w-0 flex-1"
+                      >
                         <OwnedInput
-                          value={money(12500, settings.currencyCode)}
-                          readOnly
+                          value={tag}
+                          aria-label={`Project tag ${index + 1}`}
+                          aria-invalid={Boolean(tagIssues && !tag.trim())}
+                          onChange={(event) =>
+                            updateProjectTag(index, event.target.value)
+                          }
                         />
                       </FieldLayout>
+
+                      <RelayActionMenu>
+                        <RelayActionMenuTrigger asChild>
+                          <OwnedButton
+                            type="button"
+                            variant="ghost"
+                            size="icon-sm"
+                            aria-label={`Remove project tag ${index + 1}`}
+                            disabled={settings.projectTags.length <= 1}
+                          >
+                            <RelayActionMenuIcon aria-hidden="true" />
+                          </OwnedButton>
+                        </RelayActionMenuTrigger>
+                        <RelayActionMenuContent align="end">
+                          <RelayActionMenuItem
+                            variant="destructive"
+                            disabled={settings.projectTags.length <= 1}
+                            onSelect={() => removeProjectTag(index)}
+                          >{`Remove project tag ${index + 1}`}</RelayActionMenuItem>
+                        </RelayActionMenuContent>
+                      </RelayActionMenu>
                     </div>
-                  </SettingsPanel>
-                ) : null}
-              </section>
-            }
-          />
-        </FillViewport>
+                  ))}
+                  <OwnedButton
+                    type="button"
+                    variant="secondary"
+                    onClick={addProjectTag}
+                    className="justify-self-start"
+                  >
+                    <Plus aria-hidden="true" />
+                    Add Tag
+                  </OwnedButton>
+                  {tagIssues ? (
+                    <p
+                      role="alert"
+                      className="text-body text-[var(--status-danger)]"
+                    >
+                      {tagIssues}
+                    </p>
+                  ) : null}
+                  <div className="grid gap-3 pt-1 md:grid-cols-3">
+                    <ProjectSelect
+                      label="Salary Tag"
+                      value={canonicalWorkType(
+                        settings.salaryWorkType,
+                        settings.projectTags
+                      )}
+                      options={settings.projectTags}
+                      onChange={(value) =>
+                        setSettings({
+                          ...settings,
+                          salaryWorkType: value,
+                        })
+                      }
+                    />
+                    <FieldLayout label="Videos per batch">
+                      <OwnedInput
+                        type="number"
+                        value={normalizedSalaryBatchSize(
+                          settings.salaryBatchSize
+                        )}
+                        min={1}
+                        step={1}
+                        onChange={(event) =>
+                          updateSalaryBatchSize(event.target.value)
+                        }
+                      />
+                    </FieldLayout>
+                    <FieldLayout label="Salary per batch">
+                      <OwnedInput
+                        type="number"
+                        value={normalizedSalaryBatchAmount(
+                          settings.salaryBatchAmount
+                        )}
+                        min={1}
+                        step={1}
+                        onChange={(event) =>
+                          updateSalaryBatchAmount(event.target.value)
+                        }
+                      />
+                    </FieldLayout>
+                  </div>
+                  <p className="text-meta text-[var(--text-meta)]">
+                    Completed projects tagged "
+                    {canonicalWorkType(
+                      settings.salaryWorkType,
+                      settings.projectTags
+                    )}
+                    " count toward{" "}
+                    {normalizedSalaryBatchSize(settings.salaryBatchSize)} videos
+                    per payment batch worth{" "}
+                    {money(
+                      normalizedSalaryBatchAmount(settings.salaryBatchAmount),
+                      settings.currencyCode
+                    )}
+                    .
+                  </p>
+                </div>
+              </SettingsPanel>
+            </>
+          ) : null}
+          {activeSection === "workflow" ? (
+            <SettingsPanel
+              id="workflow"
+              title="Project Stages"
+              subtitle="Default workflow stages for new work."
+            >
+              {settings.projectStages.map((stage, index) => (
+                <div
+                  key={`project-stage-${index}`}
+                  className="flex items-center gap-3"
+                >
+                  <span
+                    aria-hidden="true"
+                    className="size-1.5 shrink-0 rounded-full"
+                    style={{
+                      backgroundColor: stageColors[index % stageColors.length],
+                    }}
+                  />
+                  <OwnedInput
+                    value={stage}
+                    aria-label={`Workflow stage ${index + 1}`}
+                    aria-invalid={Boolean(stageIssues && !stage.trim())}
+                    onChange={(event) => updateStage(index, event.target.value)}
+                    className="min-w-0 flex-1"
+                  />
+
+                  <RelayActionMenu>
+                    <RelayActionMenuTrigger asChild>
+                      <OwnedButton
+                        type="button"
+                        variant="ghost"
+                        size="icon-sm"
+                        aria-label={`Remove workflow stage ${index + 1}`}
+                        disabled={settings.projectStages.length <= 1}
+                      >
+                        <RelayActionMenuIcon aria-hidden="true" />
+                      </OwnedButton>
+                    </RelayActionMenuTrigger>
+                    <RelayActionMenuContent align="end">
+                      <RelayActionMenuItem
+                        variant="destructive"
+                        disabled={settings.projectStages.length <= 1}
+                        onSelect={() => removeStage(index)}
+                      >{`Remove workflow stage ${index + 1}`}</RelayActionMenuItem>
+                    </RelayActionMenuContent>
+                  </RelayActionMenu>
+                </div>
+              ))}
+              <OwnedButton
+                type="button"
+                variant="secondary"
+                onClick={() =>
+                  setSettings({
+                    ...settings,
+                    projectStages: [
+                      ...settings.projectStages,
+                      nextStageName(settings.projectStages),
+                    ],
+                  })
+                }
+                className="justify-self-start"
+              >
+                <Plus aria-hidden="true" />
+                Add Stage
+              </OwnedButton>
+              {stageIssues ? (
+                <p
+                  role="alert"
+                  className="text-body text-[var(--status-danger)]"
+                >
+                  {stageIssues}
+                </p>
+              ) : null}
+            </SettingsPanel>
+          ) : null}
+          {activeSection === "notifications" ? (
+            <SettingsPanel
+              id="notifications"
+              title="Notifications"
+              subtitle="Choose which project and team updates notify you."
+            >
+              {Object.keys(defaultSettings.notifications).map((item) => (
+                <div
+                  key={item}
+                  className="flex items-center justify-between gap-4 border-t border-[var(--border-hairline)] py-3 first:border-t-0 first:pt-0"
+                >
+                  <div>
+                    <p className="text-body font-medium text-[var(--text-primary)]">
+                      {item}
+                    </p>
+                    <p className="mt-1 text-meta text-[var(--text-meta)]">
+                      {notificationCopy(item)}
+                    </p>
+                  </div>
+                  <OwnedSwitch
+                    checked={Boolean(settings.notifications[item])}
+                    aria-label={`${item} notifications`}
+                    onCheckedChange={(checked) =>
+                      updateNotification(item, checked)
+                    }
+                  />
+                </div>
+              ))}
+              <SettingsLink
+                label="Toggle weekly summary"
+                onClick={() =>
+                  updateNotification(
+                    "Weekly summary",
+                    !settings.notifications["Weekly summary"]
+                  )
+                }
+              />
+              <div className="mt-4 flex items-center justify-between gap-4 border-t border-[var(--border-hairline)] pt-4">
+                <div>
+                  <p className="text-body font-medium">
+                    Optional product analytics
+                  </p>
+                  <p className="mt-1 text-meta text-[var(--text-meta)]">
+                    Anonymous feature-use events only. Work content and money
+                    never leave the privacy boundary.
+                  </p>
+                </div>
+                <OwnedSwitch
+                  checked={optionalAnalytics}
+                  aria-label="Optional product analytics"
+                  onCheckedChange={(checked) => {
+                    setOptionalAnalytics(checked);
+                    setAnalyticsConsent(checked ? "granted" : "denied");
+                  }}
+                />
+              </div>
+            </SettingsPanel>
+          ) : null}
+          {activeSection === "permissions" ? (
+            <SettingsPanel
+              id="permissions"
+              title="Team Roles & Permissions"
+              subtitle="Convex enforces these fixed workspace roles on every shared action."
+            >
+              <div className="grid lg:grid-cols-3">
+                {rolePolicy.map(({ role, permissions }) => (
+                  <div
+                    key={role}
+                    className="border-t border-[var(--border-hairline)] py-4 first:border-t-0 first:pt-0 lg:border-l lg:border-t-0 lg:pl-6 lg:first:border-l-0 lg:first:pl-0"
+                  >
+                    <div className="flex items-center gap-2">
+                      <span
+                        aria-hidden="true"
+                        className="size-1.5 rounded-full"
+                        style={{
+                          backgroundColor:
+                            role === "Owner"
+                              ? "var(--text-meta)"
+                              : role === "Editor"
+                                ? warningColor
+                                : successColor,
+                        }}
+                      />
+                      <h3 className="text-body font-medium text-[var(--text-primary)]">
+                        {role}
+                      </h3>
+                    </div>
+                    <ul className="mt-3 grid gap-2">
+                      {permissions.map((permission) => (
+                        <li
+                          key={permission}
+                          className="flex items-start gap-2 text-body text-[var(--text-primary)]"
+                        >
+                          <Check
+                            aria-hidden="true"
+                            className="mt-1 size-4 shrink-0 text-[var(--text-primary)]"
+                          />
+                          <span>{permission}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                ))}
+              </div>
+              <p className="text-meta text-[var(--text-meta)]">
+                Clients collaborate through private Client Portal links and are
+                not workspace members.
+              </p>
+            </SettingsPanel>
+          ) : null}
+          {activeSection === "appearance" ? (
+            <SettingsPanel
+              id="appearance"
+              title="Appearance"
+              subtitle="Customize how Relay looks and feels for your tracker."
+            >
+              <div className="grid items-end gap-4 md:grid-cols-2">
+                <SegmentedSetting
+                  label="Theme"
+                  options={["Light", "Dark", "System"]}
+                  active={settings.theme}
+                  onChange={(value) =>
+                    setSettings({ ...settings, theme: value })
+                  }
+                />
+                <AccentPicker
+                  value={settings.accentColor}
+                  onChange={(accentColor) =>
+                    setSettings({ ...settings, accentColor })
+                  }
+                />
+              </div>
+            </SettingsPanel>
+          ) : null}
+          {activeSection === "regional" ? (
+            <SettingsPanel
+              id="regional"
+              title="Regional Preferences"
+              subtitle="Choose the currency used for earnings and payout totals."
+            >
+              <div className="grid gap-4 md:grid-cols-2">
+                <ProjectSelect
+                  label="Currency"
+                  value={
+                    currencyLabels[settings.currencyCode] ??
+                    settings.currencyCode
+                  }
+                  options={currencyOptions.map((code) => currencyLabels[code])}
+                  onChange={(value) => {
+                    const nextCode =
+                      Object.entries(currencyLabels).find(
+                        ([, label]) => label === value
+                      )?.[0] ?? settings.currencyCode;
+                    setSettings({ ...settings, currencyCode: nextCode });
+                    notify(`Currency changed to ${nextCode}.`, "info");
+                  }}
+                />
+                <FieldLayout label="Preview">
+                  <OwnedInput
+                    value={money(12500, settings.currencyCode)}
+                    readOnly
+                  />
+                </FieldLayout>
+              </div>
+            </SettingsPanel>
+          ) : null}
+        </section>
       </PageContent>
     </WorkspacePage>
   );

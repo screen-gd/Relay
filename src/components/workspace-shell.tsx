@@ -1,3 +1,4 @@
+import { RelayBrand } from "@/app/relay-brand";
 import {
   Accessibility,
   Bell,
@@ -13,64 +14,26 @@ import {
   Info,
   LayoutDashboard,
   Library,
-  PanelLeft,
   LockKeyhole,
   LogIn,
   LogOut,
   Mail,
   MessageSquarePlus,
   MessageSquareText,
-  MoreHorizontal,
+  PanelLeft,
   Plus,
+  ScrollText,
   Search,
   Settings,
-  Sparkles,
   ShieldCheck,
-  ScrollText,
+  Sparkles,
+  UserPlus,
   Users,
   UsersRound,
-  UserPlus,
   Workflow,
 } from "@/components/icons";
-import { AnimatePresence, motion } from "motion/react";
-import { Link, useLocation, useNavigate } from "@tanstack/react-router";
-import {
-  createContext,
-  useContext,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-  type ComponentProps,
-  type ReactNode,
-  type RefObject,
-} from "react";
-import { useData } from "@/lib/data-context";
-import { marketingSiteUrl } from "@/lib/site";
-import { useOptionalAuth } from "@/lib/optional-auth";
-import type { SettingsState } from "@/lib/types";
-import type { FileRouteTypes } from "@/routeTree.gen";
-import type { SearchRecord } from "@/features/workspace-discovery/workspace-discovery";
-import { FeedbackDialog } from "@/features/feedback/feedback-button";
-import { AiToolsMenu } from "@/features/ai/ai-tools-menu";
-import { AiBadge, useAiAccount } from "@/features/ai/ai-availability";
-import {
-  aiToolHref,
-  aiTools,
-  aiToolsForPage,
-  featuredAiToolIds,
-} from "@/features/ai/ai-tools";
-import { useHydratedReducedMotion } from "@/lib/motion";
-import { cn } from "@/lib/utils";
-import { RelayBrand } from "@/app/relay-brand";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbList,
-  BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb";
 import {
   Command,
   CommandEmpty,
@@ -82,8 +45,6 @@ import {
   CommandShortcut,
 } from "@/components/ui/command";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
-import { Kbd } from "@/components/ui/kbd";
-import { PageHeaderContext } from "@/components/workspace-page/page-header";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -92,6 +53,11 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Kbd } from "@/components/ui/kbd";
+import {
+  SegmentedLink,
+  SegmentedNavigation,
+} from "@/components/ui/segmented-navigation";
 import {
   Sheet,
   SheetContent,
@@ -104,6 +70,42 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { PageBar } from "@/components/workspace-page/page-bar";
+import { useAiAccount } from "@/features/ai/ai-availability";
+import {
+  aiToolHref,
+  aiTools,
+  aiToolsForPage,
+  featuredAiToolIds,
+} from "@/features/ai/ai-tools";
+import { AiToolsMenu } from "@/features/ai/ai-tools-menu";
+import { FeedbackDialog } from "@/features/feedback/feedback-button";
+import type { SearchRecord } from "@/features/workspace-discovery/workspace-discovery";
+import {
+  buildHubNavigation,
+  type WorkspaceNavigationData,
+} from "@/features/workspace/workspace-navigation";
+import { useData } from "@/lib/data-context";
+import { useHydratedReducedMotion } from "@/lib/motion";
+import { useOptionalAuth } from "@/lib/optional-auth";
+import { marketingSiteUrl } from "@/lib/site";
+import type { SettingsState } from "@/lib/types";
+import { cn } from "@/lib/utils";
+import type { FileRouteTypes } from "@/routeTree.gen";
+import { Link, useLocation, useNavigate } from "@tanstack/react-router";
+import { motion } from "motion/react";
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useId,
+  useMemo,
+  useRef,
+  useState,
+  type ComponentProps,
+  type ReactNode,
+  type RefObject,
+} from "react";
 
 export type ShellPage =
   | "dashboard"
@@ -257,30 +259,21 @@ export function workspacePageForPath(pathname: string): ShellPage {
   );
 }
 
-/** The sidebar keeps five work hubs plus Team and Settings. */
-const sidebarGroups: RouteGroup[] = [
-  {
-    label: "Workspace",
-    items: routesFor([
-      "dashboard",
-      "projects",
-      "clients",
-      "feedback",
-      "reports",
-    ]),
-  },
-  {
-    label: "Account",
-    items: routesFor(["team", "settings"]),
-  },
-];
-
-const hubPages: ShellPage[] = sidebarGroups.flatMap((group) =>
-  group.items.map((item) => item.page)
-);
-const hubRoutes = sidebarGroups.flatMap((group) => group.items);
+/** The rail's seven routes: the five work hubs, then Team and Settings. */
+const hubRoutes = routesFor([
+  "dashboard",
+  "projects",
+  "clients",
+  "feedback",
+  "reports",
+  "team",
+  "settings",
+]);
+const hubPages: ShellPage[] = hubRoutes.map((item) => item.page);
 const mobileRoutes = hubRoutes.filter((item) =>
-  ["dashboard", "projects", "clients", "feedback"].includes(item.page)
+  ["dashboard", "projects", "clients", "feedback", "reports"].includes(
+    item.page
+  )
 );
 /** Pages that live under a hub instead of the sidebar. */
 const contextPages: Partial<Record<ShellPage, ShellPage[]>> = {
@@ -333,11 +326,6 @@ const compactSupportLinks: readonly SupportLink[] = [
   },
 ];
 
-const shellTransition = {
-  duration: 0.22,
-  ease: [0.22, 1, 0.36, 1] as const,
-};
-
 const quickRouteShortcuts: Partial<Record<string, StaticPath>> = {
   d: "/",
   c: "/calendar",
@@ -359,7 +347,7 @@ function routeIsActive(currentPage: ShellPage, item: RouteItem) {
   return hubPageForPage(currentPage) === item.page;
 }
 
-/** Hubs with more than their own page get a panel and a tab strip. */
+/** Hubs with several pages share the page bar's segmented navigation. */
 function hubHasPages(hub: ShellPage) {
   return hubChildren(hub).length > 1;
 }
@@ -372,45 +360,20 @@ function hasContextTabs(page: ShellPage) {
   );
 }
 
-function ContextNavigation({
-  page,
-  onActionsHost,
-}: {
-  page: ShellPage;
-  /** Receives the element page actions render into, or null when unmounted. */
-  onActionsHost: (element: HTMLElement | null) => void;
-}) {
+function ContextNavigation({ page }: { page: ShellPage }) {
   const hub = hubRoutes.find((item) => item.page === hubPageForPage(page));
   const items = hub && hasContextTabs(page) ? hubChildren(hub.page) : [];
-  // Keep the shell informed when the strip leaves the tree.
-  useEffect(() => {
-    if (!items.length) onActionsHost(null);
-  }, [items.length, onActionsHost]);
   if (!hub || !items.length) return null;
   return (
-    <div className="flex shrink-0 items-center justify-between gap-4 border-b border-[var(--app-border)] px-5">
-      <nav
-        aria-label={`${hub.label} navigation`}
-        className="flex min-w-0 flex-wrap gap-5"
-      >
-        {items.map((item) => (
-          <Link
-            key={item.page}
-            to={item.href}
-            aria-current={page === item.page ? "page" : undefined}
-            className={cn(
-              "-mb-px flex min-h-11 items-center border-b-2 text-[13px] font-medium outline-none transition-colors duration-150 focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)]",
-              page === item.page
-                ? "border-[var(--app-ink)] text-[var(--app-ink)]"
-                : "border-transparent text-[var(--app-muted)] hover:text-[var(--app-ink)]"
-            )}
-          >
-            {item.label}
+    <SegmentedNavigation aria-label={`${hub.label} navigation`}>
+      {items.map((item) => (
+        <SegmentedLink key={item.page} active={page === item.page} asChild>
+          <Link to={item.href}>
+            <span className="relative">{item.label}</span>
           </Link>
-        ))}
-      </nav>
-      <div ref={onActionsHost} className="flex shrink-0 items-center py-1.5" />
-    </div>
+        </SegmentedLink>
+      ))}
+    </SegmentedNavigation>
   );
 }
 
@@ -438,6 +401,7 @@ export function WorkspaceShell({
   pageTitle,
   notificationSlot,
   searchRecords = [],
+  navigationData,
   children,
 }: {
   page: ShellPage;
@@ -447,15 +411,13 @@ export function WorkspaceShell({
   pageTitle?: string;
   notificationSlot?: ReactNode;
   searchRecords?: readonly SearchRecord[];
+  navigationData: WorkspaceNavigationData;
   children: ReactNode;
 }) {
   const [commandOpen, setCommandOpen] = useState(false);
   const [moreOpen, setMoreOpen] = useState(false);
   const [breadcrumb, setBreadcrumb] = useState<string | null>(null);
   const [sidebarOpen, toggleSidebar] = useSidebarOpen();
-  // The tab strip's right side, where page actions render.
-  const [actionsHost, setActionsHost] = useState<HTMLElement | null>(null);
-  const pageHeaderContext = useMemo(() => ({ actionsHost }), [actionsHost]);
   const goChordRef = useRef(false);
   const goChordTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const commandReturnFocusRef = useRef<HTMLElement | null>(null);
@@ -521,160 +483,149 @@ export function WorkspaceShell({
     [page, pageTitle]
   );
 
+  const hub = hubRoutes.find((item) => item.page === hubPageForPage(page));
+  useEffect(() => {
+    const desktop = window.matchMedia("(min-width: 1024px)");
+    const close = () => {
+      if (desktop.matches) setMoreOpen(false);
+    };
+    desktop.addEventListener("change", close);
+    return () => desktop.removeEventListener("change", close);
+  }, []);
   return (
     <BreadcrumbContext.Provider value={setBreadcrumb}>
-      <div
-        data-testid="workspace-shell"
-        data-sidebar={sidebarOpen ? "open" : "rail"}
-        className="relay-density-balanced min-h-dvh bg-[var(--app-canvas)] text-[var(--app-ink)] lg:h-dvh lg:overflow-hidden lg:bg-[var(--app-sidebar)]"
-      >
-        <DesktopSidebar
-          page={page}
-          open={sidebarOpen}
-          onToggle={toggleSidebar}
-          onNewProject={onNewProject}
-          canCreateProject={canCreateProject}
-          searchRecords={searchRecords}
-        />
-
-        <div className="min-h-dvh transition-[padding] duration-200 ease-out motion-reduce:transition-none lg:pl-[var(--sidebar-width)]">
-          <header className="workspace-topbar fixed inset-x-0 top-0 z-30 flex h-[54px] items-center border-b border-[var(--app-border)] bg-[var(--app-canvas)] px-2.5 transition-[left] duration-200 ease-out motion-reduce:transition-none lg:left-[var(--sidebar-width)] lg:right-2 lg:top-2 lg:justify-between lg:rounded-t-xl lg:px-4">
-            <div className="flex h-full min-w-0 flex-1 items-center gap-2 lg:flex-none">
-              <RelayBrand compact className="lg:hidden" />
-              <p className="truncate text-sm font-semibold lg:hidden">
+      <Sheet open={moreOpen} onOpenChange={setMoreOpen}>
+        <div
+          data-testid="workspace-shell"
+          data-sidebar={sidebarOpen ? "open" : "rail"}
+          className="min-h-dvh bg-[var(--surface-page)] text-[var(--text-primary)] lg:h-dvh lg:overflow-hidden lg:bg-[var(--surface-frame)]"
+        >
+          <DesktopSidebar
+            page={page}
+            open={sidebarOpen}
+            onToggle={toggleSidebar}
+            onNewProject={onNewProject}
+            canCreateProject={canCreateProject}
+            data={navigationData}
+            settings={settings}
+          />
+          {/*
+            One inset panel holds the top bar and the page. On a phone it is
+            full bleed; from lg it floats 8px inside the frame.
+          */}
+          <section
+            aria-label="Workspace"
+            className="fixed inset-x-0 top-0 bottom-[calc(var(--shell-mobile-nav-height)+env(safe-area-inset-bottom))] z-20 flex flex-col overflow-hidden bg-[var(--surface-page)] transition-[left] duration-(--motion-base) ease-(--motion-ease-standard) lg:bottom-2 lg:left-[calc(var(--sidebar-width)+var(--shell-inset))] lg:right-2 lg:top-2 lg:rounded-(--radius-panel) lg:border lg:border-[var(--border-panel)]"
+          >
+            <header className="workspace-topbar flex h-(--shell-topbar-height) shrink-0 items-center gap-2 px-3 lg:px-4">
+              <SheetTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="lg:hidden"
+                  aria-label="Open workspace navigation"
+                >
+                  <PanelLeft />
+                </Button>
+              </SheetTrigger>
+              <p className="truncate text-body font-medium lg:hidden">
                 {breadcrumb ?? title}
               </p>
-              <Breadcrumb
-                className="hidden min-w-0 lg:block"
-                aria-label={`Current location: ${breadcrumb ? `${title} / ${breadcrumb}` : title}`}
-              >
-                <BreadcrumbList className="min-w-0 flex-nowrap gap-1.5 text-xs">
-                  <BreadcrumbItem>
-                    <span className="font-medium text-[var(--app-subtle)]">
-                      Relay
-                    </span>
-                  </BreadcrumbItem>
-                  <BreadcrumbSeparator className="text-[var(--app-strong-border)]">
-                    /
-                  </BreadcrumbSeparator>
-                  <BreadcrumbItem className="min-w-0">
-                    <span
-                      className={cn(
-                        "min-w-0 truncate font-medium",
-                        breadcrumb
-                          ? "text-[var(--app-subtle)]"
-                          : "text-[var(--app-ink)]"
-                      )}
-                    >
-                      {title}
-                    </span>
-                  </BreadcrumbItem>
-                  {breadcrumb ? (
-                    <>
-                      <BreadcrumbSeparator className="text-[var(--app-strong-border)]">
-                        /
-                      </BreadcrumbSeparator>
-                      <BreadcrumbItem className="min-w-0">
-                        <span className="max-w-[min(32vw,28rem)] truncate text-sm font-semibold text-[var(--app-ink)]">
-                          {breadcrumb}
-                        </span>
-                      </BreadcrumbItem>
-                    </>
-                  ) : null}
-                </BreadcrumbList>
-              </Breadcrumb>
-            </div>
-
-            <Button
-              variant="outline"
-              className="absolute left-1/2 top-1/2 hidden h-9 w-[240px] -translate-x-1/2 -translate-y-1/2 justify-start rounded-lg border-[var(--app-border)] !bg-[var(--surface-panel)] px-3 text-xs text-[var(--app-muted)] shadow-none hover:text-[var(--app-ink)] active:-translate-y-1/2 active:scale-100 lg:flex"
-              onClick={openCommand}
-              aria-label="Quick Search (Ctrl K)"
-            >
-              <Search className="size-3.5 shrink-0" />
-              <span className="truncate">Quick Search</span>
-              <Kbd className="ml-auto h-auto min-w-0 rounded-none bg-transparent px-0 font-mono text-[9px] text-[var(--app-subtle)]">
-                Ctrl K
-              </Kbd>
-            </Button>
-
-            <div className="ml-3 flex h-9 items-center gap-1.5 lg:ml-0">
-              <Button
-                variant="ghost"
-                size="icon"
-                className="lg:hidden"
-                aria-label="Search pages and workspace actions (Ctrl K)"
-                onClick={openCommand}
-              >
-                <Search className="size-[18px]" />
-              </Button>
-              <div className="hidden h-9 items-center sm:flex lg:hidden">
-                <Button
-                  aria-label="Quick create project"
-                  className="h-9 px-3 text-xs shadow-none"
-                  onClick={onNewProject}
-                  disabled={!canCreateProject}
-                >
-                  <Plus className="size-3.5" />
-                  Quick create
-                </Button>
+              <div className="hidden min-w-0 lg:block">
+                <PageTitleChip
+                  page={page}
+                  label={pageTitle ?? title}
+                  hub={hub}
+                  sample={navigationData.sample}
+                  pages={hubChildren(hubPageForPage(page))}
+                />
               </div>
-              {notificationSlot ?? (
-                <Button variant="ghost" size="icon" aria-label="Notifications">
-                  <Bell className="size-[18px]" />
+              <Button
+                variant="secondary"
+                className="ml-auto hidden w-60 shrink-0 justify-start xl:flex"
+                onClick={openCommand}
+                aria-label="Search workspace (Ctrl K)"
+              >
+                <Search />
+                <span>Search</span>
+                <Kbd className="ml-auto">Ctrl K</Kbd>
+              </Button>
+              <div className="ml-auto flex shrink-0 items-center gap-1 xl:ml-0">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="xl:hidden"
+                  aria-label="Search workspace (Ctrl K)"
+                  onClick={openCommand}
+                >
+                  <Search />
                 </Button>
-              )}
-              <AiToolsMenu />
-              <ProfileMenu settings={settings} compact page={page} />
-            </div>
-          </header>
-
-          <main
-            id="main-content"
-            data-testid="workspace-content-surface"
-            tabIndex={-1}
-            className="workspace-scrollbar-hidden h-[calc(100dvh_-_68px_-_env(safe-area-inset-bottom))] overflow-y-auto bg-[var(--app-canvas)] pt-12 outline-none transition-[left] duration-200 ease-out motion-reduce:transition-none lg:fixed lg:bottom-2 lg:right-2 lg:top-[62px] lg:left-[var(--sidebar-width)] lg:h-auto lg:min-h-0 lg:overscroll-contain lg:rounded-b-xl lg:pt-0"
-          >
-            <div className="flex min-h-full flex-col lg:h-full">
-              <ContextNavigation page={page} onActionsHost={setActionsHost} />
-              <PageHeaderContext.Provider value={pageHeaderContext}>
-                <div className="min-h-0 flex-1">{children}</div>
-              </PageHeaderContext.Provider>
-            </div>
-          </main>
+                {notificationSlot ?? (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    aria-label="Notifications"
+                  >
+                    <Bell />
+                  </Button>
+                )}
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="hidden sm:inline-flex"
+                  asChild
+                >
+                  <Link to="/contact" aria-label="Help">
+                    <Info />
+                  </Link>
+                </Button>
+                <div className="hidden sm:block">
+                  <AiToolsMenu />
+                </div>
+                <ProfileMenu settings={settings} compact page={page} />
+              </div>
+            </header>
+            <main
+              id="main-content"
+              data-testid="workspace-content-surface"
+              tabIndex={-1}
+              className="workspace-scrollbar-hidden flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-y-contain"
+            >
+              <div className="flex min-h-0 flex-1 flex-col">
+                <PageBar
+                  tabs={
+                    <div className={sidebarOpen ? "lg:hidden" : undefined}>
+                      <ContextNavigation page={page} />
+                    </div>
+                  }
+                >
+                  {children}
+                </PageBar>
+              </div>
+            </main>
+          </section>
+          <MobileNavigation
+            page={page}
+            onOpenChange={setMoreOpen}
+            data={navigationData}
+            settings={settings}
+            onNewProject={onNewProject}
+            canCreateProject={canCreateProject}
+          />
+          <WorkspaceCommand
+            open={commandOpen}
+            onOpenChange={setCommandOpen}
+            onNewProject={onNewProject}
+            returnFocusRef={commandReturnFocusRef}
+            searchRecords={searchRecords}
+          />
         </div>
-
-        {(page === "dashboard" || page === "projects") && canCreateProject ? (
-          <Button
-            type="button"
-            aria-label="New Project"
-            className="fixed bottom-[calc(80px+env(safe-area-inset-bottom))] right-4 z-40 flex min-h-12 items-center gap-2 rounded-md bg-[var(--app-accent)] px-4 text-sm font-semibold text-[var(--app-accent-foreground)] shadow-[var(--app-shadow-2)] outline-none hover:bg-[var(--app-accent)]/90 focus-visible:ring-2 focus-visible:ring-[var(--app-accent)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--app-canvas)] sm:hidden"
-            onClick={onNewProject}
-          >
-            <Plus className="size-4" />
-            New project
-          </Button>
-        ) : null}
-
-        <MobileNavigation
-          page={page}
-          open={moreOpen}
-          onOpenChange={setMoreOpen}
-        />
-        <WorkspaceCommand
-          open={commandOpen}
-          onOpenChange={setCommandOpen}
-          onNewProject={onNewProject}
-          returnFocusRef={commandReturnFocusRef}
-          searchRecords={searchRecords}
-        />
-      </div>
+      </Sheet>
     </BreadcrumbContext.Provider>
   );
 }
 
 const SIDEBAR_OPEN_STORAGE_KEY = "relay:sidebar-open";
-const RAIL_WIDTH = 56;
 
 /**
  * Whether the panel beside the rail is open. Open is the default; the choice
@@ -683,14 +634,19 @@ const RAIL_WIDTH = 56;
  */
 function useSidebarOpen() {
   const [open, setOpen] = useState(true);
+  const touched = useRef(false);
   useEffect(() => {
+    // A click before hydration already decided; the stored value must not
+    // undo it, which would make the toggle look dead on a slow first paint.
+    if (touched.current) return;
     try {
       setOpen(window.localStorage.getItem(SIDEBAR_OPEN_STORAGE_KEY) !== "0");
     } catch {
       // Storage is unavailable; keep the open default.
     }
   }, []);
-  const toggle = () =>
+  const toggle = () => {
+    touched.current = true;
     setOpen((current) => {
       const next = !current;
       try {
@@ -700,11 +656,12 @@ function useSidebarOpen() {
       }
       return next;
     });
+  };
   return [open, toggle] as const;
 }
 
 /**
- * Pages listed under a hub, in the panel and the context tabs alike. The
+ * Pages listed under a hub in the page bar. The
  * hub's own page comes first and is labelled "Overview".
  */
 function hubChildren(hub: ShellPage) {
@@ -715,59 +672,197 @@ function hubChildren(hub: ShellPage) {
   );
 }
 
-/** One-shot spring for the active markers; nothing loops. */
-const markerTransition = {
-  type: "spring",
-  stiffness: 520,
-  damping: 40,
-  mass: 0.8,
-} as const;
+const markerTransition = { duration: 0.18, ease: [0.2, 0, 0, 1] as const };
 
-const RECENT_PROJECT_LIMIT = 8;
-
-/**
- * Desktop navigation in two columns, as in ChatGPT and Codex: a slim rail with
- * one icon per hub, and a panel with the current hub's pages, the primary
- * action, and recent Projects. The toggle in the panel header closes it to
- * the rail alone; the rail then shows the toggle to reopen it.
- */
-function DesktopSidebar({
+function HubItems({
   page,
-  open,
-  onToggle,
+  data,
+  settings,
   onNewProject,
   canCreateProject,
-  searchRecords,
+  onNavigate,
+  bare = false,
 }: {
   page: ShellPage;
-  open: boolean;
-  onToggle: () => void;
+  data: WorkspaceNavigationData;
+  settings: SettingsState;
   onNewProject: () => void;
   canCreateProject: boolean;
-  searchRecords: readonly SearchRecord[];
+  onNavigate?: () => void;
+  /** Drops the outer gap so the list can sit inside another nav section. */
+  bare?: boolean;
 }) {
+  const location = useLocation();
+  const markerId = useId();
   const reduceMotion = useHydratedReducedMotion();
-  const hub = hubRoutes.find((item) => item.page === hubPageForPage(page));
-  const pages = hub ? hubChildren(hub.page) : [];
-  const pathname = useLocation({ select: (location) => location.pathname });
-  const aiHere = hub ? aiToolsForPage(hub.page) : [];
-  const recentProjects = searchRecords
-    .filter((record) => record.kind === "project" && record.href)
-    .slice(0, RECENT_PROJECT_LIMIT);
-  const toggle = (
+  const current = new URL(location.href, "https://relay.local");
+  const hub = hubPageForPage(page);
+  const groups = buildHubNavigation({ hub, data, settings });
+  return (
+    <div className={cn("grid content-start", bare ? "gap-3" : "gap-4")}>
+      {hub === "projects" && canCreateProject ? (
+        <Button
+          variant="ghost"
+          className="w-full justify-start"
+          onClick={() => {
+            onNavigate?.();
+            onNewProject();
+          }}
+        >
+          <Plus />
+          New project
+        </Button>
+      ) : null}
+      {groups.map((group) => (
+        <nav key={group.label} aria-label={group.label}>
+          <p className="px-2 pb-1 text-meta text-[var(--text-meta)]">
+            {group.label}
+          </p>
+          <ul className="grid gap-0.5">
+            {group.items.map((item) => {
+              const target = new URL(item.href, "https://relay.local");
+              const active =
+                location.pathname === target.pathname &&
+                (!target.hash ||
+                  location.hash === target.hash.slice(1) ||
+                  (hub === "settings" &&
+                    !location.hash &&
+                    target.hash === "#workspace")) &&
+                [...target.searchParams].every(
+                  ([key, value]) => current.searchParams.get(key) === value
+                );
+              return (
+                <li key={item.id}>
+                  <HrefLink
+                    href={item.href}
+                    onClick={onNavigate}
+                    aria-current={active ? "page" : undefined}
+                    className={cn(
+                      "relative flex min-h-8 items-center rounded-md px-2 text-body transition-colors duration-(--motion-fast)",
+                      active
+                        ? "text-[var(--text-primary)]"
+                        : "text-[var(--text-meta)] hover:bg-[var(--surface-fill)] hover:text-[var(--text-primary)]"
+                    )}
+                  >
+                    {active ? (
+                      <motion.span
+                        aria-hidden="true"
+                        layoutId={markerId}
+                        transition={
+                          reduceMotion ? { duration: 0 } : markerTransition
+                        }
+                        className="pointer-events-none absolute inset-0 rounded-md bg-[var(--surface-active)]"
+                      />
+                    ) : null}
+                    <span className="relative min-w-0 truncate">
+                      {item.label}
+                    </span>
+                  </HrefLink>
+                </li>
+              );
+            })}
+          </ul>
+          {!group.items.length ? (
+            <p className="px-2 py-1 text-meta text-[var(--text-meta)]">
+              None yet
+            </p>
+          ) : null}
+        </nav>
+      ))}
+    </div>
+  );
+}
+
+/**
+ * The page's identity, as a chip at the panel's top-left. It opens the route's
+ * own pages when there is more than one, and is a plain label when there is not.
+ */
+function PageTitleChip({
+  page,
+  label,
+  hub,
+  sample,
+  pages,
+}: {
+  page: ShellPage;
+  label: string;
+  hub?: RouteItem;
+  sample: boolean;
+  pages: RouteItem[];
+}) {
+  const hubHref = sample ? "/sample-studio" : (hub?.href ?? "/");
+  if (pages.length < 2)
+    return (
+      <span
+        aria-label={`Current location: ${label}`}
+        className="flex h-7 items-center rounded-full border border-[var(--border-panel)] px-3 text-body font-medium"
+      >
+        {label}
+      </span>
+    );
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button
+          variant="ghost"
+          aria-label={`Current location: ${label}`}
+          className="h-7 gap-1 rounded-full border border-[var(--border-panel)] px-3 text-body font-medium"
+        >
+          {label}
+          <ChevronDown className="size-3.5 text-[var(--text-meta)]" />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="start" sideOffset={6}>
+        <DropdownMenuItem asChild>
+          <Link to={hubHref}>Overview</Link>
+        </DropdownMenuItem>
+        {pages
+          .filter((item) => item.page !== page || item.href !== hubHref)
+          .map((item) => (
+            <DropdownMenuItem key={item.page} asChild>
+              <Link
+                to={item.href}
+                aria-current={item.page === page ? "page" : undefined}
+                className={cn(item.page === page && "bg-[var(--surface-fill)]")}
+              >
+                {item.label}
+              </Link>
+            </DropdownMenuItem>
+          ))}
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
+
+/** The one collapse control. It keeps the same slot in every sidebar state. */
+function SidebarToggle({
+  open,
+  onToggle,
+}: {
+  open: boolean;
+  onToggle: () => void;
+}) {
+  return (
     <Tooltip>
       <TooltipTrigger asChild>
         <Button
-          type="button"
+          data-sidebar-toggle
           variant="ghost"
           size="icon"
-          className="size-9 text-[var(--app-muted)] hover:text-[var(--app-ink)]"
+          className="size-8 shrink-0"
           aria-label={open ? "Close sidebar" : "Open sidebar"}
           aria-expanded={open}
-          aria-controls="workspace-sidebar-panel"
-          onClick={onToggle}
+          aria-controls="workspace-sidebar"
+          onClick={() => {
+            onToggle();
+            requestAnimationFrame(() =>
+              document
+                .querySelector<HTMLElement>("[data-sidebar-toggle]")
+                ?.focus()
+            );
+          }}
         >
-          <PanelLeft className="size-[18px]" />
+          <PanelLeft />
         </Button>
       </TooltipTrigger>
       <TooltipContent side="right">
@@ -775,215 +870,222 @@ function DesktopSidebar({
       </TooltipContent>
     </Tooltip>
   );
+}
 
+/**
+ * One sidebar: the routes, then the current route's own pages and records.
+ * Collapsed to a 56px strip it is icons only, with the toggle still in the
+ * sidebar's first slot.
+ */
+function DesktopSidebar({
+  page,
+  open,
+  onToggle,
+  onNewProject,
+  canCreateProject,
+  data,
+  settings,
+}: {
+  page: ShellPage;
+  open: boolean;
+  onToggle: () => void;
+  onNewProject: () => void;
+  canCreateProject: boolean;
+  data: WorkspaceNavigationData;
+  settings: SettingsState;
+}) {
+  const reduceMotion = useHydratedReducedMotion();
+  const hub = hubRoutes.find((item) => item.page === hubPageForPage(page));
+  const hubLabel = hub?.label ?? "Workspace";
+  const pages = hubChildren(hubPageForPage(page));
   return (
-    <div className="fixed inset-y-0 left-0 z-40 hidden lg:flex">
-      <aside
-        className="flex h-full flex-col items-center bg-[var(--app-sidebar)] py-2"
-        style={{ width: RAIL_WIDTH }}
-      >
-        <div className="flex h-[46px] items-center">
-          <RelayBrand variant="mark" compact />
-        </div>
-        <nav
-          aria-label="Primary navigation"
-          className="mt-2 flex min-h-0 flex-1 flex-col items-center gap-1"
-        >
-          {hubRoutes.map((item) => (
-            <RailRoute
-              key={item.page}
-              item={item}
-              active={routeIsActive(page, item)}
-              reduceMotion={reduceMotion}
-            />
-          ))}
+    <motion.aside
+      id="workspace-sidebar"
+      aria-label="Workspace navigation"
+      initial={false}
+      animate={{ width: open ? 240 : 56 }}
+      transition={reduceMotion ? { duration: 0 } : markerTransition}
+      className="fixed inset-y-0 left-0 z-40 hidden flex-col overflow-hidden bg-[var(--surface-frame)] lg:flex"
+    >
+      <div className="flex h-(--shell-topbar-height) shrink-0 items-center gap-2 px-3">
+        <SidebarToggle open={open} onToggle={onToggle} />
+        {open ? (
+          <>
+            <RelayBrand variant="mark" compact />
+            <span className="min-w-0 flex-1 truncate text-section">
+              {data.sample ? "Sample studio" : "Relay"}
+            </span>
+          </>
+        ) : null}
+      </div>
+      <div className="workspace-scrollbar-hidden flex min-h-0 flex-1 flex-col overflow-y-auto px-2 pb-3">
+        <nav aria-label="Primary navigation">
+          <ul className="grid gap-px">
+            {hubRoutes.map((item) => (
+              <li key={item.page}>
+                <SidebarRoute
+                  item={item}
+                  active={routeIsActive(page, item)}
+                  open={open}
+                  reduceMotion={reduceMotion}
+                />
+              </li>
+            ))}
+          </ul>
         </nav>
-        <div className="pb-1">{toggle}</div>
-      </aside>
+        {open ? (
+          <SidebarRouteDetail
+            page={page}
+            hubLabel={hubLabel}
+            pages={pages}
+            data={data}
+            settings={settings}
+            onNewProject={onNewProject}
+            canCreateProject={canCreateProject}
+          />
+        ) : null}
+      </div>
+      <div className="shrink-0 border-t border-[var(--border-hairline)] p-1.5">
+        <ProfileMenu settings={settings} collapsed={!open} page={page} />
+      </div>
+    </motion.aside>
+  );
+}
 
-      <section
-        id="workspace-sidebar-panel"
-        aria-label={hub ? `${hub.label} sidebar` : "Sidebar"}
-        hidden={!open}
-        className="flex h-full w-[248px] flex-col border-l border-[var(--app-border)] bg-[var(--app-sidebar)]"
+/**
+ * The current route's detail: its own pages first, then the records that belong
+ * to it (projects in progress, open reviews, settings sections, …). Collapsible,
+ * so a long record list never buries the routes above it.
+ */
+function SidebarRouteDetail({
+  page,
+  hubLabel,
+  pages,
+  data,
+  settings,
+  onNewProject,
+  canCreateProject,
+  onNavigate,
+}: {
+  page: ShellPage;
+  hubLabel: string;
+  pages: RouteItem[];
+  data: WorkspaceNavigationData;
+  settings: SettingsState;
+  onNewProject: () => void;
+  canCreateProject: boolean;
+  onNavigate?: () => void;
+}) {
+  const [open, setOpen] = useState(true);
+  return (
+    <div className="mt-3 border-t border-[var(--border-hairline)] pt-3">
+      <button
+        type="button"
+        aria-expanded={open}
+        onClick={() => setOpen((current) => !current)}
+        className="flex min-h-7 w-full items-center gap-1.5 rounded-md px-2 text-meta font-medium text-[var(--text-meta)] hover:text-[var(--text-primary)]"
       >
-        <div className="flex h-[54px] shrink-0 items-center px-4">
-          <h2 className="truncate text-sm font-semibold">
-            {hub?.label ?? "Relay"}
-          </h2>
-        </div>
-
-        <div className="workspace-scrollbar-hidden min-h-0 flex-1 overflow-y-auto px-2 pb-2">
-          {canCreateProject ? (
-            <button
-              type="button"
-              onClick={onNewProject}
-              className="flex min-h-9 w-full items-center gap-2.5 rounded-[10px] bg-[var(--sidebar-active)] px-3 text-[13px] font-medium text-[var(--app-ink)] outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)] focus-visible:ring-inset"
-            >
-              <Plus className="size-4 text-[var(--app-highlight)]" />
-              New project
-            </button>
-          ) : null}
-
-          {hub && pages.length > 1 ? (
-            <nav aria-label={`${hub.label} pages`} className="mt-3 space-y-0.5">
-              {pages.map((item) => {
-                const current = page === item.page;
-                return (
-                  <Link
-                    key={item.page}
-                    to={item.href}
-                    aria-current={current ? "page" : undefined}
-                    className={cn(
-                      "relative flex min-h-9 items-center rounded-[10px] px-3 text-[13px] font-medium outline-none transition-colors duration-150 focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)] focus-visible:ring-inset",
-                      current
-                        ? "text-[var(--app-ink)]"
-                        : "text-[var(--app-muted)] hover:text-[var(--app-ink)]"
-                    )}
-                  >
-                    {current ? (
-                      <motion.span
-                        aria-hidden="true"
-                        layoutId="panel-active-page"
-                        transition={
-                          reduceMotion ? { duration: 0 } : markerTransition
-                        }
-                        className="absolute inset-0 rounded-[10px] bg-[var(--sidebar-active)]"
-                      />
-                    ) : null}
-                    <span className="relative truncate">{item.label}</span>
-                  </Link>
-                );
-              })}
-            </nav>
-          ) : null}
-
-          {aiHere.length ? (
-            <nav aria-label="AI tools" className="mt-4">
-              <p className="px-3 pb-1 text-[11px] font-medium text-[var(--app-subtle)]">
-                AI
-              </p>
-              <ul className="space-y-0.5">
-                {aiHere.map((tool) => (
-                  <li key={tool.id}>
-                    <HrefLink
-                      href={aiToolHref(tool, pathname)}
-                      className="flex min-h-8 items-center gap-2.5 rounded-[10px] px-3 text-[13px] text-[var(--app-muted)] outline-none transition-colors duration-150 hover:text-[var(--app-ink)] focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)] focus-visible:ring-inset"
-                    >
-                      <Sparkles className="size-4 shrink-0 text-[var(--app-highlight)]" />
-                      <span className="truncate">{tool.label}</span>
-                    </HrefLink>
-                  </li>
-                ))}
-              </ul>
-            </nav>
-          ) : null}
-
-          {recentProjects.length ? (
-            <nav aria-label="Recent Projects" className="mt-4">
-              <p className="px-3 pb-1 text-[11px] font-medium text-[var(--app-subtle)]">
-                Recent projects
-              </p>
-              <ul className="space-y-0.5">
-                {recentProjects.map((record) => (
-                  <li key={record.id}>
-                    <HrefLink
-                      href={record.href ?? "/projects"}
-                      className="group flex min-h-8 flex-col justify-center rounded-[10px] px-3 py-1 outline-none transition-colors duration-150 focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)] focus-visible:ring-inset"
-                    >
-                      <span className="truncate text-[13px] text-[var(--app-muted)] transition-colors group-hover:text-[var(--app-ink)]">
-                        {record.title}
-                      </span>
-                      <span className="truncate text-[11px] text-[var(--app-subtle)]">
-                        {record.detail}
-                      </span>
-                    </HrefLink>
-                  </li>
-                ))}
-              </ul>
-            </nav>
-          ) : null}
-        </div>
-
-        <nav
-          aria-label="Support and legal"
-          className="flex shrink-0 flex-wrap gap-x-3 gap-y-1 border-t border-[var(--app-border)] px-4 py-3 text-[11px] text-[var(--app-subtle)]"
-        >
-          {compactSupportLinks.map((link) =>
-            link.external ? (
-              <a
-                key={link.label}
-                href={link.href}
-                target="_blank"
-                rel="noreferrer"
-                className="rounded-sm outline-none hover:text-[var(--app-ink)] focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)]"
-              >
-                {link.label}
-              </a>
-            ) : (
-              <Link
-                key={link.label}
-                to={link.href}
-                className="rounded-sm outline-none hover:text-[var(--app-ink)] focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)]"
-              >
-                {link.label}
-              </Link>
-            )
+        <ChevronDown
+          className={cn(
+            "size-3.5 shrink-0 transition-transform duration-(--motion-fast)",
+            !open && "-rotate-90"
           )}
-        </nav>
-      </section>
+        />
+        <span className="min-w-0 truncate">{hubLabel}</span>
+      </button>
+      {open ? (
+        <div className="mt-2 grid gap-3">
+          {pages.length > 1 ? (
+            <nav aria-label={`${hubLabel} navigation`}>
+              <ul className="grid gap-px">
+                {pages.map((item) => (
+                  <li key={item.page}>
+                    <HrefLink
+                      href={item.href}
+                      aria-current={page === item.page ? "page" : undefined}
+                      className={cn(
+                        "flex min-h-7 items-center rounded-md px-2 pl-7 text-body transition-colors duration-(--motion-fast)",
+                        page === item.page
+                          ? "bg-[var(--surface-active)] font-medium text-[var(--text-primary)]"
+                          : "text-[var(--text-meta)] hover:bg-[var(--surface-fill)] hover:text-[var(--text-primary)]"
+                      )}
+                    >
+                      <span className="min-w-0 truncate">{item.label}</span>
+                    </HrefLink>
+                  </li>
+                ))}
+              </ul>
+            </nav>
+          ) : null}
+          <HubItems
+            page={page}
+            data={data}
+            settings={settings}
+            onNewProject={onNewProject}
+            canCreateProject={canCreateProject}
+            onNavigate={onNavigate}
+            bare
+          />
+        </div>
+      ) : null}
     </div>
   );
 }
 
-function RailRoute({
+function SidebarRoute({
   item,
   active,
+  open,
   reduceMotion,
 }: {
   item: RouteItem;
   active: boolean;
+  open: boolean;
   reduceMotion: boolean;
 }) {
   const Icon = item.icon;
   const aiHere = aiToolsForPage(item.page);
+  const link = (
+    <Link
+      to={item.href}
+      aria-label={item.label}
+      aria-current={active ? "page" : undefined}
+      className={cn(
+        "relative flex min-h-7 items-center gap-2.5 rounded-md text-body transition-colors duration-(--motion-fast)",
+        open ? "px-2" : "mx-auto size-9 justify-center",
+        active
+          ? "bg-[var(--surface-active)] font-medium text-[var(--text-primary)]"
+          : "text-[var(--text-meta)] hover:bg-[var(--surface-fill)] hover:text-[var(--text-primary)]"
+      )}
+    >
+      {active && open ? (
+        <motion.span
+          aria-hidden="true"
+          layoutId="sidebar-active-route"
+          transition={reduceMotion ? { duration: 0 } : markerTransition}
+          className="absolute inset-0 rounded-md bg-[var(--surface-active)]"
+        />
+      ) : null}
+      <Icon className="relative size-4 shrink-0" />
+      {open ? (
+        <span className="relative min-w-0 flex-1 truncate">{item.label}</span>
+      ) : null}
+      {aiHere.length ? (
+        <span
+          aria-hidden="true"
+          data-slot="ai-nav-badge"
+          className={cn(
+            "size-1.5 shrink-0 rounded-full bg-[var(--text-primary)]",
+            !open && "absolute right-1.5 top-1.5"
+          )}
+        />
+      ) : null}
+    </Link>
+  );
+  if (open) return link;
   return (
     <Tooltip>
-      <TooltipTrigger asChild>
-        <Link
-          to={item.href}
-          aria-label={item.label}
-          aria-current={active ? "page" : undefined}
-          className={cn(
-            "group relative flex size-10 items-center justify-center rounded-[10px] outline-none transition-colors duration-150 focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)] focus-visible:ring-inset",
-            active
-              ? "text-[var(--app-ink)]"
-              : "text-[var(--app-muted)] hover:text-[var(--app-ink)]"
-          )}
-        >
-          {active ? (
-            <motion.span
-              aria-hidden="true"
-              layoutId="rail-active-item"
-              transition={reduceMotion ? { duration: 0 } : markerTransition}
-              className="absolute inset-0 rounded-[10px] bg-[var(--sidebar-active)]"
-            />
-          ) : null}
-          <Icon
-            className={cn(
-              "relative size-[18px]",
-              active && "text-[var(--app-highlight)]"
-            )}
-          />
-          {aiHere.length ? (
-            <span
-              aria-hidden="true"
-              data-slot="ai-nav-badge"
-              className="absolute right-1.5 top-1.5 size-1.5 rounded-full bg-[var(--app-highlight)]"
-            />
-          ) : null}
-        </Link>
-      </TooltipTrigger>
+      <TooltipTrigger asChild>{link}</TooltipTrigger>
       <TooltipContent side="right">{item.label}</TooltipContent>
     </Tooltip>
   );
@@ -1019,42 +1121,37 @@ function ProfileMenu({
             type="button"
             variant="ghost"
             className={cn(
-              "group flex items-center rounded-md text-left outline-none transition-[background-color,box-shadow] hover:bg-[var(--app-hover)] active:translate-y-0 active:scale-100 focus-visible:ring-2 focus-visible:ring-[var(--app-accent)] data-[state=open]:bg-[var(--app-active)]",
+              "group flex items-center text-left data-[state=open]:bg-[var(--surface-active)]",
               compact
                 ? "h-9 w-9 justify-center p-0"
                 : collapsed
                   ? "w-full justify-center p-1"
-                  : "w-full gap-2.5 p-2"
+                  : "w-full gap-2 p-2"
             )}
             aria-label="Open profile menu"
           >
-            <Avatar className="size-8 border border-[var(--app-strong-border)] bg-[var(--app-avatar-surface)] ring-1 ring-transparent transition-[border-color,box-shadow] group-data-[state=open]:border-[var(--app-accent)]">
+            <Avatar className="size-8">
               <AvatarImage
                 src={settings.profileImageUrl || undefined}
                 alt={name}
                 className="object-cover"
               />
-              <AvatarFallback className="bg-[var(--app-avatar-surface)] text-[11px] font-semibold text-[var(--app-ink)]">
+              <AvatarFallback className="bg-[var(--surface-fill)] text-meta font-semibold text-[var(--text-primary)]">
                 {initials(name)}
               </AvatarFallback>
             </Avatar>
             {!collapsed && !compact ? (
               <>
                 <span className="min-w-0 flex-1">
-                  <span className="block truncate text-[12px] font-semibold">
+                  <span className="block truncate text-meta font-semibold">
                     {name}
                   </span>
-                  <span className="block truncate text-[11px] text-[var(--app-muted)]">
+                  <span className="block truncate text-meta text-[var(--text-primary)]">
                     {handle}
                   </span>
                 </span>
-                <span
-                  className={cn(
-                    "flex transition-transform",
-                    open && "rotate-180"
-                  )}
-                >
-                  <ChevronDown className="size-3.5 text-[var(--app-muted)]" />
+                <span className="flex">
+                  <ChevronDown className="size-4 text-[var(--text-primary)]" />
                 </span>
               </>
             ) : null}
@@ -1064,38 +1161,37 @@ function ProfileMenu({
           side={compact ? "bottom" : collapsed ? "right" : "top"}
           align={compact ? "end" : "start"}
           sideOffset={8}
-          className="workspace-flyout w-[280px] rounded-xl border-[var(--app-border)] bg-[var(--app-panel)] p-1.5 text-[var(--app-ink)] shadow-[var(--app-shadow-2)] [&_[data-slot=dropdown-menu-item]]:h-9 [&_[data-slot=dropdown-menu-item]]:rounded-lg [&_[data-slot=dropdown-menu-item]]:text-[13px] [&_[data-slot=dropdown-menu-item]]:transition-colors"
+          className="w-72"
         >
-          <DropdownMenuLabel className="flex items-center gap-3 px-2.5 py-2.5">
-            <Avatar className="size-9 border border-[var(--app-strong-border)] bg-[var(--app-avatar-surface)]">
+          <DropdownMenuLabel className="flex items-center gap-3 px-3 py-2">
+            <Avatar className="size-9">
               <AvatarImage
                 src={settings.profileImageUrl || undefined}
                 alt=""
                 className="object-cover"
               />
-              <AvatarFallback className="bg-[var(--app-avatar-surface)] text-xs font-semibold text-[var(--app-ink)]">
+              <AvatarFallback className="bg-[var(--surface-fill)] text-meta font-semibold text-[var(--text-primary)]">
                 {initials(name)}
               </AvatarFallback>
             </Avatar>
             <span className="min-w-0">
-              <span className="block truncate text-[13px] font-semibold">
+              <span className="block truncate text-body font-semibold">
                 {name}
               </span>
-              <span className="block truncate text-xs font-normal text-[var(--app-muted)]">
+              <span className="block truncate text-meta font-normal text-[var(--text-primary)]">
                 {handle}
               </span>
             </span>
           </DropdownMenuLabel>
-          <DropdownMenuSeparator className="mx-0.5 bg-[var(--app-border)]" />
+          <DropdownMenuSeparator />
           {!isSignedIn ? (
             <>
-              <DropdownMenuLabel className="text-xs font-normal text-muted-foreground">
+              <DropdownMenuLabel className="text-meta font-normal text-muted-foreground">
                 Local Workspace · stored in this browser
               </DropdownMenuLabel>
               <DropdownMenuItem
                 disabled={!isAuthEnabled}
                 onSelect={() => openSignIn()}
-                className="bg-primary text-primary-foreground focus:bg-primary/90 focus:text-primary-foreground"
               >
                 <LogIn /> Sign in
               </DropdownMenuItem>
@@ -1140,6 +1236,21 @@ function ProfileMenu({
               <UsersRound /> Organization profile
             </Link>
           </DropdownMenuItem>
+          {compactSupportLinks.map((link) => (
+            <DropdownMenuItem key={link.label} asChild>
+              {link.external ? (
+                <a href={link.href} target="_blank" rel="noreferrer">
+                  <link.icon />
+                  {link.label}
+                </a>
+              ) : (
+                <Link to={link.href}>
+                  <link.icon />
+                  {link.label}
+                </Link>
+              )}
+            </DropdownMenuItem>
+          ))}
           <DropdownMenuItem onSelect={() => setFeedbackOpen(true)}>
             <MessageSquarePlus /> Send feedback
           </DropdownMenuItem>
@@ -1167,7 +1278,7 @@ function ProfileMenu({
               <LogOut /> Sign out
             </DropdownMenuItem>
           ) : isAuthEnabled ? null : (
-            <DropdownMenuLabel className="text-xs font-normal text-muted-foreground">
+            <DropdownMenuLabel className="text-meta font-normal text-muted-foreground">
               Sign-in needs Clerk and Convex configuration.
             </DropdownMenuLabel>
           )}
@@ -1235,21 +1346,14 @@ function WorkspaceCommand({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
-        className="overflow-hidden border-[var(--app-strong-border)] p-0 shadow-[0_24px_80px_color-mix(in_srgb,var(--app-ink)_18%,transparent)] sm:max-w-[620px]"
+        className="overflow-hidden p-0 sm:max-w-xl"
         onCloseAutoFocus={(event) => {
           event.preventDefault();
           returnFocusRef.current?.focus();
         }}
       >
         <DialogTitle className="sr-only">Workspace command menu</DialogTitle>
-        <motion.div
-          initial={reduceMotion ? false : { opacity: 0, y: -8, scale: 0.985 }}
-          animate={{ opacity: 1, y: 0, scale: 1 }}
-          transition={{
-            duration: reduceMotion ? 0 : 0.18,
-            ease: [0.2, 0.8, 0.2, 1],
-          }}
-        >
+        <div>
           <Command className="**:data-[slot=command-input-wrapper]:pr-12">
             <CommandInput
               aria-label="Search workspace commands"
@@ -1285,7 +1389,7 @@ function WorkspaceCommand({
                           <span className="min-w-0 flex-1 truncate">
                             {record.title}
                           </span>
-                          <span className="text-xs text-muted-foreground">
+                          <span className="text-meta text-muted-foreground">
                             {record.detail}
                           </span>
                         </HrefLink>
@@ -1317,7 +1421,7 @@ function WorkspaceCommand({
               ))}
             </CommandList>
           </Command>
-        </motion.div>
+        </div>
       </DialogContent>
     </Dialog>
   );
@@ -1358,138 +1462,78 @@ function HrefLink({
 
 function MobileNavigation({
   page,
-  open,
   onOpenChange,
+  data,
+  settings,
+  onNewProject,
+  canCreateProject,
 }: {
   page: ShellPage;
-  open: boolean;
   onOpenChange: (open: boolean) => void;
+  data: WorkspaceNavigationData;
+  settings: SettingsState;
+  onNewProject: () => void;
+  canCreateProject: boolean;
 }) {
-  const reduceMotion = useHydratedReducedMotion();
-  const primaryRoutes = mobileRoutes;
-
+  const hub = hubRoutes.find((item) => item.page === hubPageForPage(page));
   return (
-    <nav
-      aria-label="Mobile navigation"
-      className="fixed inset-x-0 bottom-0 z-40 grid h-[calc(68px+env(safe-area-inset-bottom))] grid-cols-5 border-t border-[var(--app-border)] bg-[color-mix(in_srgb,var(--app-panel)_94%,transparent)] px-1 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl lg:hidden"
-    >
-      {primaryRoutes.map((item) => {
-        const Icon = item.icon;
-        const active = routeIsActive(page, item);
-        return (
-          <Link
-            key={item.page}
-            to={item.href}
-            aria-current={active ? "page" : undefined}
-            className={cn(
-              "relative flex flex-col items-center justify-center gap-1 rounded-md text-[10px] font-medium outline-none focus-visible:ring-2 focus-visible:ring-[var(--app-accent)] focus-visible:ring-inset",
-              active ? "text-[var(--app-highlight)]" : "text-[var(--app-muted)]"
-            )}
-          >
-            {active ? (
-              <span className="absolute inset-x-3 top-0 h-0.5 rounded-full bg-[var(--app-accent)]" />
-            ) : null}
-            <span className="flex flex-col items-center justify-center gap-1">
-              <Icon className="size-[19px]" strokeWidth={active ? 2.2 : 1.8} />
-              {item.label}
-            </span>
-          </Link>
-        );
-      })}
-      <Sheet open={open} onOpenChange={onOpenChange}>
-        <SheetTrigger asChild>
-          <Button
-            type="button"
-            variant="ghost"
-            className="h-full w-full flex-col items-center justify-center gap-1 rounded-md text-[10px] font-medium text-[var(--app-muted)] outline-none focus-visible:ring-2 focus-visible:ring-[var(--app-accent)] focus-visible:ring-inset"
-            aria-label="Open more workspace pages"
-          >
-            <motion.span
-              animate={{
-                rotate: open ? 90 : 0,
-                scale: open && !reduceMotion ? 1.06 : 1,
-              }}
-              transition={{ duration: reduceMotion ? 0 : 0.16 }}
-              className="flex"
+    <>
+      <nav
+        aria-label="Mobile navigation"
+        className="fixed inset-x-0 bottom-0 z-40 grid h-[calc(var(--shell-mobile-nav-height)+env(safe-area-inset-bottom))] grid-cols-5 bg-[var(--surface-frame)] px-1 pb-[env(safe-area-inset-bottom)] lg:hidden"
+      >
+        {mobileRoutes.map((item) => {
+          const Icon = item.icon;
+          const active = routeIsActive(page, item);
+          return (
+            <Link
+              key={item.page}
+              to={item.href}
+              aria-current={active ? "page" : undefined}
+              className="flex min-w-0 items-center justify-center rounded-md text-meta font-medium text-[var(--text-primary)]"
             >
-              <MoreHorizontal className="size-[19px]" />
-            </motion.span>
-            More
-          </Button>
-        </SheetTrigger>
-        <SheetContent
-          side="bottom"
-          className="max-h-[82dvh] rounded-t-xl px-3 pb-8"
+              <span
+                className={cn(
+                  "flex w-full min-w-0 flex-col items-center justify-center gap-1 rounded-md py-2",
+                  active && "bg-[var(--surface-active)]"
+                )}
+              >
+                <Icon className="size-4" />
+                {item.label}
+              </span>
+            </Link>
+          );
+        })}
+      </nav>
+      <SheetContent side="bottom" className="overflow-y-auto p-4 lg:hidden">
+        <SheetHeader>
+          <SheetTitle>{hub?.label ?? "Workspace"}</SheetTitle>
+        </SheetHeader>
+        <SidebarRouteDetail
+          page={page}
+          hubLabel={hub?.label ?? "Workspace"}
+          pages={hubChildren(hubPageForPage(page))}
+          data={data}
+          settings={settings}
+          onNewProject={onNewProject}
+          canCreateProject={canCreateProject}
+          onNavigate={() => onOpenChange(false)}
+        />
+        <nav
+          aria-label="Other workspace hubs"
+          className="mt-4 flex flex-wrap gap-2"
         >
-          <SheetHeader className="px-1">
-            <SheetTitle>Workspace</SheetTitle>
-          </SheetHeader>
-          <div className="mt-3 grid grid-cols-2 gap-2">
-            {hubRoutes
-              .filter(
-                (route) =>
-                  !primaryRoutes.some((mobile) => mobile.page === route.page)
-              )
-              .map((item) => {
-                const Icon = item.icon;
-                return (
-                  <Link
-                    key={item.page}
-                    to={item.href}
-                    onClick={() => onOpenChange(false)}
-                    aria-current={
-                      routeIsActive(page, item) ? "page" : undefined
-                    }
-                    className="group flex items-center gap-3 rounded-md border border-[var(--app-border)] bg-[var(--app-panel)] p-3 text-sm font-medium outline-none transition-[background-color,border-color] hover:border-[var(--app-strong-border)] hover:bg-[var(--app-soft-panel)] focus-visible:ring-2 focus-visible:ring-[var(--app-accent)]"
-                  >
-                    <span className="flex">
-                      <Icon className="size-[18px] text-[var(--app-muted)] transition-colors group-hover:text-[var(--app-ink)]" />
-                    </span>
-                    {item.label}
-                  </Link>
-                );
-              })}
-          </div>
-          <div className="mt-4 border-t border-[var(--app-border)] pt-4">
-            <p className="px-1 text-xs font-semibold text-[var(--app-muted)]">
-              Support and legal
-            </p>
-            <div className="mt-2 grid grid-cols-2 gap-2 text-sm">
-              <Link
-                className="min-h-12 rounded-md border border-[var(--app-border)] p-3"
-                to="/contact"
-                onClick={() => onOpenChange(false)}
-              >
-                Contact
-              </Link>
-              <Link
-                className="min-h-12 rounded-md border border-[var(--app-border)] p-3"
-                to="/privacy"
-                onClick={() => onOpenChange(false)}
-              >
-                Privacy
-              </Link>
-              <Link
-                className="min-h-12 rounded-md border border-[var(--app-border)] p-3"
-                to="/terms"
-                onClick={() => onOpenChange(false)}
-              >
-                Terms
-              </Link>
-              <Link
-                className="min-h-12 rounded-md border border-[var(--app-border)] p-3"
-                to="/accessibility"
-                onClick={() => onOpenChange(false)}
-              >
-                Accessibility
-              </Link>
-            </div>
-            <p className="mt-3 px-1 text-xs text-[var(--app-subtle)]">
-              © {new Date().getFullYear()} Relay
-            </p>
-          </div>
-        </SheetContent>
-      </Sheet>
-    </nav>
+          {hubRoutes
+            .filter((item) => !mobileRoutes.includes(item))
+            .map((item) => (
+              <Button key={item.page} variant="ghost" asChild>
+                <Link to={item.href} onClick={() => onOpenChange(false)}>
+                  {item.label}
+                </Link>
+              </Button>
+            ))}
+        </nav>
+      </SheetContent>
+    </>
   );
 }

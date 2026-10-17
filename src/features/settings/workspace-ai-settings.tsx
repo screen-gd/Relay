@@ -1,14 +1,14 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useConvexAuth, useAction, useMutation, useQuery } from "convex/react";
-import { api } from "../../../convex/_generated/api";
-import type { Id } from "../../../convex/_generated/dataModel";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
 import type { ToastState } from "@/features/routes/shared/route-types";
+import { useAction, useConvexAuth, useMutation, useQuery } from "convex/react";
+import { useEffect, useState } from "react";
+import { api } from "../../../convex/_generated/api";
+import type { Id } from "../../../convex/_generated/dataModel";
 import { SettingsPanel } from "./settings-components";
 
 export function WorkspaceAiSettings({
@@ -107,7 +107,7 @@ export function WorkspaceAiSettings({
       title="AI assistance"
       subtitle="Bring your own API keys. Your provider bills your account for AI usage."
     >
-      <div className="mb-5 space-y-4">
+      <div className="mb-4 space-y-4">
         {(
           [
             {
@@ -126,7 +126,7 @@ export function WorkspaceAiSettings({
         ).map(({ provider, label, configured, hint }) => (
           <div key={provider}>
             <Label htmlFor={`ai-key-${provider}`}>{label}</Label>
-            <p className="mt-1 text-xs text-muted-foreground">
+            <p className="mt-1 text-meta text-[var(--text-meta)]">
               {hint} {configured ? "Key saved." : "No key saved."}
             </p>
             {summary?.canManage ? (
@@ -160,7 +160,7 @@ export function WorkspaceAiSettings({
                 />
                 <Button
                   type="submit"
-                  variant="outline"
+                  variant="secondary"
                   disabled={
                     savingProvider !== undefined || !keys[provider].trim()
                   }
@@ -181,22 +181,22 @@ export function WorkspaceAiSettings({
             ) : null}
           </div>
         ))}
-        <p className="text-xs text-muted-foreground">
+        <p className="text-meta text-[var(--text-meta)]">
           Keys are encrypted in storage and shared for AI runs in this
           workspace. Only the Workspace Owner can replace or remove them.
         </p>
       </div>
-      <Label className="flex items-center justify-between gap-4 rounded-md border border-border px-3 py-3 text-sm font-normal">
+      <Label className="flex items-center justify-between gap-4 font-normal">
         <span>
           <span className="block font-medium">Allow AI in this workspace</span>
-          <span className="mt-1 block text-xs text-muted-foreground">
+          <span className="mt-1 block text-meta text-[var(--text-meta)]">
             Owners and Editors trigger each run. Clients and Viewers cannot run
             AI.
           </span>
           {gap ? (
             <span
               id="workspace-ai-gap"
-              className="mt-1 block text-xs text-muted-foreground"
+              className="mt-1 block text-meta text-[var(--text-meta)]"
             >
               {gap.text}
             </span>
@@ -206,7 +206,7 @@ export function WorkspaceAiSettings({
           {gap?.control === "workspace" ? (
             <a
               href="/team"
-              className="text-xs font-semibold text-[var(--app-highlight)] hover:underline"
+              className="text-meta font-semibold text-[var(--text-primary)] hover:underline"
             >
               Connect a workspace
             </a>
@@ -220,14 +220,14 @@ export function WorkspaceAiSettings({
           />
         </span>
       </Label>
-      <p className="mt-3 text-sm text-muted-foreground" role="status">
+      <p className="mt-3 text-body text-[var(--text-meta)]" role="status">
         {summary
           ? `${summary.used} of ${summary.limit} runs used this month. ${summary.remaining} remaining. Resets ${new Date(summary.resetsAt).toLocaleDateString("en", { timeZone: "UTC", day: "numeric", month: "short" })} (UTC).`
           : workspaceId && isAuthenticated
             ? "Loading AI usage…"
             : "Connect an authenticated workspace to manage AI and its monthly allowance."}
       </p>
-      <p className="mt-3 text-xs leading-relaxed text-muted-foreground">
+      <p className="mt-3 text-meta text-[var(--text-meta)]">
         AI features send only the text, timestamps and titles needed for the
         request. Drafts are marked AI-drafted and linked to their sources.
         Nothing is sent to clients automatically. Reused drafts do not use

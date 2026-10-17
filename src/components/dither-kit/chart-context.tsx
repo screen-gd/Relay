@@ -3,9 +3,8 @@
 import type { ScaleLinear } from "d3-scale";
 import { createContext, use, useCallback, useMemo, useState } from "react";
 import type { CommonChart } from "./common-context";
-import type { BloomInput } from "./dither-paint";
 import type { DitherColor, Seed } from "./palette";
-import { seedOfColor } from "./palette";
+import { seedOfColor, useChartPalette } from "./palette";
 import {
   buildBandScale,
   buildXScale,
@@ -86,22 +85,11 @@ export type ChartContextValue = {
   setCursorX: (px: number) => void;
   isMouseInChart: boolean;
   setMouseInChart: (over: boolean) => void;
-  hovered: boolean; // parent-driven hover (e.g. the whole card) — lifts the fill
-  bloom: BloomInput; // glow on the dither canvas
-  bloomOnHover: boolean; // only bloom while hovered
-
+  hovered: boolean; // parent-driven fill emphasis
   // Series register themselves so the canvas knows what (and how) to paint.
   seriesSpecs: Record<string, SeriesSpec>;
   registerSeries: (spec: SeriesSpec) => void;
   unregisterSeries: (dataKey: string) => void;
-
-  // Entrance animation (prop-driven). `revision` bumps when the data changes or
-  // the replay token advances, so the canvas can re-play its entrance.
-  animate: boolean;
-  animationDuration: number;
-  revision: number;
-  entranceDone: boolean; // true once the entrance has played — gates SVG markers
-  markEntranceDone: () => void; // the canvas calls this when its reveal completes
 
   // Helpers.
   seedOf: (key: string) => Seed;
@@ -160,21 +148,6 @@ export function useChartPart(
 
 export { ChartContext };
 
-/** A counter that advances whenever `data` changes identity or `token` advances
- * — drives entrance replays without remounting. Uses the adjust-state-during-
- * render pattern (https://react.dev/reference/react/useState) instead of a ref:
- * the revision is derived purely from render inputs, so it stays consistent
- * across the memoized values below rather than lagging a render behind. */
-export function useRevision(data: unknown, token: number) {
-  const [prev, setPrev] = useState({ data, token, revision: 0 });
-  if (prev.data !== data || prev.token !== token) {
-    const next = { data, token, revision: prev.revision + 1 };
-    setPrev(next);
-    return next.revision;
-  }
-  return prev.revision;
-}
-
 /**
  * Builds the shared context value: resolves the plot rect from the measured
  * size minus margins, computes the x/y scales and the per-series stack bands,
@@ -187,13 +160,8 @@ export function useChartController({
   stackType,
   dimensions,
   margins,
-  animate = true,
-  animationDuration = 900,
-  replayToken = 0,
   markerIndex = null,
   hovered = false,
-  bloom = "off",
-  bloomOnHover = false,
   defaultSelectedDataKey = null,
   onSelectionChange,
 }: {
@@ -203,13 +171,8 @@ export function useChartController({
   stackType: StackType;
   dimensions: Dimensions;
   margins: Margins;
-  animate?: boolean;
-  animationDuration?: number;
-  replayToken?: number;
   markerIndex?: number | null;
   hovered?: boolean;
-  bloom?: BloomInput;
-  bloomOnHover?: boolean;
   defaultSelectedDataKey?: string | null;
   onSelectionChange?: (key: string | null) => void;
 }): ChartContextValue {
@@ -224,7 +187,7 @@ export function useChartController({
   // Memoized: configKeys is the dep that drives `bands`, `common` and the
   // canvas `targets` memo — a fresh array each render would bust all of them.
   const configKeys = useMemo(() => Object.keys(config), [config]);
-  const revision = useRevision(data, replayToken);
+  const palette = useChartPalette();
 
   const [selectedDataKey, setSelectedDataKey] = useState<string | null>(
     defaultSelectedDataKey
@@ -283,22 +246,6 @@ export function useChartController({
   const plotHeight = Math.max(0, dimensions.height - mTop - mBottom);
   const ready = plotWidth > 0 && plotHeight > 0;
 
-  // The entrance gate flips true when the canvas reveal completes (via
-  // `markEntranceDone`) so DOM markers fade in with the fill, and re-arms on
-  // each replay. Adjust-state-during-render instead of an effect, so the reset
-  // lands in the same render as the revision bump.
-  const [entrance, setEntrance] = useState({ revision, done: !animate });
-  if (entrance.revision !== revision) {
-    setEntrance({ revision, done: !animate });
-  }
-  const entranceDone =
-    entrance.revision === revision ? entrance.done : !animate;
-  // Stable across renders at the same revision; the canvas holds this in a ref.
-  const markEntranceDone = useCallback(
-    () => setEntrance({ revision, done: true }),
-    [revision]
-  );
-
   // Memoized: the priciest derivation in the render path — it walks every
   // row × series to build the stack bands. Hover/cursor state changes must not
   // recompute it, only a real data/series/stack change.
@@ -355,8 +302,8 @@ export function useChartController({
 
   // Stable so `common` and the value stay stable; re-created only on config.
   const seedOf = useCallback(
-    (key: string) => seedOfColor(config[key]?.color ?? "grey"),
-    [config]
+    (key: string) => seedOfColor(config[key]?.color ?? "neutral", palette),
+    [config, palette]
   );
 
   // Memoized: this is the value handed to CommonChartContext (Legend/Tooltip),
@@ -459,16 +406,9 @@ export function useChartController({
       isMouseInChart,
       setMouseInChart,
       hovered,
-      bloom,
-      bloomOnHover,
       seriesSpecs,
       registerSeries,
       unregisterSeries,
-      animate,
-      animationDuration,
-      revision,
-      entranceDone,
-      markEntranceDone,
       seedOf,
       common,
     }),
@@ -502,16 +442,9 @@ export function useChartController({
       isMouseInChart,
       setMouseInChart,
       hovered,
-      bloom,
-      bloomOnHover,
       seriesSpecs,
       registerSeries,
       unregisterSeries,
-      animate,
-      animationDuration,
-      revision,
-      entranceDone,
-      markEntranceDone,
       seedOf,
       common,
     ]

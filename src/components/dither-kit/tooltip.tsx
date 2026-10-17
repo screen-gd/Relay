@@ -1,43 +1,27 @@
 "use client";
 
+import { useHydratedReducedMotion } from "@/lib/motion";
 import { AnimatePresence, motion } from "motion/react";
 import { useState } from "react";
 import { useCommonChart } from "./common-context";
-import { cn } from "./lib";
 import { rgb } from "./palette";
 
-export type TooltipVariant = "default" | "frosted-glass";
-
-const VARIANT: Record<TooltipVariant, string> = {
-  default: "bg-popover",
-  "frosted-glass": "bg-popover/70 backdrop-blur-sm",
-};
-
-/**
- * Floating hover tooltip. Reads the shared common context so it works in every
- * chart family. It glides between points and fades in/out (instead of snapping),
- * and dims unselected series/slices.
- */
+/** Floating chart values use the shared overlay surface and one-shot motion. */
 export function Tooltip({
   labelKey,
   valueFormatter,
-  variant = "default",
 }: {
   labelKey?: string;
   valueFormatter?: (value: number, name: string) => string;
-  variant?: TooltipVariant;
 }) {
   const chart = useCommonChart();
-  const show = chart.ready && chart.hoverIndex != null;
-
-  // Retain the last hovered index so the card keeps its content while fading
-  // out — adjust-state-during-render (no refs in render).
+  const reduceMotion = useHydratedReducedMotion();
+  const show = chart.ready && chart.hoverIndex !== null;
   const [lastIndex, setLastIndex] = useState(0);
-  if (chart.hoverIndex != null && chart.hoverIndex !== lastIndex) {
+  if (chart.hoverIndex !== null && chart.hoverIndex !== lastIndex) {
     setLastIndex(chart.hoverIndex);
   }
   const index = chart.hoverIndex ?? lastIndex;
-
   const heading = chart.heading(index, labelKey);
   const items = chart.itemsAt(index);
 
@@ -46,50 +30,38 @@ export function Tooltip({
       {show && items.length > 0 && (
         <motion.div
           key="dither-tooltip"
-          initial={{
+          role="tooltip"
+          initial={{ opacity: 0, scale: 0.97 }}
+          animate={{ opacity: 1, scale: 1 }}
+          exit={{
             opacity: 0,
-            x: "-50%",
-            y: "-115%",
-            top: chart.tooltipTop,
-            left: chart.tooltipLeft,
+            transition: { duration: reduceMotion ? 0 : 0.12 },
           }}
-          animate={{
-            opacity: 1,
-            x: "-50%",
-            y: "-115%",
-            top: chart.tooltipTop,
-            left: chart.tooltipLeft,
-          }}
-          exit={{ opacity: 0 }}
           transition={{
-            type: "spring",
-            stiffness: 520,
-            damping: 38,
-            mass: 0.6,
+            duration: reduceMotion ? 0 : 0.18,
+            ease: [0.16, 1, 0.3, 1],
           }}
-          className={cn(
-            "pointer-events-none absolute z-10 rounded-md border px-2 py-1 shadow-sm",
-            VARIANT[variant]
-          )}
+          style={{ top: chart.tooltipTop, left: chart.tooltipLeft }}
+          className="pointer-events-none absolute z-10 -translate-x-1/2 -translate-y-full rounded-md border border-[var(--border-control)] bg-[var(--surface-overlay)] p-3 text-[var(--text-primary)] shadow-(--shadow-overlay)"
         >
-          {heading && (
-            <div className="mb-0.5 font-mono text-[10px] text-muted-foreground">
+          {heading ? (
+            <div className="mb-1 font-mono text-meta text-[var(--text-meta)]">
               {heading}
             </div>
-          )}
-          <div className="flex flex-col gap-0.5">
+          ) : null}
+          <div className="flex flex-col gap-1">
             {items.map((item) => (
               <div
                 key={item.name}
-                className="flex items-center gap-1.5 font-mono text-[11px] text-popover-foreground tabular-nums"
-                style={{ opacity: item.dimmed ? 0.4 : 1 }}
+                className="flex items-center gap-2 text-meta"
               >
                 <span
-                  className="size-2 rounded-[1px]"
+                  aria-hidden="true"
+                  className="size-2 rounded-sm"
                   style={{ backgroundColor: rgb(item.seed.fill) }}
                 />
-                <span className="text-muted-foreground">{item.label}</span>
-                <span className="ml-auto pl-2 text-foreground">
+                <span>{item.label}</span>
+                <span className="ml-auto pl-2 font-mono tabular-nums">
                   {valueFormatter
                     ? valueFormatter(item.value, item.name)
                     : item.value.toLocaleString()}

@@ -1,44 +1,46 @@
 import {
   DropdownMenu,
-  DropdownMenuTrigger,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-import { getProjectProgress } from "@/features/projects/project-domain";
+import { ArrowLeft, ExternalLink, MoreHorizontal } from "@/components/icons";
 import { ProjectOutputsPanel } from "@/components/project-outputs-panel";
 import { ProjectPortalPanel } from "@/components/project-portal-panel";
 import { Badge as OwnedBadge } from "@/components/ui/badge";
 import { Button as OwnedButton } from "@/components/ui/button";
-import { cardSurfaceClassName } from "@/components/ui/card";
 import { Progress as OwnedProgress } from "@/components/ui/progress";
 import { Switch as OwnedSwitch } from "@/components/ui/switch";
 import {
   ContentSection,
   PageContent,
-  SectionNav,
+  PageHeader,
+  PageViews,
   sectionListClassName,
   sectionRowClassName,
   SplitPane,
   WorkspacePage,
 } from "@/components/workspace-page";
+import { useWorkspaceBreadcrumb } from "@/components/workspace-shell";
+import { getProjectProgress } from "@/features/projects/project-domain";
+import { ProjectSelect } from "@/features/projects/project-select";
+import { RevisionScopePanel } from "@/features/revision-scope/revision-scope-panel";
+import { createId } from "@/features/routes/utils/date-utils";
+import { useData } from "@/lib/data-context";
 import { PROJECT_STATUS_VALUES, type ProjectStatus } from "@/lib/domain-values";
 import { downloadCsv, projectsToCsv } from "@/lib/export-csv";
-import { useData } from "@/lib/data-context";
-import { useProjectOutputDuplication } from "@/lib/project-output-data";
-import { createId } from "@/features/routes/utils/date-utils";
-import { useProjectAccess } from "./project-access";
-import { useProjectActions } from "./project-actions-provider";
 import {
   hasIntegrationLink,
   integrationDisplayText,
   integrationServices,
 } from "@/lib/integrations";
+import { useProjectOutputDuplication } from "@/lib/project-output-data";
 import { projectStatusTone } from "@/lib/project-status-style";
 import type { SettingsState, WorkItem } from "@/lib/types";
 import { cn } from "@/lib/utils";
-import { useWorkspaceBreadcrumb } from "@/components/workspace-shell";
-import { ArrowLeft, ExternalLink, MoreHorizontal } from "@/components/icons";
+import { useProjectAccess } from "./project-access";
+import { useProjectActions } from "./project-actions-provider";
 import {
   formatShortDateTime,
   ProjectActivityFeed,
@@ -50,8 +52,6 @@ import type {
   ProjectWorkspaceView,
   WorkspaceMemberOption,
 } from "./project-view";
-import { ProjectSelect } from "@/features/projects/project-select";
-import { RevisionScopePanel } from "@/features/revision-scope/revision-scope-panel";
 
 const statusOptions: ProjectStatus[] = [...PROJECT_STATUS_VALUES];
 
@@ -266,7 +266,7 @@ export function ProjectWorkspace({
         message: `Could not copy the Project Outputs: ${
           caught instanceof Error ? caught.message : "the copy is empty."
         }`,
-        tone: "warning",
+        tone: "error",
       });
     }
   }
@@ -327,65 +327,74 @@ export function ProjectWorkspace({
   return (
     <WorkspacePage family="master-detail" mode="fill">
       {/* The visible title lives in the shell breadcrumb. */}
-      <h1 className="sr-only">{project.title}</h1>
       <PageContent mode="fill">
         <div className="flex h-full min-h-0 flex-col">
-          <div className="flex min-w-0 shrink-0 items-center justify-between gap-3">
-            <SectionNav
-              aria-label="Project workspace views"
-              items={projectViews}
-              value={view}
-              onValueChange={onViewChange}
-            />
-            <div className="flex shrink-0 items-center gap-2">
-              <OwnedButton variant="ghost" size="sm" onClick={onBack}>
-                <ArrowLeft aria-hidden="true" />
-                Projects
-              </OwnedButton>
-              {canEdit ? (
-                <OwnedButton
-                  variant="secondary"
-                  size="sm"
-                  onClick={() => onEdit(project)}
-                >
-                  Edit
+          <PageViews
+            aria-label="Project workspace views"
+            panelId="project-workspace-panel"
+            items={projectViews}
+            value={view}
+            onValueChange={onViewChange}
+          />
+          <PageHeader
+            title={project.title}
+            actions={
+              <div className="flex shrink-0 items-center gap-2">
+                <OwnedButton variant="ghost" size="sm" onClick={onBack}>
+                  <ArrowLeft aria-hidden="true" />
+                  Projects
                 </OwnedButton>
-              ) : null}
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
+                {canEdit ? (
                   <OwnedButton
-                    variant="ghost"
-                    size="icon-sm"
-                    aria-label="Project actions"
+                    variant="secondary"
+                    size="sm"
+                    onClick={() => onEdit(project)}
                   >
-                    <MoreHorizontal />
+                    Edit
                   </OwnedButton>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  {menuItems.map((item) => (
-                    <DropdownMenuItem
-                      key={item.id}
-                      className={
-                        item.id === "delete"
-                          ? "text-destructive focus:text-destructive"
-                          : undefined
-                      }
-                      onSelect={menuActions[item.id]}
+                ) : null}
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <OwnedButton
+                      variant="ghost"
+                      size="icon-sm"
+                      aria-label="Project actions"
                     >
-                      {item.label}
-                    </DropdownMenuItem>
-                  ))}
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
-          </div>
-          <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain pt-4 pb-5">
+                      <MoreHorizontal />
+                    </OwnedButton>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    {menuItems.map((item) => (
+                      <DropdownMenuItem
+                        key={item.id}
+                        className={
+                          item.id === "delete"
+                            ? "text-[var(--status-danger)] focus:text-[var(--status-danger)]"
+                            : undefined
+                        }
+                        onSelect={menuActions[item.id]}
+                      >
+                        {item.label}
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+            }
+          />
+          <div
+            id="project-workspace-panel"
+            role="tabpanel"
+            aria-labelledby={`project-workspace-panel-${view}-tab`}
+            tabIndex={0}
+            className="min-h-0 flex-1 pt-3 pb-4"
+          >
             {view === "overview" ? (
               <SplitPane
                 ratio="inspector"
                 className="h-auto items-start"
                 primary={
-                  <div className="grid content-start gap-4">
+                  <div className="grid content-start gap-10">
                     <ContentSection title="Workflow">
                       <ProjectStageTracker status={project.status} />
                     </ContentSection>
@@ -405,8 +414,8 @@ export function ProjectWorkspace({
                     >
                       <p
                         className={cn(
-                          "whitespace-pre-wrap text-sm leading-6",
-                          !project.notes && "text-muted-foreground"
+                          "whitespace-pre-wrap text-body",
+                          !project.notes && "text-[var(--text-meta)]"
                         )}
                       >
                         {project.notes || "No internal notes."}
@@ -440,30 +449,27 @@ export function ProjectWorkspace({
                 secondary={
                   <aside
                     aria-label="Project details"
-                    className={cn(
-                      cardSurfaceClassName,
-                      "h-fit text-sm lg:sticky lg:top-0"
-                    )}
+                    className={cn("h-fit text-body")}
                   >
-                    <div className="flex items-center justify-between gap-3 px-5 pt-5">
-                      <h2 className="text-sm font-semibold">Details</h2>
-                      <span className="font-mono text-xs tabular-nums text-muted-foreground">
+                    <div className="flex items-center justify-between gap-3">
+                      <h2 className="text-body font-semibold">Details</h2>
+                      <span className="font-mono text-meta tabular-nums text-[var(--text-meta)]">
                         {progress}%
                       </span>
                     </div>
-                    <div className="px-5 pt-4">
+                    <div className="pt-4">
                       <OwnedProgress
                         value={progress}
                         aria-label="Project workflow progress"
-                        className="h-1"
+                        className=""
                       />
-                      <p className="mt-2 text-xs text-muted-foreground">
+                      <p className="mt-2 text-meta text-[var(--text-meta)]">
                         {clientPortalStage(project.status)}
                       </p>
                     </div>
-                    <dl className="grid px-5 pt-3 pb-4">
-                      <div className="flex min-h-9 items-center justify-between gap-4 text-xs">
-                        <dt className="shrink-0 text-muted-foreground">
+                    <dl className="grid pt-3">
+                      <div className="flex min-h-10 items-center justify-between gap-4 text-body">
+                        <dt className="shrink-0 text-[var(--text-primary)]">
                           Stage
                         </dt>
                         <dd className="min-w-0">
@@ -476,7 +482,7 @@ export function ProjectWorkspace({
                                   onStatusChange(project, status);
                               }}
                               compact
-                              className="!h-7 min-w-[8.5rem] text-xs"
+                              className="min-w-32"
                             />
                           ) : (
                             <ProjectStatusBadge status={project.status} />
@@ -515,7 +521,7 @@ export function ProjectWorkspace({
                 }
               />
             ) : (
-              <div className="grid content-start gap-4">
+              <div className="grid content-start gap-10">
                 {view === "outputs" ? (
                   <ProjectOutputsPanel
                     project={project}
@@ -548,7 +554,7 @@ export function ProjectWorkspace({
                     <ContentSection
                       title="External links"
                       metadata={
-                        <OwnedBadge variant="secondary" className="rounded-sm">
+                        <OwnedBadge variant="secondary" className="">
                           {configuredLinks.length}
                         </OwnedBadge>
                       }
@@ -565,14 +571,14 @@ export function ProjectWorkspace({
                                 rel="noreferrer"
                                 className={cn(
                                   sectionRowClassName,
-                                  "flex items-center justify-between gap-3 text-sm"
+                                  "flex items-center justify-between gap-3 text-body"
                                 )}
                               >
                                 <span className="min-w-0 truncate">
                                   {integrationDisplayText(link, service.name)}
                                 </span>
                                 <ExternalLink
-                                  className="size-4 shrink-0 text-muted-foreground"
+                                  className="size-4 shrink-0 text-[var(--text-primary)]"
                                   aria-hidden="true"
                                 />
                               </a>
@@ -580,7 +586,7 @@ export function ProjectWorkspace({
                           )}
                         </div>
                       ) : (
-                        <p className="px-5 pb-5 text-sm text-muted-foreground">
+                        <p className="px-4 pb-4 text-body text-[var(--text-meta)]">
                           No external links yet.
                         </p>
                       )}
@@ -609,7 +615,7 @@ function ProjectStageTracker({ status }: { status: string }) {
   const currentIndex = WORKFLOW_STAGES.indexOf(clientPortalStage(status));
 
   return (
-    <ol className="grid grid-cols-4 gap-1.5" aria-label="Workflow stages">
+    <ol className="grid grid-cols-4 gap-2" aria-label="Workflow stages">
       {WORKFLOW_STAGES.map((stage, index) => {
         const reached = index <= currentIndex;
         return (
@@ -622,15 +628,17 @@ function ProjectStageTracker({ status }: { status: string }) {
               className={cn(
                 "block h-1 rounded-sm",
                 reached
-                  ? "bg-[var(--app-ink)]"
-                  : "bg-[var(--app-progress-track)]",
+                  ? "bg-[var(--accent-mark)]"
+                  : "bg-[var(--surface-active)]",
                 "rounded-sm"
               )}
             />
             <span
               className={cn(
-                "mt-2 block text-xs",
-                reached ? "text-foreground" : "text-muted-foreground",
+                "mt-2 block text-meta",
+                reached
+                  ? "text-[var(--text-primary)]"
+                  : "text-[var(--text-meta)]",
                 index === currentIndex && "font-medium"
               )}
             >
@@ -651,8 +659,8 @@ function ProjectMetadataRow({
   value: string;
 }) {
   return (
-    <div className="flex min-h-9 items-center justify-between gap-4 text-xs">
-      <dt className="shrink-0 text-muted-foreground">{label}</dt>
+    <div className="flex min-h-10 items-center justify-between gap-4 text-body">
+      <dt className="shrink-0 text-[var(--text-primary)]">{label}</dt>
       <dd className="text-right font-medium [overflow-wrap:anywhere]">
         {value}
       </dd>
@@ -663,11 +671,7 @@ function ProjectMetadataRow({
 function ProjectStatusBadge({ status }: { status: string }) {
   return (
     <OwnedBadge
-      variant="outline"
-      className={cn(
-        "rounded-sm",
-        projectStatusTone(isDoneStatus(status) ? "Delivered" : status)
-      )}
+      status={projectStatusTone(isDoneStatus(status) ? "Delivered" : status)}
     >
       {status}
     </OwnedBadge>

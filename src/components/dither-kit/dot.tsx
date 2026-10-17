@@ -10,7 +10,7 @@ function dotPaint(variant: DotVariant, seed: Seed) {
   switch (variant) {
     case "colored-border":
       return {
-        fill: "var(--card, #0b0b0c)",
+        fill: "var(--surface-page)",
         stroke: rgb(seed.line),
         strokeWidth: 1.5,
       };
@@ -18,8 +18,8 @@ function dotPaint(variant: DotVariant, seed: Seed) {
       return { fill: rgb(seed.star), stroke: rgb(seed.line), strokeWidth: 1 };
     default:
       return {
-        fill: "var(--card, #0b0b0c)",
-        stroke: rgb(seed.star, 0.8),
+        fill: "var(--surface-page)",
+        stroke: rgb(seed.star),
         strokeWidth: 1,
       };
   }
@@ -40,13 +40,7 @@ export function Dot({
   const paint = dotPaint(variant, seed);
 
   return (
-    // Fade in once the fill has drawn so dots don't float over the entrance.
-    <g
-      style={{
-        opacity: ctx.entranceDone ? 1 : 0,
-        transition: "opacity 300ms ease",
-      }}
-    >
+    <g>
       {band.map((b, i) => (
         <circle
           {...paint}
@@ -72,8 +66,7 @@ export function ActiveDot({
   const ctx = useChart();
   const { dataKey, seed } = useSeries("ActiveDot");
   const band = ctx.bands[dataKey];
-  if (!ctx.ready || !band || ctx.hoverIndex == null || !ctx.entranceDone)
-    return null;
+  if (!ctx.ready || !band || ctx.hoverIndex == null) return null;
   const b = band[ctx.hoverIndex];
   if (!b) return null;
   const paint = dotPaint(variant, seed);
@@ -82,8 +75,6 @@ export function ActiveDot({
 
   return (
     <g>
-      {/* Soft halo so the active point is unmistakable over the dither. */}
-      <circle cx={cx} cy={cy} r={r + 3} fill={rgb(seed.line, 1, 0.18)} />
       <circle cx={cx} cy={cy} r={r} {...paint} strokeWidth={2} />
     </g>
   );

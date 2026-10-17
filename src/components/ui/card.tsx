@@ -2,9 +2,9 @@ import * as React from "react";
 
 import { cn } from "@/lib/utils";
 
-/** Shared panel surface. Reused by elements that cannot render a `Card` div. */
+/** Shared surface for cards, sections, and data panels. */
 export const cardSurfaceClassName =
-  "flex flex-col rounded-[var(--radius-panel)] border border-[var(--panel-edge)] bg-card text-card-foreground";
+  "flex flex-col rounded-md border border-[var(--border-panel)] bg-card text-card-foreground";
 
 function Card({ className, ...props }: React.ComponentProps<"div">) {
   return (
@@ -21,7 +21,7 @@ function CardHeader({ className, ...props }: React.ComponentProps<"div">) {
     <div
       data-slot="card-header"
       className={cn(
-        "flex min-h-12 items-center justify-between gap-3 px-4 py-1.5",
+        "flex min-h-12 items-center justify-between gap-3 p-4",
         className
       )}
       {...props}

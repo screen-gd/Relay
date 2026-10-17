@@ -1,8 +1,28 @@
 "use client";
+import { MoreHorizontal as RelayActionMenuIcon } from "@/components/icons";
+import {
+  DropdownMenu as RelayActionMenu,
+  DropdownMenuContent as RelayActionMenuContent,
+  DropdownMenuItem as RelayActionMenuItem,
+  DropdownMenuTrigger as RelayActionMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
-import { useEffect, useMemo, useState } from "react";
-import type { SettingsState, WorkItem } from "@/lib/types";
-import { normalizeOptionalTimecode } from "@/lib/timecode";
+import { useConfirm } from "@/components/confirm-dialog";
+import {
+  Bell,
+  Clock3,
+  Copy,
+  FolderKanban,
+  UserRound,
+  Users,
+} from "@/components/icons";
+import { Badge as OwnedBadge } from "@/components/ui/badge";
+import { Button as OwnedButton } from "@/components/ui/button";
+import { FieldLayout } from "@/components/ui/field-layout";
+import { Input as OwnedInput } from "@/components/ui/input";
+import { Label as OwnedLabel } from "@/components/ui/label";
+import { Switch as OwnedSwitch } from "@/components/ui/switch";
+import { Textarea as OwnedTextarea } from "@/components/ui/textarea";
 import {
   ContentSection,
   MetricItem,
@@ -12,16 +32,14 @@ import {
   SplitPane,
   WorkspacePage,
 } from "@/components/workspace-page";
-import { Button as OwnedButton } from "@/components/ui/button";
-import { Badge as OwnedBadge } from "@/components/ui/badge";
-import { FieldLayout } from "@/components/ui/field-layout";
-import { Input as OwnedInput } from "@/components/ui/input";
-import { Label as OwnedLabel } from "@/components/ui/label";
-import { Switch as OwnedSwitch } from "@/components/ui/switch";
-import { Textarea as OwnedTextarea } from "@/components/ui/textarea";
+import { ProjectSelect } from "@/features/projects/project-select";
+import { copyText } from "@/features/routes/shared/clipboard";
+import { EmptyPanel } from "@/features/routes/shared/empty-panel";
+import { formatDate } from "@/features/routes/utils/date-utils";
 import { trackOptionalEvent } from "@/lib/telemetry";
-import { cn } from "@/lib/utils";
-import { useTeamController } from "./team-controller";
+import { normalizeOptionalTimecode } from "@/lib/timecode";
+import type { SettingsState, WorkItem } from "@/lib/types";
+import { useEffect, useMemo, useState } from "react";
 import {
   TEAM_INVITE_CODE_PATTERN,
   TEAM_MEMBER_PERMISSION_LABELS,
@@ -29,21 +47,8 @@ import {
   TEAM_WORKSPACE_NAME_LIMIT,
   teamRoleOptions,
 } from "./team-constants";
+import { useTeamController } from "./team-controller";
 import { buildClientSummaries, isValidEmail } from "./team-utils";
-import { copyText } from "@/features/routes/shared/clipboard";
-import { EmptyPanel } from "@/features/routes/shared/empty-panel";
-import { formatDate } from "@/features/routes/utils/date-utils";
-import {
-  Bell,
-  Clock3,
-  Copy,
-  FolderKanban,
-  LoaderCircle,
-  UserRound,
-  Users,
-} from "@/components/icons";
-import { ProjectSelect } from "@/features/projects/project-select";
-import { useConfirm } from "@/components/confirm-dialog";
 
 type EditableTeamRole = "Editor" | "Viewer";
 
@@ -159,6 +164,15 @@ export function TeamDesignPage({
   }, [canManageTeam, normalizeLegacyRoles, teamData]);
 
   async function runTeamAction<T>(label: string, action: () => Promise<T>) {
+    if (
+      (label === "leave" || label === "remove") &&
+      !(await confirm({
+        title: label === "leave" ? "Leave workspace?" : "Remove member?",
+        confirmLabel: label === "leave" ? "Leave" : "Remove",
+        destructive: true,
+      }))
+    )
+      return;
     setBusyAction(label);
     setTeamError("");
     try {
@@ -203,7 +217,7 @@ export function TeamDesignPage({
         title="Team"
         description="Manage members, shared project comments, notifications, and workspace activity."
       />
-      <PageContent className="space-y-5">
+      <PageContent className="">
         <MetricStrip columns={4}>
           {[
             {
@@ -244,8 +258,8 @@ export function TeamDesignPage({
                   <span
                     className={
                       metric.highlighted
-                        ? "rounded-md bg-primary/15 p-2 text-primary"
-                        : "rounded-md bg-muted p-2 text-muted-foreground"
+                        ? "text-[var(--text-primary)]"
+                        : "text-[var(--text-meta)]"
                     }
                   >
                     <Icon aria-hidden="true" className="size-5" />
@@ -259,7 +273,7 @@ export function TeamDesignPage({
         {teamError ? (
           <div
             role="alert"
-            className="rounded-xl border border-destructive/50 bg-destructive/10 px-4 py-3 text-sm font-semibold text-destructive shadow-sm"
+            className="border-t border-[var(--border-hairline)] pt-4 text-body font-medium text-[var(--status-danger)]"
           >
             {teamError}
           </div>
@@ -267,37 +281,33 @@ export function TeamDesignPage({
 
         {!isUserLoaded ? (
           <ContentSection
-            bodyClassName="flex min-h-28 items-center gap-3 p-6 text-sm text-[var(--app-muted)]"
+            bodyClassName="flex min-h-28 items-center gap-3 text-body text-[var(--text-meta)]"
             role="status"
           >
-            <LoaderCircle
-              aria-hidden="true"
-              className="size-5 animate-spin text-primary"
-            />
             Checking account status...
           </ContentSection>
         ) : !isSignedIn ? (
           <ContentSection
             title="Team access"
             description="Shared workspaces keep members, project comments, notifications, activity, and chat in sync."
-            className="shadow-[var(--app-shadow-1)]"
+            className=""
           >
             <div className="max-w-3xl">
-              <h2 className="text-xl font-semibold leading-tight md:text-2xl">
+              <h2 className="text-body font-medium text-[var(--text-primary)]">
                 Team workspaces require an account
               </h2>
-              <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
+              <p className="mt-3 text-body text-[var(--text-meta)]">
                 Local mode is available for solo tracking, but invites, shared
                 projects, comments, notifications, activity, and chat need Clerk
                 sign-in so Convex can sync the right team workspace.
               </p>
-              <div className="mt-5 flex flex-col gap-2 sm:flex-row">
+              <div className="mt-4 flex flex-col gap-2 sm:flex-row">
                 <OwnedButton type="button" onClick={() => openSignUp()}>
                   Create Account
                 </OwnedButton>
                 <OwnedButton
                   type="button"
-                  variant="outline"
+                  variant="secondary"
                   onClick={() => openSignIn()}
                 >
                   Sign In
@@ -307,25 +317,21 @@ export function TeamDesignPage({
           </ContentSection>
         ) : isConvexAuthLoading ? (
           <ContentSection
-            bodyClassName="flex min-h-28 items-center gap-3 p-6 text-sm text-[var(--app-muted)]"
+            bodyClassName="flex min-h-28 items-center gap-3 text-body text-[var(--text-meta)]"
             role="status"
           >
-            <LoaderCircle
-              aria-hidden="true"
-              className="size-5 animate-spin text-primary"
-            />
             Connecting your account to Team sync...
           </ContentSection>
         ) : !isConvexAuthenticated ? (
           <ContentSection
             role="alert"
-            className="border-destructive/50 bg-destructive/10 text-destructive"
+            className="bg-transparent text-[var(--status-danger)]"
             bodyClassName="p-6 shadow-sm md:p-8"
           >
-            <h2 className="text-xl font-semibold">
+            <h2 className="text-body font-medium text-[var(--text-primary)]">
               Team sync is not connected
             </h2>
-            <p className="mt-2 text-sm leading-relaxed">
+            <p className="mt-2 text-body">
               Clerk sign-in is loaded, but Convex did not receive an
               authenticated token. Check `convex/auth.config.ts`, the Clerk JWT
               template audience, and the Clerk issuer environment variables
@@ -334,13 +340,9 @@ export function TeamDesignPage({
           </ContentSection>
         ) : teamData === undefined ? (
           <ContentSection
-            bodyClassName="flex min-h-28 items-center gap-3 p-6 text-sm text-[var(--app-muted)]"
+            bodyClassName="flex min-h-28 items-center gap-3 text-body text-[var(--text-meta)]"
             role="status"
           >
-            <LoaderCircle
-              aria-hidden="true"
-              className="size-5 animate-spin text-primary"
-            />
             Loading team workspace...
           </ContentSection>
         ) : !teamData ? (
@@ -357,7 +359,7 @@ export function TeamDesignPage({
               description="Team includes three editing seats. Viewers are free and do not use an editing seat."
             >
               <FieldLayout
-                className="mt-5"
+                className="mt-4"
                 label="Workspace name"
                 description={`${workspaceName.length}/${TEAM_WORKSPACE_NAME_LIMIT} characters`}
               >
@@ -385,7 +387,7 @@ export function TeamDesignPage({
               description="Use the six-character code from your team owner. Your signed-in email must match a pending invite."
             >
               <FieldLayout
-                className="mt-5"
+                className="mt-4"
                 label="Invite code"
                 description="Enter the six-character code from your team owner."
                 error={
@@ -407,7 +409,7 @@ export function TeamDesignPage({
               </FieldLayout>
               <OwnedButton
                 type="button"
-                variant="outline"
+                variant="secondary"
                 className="mt-4"
                 disabled={Boolean(busyAction) || !inviteCodeIsValid}
                 onClick={() =>
@@ -423,14 +425,14 @@ export function TeamDesignPage({
             data-slot="team-administration"
             ratio="supporting"
             primary={
-              <div className="grid min-w-0 content-start gap-4">
+              <div className="grid min-w-0 content-start">
                 <ContentSection
                   title={teamData.workspace.name}
                   description={
                     canManageTeam ? (
                       <span>
                         Invite code{" "}
-                        <span className="font-mono font-bold tracking-widest text-[var(--app-highlight)]">
+                        <span className="font-mono font-semibold text-[var(--text-primary)]">
                           {teamData.workspace.inviteCode}
                         </span>
                       </span>
@@ -447,7 +449,7 @@ export function TeamDesignPage({
                         <OwnedButton
                           type="button"
                           size="sm"
-                          variant="outline"
+                          variant="secondary"
                           onClick={() =>
                             copyInviteCode(teamData.workspace.inviteCode)
                           }
@@ -457,55 +459,66 @@ export function TeamDesignPage({
                         </OwnedButton>
                       ) : null}
                       {canLeaveWorkspace ? (
-                        <OwnedButton
-                          type="button"
-                          size="sm"
-                          variant="outline"
-                          disabled={Boolean(busyAction)}
-                          onClick={() =>
-                            runTeamAction("leave", () =>
-                              leaveWorkspace({ teamId: teamData.workspace._id })
-                            )
-                          }
-                          className="border-destructive/50 text-destructive hover:bg-destructive/10 hover:text-destructive"
-                        >
-                          Leave Workspace
-                        </OwnedButton>
+                        <RelayActionMenu>
+                          <RelayActionMenuTrigger asChild>
+                            <OwnedButton
+                              type="button"
+                              variant="ghost"
+                              size="icon-sm"
+                              aria-label="More actions"
+                              disabled={Boolean(busyAction)}
+                            >
+                              <RelayActionMenuIcon aria-hidden="true" />
+                            </OwnedButton>
+                          </RelayActionMenuTrigger>
+                          <RelayActionMenuContent align="end">
+                            <RelayActionMenuItem
+                              variant="destructive"
+                              disabled={Boolean(busyAction)}
+                              onSelect={() =>
+                                runTeamAction("leave", () =>
+                                  leaveWorkspace({
+                                    teamId: teamData.workspace._id,
+                                  })
+                                )
+                              }
+                            >
+                              Leave Workspace
+                            </RelayActionMenuItem>
+                          </RelayActionMenuContent>
+                        </RelayActionMenu>
                       ) : null}
                     </div>
                   }
                   bodyMode="flush"
                 >
-                  <div className="max-h-[min(560px,calc(100dvh-21rem))] divide-y divide-[var(--app-border)] overflow-y-auto overscroll-contain">
+                  <div className="max-h-[min(560px,calc(100dvh-21rem))] overflow-y-auto overscroll-contain">
                     {teamData.members.map((member) => (
                       <article
                         key={member._id}
-                        className="flex flex-col justify-between gap-3 p-4 md:flex-row md:items-center"
+                        id={`member-${member.userId}`}
+                        className="flex flex-col justify-between gap-3 border-t border-[var(--border-hairline)] py-4 first:border-t-0 first:pt-0 md:flex-row md:items-center"
                       >
                         <div className="min-w-0">
                           <div className="flex flex-wrap items-center gap-2">
-                            <h3 className="text-sm font-semibold">
+                            <h3 className="text-body font-medium">
                               {member.name}
                             </h3>
-                            <OwnedBadge
-                              variant="outline"
-                              className="rounded-md text-[10px]"
-                            >
+                            <OwnedBadge variant="secondary" className="">
                               {displayTeamRole(member.role)}
                             </OwnedBadge>
                             <OwnedBadge
                               variant="secondary"
-                              className={cn(
-                                "rounded-md",
+                              status={
                                 member.status === "active"
-                                  ? "bg-[var(--status-success-bg)] text-[var(--status-success)]"
-                                  : "bg-[var(--status-warning-bg)] text-[var(--status-warning)]"
-                              )}
+                                  ? "success"
+                                  : "warning"
+                              }
                             >
                               {member.status}
                             </OwnedBadge>
                           </div>
-                          <p className="mt-1 text-xs text-muted-foreground">
+                          <p className="mt-1 text-meta text-[var(--text-meta)]">
                             {member.email || "No email on profile"}
                           </p>
                         </div>
@@ -538,7 +551,7 @@ export function TeamDesignPage({
                                 <OwnedBadge
                                   key={permission}
                                   variant="secondary"
-                                  className="rounded-md text-[10px]"
+                                  className=""
                                 >
                                   {permission}
                                 </OwnedBadge>
@@ -550,7 +563,7 @@ export function TeamDesignPage({
                                 ([permission, label]) => (
                                   <OwnedLabel
                                     key={permission}
-                                    className="flex items-center gap-2 text-xs font-normal text-muted-foreground"
+                                    className="flex items-center gap-2 font-normal"
                                   >
                                     <OwnedSwitch
                                       checked={Boolean(
@@ -582,7 +595,7 @@ export function TeamDesignPage({
                             <OwnedButton
                               type="button"
                               size="sm"
-                              variant="outline"
+                              variant="secondary"
                               disabled={Boolean(busyAction)}
                               onClick={async () => {
                                 if (
@@ -607,25 +620,37 @@ export function TeamDesignPage({
                             </OwnedButton>
                           ) : null}
                           {canManageTeam && member.role !== "Owner" ? (
-                            <OwnedButton
-                              type="button"
-                              size="sm"
-                              variant="ghost"
-                              disabled={Boolean(busyAction)}
-                              onClick={() =>
-                                runTeamAction("remove", () =>
-                                  removeMember({
-                                    teamId: teamData.workspace._id,
-                                    memberId: member._id,
-                                  })
-                                )
-                              }
-                              className="text-destructive hover:bg-destructive/10 hover:text-destructive"
-                            >
-                              {member.status === "invited"
-                                ? "Cancel Invite"
-                                : "Remove"}
-                            </OwnedButton>
+                            <RelayActionMenu>
+                              <RelayActionMenuTrigger asChild>
+                                <OwnedButton
+                                  type="button"
+                                  variant="ghost"
+                                  size="icon-sm"
+                                  aria-label="More actions"
+                                  disabled={Boolean(busyAction)}
+                                >
+                                  <RelayActionMenuIcon aria-hidden="true" />
+                                </OwnedButton>
+                              </RelayActionMenuTrigger>
+                              <RelayActionMenuContent align="end">
+                                <RelayActionMenuItem
+                                  variant="destructive"
+                                  disabled={Boolean(busyAction)}
+                                  onSelect={() =>
+                                    runTeamAction("remove", () =>
+                                      removeMember({
+                                        teamId: teamData.workspace._id,
+                                        memberId: member._id,
+                                      })
+                                    )
+                                  }
+                                >
+                                  {member.status === "invited"
+                                    ? "Cancel Invite"
+                                    : "Remove"}
+                                </RelayActionMenuItem>
+                              </RelayActionMenuContent>
+                            </RelayActionMenu>
                           ) : null}
                         </div>
                       </article>
@@ -633,8 +658,10 @@ export function TeamDesignPage({
                   </div>
 
                   {canManageTeam ? (
-                    <div className="border-t border-[var(--app-border)] p-5">
-                      <h3 className="text-sm font-semibold">Invite member</h3>
+                    <div className="mt-4 border-t border-[var(--border-hairline)] pt-4">
+                      <h3 className="text-meta font-medium text-[var(--text-meta)]">
+                        Invite member
+                      </h3>
                       <div className="mt-3 grid items-end gap-3 md:grid-cols-[minmax(0,1fr)_160px_120px]">
                         <FieldLayout
                           label="Email"
@@ -671,7 +698,7 @@ export function TeamDesignPage({
                         />
                         <OwnedButton
                           type="button"
-                          variant="outline"
+                          variant="secondary"
                           disabled={Boolean(busyAction) || !inviteEmailIsValid}
                           onClick={() =>
                             runTeamAction("invite", async () => {
@@ -692,7 +719,7 @@ export function TeamDesignPage({
                 </ContentSection>
 
                 <ContentSection
-                  title="Project Comments"
+                  title="Project comments"
                   description="Leave notes for the team. Use @name or @emailname to notify someone."
                   actions={
                     <div className="w-full md:w-64">
@@ -714,11 +741,11 @@ export function TeamDesignPage({
                 >
                   {selectedProject ? (
                     <div className="grid gap-4">
-                      <div className="rounded-md border border-[var(--app-border)] bg-[var(--app-soft-panel)] p-3">
-                        <p className="text-sm font-semibold">
+                      <div>
+                        <p className="text-body font-medium">
                           {selectedProject.title}
                         </p>
-                        <p className="mt-1 text-xs text-muted-foreground">
+                        <p className="mt-1 text-meta text-[var(--text-meta)]">
                           {selectedProject.client || "No client"} ·{" "}
                           {selectedProject.status} · Due{" "}
                           {formatDate(
@@ -732,31 +759,31 @@ export function TeamDesignPage({
                         aria-live="polite"
                       >
                         {projectComments === undefined ? (
-                          <p className="text-sm text-muted-foreground">
+                          <p className="text-body text-[var(--text-meta)]">
                             Loading comments...
                           </p>
                         ) : projectComments.length ? (
                           projectComments.map((comment) => (
                             <article
                               key={comment._id}
-                              className="rounded-md border border-[var(--app-border)] bg-[var(--app-panel)] p-3"
+                              className="border-t border-[var(--border-hairline)] pt-3 first:border-t-0 first:pt-0"
                             >
-                              <p className="text-sm font-semibold">
+                              <p className="text-body font-medium">
                                 {comment.authorName}{" "}
-                                <time className="text-xs font-normal text-muted-foreground">
+                                <time className="text-meta font-normal text-[var(--text-meta)]">
                                   {formatActivityTime(comment.createdAt)}
                                 </time>
                               </p>
                               {comment.timecode ? (
-                                <span className="mt-2 inline-flex items-center gap-1 rounded-md bg-primary/15 px-2 py-1 text-xs font-semibold text-primary">
+                                <span className="mt-2 inline-flex items-center gap-1 bg-[var(--surface-active)] px-2 py-1 text-meta text-[var(--text-primary)]">
                                   <Clock3
                                     aria-hidden="true"
-                                    className="size-3.5"
+                                    className="size-4"
                                   />
                                   {comment.timecode}
                                 </span>
                               ) : null}
-                              <p className="mt-2 whitespace-pre-wrap text-sm">
+                              <p className="mt-2 whitespace-pre-wrap text-body">
                                 {comment.body}
                               </p>
                             </article>
@@ -867,23 +894,19 @@ export function TeamDesignPage({
                     teamData.notifications.map((notification) => (
                       <article
                         key={notification._id}
-                        className={
-                          notification.read
-                            ? "flex justify-between gap-3 rounded-md border border-[var(--app-border)] p-3"
-                            : "flex justify-between gap-3 rounded-md border border-[var(--app-accent)] bg-[var(--app-active)] p-3"
-                        }
+                        className="flex justify-between gap-3 border-t border-[var(--border-hairline)] py-3 first:border-t-0 first:pt-0"
                       >
                         <div className="min-w-0">
-                          <p className="text-sm font-medium">
+                          <p className="text-body font-medium">
                             {notification.message}
                           </p>
                           {notification.projectId ? (
-                            <p className="mt-1 text-xs font-semibold text-primary">
+                            <p className="mt-1 text-meta text-[var(--text-primary)]">
                               Project:{" "}
                               {teamProjectLabel(notification.projectId)}
                             </p>
                           ) : null}
-                          <time className="mt-1 block text-xs text-muted-foreground">
+                          <time className="mt-1 block text-meta text-[var(--text-meta)]">
                             {formatActivityTime(notification.createdAt)}
                           </time>
                         </div>
@@ -892,7 +915,7 @@ export function TeamDesignPage({
                           teamProjectTitles[notification.projectId] ? (
                             <OwnedButton
                               type="button"
-                              size="xs"
+                              size="sm"
                               variant="ghost"
                               onClick={() => {
                                 showTeamProject(notification.projectId);
@@ -909,7 +932,7 @@ export function TeamDesignPage({
                           {!notification.read ? (
                             <OwnedButton
                               type="button"
-                              size="xs"
+                              size="sm"
                               variant="ghost"
                               onClick={() =>
                                 runTeamAction("read", () =>
@@ -934,7 +957,7 @@ export function TeamDesignPage({
                 </ContentSection>
 
                 <ContentSection
-                  title="Activity Feed"
+                  title="Activity feed"
                   description="Workspace creation, invites, comments, and project updates."
                   bodyClassName="grid max-h-[min(460px,50dvh)] gap-2 overflow-y-auto overscroll-contain"
                 >
@@ -942,22 +965,22 @@ export function TeamDesignPage({
                     teamData.activity.map((activity) => (
                       <article
                         key={activity._id}
-                        className="rounded-md border-l-2 border-[var(--app-accent)] bg-[var(--app-soft-panel)] p-3"
+                        className="border-t border-[var(--border-hairline)] py-3 first:border-t-0 first:pt-0"
                       >
-                        <p className="text-sm font-medium">
+                        <p className="text-body font-medium">
                           {activity.message}
                         </p>
                         {activity.projectId ? (
                           <div className="mt-1 flex flex-wrap items-center gap-2">
-                            <p className="text-xs font-semibold text-primary">
+                            <p className="text-meta text-[var(--text-primary)]">
                               Project: {teamProjectLabel(activity.projectId)}
                             </p>
                             {teamProjectTitles[activity.projectId] ? (
                               <OwnedButton
                                 type="button"
-                                size="xs"
-                                variant="link"
-                                className="h-auto p-0"
+                                size="sm"
+                                variant="ghost"
+                                className=""
                                 onClick={() =>
                                   showTeamProject(activity.projectId)
                                 }
@@ -967,7 +990,7 @@ export function TeamDesignPage({
                             ) : null}
                           </div>
                         ) : null}
-                        <time className="mt-1 block text-xs text-muted-foreground">
+                        <time className="mt-1 block text-meta text-[var(--text-meta)]">
                           {formatActivityTime(activity.createdAt)}
                         </time>
                       </article>

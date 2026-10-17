@@ -2,7 +2,7 @@
 
 import type { ChartConfig } from "./chart-context";
 import { cn } from "./lib";
-import { rgb, seedOfColor } from "./palette";
+import { colorVariable } from "./palette";
 
 /**
  * An in-flow legend rendered as a sibling of the chart rather than an overlay.
@@ -33,23 +33,23 @@ export function BlockLegend({
   return (
     <ul
       className={cn(
-        "flex flex-wrap gap-x-4 gap-y-1.5 px-1",
+        "flex flex-wrap gap-x-4 gap-y-1 px-1",
         align === "center" && "justify-center",
         align === "end" && "justify-end",
         className
       )}
     >
       {Object.entries(config).map(([name, entry]) => {
-        const seed = seedOfColor(entry.color);
         const value = values?.[name];
         return (
           <li
             key={name}
-            className="flex items-center gap-1.5 font-mono text-[11px] text-muted-foreground"
+            className="flex items-center gap-2 font-mono text-meta text-[var(--text-meta)]"
           >
             <span
-              className="size-2 rounded-[1px]"
-              style={{ backgroundColor: rgb(seed.fill) }}
+              aria-hidden="true"
+              className="size-2 rounded-sm"
+              style={{ backgroundColor: colorVariable(entry.color) }}
             />
             <span>{entry.label ?? name}</span>
             {value !== undefined ? (

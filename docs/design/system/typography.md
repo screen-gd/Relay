@@ -1,35 +1,36 @@
 # Typography
 
-## Purpose
+## Fonts
 
-Make hierarchy and dense production data easy to scan without changing the current type voice.
+- **Geist Sans** for every title, label and paragraph.
+- **Geist Mono** for numbers, dates, durations, timecodes, IDs, amounts and keyboard shortcuts.
 
-## Anatomy
+Both are self-hosted through Fontsource (`@fontsource-variable/geist`, `@fontsource-variable/geist-mono`). There is no display face: Space Grotesk was removed in commit 4971d0a and stays out. `--font-display` and `.font-display` are dropped.
 
-Use the current font set: Space Grotesk for display and page titles, Geist Sans for the interface and body, and Geist Mono for code and fixed-width data. Define page title, section title, body, label, metadata, numeric, and code roles.
+## Scale
 
-## Behavior
+Five sizes. Every piece of text uses one of these roles; arbitrary sizes (`text-[11px]`, `text-[15px]`, `text-[34px]`) are not allowed.
 
-Use rem sizes, clear weight and line-height steps, short labels, and sentence case. Prose uses a shared typeset wrapper. Never use size or weight as the only status cue.
+| Role           | Size / line height | Weight                | Font          | Use                                                                                |
+| -------------- | ------------------ | --------------------- | ------------- | ---------------------------------------------------------------------------------- |
+| `text-meta`    | 12 / 16            | 400 or 500            | Geist or Mono | Dates, counts, helper text, descriptions, column headings, tags, group labels, kbd |
+| `text-body`    | 13 / 20            | 400, 500 for emphasis | Geist         | Body, controls, rows, menu items, tabs, sidebar items                              |
+| `text-section` | 13 / 20            | 600                   | Geist         | Section titles, empty-state titles, field labels                                   |
+| `text-title`   | 16 / 24            | 600                   | Geist         | Dialog and sheet titles, the inspector card's title                                |
+| `text-metric`  | 20 / 24            | 600                   | Mono          | Metric card values                                                                 |
+| `text-display` | 28 / 32            | 600                   | Geist         | Client portal, public profile, sign-in and onboarding headings                     |
 
-## States
+Nothing is smaller than 12px. Weights are 400, 500 and 600 only. Titles at 20px and above use `-0.02em` tracking; everything else uses `0`.
 
-Keep text readable for disabled, error, selected, loading, and dark-theme states. Preserve entered text on form errors.
+## Rules
 
-## Responsive rules
-
-Allow wrapping and reflow at 200% text zoom. Do not reduce text below a readable size to fit a table.
+- Sentence case everywhere. No all-caps labels, no eyebrow text above titles.
+- Workspace pages show no visible page title. The breadcrumb and sidebar name the page; each page still renders a screen-reader `h1`.
+- Numbers in tables and metrics use Mono with `tabular-nums` and right alignment.
+- Never use size or weight alone to signal status.
+- Long labels wrap; they are never shrunk to fit.
+- Inputs use 16px on touch screens so phones do not zoom.
 
 ## Accessibility
 
-Meet WCAG contrast and 200% resize requirements. Headings must form a useful outline and route titles must match the page.
-
-## Preserved features
-
-Keep current product fonts and font loading. Preserve code, comments, descriptions, and numeric data roles.
-
-## Acceptance checks
-
-- Typography tokens cover every route family.
-- 200% zoom retains all content and controls.
-- Long labels and translated-like strings wrap without overlap.
+Text meets 4.5:1 contrast in both themes (`--text-meta` is 7.6:1 on black and 6.4:1 on white). Headings form a real outline. Content survives 200% text zoom.

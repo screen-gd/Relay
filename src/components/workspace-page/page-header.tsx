@@ -1,22 +1,10 @@
 import {
-  createContext,
   useContext,
   type ComponentPropsWithoutRef,
   type ReactNode,
 } from "react";
 import { createPortal } from "react-dom";
-
-import { cn } from "@/lib/utils";
-
-/**
- * Where page actions render. The breadcrumb and sidebar already name the
- * page, so headers show no title; actions sit on one line at the right, and
- * when the shell renders a tab strip it offers `actionsHost` so the actions
- * share that row.
- */
-export const PageHeaderContext = createContext<{
-  actionsHost: HTMLElement | null;
-}>({ actionsHost: null });
+import { PageBarContext } from "./page-bar";
 
 type PageHeaderProps = Omit<ComponentPropsWithoutRef<"header">, "title"> & {
   title: ReactNode;
@@ -24,6 +12,7 @@ type PageHeaderProps = Omit<ComponentPropsWithoutRef<"header">, "title"> & {
   actions?: ReactNode;
 };
 
+/** Keeps the page heading accessible and places its actions in the shared bar. */
 export function PageHeader({
   title,
   description,
@@ -31,49 +20,20 @@ export function PageHeader({
   className,
   ...props
 }: PageHeaderProps) {
-  const { actionsHost } = useContext(PageHeaderContext);
-  const heading = (
-    <div className="sr-only">
-      <h1>{title}</h1>
-      {description ? <div>{description}</div> : null}
-    </div>
-  );
-  if (!actions) {
-    return (
-      <header data-slot="page-header" className="sr-only" {...props}>
-        {heading}
-      </header>
-    );
-  }
-  if (actionsHost) {
-    return (
-      <header data-slot="page-header" {...props}>
-        {heading}
-        {createPortal(
-          <div
-            data-slot="page-header-actions"
-            className="flex shrink-0 items-center gap-2"
-          >
-            {actions}
-          </div>,
-          actionsHost
-        )}
-      </header>
-    );
-  }
-  return (
-    <header
-      data-slot="page-header"
-      className={cn("flex min-w-0 items-center justify-end pb-3", className)}
-      {...props}
+  const { actionsHost } = useContext(PageBarContext);
+  const content = actions ? (
+    <div
+      data-slot="page-header-actions"
+      className="flex shrink-0 flex-wrap items-center justify-end gap-2"
     >
-      {heading}
-      <div
-        data-slot="page-header-actions"
-        className="flex shrink-0 flex-wrap items-center justify-end gap-2"
-      >
-        {actions}
-      </div>
+      {actions}
+    </div>
+  ) : null;
+  return (
+    <header data-slot="page-header" className="contents" {...props}>
+      <h1 className="sr-only">{title}</h1>
+      {description ? <div className="sr-only">{description}</div> : null}
+      {actionsHost ? createPortal(content, actionsHost) : content}
     </header>
   );
 }

@@ -2,35 +2,37 @@
 
 ## Purpose
 
-Give every Relay surface one clear visual and interaction contract while keeping the current features and fonts. The product should feel calm, dense, and direct for video-work production.
+Give every Relay surface one visual and interaction contract. Relay should feel calm, dense and direct: a black page, white text, one accent that points at the thing to do next.
 
-## Anatomy
+## How the system is built
 
-The system has tokens, owned shadcn/Radix primitives, workspace-page layout patterns, feature compositions, and route-level content. Screens own data and actions; shared modules own visual rules.
+1. **Tokens** in `src/app/globals.css`: color, type, radius, spacing and motion. Light and dark themes override the same names.
+2. **Primitives** in `src/components/ui/`: buttons, inputs, menus, dialogs, tables, tabs. They consume tokens only.
+3. **Page layouts** in `src/components/workspace-page/`: the page bar, sections, split panes, metric strips, empty states.
+4. **Features** compose primitives and layouts. They own data and handlers, never visual rules.
 
-## Behavior
+Feature code never sets raw colors, arbitrary sizes (`text-[13px]`, `rounded-[10px]`, `h-[37px]`) or its own outer padding. If a feature needs something the system lacks, add it to the system first.
 
-Use semantic tokens and composition. Keep common actions visible, move rare actions into menus or sheets, and use one primary work surface per page. Never import Convex or Clerk into visual primitives.
+Never import Convex or Clerk into visual primitives.
 
-## States
+## Principles
 
-Every control and page defines default, hover, pressed, focus-visible, selected, disabled, loading, empty, no-results, error, success, and read-only states. See [states and feedback](states-feedback.md).
+- **Flat by default.** Content sits on the page. A surface means "this is an object": something you type into, press, or read as a unit.
+- **One signal per job.** The accent means "do this" or "this number matters". Status colors mean status. Tone means "active" or "selected". Do not reuse a signal for another job.
+- **White text.** Anything you read or click is primary text. Metadata is the only quieter step.
+- **Less text.** No eyebrow labels above titles, no visible page titles in the workspace, no vague words such as "people", "connect" or "better".
+- **Nothing loops.** Motion answers an action and stops.
 
-## Responsive rules
+## Banned
 
-Use the same content at each width. Change layout, overflow, and disclosure, not meaning. Keep essential actions and data reachable at 320px and at 200% text zoom.
+- Decorative card frames, cards inside cards.
+- Pill shapes (fully rounded buttons, tabs or tags).
+- Light-gray body text in dark mode.
+- Glow, halo or blur on anything, including focus and hover.
+- Continuous animation: spinners, pulse, shimmer, looping orbs.
+- Hairlines outside data tables.
+- `backdrop-filter` blur.
 
-## Accessibility
+## Modes
 
-Target WCAG 2.2 AA. Use semantic HTML, visible focus, named landmarks, keyboard paths, contrast checks, and reduced motion. See [accessibility](accessibility.md).
-
-## Preserved features
-
-Keep local, sample, and cloud modes; current routes and aliases; theme, accent, density, date, and currency settings; permissions; and current fonts (Space Grotesk display, Geist Sans interface/body, and Geist Mono for code and fixed-width data).
-
-## Acceptance checks
-
-- One token source serves light and dark themes.
-- Shared primitives have documented keyboard and state behavior.
-- Every route family links to a feature contract.
-- Existing UI and browser checks pass after each slice.
+Relay supports local, sample and cloud modes, every current route, the theme setting (Light, Dark, System) and the accent setting. Density is fixed; there is no density setting.

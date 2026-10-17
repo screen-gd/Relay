@@ -1,10 +1,12 @@
 "use client";
 
-import type { SettingsState } from "@/lib/types";
+import { FolderOpen } from "@/components/icons";
+import { PageEmptyState } from "@/components/workspace-page";
 import {
-  profileDisplayName,
   initials,
+  profileDisplayName,
 } from "@/features/routes/utils/profile-utils";
+import type { SettingsState } from "@/lib/types";
 
 export function ProfileMetric({
   icon,
@@ -19,20 +21,20 @@ export function ProfileMetric({
 }) {
   return (
     <div
-      className="min-h-[82px] px-4"
+      className="rounded-md bg-[var(--surface-fill)] p-4"
       aria-label={`${label} ${sublabel}: ${value}`}
     >
       <span
         aria-hidden="true"
-        className="mb-2 grid w-6 place-items-center text-muted-foreground [&_svg]:size-[19px]"
+        className="mb-2 grid w-6 place-items-center text-[var(--text-meta)] [&_svg]:size-4"
       >
         {icon}
       </span>
-      <dd className="text-2xl font-semibold leading-none tabular-nums">
+      <dd className="text-metric font-mono font-semibold tabular-nums">
         {value}
       </dd>
-      <dt className="mt-1.5 text-xs font-semibold">{label}</dt>
-      <dd className="mt-0.5 text-xs text-muted-foreground">{sublabel}</dd>
+      <dt className="mt-2 text-meta text-[var(--text-meta)]">{label}</dt>
+      <dd className="mt-1 text-meta text-[var(--text-meta)]">{sublabel}</dd>
     </div>
   );
 }
@@ -40,19 +42,17 @@ export function ProfileMetric({
 export function PublicProfileAvatar({
   settings,
   size,
-  fontSize,
 }: {
   settings: SettingsState;
   size: number;
-  fontSize: number;
 }) {
   const imageUrl = settings.profileImageUrl.trim();
   const displayName = profileDisplayName(settings);
 
   return (
     <div
-      className="grid shrink-0 place-items-center overflow-hidden rounded-full border bg-muted font-semibold text-foreground"
-      style={{ width: size, height: size, fontSize }}
+      className="grid shrink-0 place-items-center overflow-hidden rounded-full bg-[var(--surface-fill)] text-meta font-semibold text-[var(--text-primary)]"
+      style={{ width: size, height: size }}
     >
       {imageUrl ? (
         <img
@@ -77,10 +77,10 @@ export function ProfileDetail({
   text: string;
 }) {
   return (
-    <span className="flex min-w-0 items-center gap-2 text-[13px]">
+    <span className="flex min-w-0 items-center gap-2 text-body">
       <span
         aria-hidden="true"
-        className="grid w-5 shrink-0 place-items-center [&_svg]:size-[17px]"
+        className="grid w-5 shrink-0 place-items-center [&_svg]:size-4"
       >
         {icon}
       </span>
@@ -97,11 +97,6 @@ export function ProfileEmptyState({
   body: string;
 }) {
   return (
-    <div className="grid justify-items-center px-4 py-10 text-center">
-      <h3 className="text-base font-semibold">{title}</h3>
-      <p className="mt-2 max-w-[440px] text-[13px] leading-relaxed text-muted-foreground">
-        {body}
-      </p>
-    </div>
+    <PageEmptyState icon={<FolderOpen />} title={title} description={body} />
   );
 }

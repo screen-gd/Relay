@@ -1,7 +1,7 @@
 "use client";
 
-import * as React from "react";
 import { Switch as SwitchPrimitive } from "radix-ui";
+import * as React from "react";
 
 import { cn } from "@/lib/utils";
 
@@ -13,14 +13,14 @@ function Switch({
     <SwitchPrimitive.Root
       data-slot="switch"
       className={cn(
-        "peer inline-flex h-[1.15rem] w-8 shrink-0 items-center rounded-full border border-transparent shadow-xs transition-all outline-none data-[state=checked]:bg-primary data-[state=unchecked]:bg-input focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-destructive/20 dark:data-[state=unchecked]:bg-input/80 dark:aria-invalid:ring-destructive/40",
+        "peer inline-flex h-6 w-10 shrink-0 items-center rounded-md border border-[var(--text-meta)] bg-[var(--surface-fill)] px-1 data-[state=checked]:bg-[var(--surface-active)] disabled:cursor-not-allowed disabled:opacity-50 aria-invalid:border-[var(--status-danger)]",
         className
       )}
       {...props}
     >
       <SwitchPrimitive.Thumb
         data-slot="switch-thumb"
-        className="pointer-events-none block size-4 rounded-full bg-[var(--app-switch-thumb)] ring-0 transition-transform data-[state=checked]:translate-x-[calc(100%-2px)] data-[state=unchecked]:translate-x-0 dark:data-[state=checked]:bg-primary-foreground dark:data-[state=unchecked]:bg-foreground"
+        className="pointer-events-none block size-4 rounded-sm bg-[var(--text-primary)] data-[state=checked]:translate-x-4 data-[state=unchecked]:translate-x-0"
       />
     </SwitchPrimitive.Root>
   );

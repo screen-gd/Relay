@@ -5,30 +5,15 @@ type SegmentedMeterProps = {
   value: number;
   /** Number of cells. Wider meters read better with more cells. */
   segments?: number;
-  /**
-   * `scale` shades filled cells from danger through warning to success by
-   * position, so low values read as early and high values as nearly done.
-   * `accent` fills every cell with the brand accent.
-   */
-  tone?: "scale" | "accent";
   /** Accessible name. Without one the meter is decorative and hidden. */
   label?: string;
   className?: string;
 };
 
-function cellColor(index: number, segments: number, tone: "scale" | "accent") {
-  if (tone === "accent") return "var(--app-accent)";
-  const position = (index + 1) / segments;
-  if (position <= 0.35) return "var(--status-danger)";
-  if (position <= 0.65) return "var(--status-warning)";
-  return "var(--status-success)";
-}
-
 /** A row of small cells filled up to `value`, used for progress at a glance. */
 export function SegmentedMeter({
   value,
   segments = 16,
-  tone = "scale",
   label,
   className,
 }: SegmentedMeterProps) {
@@ -36,7 +21,8 @@ export function SegmentedMeter({
     100,
     Math.max(0, Number.isFinite(value) ? value : 0)
   );
-  const filled = Math.round((clamped / 100) * segments);
+  const count = Math.max(1, Math.round(segments));
+  const filled = Math.round((clamped / 100) * count);
   return (
     <div
       data-slot="segmented-meter"
@@ -46,17 +32,15 @@ export function SegmentedMeter({
       aria-valuemax={label ? 100 : undefined}
       aria-valuenow={label ? clamped : undefined}
       aria-hidden={label ? undefined : true}
-      className={cn("flex h-3 items-stretch gap-[2px]", className)}
+      className={cn("flex h-3 items-stretch gap-1", className)}
     >
-      {Array.from({ length: segments }, (_, index) => (
+      {Array.from({ length: count }, (_, index) => (
         <span
           key={index}
-          className="min-w-[2px] flex-1 rounded-[1px]"
+          className="min-w-1 flex-1 rounded-sm"
           style={{
             backgroundColor:
-              index < filled
-                ? cellColor(index, segments, tone)
-                : "var(--app-strong-border)",
+              index < filled ? "var(--accent-mark)" : "var(--surface-active)",
           }}
         />
       ))}

@@ -34,7 +34,7 @@ export function RevisionAllowance({
 }) {
   if (!allowance) return null;
   return (
-    <p className="mt-1 text-sm text-muted-foreground">
+    <p className="mt-1 text-body text-[var(--text-meta)]">
       {allowance.used} of {allowance.limit} revisions used
     </p>
   );

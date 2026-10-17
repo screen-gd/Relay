@@ -8,12 +8,14 @@ function Table({ className, ...props }: React.ComponentProps<"table">) {
   return (
     <div
       data-slot="table-container"
+      role="region"
+      aria-label={props["aria-label"] ?? "Data table"}
       tabIndex={0}
-      className="relative w-full overflow-x-auto overflow-y-hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset"
+      className="relative w-full overflow-x-auto overflow-y-hidden p-1"
     >
       <table
         data-slot="table"
-        className={cn("w-full caption-bottom text-sm", className)}
+        className={cn("w-full caption-bottom text-body", className)}
         {...props}
       />
     </div>
@@ -24,7 +26,10 @@ function TableHeader({ className, ...props }: React.ComponentProps<"thead">) {
   return (
     <thead
       data-slot="table-header"
-      className={cn("[&_tr]:border-b", className)}
+      className={cn(
+        "[&_tr]:border-b [&_tr]:border-[var(--border-table)]",
+        className
+      )}
       {...props}
     />
   );
@@ -44,7 +49,10 @@ function TableRow({ className, ...props }: React.ComponentProps<"tr">) {
   return (
     <tr
       data-slot="table-row"
-      className={cn("border-b transition-colors", className)}
+      className={cn(
+        "h-10 border-b border-[var(--border-table)] text-[var(--text-primary)] hover:bg-[var(--surface-fill)] data-[state=selected]:bg-[var(--surface-active)]",
+        className
+      )}
       {...props}
     />
   );
@@ -55,7 +63,7 @@ function TableHead({ className, ...props }: React.ComponentProps<"th">) {
     <th
       data-slot="table-head"
       className={cn(
-        "h-10 px-2 text-left align-middle font-medium text-muted-foreground",
+        "h-10 px-2 text-left align-middle text-meta font-medium text-[var(--text-meta)]",
         className
       )}
       {...props}
@@ -80,7 +88,7 @@ function TableCaption({
   return (
     <caption
       data-slot="table-caption"
-      className={cn("mt-4 text-sm text-muted-foreground", className)}
+      className={cn("mt-4 text-body text-muted-foreground", className)}
       {...props}
     />
   );

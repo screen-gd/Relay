@@ -1,7 +1,6 @@
 import { Link } from "@tanstack/react-router";
 
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
 import { RelayBrand } from "./relay-brand";
 
 /** Root route not-found screen. */
@@ -9,34 +8,31 @@ export function NotFound() {
   return (
     <main
       id="main-content"
-      className="grid min-h-dvh place-items-center bg-[var(--surface-canvas)] px-4 py-8 text-[var(--text-primary)]"
+      className="grid min-h-dvh place-items-center bg-[var(--surface-page)] px-4 py-8 text-[var(--text-primary)]"
     >
-      <Card
-        className="w-full max-w-[560px] bg-[var(--surface-panel)] p-6 text-[var(--text-primary)] shadow-[var(--shadow-panel)] md:p-8"
+      <section
+        className="w-full max-w-[560px] p-6 text-[var(--text-primary)] md:p-8"
         aria-labelledby="not-found-heading"
       >
         <div className="space-y-4">
           <RelayBrand compact />
           <div>
-            <p className="text-xs font-bold uppercase tracking-[0.12em] text-[var(--app-muted)]">
-              Relay
-            </p>
             <h1
               id="not-found-heading"
-              className="mt-2 font-[family-name:var(--font-geist-sans)] text-[30px] font-bold leading-tight"
+              className="mt-2 font-[family-name:var(--font-geist-sans)] text-display font-semibold"
             >
               Page not found
             </h1>
-            <p className="mt-2 text-sm leading-relaxed text-[var(--text-secondary)]">
+            <p className="mt-2 text-body text-[var(--text-primary)]">
               This Relay route does not exist. Return to the dashboard to keep
               tracking work.
             </p>
           </div>
-          <Button asChild className="min-h-11 w-fit">
+          <Button asChild className="w-fit">
             <Link to="/">Back to Dashboard</Link>
           </Button>
         </div>
-      </Card>
+      </section>
     </main>
   );
 }

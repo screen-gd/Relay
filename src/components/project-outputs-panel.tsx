@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import {
   ChevronRight,
   ExternalLink,
@@ -13,18 +12,19 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
-import type { SettingsState, WorkItem } from "@/lib/types";
-import type { FileCategory } from "@/lib/domain-values";
-import { useProjectOutputs } from "@/lib/project-output-data";
 import { useInternalMediaVersionComments } from "@/features/media-version-comments/media-version-comments-data";
-import { MediaVersionComments } from "./media-version-comments";
 import type {
   ProjectOutput,
   ProjectOutputReviewState,
 } from "@/features/project-outputs/project-output-domain";
-import { ContentSection, PageEmptyState } from "./workspace-page";
+import type { FileCategory } from "@/lib/domain-values";
+import { useProjectOutputs } from "@/lib/project-output-data";
+import type { SettingsState, WorkItem } from "@/lib/types";
+import { useState, type ComponentProps } from "react";
+import { MediaVersionComments } from "./media-version-comments";
 import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
+import { DatePicker } from "./ui/date-picker";
 import {
   Dialog,
   DialogContent,
@@ -33,7 +33,12 @@ import {
   DialogHeader,
   DialogTitle,
 } from "./ui/dialog";
-import { DatePicker } from "./ui/date-picker";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "./ui/dropdown-menu";
 import { FieldLayout } from "./ui/field-layout";
 import { Input } from "./ui/input";
 import {
@@ -43,13 +48,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "./ui/select";
+import { Skeleton } from "./ui/skeleton";
 import { Textarea } from "./ui/textarea";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "./ui/dropdown-menu";
+import { ContentSection, PageEmptyState } from "./workspace-page";
 
 const reviewStates: Array<{ value: ProjectOutputReviewState; label: string }> =
   [
@@ -67,6 +68,16 @@ const nextAction: Record<ProjectOutputReviewState, string> = {
   approved: "Deliver the approved version",
   final_delivered: "No action needed",
 };
+const reviewStatus = {
+  draft: "neutral",
+  sent_to_client: "warning",
+  changes_requested: "warning",
+  approved: "success",
+  final_delivered: "success",
+} satisfies Record<
+  ProjectOutputReviewState,
+  NonNullable<ComponentProps<typeof Badge>["status"]>
+>;
 
 type OutputForm = { title: string; category: FileCategory; dueDate: string };
 const blankOutput = (): OutputForm => ({
@@ -193,12 +204,14 @@ export function ProjectOutputsPanel({
 
   if (data.loading)
     return (
-      <p
+      <div
         role="status"
-        className="py-8 text-center text-sm text-muted-foreground"
+        aria-label="Loading project outputs"
+        className="grid gap-3"
       >
-        Loading Project Outputs...
-      </p>
+        <Skeleton className="h-4 w-40" />
+        <Skeleton className="h-10 w-full" />
+      </div>
     );
 
   return (
@@ -212,6 +225,7 @@ export function ProjectOutputsPanel({
               id="add-project-output"
               type="button"
               size="sm"
+              variant="secondary"
               onClick={() => openOutput()}
             >
               <Plus aria-hidden="true" />
@@ -221,13 +235,16 @@ export function ProjectOutputsPanel({
         }
       >
         {data.error ? (
-          <p role="alert" className="mb-4 text-sm text-destructive">
+          <p
+            role="alert"
+            className="mb-4 text-meta text-[var(--status-danger)]"
+          >
             {data.error}
           </p>
         ) : null}
 
         {data.outputs.length ? (
-          <div className="grid gap-8">
+          <div className="grid gap-10">
             {data.outputs.map((output) => {
               const versions = data.versions
                 .filter((version) => version.projectOutputId === output.id)
@@ -241,36 +258,34 @@ export function ProjectOutputsPanel({
                   <div className="flex flex-col justify-between gap-4 lg:flex-row lg:items-start">
                     <div className="min-w-0">
                       <div className="flex flex-wrap items-center gap-2">
-                        <h3 className="text-sm font-semibold">
-                          {output.title}
-                        </h3>
+                        <h3 className="text-section">{output.title}</h3>
                         <Badge variant="secondary" className="rounded-sm">
                           {output.category}
                         </Badge>
                         {canEdit ? null : (
-                          <Badge variant="secondary" className="rounded-sm">
+                          <Badge status={reviewStatus[output.reviewState]}>
                             {reviewStates.find(
                               ({ value }) => value === output.reviewState
                             )?.label ?? output.reviewState}
                           </Badge>
                         )}
                       </div>
-                      <p className="mt-1 text-[13px] text-muted-foreground">
+                      <p className="mt-1 text-meta text-[var(--text-meta)]">
                         {output.dueDate
                           ? `Due ${output.dueDate}`
                           : "No output due date"}
                         {" · "}Next: {nextAction[output.reviewState]}
                       </p>
                       {unresolvedOld ? (
-                        <p className="mt-2 text-[13px] font-medium text-[var(--status-warning)]">
+                        <Badge className="mt-2" status="warning">
                           {unresolvedOld} unresolved{" "}
                           {unresolvedOld === 1 ? "Comment" : "Comments"} on
                           older versions
-                        </p>
+                        </Badge>
                       ) : null}
                     </div>
                     {canEdit ? (
-                      <div className="flex flex-wrap items-center gap-1.5">
+                      <div className="flex flex-wrap items-center gap-2">
                         <Select
                           value={output.reviewState}
                           onValueChange={(value) => {
@@ -344,12 +359,12 @@ export function ProjectOutputsPanel({
 
                   <div className="mt-4 grid gap-4">
                     {current ? (
-                      <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg bg-[var(--surface-inset)] px-4 py-3">
+                      <div className="flex min-h-10 flex-wrap items-center justify-between gap-3">
                         <div>
-                          <p className="text-sm font-medium">
+                          <p className="text-body font-medium">
                             Current: {current.label}
                           </p>
-                          <p className="mt-0.5 text-xs text-muted-foreground">
+                          <p className="mt-1 text-meta text-[var(--text-meta)]">
                             Version {current.versionNumber} ·{" "}
                             {current.source.provider === "external"
                               ? "External link"
@@ -369,26 +384,26 @@ export function ProjectOutputsPanel({
                         </Button>
                       </div>
                     ) : (
-                      <p className="rounded-lg bg-[var(--surface-inset)] px-4 py-3 text-sm text-muted-foreground">
+                      <p className="text-meta text-[var(--text-meta)]">
                         No Media Version yet.
                       </p>
                     )}
                     {versions.length > 1 ? (
                       <Collapsible>
-                        <CollapsibleTrigger className="group inline-flex items-center gap-1 rounded-md outline-none focus-visible:ring-2 focus-visible:ring-[var(--app-accent)] text-[13px] font-medium text-muted-foreground hover:text-foreground">
+                        <CollapsibleTrigger className="group inline-flex items-center gap-1 rounded-md text-body font-medium text-[var(--text-primary)]">
                           <ChevronRight
                             aria-hidden="true"
-                            className="size-3.5 shrink-0 text-muted-foreground transition-transform group-data-[state=open]:rotate-90"
+                            className="size-4 shrink-0 text-[var(--text-primary)] group-data-[state=open]:rotate-90"
                           />
                           <History aria-hidden="true" className="size-4" />
                           Version history ({versions.length})
                         </CollapsibleTrigger>
                         <CollapsibleContent asChild>
-                          <ol className="mt-2 grid gap-0.5">
+                          <ol className="mt-2 grid gap-1">
                             {versions.map((version) => (
                               <li
                                 key={version.id}
-                                className="flex items-center justify-between gap-3 rounded-md px-3 py-2 text-sm hover:bg-[var(--app-hover)]"
+                                className="flex min-h-10 items-center justify-between gap-3 rounded-md px-3 py-2 text-body hover:bg-[var(--surface-fill)]"
                               >
                                 <span>
                                   v{version.versionNumber} · {version.label}
@@ -400,7 +415,7 @@ export function ProjectOutputsPanel({
                                   href={version.source.url}
                                   target="_blank"
                                   rel="noreferrer"
-                                  className="font-medium hover:underline"
+                                  className="font-medium text-[var(--text-primary)] underline underline-offset-4"
                                 >
                                   Open
                                 </a>
@@ -444,6 +459,7 @@ export function ProjectOutputsPanel({
         ) : (
           <PageEmptyState
             compact
+            icon={<Plus />}
             title="No Project Outputs yet."
             description="Add the first promised result for this Project."
           />
@@ -513,6 +529,8 @@ export function ProjectOutputsPanel({
               Cancel
             </Button>
             <Button
+              pending={busy}
+              pendingLabel="Saving..."
               type="button"
               disabled={busy}
               onClick={() => void saveOutput()}
@@ -573,6 +591,8 @@ export function ProjectOutputsPanel({
               Cancel
             </Button>
             <Button
+              pending={busy}
+              pendingLabel="Adding..."
               type="button"
               disabled={busy}
               onClick={() => void saveVersion()}

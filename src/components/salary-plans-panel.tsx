@@ -1,14 +1,15 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { Plus } from "@/components/icons";
 import { useConvexAuth, useMutation, useQuery } from "convex/react";
-import { Check, Plus } from "@/components/icons";
+import { useEffect, useMemo, useState } from "react";
 import { api } from "../../convex/_generated/api";
 import type { Doc, Id } from "../../convex/_generated/dataModel";
 
-import { ContentSection } from "@/components/workspace-page";
 import { CapabilityUpgradePrompt } from "@/components/subscription-plans";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { DatePicker } from "@/components/ui/date-picker";
 import {
   Dialog,
   DialogContent,
@@ -18,8 +19,8 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { FieldLayout } from "@/components/ui/field-layout";
-import { DatePicker } from "@/components/ui/date-picker";
 import { Input } from "@/components/ui/input";
+import { Progress } from "@/components/ui/progress";
 import {
   Select,
   SelectContent,
@@ -27,6 +28,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Table,
   TableBody,
@@ -35,9 +37,13 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import type { SettingsState, WorkItem } from "@/lib/types";
+import {
+  ContentSection,
+  DataTableFrame,
+  PageEmptyState,
+} from "@/components/workspace-page";
 import { trackOptionalEvent } from "@/lib/telemetry";
-import { cn } from "@/lib/utils";
+import type { SettingsState, WorkItem } from "@/lib/types";
 
 type SalaryPlan = Doc<"salaryPlans">;
 type SalaryBatch = Doc<"projectSalaryBatches">;
@@ -277,7 +283,6 @@ export function SalaryPlansPanel({
                 type="button"
                 variant="ghost"
                 size="sm"
-                className="text-muted-foreground"
                 aria-pressed={showArchived}
                 onClick={() => setShowArchived((current) => !current)}
               >
@@ -288,6 +293,7 @@ export function SalaryPlansPanel({
               <Button
                 type="button"
                 size="sm"
+                variant="secondary"
                 disabled={!clients.length}
                 onClick={openNewPlan}
               >
@@ -298,9 +304,9 @@ export function SalaryPlansPanel({
         }
       >
         {!canCreatePlans ? (
-          <div className="border-t border-border px-4 py-3">
+          <div className="mb-4">
             <CapabilityUpgradePrompt capability="salaryPlans" inline />
-            <p className="mt-2 text-xs text-muted-foreground">
+            <p className="mt-2 text-meta text-[var(--text-meta)]">
               Existing plans and batches stay visible. Creating plans,
               completing batches, and recording batch payments require Creator
               or Team.
@@ -310,17 +316,22 @@ export function SalaryPlansPanel({
         {error ? (
           <p
             role="alert"
-            className="border-t border-border px-4 py-3 text-sm text-destructive"
+            className="mb-4 text-meta text-[var(--status-danger)]"
           >
             {error}
           </p>
         ) : null}
         {plans === undefined ? (
-          <p className="border-t border-border px-4 py-8 text-center text-xs text-muted-foreground">
-            Loading payment plans...
-          </p>
+          <div
+            role="status"
+            aria-label="Loading payment plans"
+            className="grid gap-3"
+          >
+            <Skeleton className="h-4 w-40" />
+            <Skeleton className="h-10 w-full" />
+          </div>
         ) : visiblePlans.length ? (
-          <div className="divide-y divide-border border-t border-border">
+          <div className="grid gap-10">
             {visiblePlans.map((plan) => (
               <SalaryPlanRow
                 key={plan._id}
@@ -351,14 +362,26 @@ export function SalaryPlansPanel({
             ))}
           </div>
         ) : (
-          <p className="border-t border-border px-4 py-8 text-center text-xs text-muted-foreground">
-            {clients.length
-              ? "No payment plans yet."
-              : "Add a client before creating a payment plan."}
-          </p>
+          <PageEmptyState
+            compact
+            icon={<Plus />}
+            title="No payment plans yet"
+            description={
+              clients.length
+                ? "Create a plan to track client payment batches."
+                : "Add a client before creating a payment plan."
+            }
+            action={
+              canCreatePlans && clients.length ? (
+                <Button variant="secondary" onClick={openNewPlan}>
+                  New plan
+                </Button>
+              ) : undefined
+            }
+          />
         )}
         {hasLegacyBatches ? (
-          <p className="border-t border-border px-4 py-3 text-xs text-muted-foreground">
+          <p className="mt-3 text-meta text-[var(--text-meta)]">
             Older payment batches stay in the Payment batches list. New plans do
             not change them.
           </p>
@@ -418,27 +441,19 @@ function SalaryPlanRow({
       project.status === "Delivered" &&
       !settledProjectIds.has(project.id)
   ).length;
-  const percent = Math.min(
-    100,
-    Math.round((progress / plan.requiredProjectCount) * 100)
-  );
-
   return (
-    <section
-      aria-label={`${clientName} payment plan`}
-      className={cn("grid gap-4 px-4 py-4", plan.archived && "opacity-70")}
-    >
+    <section aria-label={`${clientName} payment plan`} className="grid gap-4">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
-          <h3 className="flex items-center gap-2 text-sm font-semibold">
+          <h3 className="flex items-center gap-2 text-section">
             <span className="truncate">{clientName}</span>
             {plan.archived ? (
-              <span className="text-xs font-normal text-muted-foreground">
+              <span className="text-meta font-normal text-[var(--text-meta)]">
                 Archived
               </span>
             ) : null}
           </h3>
-          <p className="mt-1 text-xs text-muted-foreground">
+          <p className="mt-1 text-meta text-[var(--text-meta)]">
             {money(plan.amount)} per {plan.requiredProjectCount} projects ·
             Started {formatDay(plan.startDate)}
           </p>
@@ -451,7 +466,6 @@ function SalaryPlanRow({
             type="button"
             variant="ghost"
             size="sm"
-            className="text-muted-foreground"
             disabled={busy === plan._id}
             onClick={onToggleArchived}
           >
@@ -460,93 +474,74 @@ function SalaryPlanRow({
         </div>
       </div>
 
-      <div className="grid max-w-xl gap-1.5">
-        <div className="flex items-baseline justify-between gap-3 text-xs">
-          <span className="text-muted-foreground">
+      <div className="grid max-w-xl gap-2">
+        <div className="flex items-baseline justify-between gap-3 text-meta">
+          <span className="text-[var(--text-meta)]">
             Batch #{batches.length + 1}
           </span>
-          <span className="font-mono tabular-nums text-foreground">
+          <span className="font-mono tabular-nums text-[var(--text-primary)]">
             {progress} / {plan.requiredProjectCount}
           </span>
         </div>
-        <div
-          role="progressbar"
+        <Progress
           aria-label={`${clientName} progress toward the next batch`}
-          aria-valuemin={0}
-          aria-valuemax={plan.requiredProjectCount}
-          aria-valuenow={progress}
-          className="h-1.5 overflow-hidden rounded-sm bg-[var(--app-progress-track)]"
-        >
-          <div
-            className="h-full rounded-sm bg-[var(--app-accent)]"
-            style={{ width: `${percent}%` }}
-          />
-        </div>
+          max={plan.requiredProjectCount}
+          value={progress}
+        />
       </div>
 
       {plan.notes ? (
-        <p className="max-w-3xl text-xs text-muted-foreground">{plan.notes}</p>
+        <p className="max-w-3xl text-body text-[var(--text-primary)]">
+          {plan.notes}
+        </p>
       ) : null}
 
       {batches.length ? (
-        <div className="overflow-hidden rounded-md border border-border">
-          <Table className="min-w-[640px] text-xs">
+        <DataTableFrame bodyLabel={`${clientName} payment batches`}>
+          <Table className="min-w-160">
             <TableHeader>
-              <TableRow className="bg-[var(--app-soft-panel)] hover:bg-[var(--app-soft-panel)]">
-                <TableHead className="h-8 w-20 px-3 text-[11px]">
-                  Batch
-                </TableHead>
-                <TableHead className="h-8 px-3 text-[11px]">Amount</TableHead>
-                <TableHead className="h-8 px-3 text-[11px]">Projects</TableHead>
-                <TableHead className="h-8 px-3 text-[11px]">
-                  Completed
-                </TableHead>
-                <TableHead className="h-8 w-36 px-3 text-[11px]">
-                  Payment
-                </TableHead>
-                <TableHead className="h-8 w-[34%] px-3 text-[11px]">
-                  Note
-                </TableHead>
+              <TableRow>
+                <TableHead className="w-20 px-3">Batch</TableHead>
+                <TableHead className="px-3 text-right">Amount</TableHead>
+                <TableHead className="px-3 text-right">Projects</TableHead>
+                <TableHead className="px-3">Completed</TableHead>
+                <TableHead className="w-36 px-3">Payment</TableHead>
+                <TableHead className="w-1/3 px-3">Note</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {batches.map((batch) => {
                 const received = isReceived(batch);
                 return (
-                  <TableRow key={batch._id} className="h-12">
-                    <TableCell className="px-3 font-medium">
+                  <TableRow key={batch._id}>
+                    <TableCell className="px-3 font-mono font-medium">
                       #{batch.number}
                     </TableCell>
-                    <TableCell className="px-3 font-mono tabular-nums">
+                    <TableCell className="px-3 text-right font-mono tabular-nums">
                       {money(batch.amount)}
                     </TableCell>
-                    <TableCell className="px-3 tabular-nums">
+                    <TableCell className="px-3 text-right font-mono tabular-nums">
                       {batch.projectIds.length}
                     </TableCell>
-                    <TableCell className="px-3 text-muted-foreground">
+                    <TableCell className="px-3 font-mono">
                       {formatDay(batch.completedAt)}
                     </TableCell>
                     <TableCell className="px-3">
                       <Button
                         type="button"
-                        variant={received ? "ghost" : "outline"}
-                        size="xs"
+                        variant={received ? "ghost" : "secondary"}
+                        size="sm"
                         aria-pressed={received}
                         aria-label={
                           received
                             ? `Batch ${batch.number} received. Mark as not received`
                             : `Mark batch ${batch.number} received`
                         }
-                        className={cn(
-                          received && "px-0 text-[var(--app-success)]"
-                        )}
                         disabled={locked || busy === batch._id}
                         onClick={() => onToggleReceived(batch)}
                       >
                         {received ? (
-                          <>
-                            <Check /> Received
-                          </>
+                          <Badge status="success">Received</Badge>
                         ) : (
                           "Mark received"
                         )}
@@ -556,7 +551,7 @@ function SalaryPlanRow({
                       <Input
                         aria-label={`Correction note for batch ${batch.number}`}
                         placeholder="Add a note"
-                        className="h-8 text-xs"
+                        className="h-8"
                         maxLength={4000}
                         disabled={locked || busy === `note-${batch._id}`}
                         value={correctionNotes[batch._id] ?? ""}
@@ -574,9 +569,9 @@ function SalaryPlanRow({
               })}
             </TableBody>
           </Table>
-        </div>
+        </DataTableFrame>
       ) : (
-        <p className="text-xs text-muted-foreground">
+        <p className="text-meta text-[var(--text-meta)]">
           No completed batches yet. Only delivered projects linked to this plan
           count toward a batch.
         </p>
@@ -609,7 +604,7 @@ function PlanDialog({
       <DialogContent className="sm:max-w-lg">
         {draft ? (
           <form
-            className="grid gap-5"
+            className="grid gap-6"
             onSubmit={(event) => {
               event.preventDefault();
               onSave(draft);
@@ -688,7 +683,7 @@ function PlanDialog({
               </FieldLayout>
             </div>
             {error ? (
-              <p role="alert" className="text-sm text-destructive">
+              <p role="alert" className="text-body text-[var(--status-danger)]">
                 {error}
               </p>
             ) : null}
@@ -696,7 +691,12 @@ function PlanDialog({
               <Button type="button" variant="ghost" onClick={onClose}>
                 Cancel
               </Button>
-              <Button type="submit" disabled={saving}>
+              <Button
+                pending={saving}
+                pendingLabel="Saving..."
+                type="submit"
+                disabled={saving}
+              >
                 {saving
                   ? "Saving..."
                   : draft.planId

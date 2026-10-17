@@ -1,8 +1,9 @@
 import { Link, type ErrorComponentProps } from "@tanstack/react-router";
 import { useEffect } from "react";
 
+import { AlertCircle } from "@/components/icons";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
+import { PageEmptyState } from "@/components/workspace-page";
 import { reportEssentialError } from "@/lib/telemetry";
 import { RelayBrand } from "./relay-brand";
 
@@ -14,43 +15,31 @@ export function RouteError({ error, reset }: ErrorComponentProps) {
   return (
     <main
       id="main-content"
-      className="grid min-h-dvh place-items-center bg-[var(--surface-canvas)] px-4 py-8 text-[var(--text-primary)]"
+      className="grid min-h-dvh place-items-center bg-[var(--surface-page)] px-4 py-8 text-[var(--text-primary)]"
     >
-      <Card
-        className="w-full max-w-[560px] bg-[var(--surface-panel)] p-6 text-[var(--text-primary)] shadow-[var(--shadow-panel)] md:p-8"
+      <section
+        className="w-full max-w-[560px] p-6 text-[var(--text-primary)] md:p-8"
         aria-labelledby="error-heading"
       >
-        <div className="space-y-4">
-          <RelayBrand compact />
-          <div>
-            <p className="text-xs font-bold uppercase tracking-[0.12em] text-[var(--app-muted)]">
-              Unexpected error
-            </p>
-            <h1
-              id="error-heading"
-              className="mt-2 font-[family-name:var(--font-geist-sans)] text-[30px] font-bold leading-tight"
-            >
-              Relay needs a refresh
-            </h1>
-            <p className="mt-2 text-sm leading-relaxed text-[var(--text-secondary)]">
-              The tracker hit an unexpected app error. Your saved projects stay
-              in local browser storage.
-            </p>
-          </div>
-          <div className="flex flex-col gap-2 sm:flex-row">
-            <Button onClick={reset} className="min-h-11">
-              Try Again
+        <RelayBrand compact />
+        <h1 id="error-heading" className="sr-only">
+          Relay needs a refresh
+        </h1>
+        <PageEmptyState
+          tone="error"
+          icon={<AlertCircle />}
+          title="Relay needs a refresh"
+          description="Your saved projects stay in local browser storage."
+          action={
+            <Button variant="secondary" onClick={reset}>
+              Try again
             </Button>
-            <Button
-              asChild
-              variant="outline"
-              className="min-h-11 border-[var(--app-border)] text-[var(--app-highlight)]"
-            >
-              <Link to="/">Back to Dashboard</Link>
-            </Button>
-          </div>
-        </div>
-      </Card>
+          }
+        />
+        <Button asChild variant="ghost">
+          <Link to="/">Back to dashboard</Link>
+        </Button>
+      </section>
     </main>
   );
 }

@@ -1,15 +1,15 @@
 "use client";
 
-import { useState } from "react";
-import { useConvexAuth, useMutation, useQuery } from "convex/react";
-import { api } from "../../../convex/_generated/api";
-import type { Doc, Id } from "../../../convex/_generated/dataModel";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { AiLockedNotice, useAiAccount } from "@/features/ai/ai-availability";
-import { VersionChangelog } from "./version-changelog";
+import { useConvexAuth, useMutation, useQuery } from "convex/react";
+import { useState } from "react";
+import { api } from "../../../convex/_generated/api";
+import type { Doc, Id } from "../../../convex/_generated/dataModel";
 import { formatReviewTimestamp } from "./review-timestamps";
 import { TranscriptLine } from "./transcript-review";
+import { VersionChangelog } from "./version-changelog";
 
 function RevisionRow({
   item,
@@ -33,7 +33,7 @@ function RevisionRow({
   }
   return (
     <li id={`revision-${item._id}`} className="grid gap-2 py-3">
-      <p className="text-xs">
+      <p className="text-meta">
         {item.status === "draft"
           ? "AI-drafted"
           : item.status === "resolved"
@@ -58,7 +58,11 @@ function RevisionRow({
             onChange={(event) => setText(event.target.value)}
           />
           <div className="flex gap-2">
-            <Button size="sm" variant="outline" disabled={busy || !text.trim()}>
+            <Button
+              size="sm"
+              variant="secondary"
+              disabled={busy || !text.trim()}
+            >
               Save
             </Button>
             <Button
@@ -73,16 +77,16 @@ function RevisionRow({
           </div>
         </form>
       ) : (
-        <p className="whitespace-pre-wrap text-sm">{item.text}</p>
+        <p className="whitespace-pre-wrap text-body">{item.text}</p>
       )}
       {item.vague ? (
-        <p className="text-sm">Vague note · {item.clarifyingQuestion}</p>
+        <p className="text-body">Vague note · {item.clarifyingQuestion}</p>
       ) : null}
       <TranscriptLine commentIds={item.sourceCommentIds} />
       {item.possibleNewScope ? (
-        <p className="text-xs">Possible new scope</p>
+        <p className="text-meta">Possible new scope</p>
       ) : null}
-      <div className="flex flex-wrap gap-3 text-xs">
+      <div className="flex flex-wrap gap-3 text-meta">
         {item.sourceCommentIds.map((id, index) => (
           <a
             key={id}
@@ -214,15 +218,15 @@ export function RevisionList({
   return (
     <section
       aria-label="Revision list"
-      className="mt-3 text-foreground dark:bg-black dark:text-white [&_button]:bg-transparent [&_button:hover]:bg-transparent [&_button]:dark:text-white [&_textarea]:dark:bg-black"
+      className="mt-3 text-[var(--text-primary)] text-[var(--text-primary)]"
     >
       <div className="flex flex-wrap items-center gap-3">
-        <h4 className="text-sm font-semibold">Revision list</h4>
+        <h4 className="text-body font-semibold">Revision list</h4>
         {canEdit ? (
           <>
             <Button
               size="sm"
-              variant="outline"
+              variant="secondary"
               disabled={running}
               title="Uses up to 40 comments and the first 1,000 characters of each."
               onClick={() => void request("default")}
@@ -243,7 +247,7 @@ export function RevisionList({
         ) : null}
       </div>
       {run ? (
-        <p role="status" className="mt-2 text-xs">
+        <p role="status" className="mt-2 text-meta">
           {run.status === "queued"
             ? "Queued"
             : run.status === "running"
@@ -254,14 +258,14 @@ export function RevisionList({
         </p>
       ) : null}
       {error ? (
-        <p role="alert" className="mt-2 text-sm text-destructive">
+        <p role="alert" className="mt-2 text-body text-[var(--status-danger)]">
           {error}
         </p>
       ) : null}
       {[...groups].map(([theme, rows]) => (
         <div key={theme} className="mt-4">
-          <h5 className="text-sm font-medium">{theme}</h5>
-          <ul className="divide-y divide-border">
+          <h5 className="text-body font-medium">{theme}</h5>
+          <ul className="">
             {rows
               .sort(
                 (a, b) =>

@@ -1,10 +1,10 @@
 "use client";
 
 import { LockKeyhole } from "@/components/icons";
-import { Link } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
 import { useOptionalAuth } from "@/lib/optional-auth";
 import { cn } from "@/lib/utils";
+import { Link } from "@tanstack/react-router";
 
 /**
  * What unlocks an AI action: `signIn` for local mode and a signed-out visit,
@@ -23,7 +23,7 @@ export function AiBadge({ className }: { className?: string }) {
   return (
     <span
       className={cn(
-        "text-[10px] font-semibold uppercase tracking-[0.08em] text-[var(--app-highlight)]",
+        "text-meta font-semibold text-[var(--text-primary)]",
         className
       )}
     >
@@ -53,19 +53,19 @@ export function AiLockedNotice({
     <div
       data-slot="ai-locked-notice"
       className={cn(
-        "flex flex-wrap items-center gap-x-3 gap-y-1.5 text-xs text-[var(--app-muted)]",
+        "flex flex-wrap items-center gap-x-3 gap-y-2 text-meta text-[var(--text-meta)]",
         className
       )}
     >
-      <LockKeyhole className="size-3.5 shrink-0" aria-hidden="true" />
-      <span className="font-medium text-[var(--app-ink)]">{feature}</span>
+      <LockKeyhole className="size-4 shrink-0" aria-hidden="true" />
+      <span className="font-medium text-[var(--text-primary)]">{feature}</span>
       {hint ? <span>{hint}</span> : null}
       {access === "signIn" ? (
         <Button
           type="button"
           size="sm"
-          variant="outline"
-          className="h-7"
+          variant="secondary"
+          className=""
           onClick={() => signIn()}
         >
           Sign in to use AI
@@ -73,7 +73,7 @@ export function AiLockedNotice({
       ) : (
         <Link
           to="/settings"
-          className="font-semibold text-[var(--app-highlight)] hover:underline"
+          className="font-semibold text-[var(--text-primary)] hover:underline"
         >
           Turn on AI in Settings
         </Link>

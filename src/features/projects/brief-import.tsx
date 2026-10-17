@@ -1,20 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useConvexAuth, useAction, useMutation, useQuery } from "convex/react";
-import { api } from "../../../convex/_generated/api";
-import type { Id } from "../../../convex/_generated/dataModel";
-import {
-  briefDraftSchema,
-  MAX_BRIEF_CHARACTERS,
-  MAX_BRIEF_PDF_BYTES,
-} from "../../../convex/briefImportPrompt";
-import type { z } from "zod";
-import type { Client } from "@/lib/types";
-import { AiLockedNotice, type AiAccess } from "@/features/ai/ai-availability";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
@@ -22,9 +9,22 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
+import { AiLockedNotice, type AiAccess } from "@/features/ai/ai-availability";
+import type { Client } from "@/lib/types";
+import { useAction, useConvexAuth, useMutation, useQuery } from "convex/react";
+import { useEffect, useState } from "react";
+import type { z } from "zod";
+import { api } from "../../../convex/_generated/api";
+import type { Id } from "../../../convex/_generated/dataModel";
+import {
+  briefDraftSchema,
+  MAX_BRIEF_CHARACTERS,
+  MAX_BRIEF_PDF_BYTES,
+} from "../../../convex/briefImportPrompt";
 
 const sectionClassName =
-  "grid gap-3 dark:bg-black dark:text-white [&_button]:bg-transparent [&_button:hover]:bg-transparent [&_input]:bg-transparent [&_textarea]:bg-transparent";
+  "grid gap-3 dark:bg-black text-[var(--text-primary)] [&_button]:bg-transparent [&_button:hover]:bg-transparent [&_input]:bg-transparent [&_textarea]:bg-transparent";
 
 export function BriefImport({
   teamId,
@@ -192,14 +192,14 @@ export function BriefImport({
               setQuestionText(undefined);
             }}
           />
-          <p className="text-xs">
+          <p className="text-meta">
             PDF up to 10 MB, or 12,000 characters. Nothing is created until you
             confirm.
           </p>
           <div className="flex gap-3">
             <Button
               type="button"
-              variant="outline"
+              variant="secondary"
               disabled={running || (!pdf && !text.trim())}
               onClick={() => void request("default")}
             >
@@ -217,7 +217,7 @@ export function BriefImport({
             ) : null}
           </div>
           {run ? (
-            <p role="status" className="text-xs">
+            <p role="status" className="text-meta">
               {running
                 ? "Drafting..."
                 : run.status === "failed"
@@ -227,7 +227,7 @@ export function BriefImport({
           ) : null}
           {draft ? (
             <div className="grid gap-3">
-              <p className="text-xs">
+              <p className="text-meta">
                 AI-drafted ·{" "}
                 <a
                   href={pdfUrl ?? "#brief-source"}
@@ -269,10 +269,7 @@ export function BriefImport({
                 </SelectContent>
               </Select>
               {draft.outputs.map((output, index) => (
-                <div
-                  key={index}
-                  className="grid gap-2 border-b border-border py-2"
-                >
+                <div key={index} className="grid gap-2 py-2">
                   <Input
                     aria-label={`Output ${index + 1} title`}
                     maxLength={160}
@@ -355,7 +352,7 @@ export function BriefImport({
               />
               <Button
                 type="button"
-                variant="outline"
+                variant="secondary"
                 disabled={running || !clientId || !draft.dueDate}
                 onClick={() => void create()}
               >
@@ -364,7 +361,7 @@ export function BriefImport({
             </div>
           ) : null}
           {error ? (
-            <p role="alert" className="text-sm text-destructive">
+            <p role="alert" className="text-body text-[var(--status-danger)]">
               {error}
             </p>
           ) : null}
