@@ -19,7 +19,7 @@ export function AccountSettingsPage() {
   return (
     <WorkspacePage
       family="administration"
-      className="[&_[data-slot=content-section]]:shadow-[var(--app-shadow-1)]"
+      className="[&_[data-slot=content-section]]:shadow-none"
     >
       <PageHeader
         title="Account Settings"
@@ -59,10 +59,10 @@ export function AccountSettingsPage() {
               role="status"
               className="grid min-h-[220px] place-items-center p-6"
             >
-              <div className="flex flex-col items-center gap-3 text-sm text-[var(--app-muted)]">
+              <div className="flex flex-col items-center gap-3 text-sm text-text-2">
                 <LoaderCircle
                   aria-hidden="true"
-                  className="size-7 animate-spin text-[var(--primary)]"
+                  className="size-7 animate-spin text-primary"
                 />
                 <span>Loading account controls...</span>
               </div>
@@ -114,9 +114,9 @@ export function AccountSettingsPage() {
                     elements: {
                       rootBox: "w-full",
                       cardBox:
-                        "w-full max-w-none rounded-md border border-[var(--app-border)] bg-[var(--app-soft-panel)] shadow-none",
+                        "w-full max-w-none rounded-md border border-line-row bg-well shadow-none",
                       card: "shadow-none",
-                      navbar: "border-[var(--app-border)]",
+                      navbar: "border-line-row",
                       pageScrollBox: "py-1",
                     },
                   }}

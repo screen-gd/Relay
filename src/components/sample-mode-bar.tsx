@@ -4,21 +4,21 @@ import { Button } from "@/components/ui/button";
 import { trackOnboardingEvent } from "@/lib/onboarding";
 
 const barClassName =
-  "flex min-h-12 shrink-0 flex-col gap-3 border-b border-[var(--app-strong-border)] bg-[var(--app-active)] px-4 py-3 text-sm sm:flex-row sm:items-center sm:justify-between";
+  "flex min-h-12 shrink-0 flex-col gap-3 border-b border-strong bg-selected px-4 py-3 text-sm sm:flex-row sm:items-center sm:justify-between";
 
 export function SampleModeBar() {
   return (
     <aside className={barClassName} aria-label="Sample studio mode">
       <p className="flex items-center gap-2 font-semibold">
-        <FlaskConical className="size-4 text-[var(--app-highlight)]" />
+        <FlaskConical className="size-4 text-text-1" />
         Sample studio{" "}
-        <span className="font-normal text-[var(--app-muted)]">
+        <span className="font-normal text-text-2">
           Read-only production data
         </span>
       </p>
       <div className="flex items-center gap-4">
         <Link
-          className="font-semibold text-[var(--app-highlight)] hover:underline"
+          className="font-semibold text-text-1 hover:underline"
           to="/"
           search={{ onboarding: "v2" }}
           onClick={() =>
@@ -31,7 +31,7 @@ export function SampleModeBar() {
           Start my workspace
         </Link>
         <Link
-          className="flex items-center gap-1.5 text-[var(--app-muted)] hover:text-[var(--app-ink)]"
+          className="flex items-center gap-1.5 text-text-2 hover:text-text-1"
           to="/"
           search={{ onboarding: "v2" }}
           onClick={() =>
@@ -54,9 +54,9 @@ export function WorkspaceSampleBar({ onClear }: { onClear: () => void }) {
   return (
     <aside className={barClassName} aria-label="Sample data">
       <p className="flex items-center gap-2 font-semibold">
-        <FlaskConical className="size-4 text-[var(--app-highlight)]" />
+        <FlaskConical className="size-4 text-text-1" />
         Sample data{" "}
-        <span className="font-normal text-[var(--app-muted)]">
+        <span className="font-normal text-text-2">
           Demo client and projects
         </span>
       </p>

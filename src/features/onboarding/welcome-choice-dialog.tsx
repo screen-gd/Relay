@@ -26,7 +26,7 @@ export function WelcomeChoiceDialog({
       <OwnedDialogContent
         showCloseButton={false}
         data-testid="welcome-choice-dialog"
-        className="max-h-[calc(100dvh-2rem)] overflow-y-auto border-[var(--app-border)] bg-[var(--app-panel)] p-5 text-[var(--app-ink)] sm:max-w-[880px] sm:p-6"
+        className="max-h-[calc(100dvh-2rem)] overflow-y-auto border-line-row bg-well p-5 text-text-1 sm:max-w-[880px] sm:p-6"
         onEscapeKeyDown={(event) => event.preventDefault()}
         onPointerDownOutside={(event) => event.preventDefault()}
       >
@@ -41,7 +41,7 @@ export function WelcomeChoiceDialog({
           </OwnedDialogDescription>
         </OwnedDialogHeader>
         <div className="grid gap-3 md:grid-cols-3">
-          <section className="flex flex-col rounded-md bg-[var(--app-soft-panel)] p-4">
+          <section className="flex flex-col rounded-md bg-well p-4">
             <p className="text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">
               Local Mode
             </p>
@@ -49,7 +49,7 @@ export function WelcomeChoiceDialog({
             <p className="mt-2 flex-1 text-sm leading-relaxed text-muted-foreground">
               Fast solo workspace with no account.
             </p>
-            <p className="mt-4 text-xs leading-relaxed text-[var(--app-warning)]">
+            <p className="mt-4 text-xs leading-relaxed text-warn-text">
               Stored in this browser. Clearing site data can remove your work.
             </p>
             <OwnedButton
@@ -61,7 +61,7 @@ export function WelcomeChoiceDialog({
             </OwnedButton>
           </section>
 
-          <section className="flex flex-col rounded-md bg-[var(--app-soft-panel)] p-4">
+          <section className="flex flex-col rounded-md bg-well p-4">
             <p className="text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">
               Account
             </p>
@@ -79,7 +79,7 @@ export function WelcomeChoiceDialog({
             </OwnedButton>
           </section>
 
-          <section className="flex flex-col rounded-md bg-[var(--app-soft-panel)] p-4">
+          <section className="flex flex-col rounded-md bg-well p-4">
             <p className="text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">
               Sample Workspace
             </p>

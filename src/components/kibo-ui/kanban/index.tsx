@@ -17,7 +17,7 @@ export function KanbanBoard({
     <section
       ref={setNodeRef}
       className={cn(
-        "flex h-full min-h-40 flex-col overflow-hidden bg-[var(--surface-inset)] text-xs",
+        "flex h-full min-h-40 flex-col overflow-hidden bg-well text-xs",
         className
       )}
       {...props}

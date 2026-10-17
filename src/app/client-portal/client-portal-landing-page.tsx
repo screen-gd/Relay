@@ -30,7 +30,7 @@ export function ClientPortalLandingPage() {
         <Button
           asChild
           variant="outline"
-          className="mt-6 border-[var(--app-border)] text-[var(--app-highlight)]"
+          className="mt-6 border-line-row text-text-1"
         >
           <Link to="/">
             <ArrowLeft aria-hidden="true" />

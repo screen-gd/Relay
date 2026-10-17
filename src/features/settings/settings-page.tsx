@@ -368,9 +368,9 @@ export function SettingsDesignPage({
         description="Your workspace details, project defaults, and preferences."
         actions={
           <div className="flex flex-wrap justify-end gap-2">
-            <span className="inline-flex h-9 items-center gap-2 rounded-md px-3 text-xs font-medium text-[var(--app-muted)]">
+            <span className="inline-flex h-9 items-center gap-2 rounded-md px-3 text-xs font-medium text-text-2">
               {settingsSaveState === "saved" ? (
-                <CircleCheckBig className="size-4 text-[var(--app-success)]" />
+                <CircleCheckBig className="size-4 text-text-1" />
               ) : null}
               <span role="status">
                 {settingsSaveState === "saving"
@@ -447,7 +447,7 @@ export function SettingsDesignPage({
                         className={cn(
                           "h-9 w-full justify-start gap-3 rounded-md px-3 text-left text-[13px] font-medium",
                           activeSection === id
-                            ? "bg-[var(--app-active)] text-foreground"
+                            ? "bg-selected text-foreground"
                             : "text-muted-foreground hover:text-foreground"
                         )}
                       >

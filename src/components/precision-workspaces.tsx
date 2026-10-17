@@ -423,15 +423,15 @@ export function PrecisionClients({
             )}
             master={
               <aside className="flex min-h-0 flex-col overflow-hidden lg:h-full">
-                <div className="border-b border-[var(--app-border)] bg-[var(--app-soft-panel)] p-3">
+                <div className="border-b border-line-row bg-well p-3">
                   <div className="relative">
-                    <Search className="pointer-events-none absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-[var(--app-muted)]" />
+                    <Search className="pointer-events-none absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-text-2" />
                     <Input
                       value={query}
                       onChange={(event) => setQuery(event.target.value)}
                       placeholder="Search clients..."
                       aria-label="Search clients"
-                      className="h-9 bg-[var(--app-panel)] pl-8 pr-8 text-xs"
+                      className="h-9 bg-well pl-8 pr-8 text-xs"
                     />
                     {query ? (
                       <Tooltip>
@@ -441,7 +441,7 @@ export function PrecisionClients({
                             variant="ghost"
                             size="icon-xs"
                             aria-label="Clear client search"
-                            className="absolute right-1.5 top-1/2 -translate-y-1/2 text-[var(--app-muted)] hover:text-[var(--app-text)]"
+                            className="absolute right-1.5 top-1/2 -translate-y-1/2 text-text-2 hover:text-text-1"
                             onClick={() => setQuery("")}
                           >
                             <X className="size-3.5" />
@@ -453,7 +453,7 @@ export function PrecisionClients({
                   </div>
                 </div>
                 <div
-                  className="min-h-0 flex-1 divide-y divide-[var(--app-border)] overflow-y-auto overscroll-contain"
+                  className="min-h-0 flex-1 divide-y divide-line-row overflow-y-auto overscroll-contain"
                   tabIndex={0}
                   aria-label="Scrollable client directory"
                 >
@@ -474,33 +474,32 @@ export function PrecisionClients({
                             }
                       }
                       className={cn(
-                        "relative h-auto w-full justify-start gap-3 px-3 py-3 text-left font-normal whitespace-normal hover:bg-[var(--app-hover)] dark:hover:bg-[var(--app-hover)] focus-visible:z-10 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--app-highlight)] active:translate-y-0 active:scale-100",
-                        selected?.name === client.name &&
-                          "bg-[var(--app-active)]"
+                        "relative h-auto w-full justify-start gap-3 px-3 py-3 text-left font-normal whitespace-normal hover:bg-hover dark:hover:bg-hover focus-visible:z-10 focus-visible:focus-ring-inset active:translate-y-0 active:scale-100",
+                        selected?.name === client.name && "bg-selected"
                       )}
                       aria-label={`${client.name}, ${client.projects.length} projects, ${client.active} active`}
                       onClick={() => setSelectedName(client.name)}
                     >
                       {selected?.name === client.name ? (
-                        <span className="absolute inset-y-2 left-0 w-0.5 rounded-full bg-[var(--app-highlight)]" />
+                        <span className="absolute inset-y-2 left-0 w-0.5 rounded-full bg-ink" />
                       ) : null}
-                      <span className="grid size-9 shrink-0 place-items-center rounded-md bg-[var(--app-panel)] text-xs font-semibold text-[var(--app-highlight)] ring-1 ring-[var(--app-border)]">
+                      <span className="grid size-9 shrink-0 place-items-center rounded-md bg-well text-xs font-semibold text-text-1 ring-1 ring-[var(--app-border)]">
                         {clientInitials(client.name)}
                       </span>
                       <span className="min-w-0 flex-1">
                         <span className="block truncate text-xs font-semibold">
                           {client.name}
                         </span>
-                        <span className="mt-0.5 block text-[10px] text-[var(--app-muted)]">
+                        <span className="mt-0.5 block text-[10px] text-text-2">
                           {client.projects.length} projects · {client.active}{" "}
                           active
                         </span>
                       </span>
-                      <ArrowRight className="size-3.5 text-[var(--app-muted)]" />
+                      <ArrowRight className="size-3.5 text-text-2" />
                     </MotionButton>
                   ))}
                   {!clients.length ? (
-                    <Empty className="flex-none gap-0 rounded-none border-0 p-6 text-center text-xs text-[var(--app-muted)] [text-wrap:wrap] md:p-6">
+                    <Empty className="flex-none gap-0 rounded-none border-0 p-6 text-center text-xs text-text-2 [text-wrap:wrap] md:p-6">
                       {query.trim()
                         ? `No clients match "${query.trim()}". Clear the search to see them all.`
                         : showArchived
@@ -515,15 +514,15 @@ export function PrecisionClients({
               <div className="h-full">
                 {selected ? (
                   <main className="flex min-h-0 min-w-0 flex-col overflow-hidden lg:h-full">
-                    <div className="flex flex-col gap-4 border-b border-[var(--app-border)] p-5 sm:flex-row sm:items-start">
-                      <span className="grid size-12 shrink-0 place-items-center rounded-lg bg-[var(--app-active)] text-sm font-semibold text-[var(--app-highlight)] ring-1 ring-[var(--app-border)]">
+                    <div className="flex flex-col gap-4 border-b border-line-row p-5 sm:flex-row sm:items-start">
+                      <span className="grid size-12 shrink-0 place-items-center rounded-lg bg-selected text-sm font-semibold text-text-1 ring-1 ring-[var(--app-border)]">
                         {clientInitials(selected.name)}
                       </span>
                       <div className="min-w-0 flex-1">
                         <h2 className="truncate text-lg font-semibold">
                           {selected.name}
                         </h2>
-                        <p className="mt-1 text-xs text-[var(--app-muted)]">
+                        <p className="mt-1 text-xs text-text-2">
                           {selected.company ||
                             `${selected.active} active projects · ${selected.delivered} delivered`}
                         </p>
@@ -549,7 +548,7 @@ export function PrecisionClients({
                       </Button>
                       <Button
                         variant="outline"
-                        className="h-8 self-start rounded-lg border-[var(--app-border)] bg-[var(--app-panel)] text-xs"
+                        className="h-8 self-start rounded-lg border-line-row bg-well text-xs"
                         onClick={() => void copyClientName(selected.name)}
                         aria-label={
                           copiedName === selected.name
@@ -565,7 +564,7 @@ export function PrecisionClients({
                         {copiedName === selected.name ? "Copied" : "Copy name"}
                       </Button>
                     </div>
-                    <div className="grid grid-cols-2 gap-2 border-b border-[var(--app-border)] p-4 sm:grid-cols-4">
+                    <div className="grid grid-cols-2 gap-2 border-b border-line-row p-4 sm:grid-cols-4">
                       <ClientMetric
                         label="Projects"
                         value={String(selected.projects.length)}
@@ -592,7 +591,7 @@ export function PrecisionClients({
                       selected.phone,
                       selected.notes,
                     ].some(Boolean) ? (
-                      <dl className="grid gap-3 border-b border-[var(--app-border)] p-5 text-xs sm:grid-cols-2">
+                      <dl className="grid gap-3 border-b border-line-row p-5 text-xs sm:grid-cols-2">
                         {[
                           ["Contact", selected.contactName],
                           ["Email", selected.email],
@@ -602,17 +601,15 @@ export function PrecisionClients({
                           .filter((entry) => entry[1])
                           .map(([label, value]) => (
                             <div key={label}>
-                              <dt className="text-[11px] text-[var(--app-muted)]">
+                              <dt className="text-[11px] text-text-2">
                                 {label}
                               </dt>
-                              <dd className="mt-1 text-[var(--app-ink)]">
-                                {value}
-                              </dd>
+                              <dd className="mt-1 text-text-1">{value}</dd>
                             </div>
                           ))}
                       </dl>
                     ) : null}
-                    <div className="grid gap-3 border-b border-[var(--app-border)] bg-[var(--app-soft-panel)]/45 p-4 sm:grid-cols-[1fr_1fr_auto]">
+                    <div className="grid gap-3 border-b border-line-row bg-well/45 p-4 sm:grid-cols-[1fr_1fr_auto]">
                       <Input
                         value={hubContactName}
                         onChange={(event) =>
@@ -651,13 +648,13 @@ export function PrecisionClients({
                           <h3 className="text-sm font-semibold">
                             Project history
                           </h3>
-                          <p className="mt-0.5 text-[11px] text-[var(--app-muted)]">
+                          <p className="mt-0.5 text-[11px] text-text-2">
                             Current and completed work for this client.
                           </p>
                         </div>
                       </div>
                       {selected.projects.length ? (
-                        <div className="divide-y divide-[var(--app-border)] overflow-hidden rounded-xl border border-[var(--app-border)]">
+                        <div className="divide-y divide-line-row overflow-hidden rounded-xl border border-line-row">
                           {selected.projects
                             .slice()
                             .sort((a, b) => b.dueDate.localeCompare(a.dueDate))
@@ -666,7 +663,7 @@ export function PrecisionClients({
                                 key={project.id}
                                 type="button"
                                 variant="ghost"
-                                className="h-auto w-full grid justify-start gap-2 px-3 py-3 text-left font-normal whitespace-normal hover:bg-[var(--app-hover)] dark:hover:bg-[var(--app-hover)] focus-visible:z-10 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--app-highlight)] active:translate-y-0 active:scale-100 sm:grid-cols-[minmax(0,1fr)_120px_100px_auto] sm:items-center"
+                                className="h-auto w-full grid justify-start gap-2 px-3 py-3 text-left font-normal whitespace-normal hover:bg-hover dark:hover:bg-hover focus-visible:z-10 focus-visible:focus-ring-inset active:translate-y-0 active:scale-100 sm:grid-cols-[minmax(0,1fr)_120px_100px_auto] sm:items-center"
                                 aria-label={`Open ${project.title}`}
                                 onClick={() => onViewProject(project)}
                               >
@@ -674,11 +671,11 @@ export function PrecisionClients({
                                   <span className="block truncate text-xs font-semibold">
                                     {project.title}
                                   </span>
-                                  <span className="mt-0.5 block truncate text-[10px] text-[var(--app-muted)]">
+                                  <span className="mt-0.5 block truncate text-[10px] text-text-2">
                                     {project.notes || project.workType}
                                   </span>
                                 </span>
-                                <span className="text-[11px] text-[var(--app-muted)]">
+                                <span className="text-[11px] text-text-2">
                                   {formatDate(project.dueDate)}
                                 </span>
                                 <Badge
@@ -690,18 +687,18 @@ export function PrecisionClients({
                                 >
                                   {project.status}
                                 </Badge>
-                                <ArrowRight className="size-3.5 text-[var(--app-muted)]" />
+                                <ArrowRight className="size-3.5 text-text-2" />
                               </Button>
                             ))}
                         </div>
                       ) : (
-                        <Empty className="min-h-56 flex-none gap-0 rounded-xl border border-dashed border-[var(--app-border)] p-0 text-center [text-wrap:wrap] md:p-0">
+                        <Empty className="min-h-56 flex-none gap-0 rounded-xl border border-dashed border-line-row p-0 text-center [text-wrap:wrap] md:p-0">
                           <div>
-                            <BriefcaseBusiness className="mx-auto size-6 text-[var(--app-muted)]" />
+                            <BriefcaseBusiness className="mx-auto size-6 text-text-2" />
                             <p className="mt-2 text-sm font-semibold">
                               No projects yet
                             </p>
-                            <p className="mt-1 text-xs text-[var(--app-muted)]">
+                            <p className="mt-1 text-xs text-text-2">
                               Assign this client when creating a project.
                             </p>
                           </div>
@@ -954,7 +951,7 @@ export function PrecisionFeedback({
                 >
                   <TabsList
                     aria-label="Filter review queue"
-                    className="h-8 rounded-md bg-[var(--app-soft-panel)] p-0.5"
+                    className="h-8 rounded-md bg-well p-0.5"
                   >
                     {(["All", "Review", "Revision"] as const).map((option) => {
                       const count =
@@ -991,7 +988,7 @@ export function PrecisionFeedback({
                 id="review-queue-panel"
                 role="tabpanel"
                 aria-labelledby={`review-${filter.toLowerCase()}-tab`}
-                className="border-t border-[var(--app-border)]"
+                className="border-t border-line-row"
               >
                 <AnimatePresence mode="popLayout" initial={false}>
                   {visibleQueue.length ? (
@@ -1003,7 +1000,7 @@ export function PrecisionFeedback({
                       transition={
                         reduceMotion ? { duration: 0 } : { duration: 0.16 }
                       }
-                      className="divide-y divide-[var(--app-border)]"
+                      className="divide-y divide-line-row"
                     >
                       {visibleQueue.map((project, index) => (
                         <MotionButton
@@ -1022,9 +1019,8 @@ export function PrecisionFeedback({
                           }
                           aria-pressed={selected?.id === project.id}
                           className={cn(
-                            "h-auto w-full grid justify-start gap-3 px-4 py-4 text-left font-normal whitespace-normal hover:bg-[var(--app-hover)] dark:hover:bg-[var(--app-hover)] focus-visible:z-10 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--app-highlight)] active:translate-y-0 active:scale-100 sm:grid-cols-[minmax(0,1fr)_150px_120px_auto] sm:items-center",
-                            selected?.id === project.id &&
-                              "bg-[var(--app-active)]"
+                            "h-auto w-full grid justify-start gap-3 px-4 py-4 text-left font-normal whitespace-normal hover:bg-hover dark:hover:bg-hover focus-visible:z-10 focus-visible:focus-ring-inset active:translate-y-0 active:scale-100 sm:grid-cols-[minmax(0,1fr)_150px_120px_auto] sm:items-center",
+                            selected?.id === project.id && "bg-selected"
                           )}
                           onClick={() => setSelectedId(project.id)}
                           onDoubleClick={() => onViewProject(project)}
@@ -1040,12 +1036,12 @@ export function PrecisionFeedback({
                             <span className="block truncate text-[13px] font-semibold">
                               {project.title}
                             </span>
-                            <span className="mt-1 block truncate text-[11px] text-[var(--app-muted)]">
+                            <span className="mt-1 block truncate text-[11px] text-text-2">
                               {project.client || project.workType} ·{" "}
                               {project.notes || "No review note"}
                             </span>
                           </span>
-                          <span className="text-[11px] text-[var(--app-muted)]">
+                          <span className="text-[11px] text-text-2">
                             Due {formatDate(project.dueDate)}
                           </span>
                           <Badge
@@ -1057,7 +1053,7 @@ export function PrecisionFeedback({
                           >
                             {project.status}
                           </Badge>
-                          <span className="inline-flex h-7 items-center gap-1 justify-self-start rounded-md px-2 text-xs font-medium text-[var(--app-highlight)] sm:justify-self-end">
+                          <span className="inline-flex h-7 items-center gap-1 justify-self-start rounded-md px-2 text-xs font-medium text-text-1 sm:justify-self-end">
                             Open <ArrowRight className="size-3.5" />
                           </span>
                         </MotionButton>
@@ -1075,13 +1071,13 @@ export function PrecisionFeedback({
                       className="grid min-h-72 flex-none place-items-center gap-0 rounded-none border-0 px-5 py-6 text-center [text-wrap:wrap] md:px-5 md:py-6"
                     >
                       <div>
-                        <CheckCircle2 className="mx-auto size-7 text-[var(--app-success)]" />
+                        <CheckCircle2 className="mx-auto size-7 text-text-1" />
                         <p className="mt-2 text-sm font-semibold">
                           {filter === "All"
                             ? "Review queue is clear"
                             : `No ${filter.toLowerCase()} items`}
                         </p>
-                        <p className="mt-1 text-xs text-[var(--app-muted)]">
+                        <p className="mt-1 text-xs text-text-2">
                           {filter === "All"
                             ? "Nothing is waiting on feedback. Request review on a project to start a new thread."
                             : filter === "Revision"
@@ -1136,40 +1132,40 @@ export function PrecisionFeedback({
                         value={selected.workType}
                       />
                     </dl>
-                    <div className="border-t border-[var(--app-border)] pt-4">
-                      <p className="text-[11px] font-semibold text-[var(--app-muted)]">
+                    <div className="border-t border-line-row pt-4">
+                      <p className="text-[11px] font-semibold text-text-2">
                         Latest review note
                       </p>
-                      <p className="mt-2 text-xs leading-5 text-[var(--app-ink)]">
+                      <p className="mt-2 text-xs leading-5 text-text-1">
                         {selected.notes ||
                           "No review note has been recorded yet."}
                       </p>
                     </div>
-                    <div className="border-t border-[var(--app-border)] pt-4">
-                      <p className="text-[11px] font-semibold text-[var(--app-muted)]">
+                    <div className="border-t border-line-row pt-4">
+                      <p className="text-[11px] font-semibold text-text-2">
                         Review history
                       </p>
                       <div className="mt-3 space-y-3">
                         <div className="flex gap-3 text-xs">
-                          <span className="mt-1 size-2 shrink-0 rounded-full bg-[var(--app-highlight)]" />
+                          <span className="mt-1 size-2 shrink-0 rounded-full bg-ink" />
                           <div>
                             <p className="font-medium">
                               {selected.status === "Revision"
                                 ? "Revision requested"
                                 : "Review requested"}
                             </p>
-                            <p className="mt-0.5 text-[11px] text-[var(--app-muted)]">
+                            <p className="mt-0.5 text-[11px] text-text-2">
                               Current production stage
                             </p>
                           </div>
                         </div>
                         <div className="flex gap-3 text-xs">
-                          <span className="mt-1 size-2 shrink-0 rounded-full bg-[var(--app-border)]" />
+                          <span className="mt-1 size-2 shrink-0 rounded-full bg-line-row" />
                           <div>
                             <p className="font-medium">
                               Project prepared for feedback
                             </p>
-                            <p className="mt-0.5 text-[11px] text-[var(--app-muted)]">
+                            <p className="mt-0.5 text-[11px] text-text-2">
                               Open the project for files and comments
                             </p>
                           </div>
@@ -1191,11 +1187,11 @@ export function PrecisionFeedback({
               ) : (
                 <div className="grid min-h-56 place-items-center text-center">
                   <div>
-                    <MessageSquareText className="mx-auto size-7 text-[var(--app-muted)]" />
+                    <MessageSquareText className="mx-auto size-7 text-text-2" />
                     <p className="mt-2 text-sm font-semibold">
                       Select a review item
                     </p>
-                    <p className="mt-1 text-xs text-[var(--app-muted)]">
+                    <p className="mt-1 text-xs text-text-2">
                       Open a queue item to read its notes and jump into the
                       project.
                     </p>
@@ -1619,7 +1615,7 @@ export function PrecisionReports({
                   <h2 className="text-sm font-semibold">
                     Delivery and earnings trend
                   </h2>
-                  <p className="mt-0.5 text-[10px] text-[var(--app-muted)]">
+                  <p className="mt-0.5 text-[10px] text-text-2">
                     Delivered value and payment batches grouped by month.
                   </p>
                 </div>
@@ -1634,7 +1630,7 @@ export function PrecisionReports({
                 >
                   <TabsList
                     aria-label="Earnings trend range"
-                    className="h-8 rounded-md bg-[var(--app-soft-panel)] p-0.5"
+                    className="h-8 rounded-md bg-well p-0.5"
                   >
                     {[
                       { value: "3", label: "3M" },
@@ -1691,14 +1687,14 @@ export function PrecisionReports({
                       <Area dataKey="earned" variant="gradient" />
                     </AreaChart>
                   ) : (
-                    <div className="grid h-full place-items-center text-xs text-[var(--app-muted)]">
+                    <div className="grid h-full place-items-center text-xs text-text-2">
                       Mark a project as delivered to start the earnings trend.
                     </div>
                   )}
                 </motion.div>
               </div>
               <p
-                className="mt-auto min-h-9 pt-3 text-xs leading-5 text-[var(--app-muted)]"
+                className="mt-auto min-h-9 pt-3 text-xs leading-5 text-text-2"
                 aria-label="Earnings trend summary"
               >
                 {trendData.length
@@ -1723,7 +1719,7 @@ export function PrecisionReports({
             >
               <div>
                 <h2 className="text-sm font-semibold">Work mix</h2>
-                <p className="mt-0.5 text-[10px] text-[var(--app-muted)]">
+                <p className="mt-0.5 text-[10px] text-text-2">
                   Distribution across project types.
                 </p>
               </div>
@@ -1753,7 +1749,7 @@ export function PrecisionReports({
                     <ChartTooltip labelKey="name" />
                   </PieChart>
                 ) : (
-                  <div className="grid h-full place-items-center rounded-md border border-dashed border-[var(--app-border)] px-4 text-center text-xs text-[var(--app-muted)]">
+                  <div className="grid h-full place-items-center rounded-md border border-dashed border-line-row px-4 text-center text-xs text-text-2">
                     Deliver projects to see how your work splits across types.
                   </div>
                 )}
@@ -1873,12 +1869,12 @@ export function PrecisionReports({
                 </BarChart>
               </div>
             ) : null}
-            <div className="divide-y divide-[var(--app-border)] border-t border-[var(--app-border)]">
+            <div className="divide-y divide-line-row border-t border-line-row">
               {report.clients.length ? (
                 <div
                   className={cn(
                     clientTotalsGrid,
-                    "h-8 items-center bg-[var(--app-soft-panel)] text-[11px] font-medium text-[var(--app-muted)]"
+                    "h-8 items-center bg-well text-[11px] font-medium text-text-2"
                   )}
                 >
                   <span>Client</span>
@@ -1909,7 +1905,7 @@ export function PrecisionReports({
                 </div>
               ))}
               {!report.clients.length ? (
-                <div className="grid min-h-24 place-items-center text-xs text-[var(--app-muted)]">
+                <div className="grid min-h-24 place-items-center text-xs text-text-2">
                   Deliver a client project in this period to see its totals.
                 </div>
               ) : null}
@@ -1933,10 +1929,10 @@ export function PrecisionReports({
             ) : undefined
           }
         >
-          <div className="overflow-x-auto border-t border-[var(--app-border)]">
+          <div className="overflow-x-auto border-t border-line-row">
             <Table className="w-full min-w-[720px] border-collapse">
               <TableHeader>
-                <TableRow className="bg-[var(--app-soft-panel)] text-left text-[11px] font-semibold text-[var(--app-subtle)]">
+                <TableRow className="bg-well text-left text-[11px] font-semibold text-text-3">
                   <TableHead className="h-8 px-4">Batch</TableHead>
                   <TableHead className="px-4">Completed</TableHead>
                   <TableHead className="px-4">Edits</TableHead>
@@ -1945,16 +1941,16 @@ export function PrecisionReports({
                   <TableHead className="px-4 text-right">Action</TableHead>
                 </TableRow>
               </TableHeader>
-              <TableBody className="divide-y divide-[var(--app-border)]">
+              <TableBody className="divide-y divide-line-row">
                 {report.batches.map((batch) => (
                   <TableRow
                     key={batch.id}
-                    className="h-12 text-xs transition-colors hover:bg-[var(--app-hover)]"
+                    className="h-12 text-xs transition-colors hover:bg-hover"
                   >
                     <TableCell className="px-4 font-semibold">
                       Batch #{batch.number}
                     </TableCell>
-                    <TableCell className="px-4 text-[var(--app-muted)]">
+                    <TableCell className="px-4 text-text-2">
                       {batch.date ? formatDate(batch.date) : "Pending"}
                     </TableCell>
                     <TableCell className="px-4">
@@ -1994,7 +1990,7 @@ export function PrecisionReports({
                   <TableRow>
                     <TableCell
                       colSpan={6}
-                      className="h-32 text-center text-xs text-[var(--app-muted)]"
+                      className="h-32 text-center text-xs text-text-2"
                     >
                       Finish the next salary batch to record its payment here.
                     </TableCell>
@@ -2022,10 +2018,10 @@ export function PrecisionReports({
               </Button>
             }
           >
-            <div className="overflow-x-auto border-t border-[var(--app-border)]">
+            <div className="overflow-x-auto border-t border-line-row">
               <Table className="w-full min-w-[760px] border-collapse">
                 <TableHeader>
-                  <TableRow className="bg-[var(--app-soft-panel)] text-left text-[11px] font-semibold text-[var(--app-subtle)]">
+                  <TableRow className="bg-well text-left text-[11px] font-semibold text-text-3">
                     <TableHead className="h-8 px-4">Draft</TableHead>
                     <TableHead className="px-4">Client</TableHead>
                     <TableHead className="px-4">Projects</TableHead>
@@ -2033,22 +2029,22 @@ export function PrecisionReports({
                     <TableHead className="px-4 text-right">Total</TableHead>
                   </TableRow>
                 </TableHeader>
-                <TableBody className="divide-y divide-[var(--app-border)]">
+                <TableBody className="divide-y divide-line-row">
                   {invoiceDrafts.map((draft) => (
                     <TableRow
                       key={draft.id}
-                      className="h-12 text-xs transition-colors hover:bg-[var(--app-hover)]"
+                      className="h-12 text-xs transition-colors hover:bg-hover"
                     >
                       <TableCell className="px-4 font-semibold">
                         {draft.invoiceNumber}
                       </TableCell>
-                      <TableCell className="px-4 text-[var(--app-muted)]">
+                      <TableCell className="px-4 text-text-2">
                         {draft.client}
                       </TableCell>
                       <TableCell className="px-4">
                         {draft.lineItems.length}
                       </TableCell>
-                      <TableCell className="px-4 text-[var(--app-muted)]">
+                      <TableCell className="px-4 text-text-2">
                         {formatDate(draft.dueDate)}
                       </TableCell>
                       <TableCell className="px-4 text-right font-semibold">
@@ -2060,7 +2056,7 @@ export function PrecisionReports({
                     <TableRow>
                       <TableCell
                         colSpan={5}
-                        className="h-28 text-center text-xs text-[var(--app-muted)]"
+                        className="h-28 text-center text-xs text-text-2"
                       >
                         Deliver a freelance project for a named client to draft
                         its invoice.
@@ -2086,13 +2082,13 @@ export function PrecisionReports({
                 }
                 bodyMode="flush"
               >
-                <div className="divide-y divide-[var(--app-border)] border-t border-[var(--app-border)]">
+                <div className="divide-y divide-line-row border-t border-line-row">
                   {editorSummary.map((editor) => (
                     <div
                       key={editor.userId}
                       className="flex items-center gap-3 px-4 py-3"
                     >
-                      <span className="grid size-8 place-items-center rounded-full bg-[var(--app-active)] text-[10px] font-semibold text-[var(--app-highlight)]">
+                      <span className="grid size-8 place-items-center rounded-full bg-selected text-[10px] font-semibold text-text-1">
                         {editor.name
                           .split(/\s+/)
                           .slice(0, 2)
@@ -2103,7 +2099,7 @@ export function PrecisionReports({
                         <span className="block truncate text-xs font-semibold">
                           {editor.name}
                         </span>
-                        <span className="mt-0.5 block text-[10px] text-[var(--app-muted)]">
+                        <span className="mt-0.5 block text-[10px] text-text-2">
                           {editor.delivered} delivered edits
                         </span>
                       </span>
@@ -2126,7 +2122,7 @@ export function PrecisionReports({
                 }
                 bodyMode="flush"
               >
-                <div className="divide-y divide-[var(--app-border)] border-t border-[var(--app-border)]">
+                <div className="divide-y divide-line-row border-t border-line-row">
                   {report.deliveredProjects.slice(0, 6).map((project) => (
                     <div
                       key={project.id}
@@ -2136,11 +2132,11 @@ export function PrecisionReports({
                         <span className="block truncate text-xs font-semibold">
                           {project.title}
                         </span>
-                        <span className="mt-0.5 block truncate text-[10px] text-[var(--app-muted)]">
+                        <span className="mt-0.5 block truncate text-[10px] text-text-2">
                           {project.editorName} · {project.workType}
                         </span>
                       </span>
-                      <span className="text-[10px] text-[var(--app-muted)]">
+                      <span className="text-[10px] text-text-2">
                         {formatDate(project.date)}
                       </span>
                       <span className="text-xs font-semibold">
@@ -2151,7 +2147,7 @@ export function PrecisionReports({
                     </div>
                   ))}
                   {!report.deliveredProjects.length ? (
-                    <div className="grid min-h-28 place-items-center text-xs text-[var(--app-muted)]">
+                    <div className="grid min-h-28 place-items-center text-xs text-text-2">
                       Deliver a project to list it here.
                     </div>
                   ) : null}
@@ -2171,10 +2167,8 @@ const clientTotalsGrid =
 
 function ClientMetric({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-lg bg-[var(--app-soft-panel)] px-3 py-2.5">
-      <p className="text-[11px] font-semibold text-[var(--app-subtle)]">
-        {label}
-      </p>
+    <div className="rounded-lg bg-well px-3 py-2.5">
+      <p className="text-[11px] font-semibold text-text-3">{label}</p>
       <p className="mt-1 text-sm font-semibold">{value}</p>
     </div>
   );
@@ -2184,7 +2178,7 @@ function ClientMetric({ label, value }: { label: string; value: string }) {
 function PeriodMetric({ label, value }: { label: string; value: string }) {
   return (
     <div className="min-w-0">
-      <dt className="text-xs text-[var(--app-muted)]">{label}</dt>
+      <dt className="text-xs text-text-2">{label}</dt>
       <dd className="mt-1 text-lg font-semibold tabular-nums">{value}</dd>
     </div>
   );

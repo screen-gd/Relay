@@ -39,7 +39,7 @@ export function SplitPane({
         <div
           className={cn(
             "h-full min-h-0 min-w-0",
-            "lg:border-l lg:border-[var(--app-border)] lg:pl-5",
+            "lg:border-l lg:border-line-row lg:pl-5",
             ratio === "inspector-xl" && "hidden xl:block"
           )}
         >

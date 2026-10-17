@@ -621,9 +621,7 @@ function ProjectStageTracker({ status }: { status: string }) {
               aria-hidden="true"
               className={cn(
                 "block h-1 rounded-sm",
-                reached
-                  ? "bg-[var(--app-ink)]"
-                  : "bg-[var(--app-progress-track)]",
+                reached ? "bg-ink" : "bg-tile",
                 "rounded-sm"
               )}
             />

@@ -68,8 +68,8 @@ export function FirstRunChecklist({
       className="mx-auto max-w-5xl px-4 py-8 sm:px-6 sm:py-12"
       aria-labelledby="first-run-title"
     >
-      <Card className="p-5 shadow-[var(--app-shadow-1)] sm:p-8">
-        <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[var(--app-highlight)]">
+      <Card className="p-5 shadow-none sm:p-8">
+        <p className="text-xs font-semibold uppercase tracking-[0.12em] text-text-1">
           Your first production
         </p>
         <h2
@@ -80,7 +80,7 @@ export function FirstRunChecklist({
             ? "See Relay filled with a sample production"
             : "Turn one active edit into a clear production plan"}
         </h2>
-        <p className="mt-3 max-w-2xl text-sm leading-6 text-[var(--app-muted)]">
+        <p className="mt-3 max-w-2xl text-sm leading-6 text-text-2">
           {canLoadSample
             ? "Demo work you can clear at any time. Nothing you add yourself is removed with it."
             : "Create a real project first. Relay will reveal the full dashboard once there is useful work to organize."}
@@ -106,18 +106,18 @@ export function FirstRunChecklist({
             return (
               <li
                 key={step.title}
-                className="rounded-lg border border-[var(--app-border)] bg-[var(--app-soft-panel)] p-4"
+                className="rounded-lg border border-line-row bg-well p-4"
               >
                 <div className="flex items-center gap-3">
-                  <span className="grid size-9 place-items-center rounded-md bg-[var(--app-active)] text-[var(--app-highlight)]">
+                  <span className="grid size-9 place-items-center rounded-md bg-selected text-text-1">
                     <Icon className="size-4" />
                   </span>
-                  <span className="font-mono text-xs text-[var(--app-subtle)]">
+                  <span className="font-mono text-xs text-text-3">
                     0{index + 1}
                   </span>
                 </div>
                 <h2 className="mt-4 text-sm font-semibold">{step.title}</h2>
-                <p className="mt-2 text-sm leading-6 text-[var(--app-muted)]">
+                <p className="mt-2 text-sm leading-6 text-text-2">
                   {step.body}
                 </p>
               </li>
@@ -125,7 +125,7 @@ export function FirstRunChecklist({
           })}
         </ol>
 
-        <div className="mt-5 flex flex-col gap-3 border-t border-[var(--app-border)] pt-5 text-sm text-[var(--app-muted)] sm:flex-row sm:items-center sm:justify-between">
+        <div className="mt-5 flex flex-col gap-3 border-t border-line-row pt-5 text-sm text-text-2 sm:flex-row sm:items-center sm:justify-between">
           <p className="flex items-center gap-2">
             <LockKeyhole className="size-4" />
             {mode === "local"

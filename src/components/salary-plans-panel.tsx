@@ -475,10 +475,10 @@ function SalaryPlanRow({
           aria-valuemin={0}
           aria-valuemax={plan.requiredProjectCount}
           aria-valuenow={progress}
-          className="h-1.5 overflow-hidden rounded-sm bg-[var(--app-progress-track)]"
+          className="h-1.5 overflow-hidden rounded-sm bg-tile"
         >
           <div
-            className="h-full rounded-sm bg-[var(--primary)]"
+            className="h-full rounded-sm bg-primary"
             style={{ width: `${percent}%` }}
           />
         </div>
@@ -492,7 +492,7 @@ function SalaryPlanRow({
         <div className="overflow-hidden rounded-md border border-border">
           <Table className="min-w-[640px] text-xs">
             <TableHeader>
-              <TableRow className="bg-[var(--app-soft-panel)] hover:bg-[var(--app-soft-panel)]">
+              <TableRow className="bg-well hover:bg-well">
                 <TableHead className="h-8 w-20 px-3 text-[11px]">
                   Batch
                 </TableHead>
@@ -537,9 +537,7 @@ function SalaryPlanRow({
                             ? `Batch ${batch.number} received. Mark as not received`
                             : `Mark batch ${batch.number} received`
                         }
-                        className={cn(
-                          received && "px-0 text-[var(--app-success)]"
-                        )}
+                        className={cn(received && "px-0 text-text-1")}
                         disabled={locked || busy === batch._id}
                         onClick={() => onToggleReceived(batch)}
                       >

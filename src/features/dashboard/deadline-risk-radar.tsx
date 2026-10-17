@@ -144,7 +144,7 @@ export function DeadlineRiskRadar({
                 className={cn(
                   "font-mono tabular-nums",
                   finding.kind === "overdue"
-                    ? "text-[var(--app-danger)]"
+                    ? "text-fail-text"
                     : "text-foreground"
                 )}
               >

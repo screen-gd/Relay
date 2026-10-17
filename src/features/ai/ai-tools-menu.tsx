@@ -32,7 +32,7 @@ export function AiToolsMenu() {
           size="icon"
           title="AI tools"
           aria-label="AI tools"
-          className="text-[var(--app-ink)] transition-colors data-[state=open]:bg-[var(--app-active)]"
+          className="text-text-1 transition-colors data-[state=open]:bg-selected"
         >
           <Sparkles aria-hidden="true" className="size-[18px]" />
         </Button>
@@ -65,7 +65,7 @@ export function AiToolsMenu() {
         ) : (
           <DropdownMenuItem
             onSelect={() => signIn()}
-            className="font-semibold text-[var(--app-highlight)]"
+            className="font-semibold text-text-1"
           >
             Sign in to use AI
           </DropdownMenuItem>

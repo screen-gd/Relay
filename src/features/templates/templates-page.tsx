@@ -314,7 +314,7 @@ export function TemplatesDesignPage({
             <article
               key={template.id}
               data-slot="template-card"
-              className="group flex min-h-[250px] flex-col justify-between rounded-xl border border-[var(--app-border)] bg-[var(--app-soft-panel)] p-4 text-foreground shadow-[var(--app-shadow-1)] transition-[background-color,border-color,transform,box-shadow] duration-200 hover:-translate-y-0.5 hover:border-[var(--app-strong-border)] hover:bg-[var(--app-hover)] hover:shadow-[var(--app-shadow-2)] focus-within:border-[var(--primary)]"
+              className="group flex min-h-[250px] flex-col justify-between rounded-xl border border-line-row bg-well p-4 text-foreground shadow-none transition-[background-color,border-color,transform,box-shadow] duration-200 hover:-translate-y-0.5 hover:border-strong hover:bg-hover hover:shadow-overlay focus-within:border-primary"
             >
               <div>
                 <header className="flex items-start justify-between gap-4">
@@ -338,22 +338,22 @@ export function TemplatesDesignPage({
                       {template.description}
                     </p>
                   </div>
-                  <span className="grid size-9 shrink-0 place-items-center rounded-md border border-[var(--app-border)] bg-[var(--app-panel)] text-[var(--primary)]">
+                  <span className="grid size-9 shrink-0 place-items-center rounded-md border border-line-row bg-well text-primary">
                     <FileText aria-hidden="true" className="size-4" />
                   </span>
                 </header>
 
-                <dl className="mt-4 grid grid-cols-2 gap-3 border-y border-[var(--app-border)] py-3 text-xs">
+                <dl className="mt-4 grid grid-cols-2 gap-3 border-y border-line-row py-3 text-xs">
                   <div>
-                    <dt className="text-[10px] uppercase tracking-[0.12em] text-[var(--app-muted)]">
+                    <dt className="text-[10px] uppercase tracking-[0.12em] text-text-2">
                       Project type
                     </dt>
-                    <dd className="mt-1 font-semibold text-[var(--app-highlight)]">
+                    <dd className="mt-1 font-semibold text-text-1">
                       {template.projectType}
                     </dd>
                   </div>
                   <div>
-                    <dt className="text-[10px] uppercase tracking-[0.12em] text-[var(--app-muted)]">
+                    <dt className="text-[10px] uppercase tracking-[0.12em] text-text-2">
                       Setup time
                     </dt>
                     <dd className="mt-1 text-foreground">
@@ -367,7 +367,7 @@ export function TemplatesDesignPage({
                     <h3 className="text-xs font-semibold text-muted-foreground">
                       Workflow preview
                     </h3>
-                    <span className="font-mono text-[10px] text-[var(--app-muted)]">
+                    <span className="font-mono text-[10px] text-text-2">
                       {template.workflowStages.length} stages
                     </span>
                   </div>
@@ -394,23 +394,20 @@ export function TemplatesDesignPage({
                         >
                           <span
                             role="listitem"
-                            className="rounded-md border border-[var(--app-border)] bg-[var(--app-panel)] px-2 py-1 text-[11px] text-foreground"
+                            className="rounded-md border border-line-row bg-well px-2 py-1 text-[11px] text-foreground"
                           >
                             {stage.label}
                           </span>
                           {index <
                           Math.min(template.workflowStages.length, 4) - 1 ? (
-                            <span
-                              aria-hidden="true"
-                              className="text-[var(--app-muted)]"
-                            >
+                            <span aria-hidden="true" className="text-text-2">
                               →
                             </span>
                           ) : null}
                         </span>
                       ))}
                     {template.workflowStages.length > 4 ? (
-                      <span className="text-[11px] text-[var(--app-muted)]">
+                      <span className="text-[11px] text-text-2">
                         +{template.workflowStages.length - 4}
                       </span>
                     ) : null}

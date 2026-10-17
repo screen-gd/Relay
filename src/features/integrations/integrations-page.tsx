@@ -206,14 +206,14 @@ export function IntegrationsDesignPage({
             <div className="relative min-w-0 flex-1 sm:max-w-md">
               <Plug
                 aria-hidden="true"
-                className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-[var(--app-muted)]"
+                className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-text-2"
               />
               <OwnedInput
                 aria-label="Search integrations"
                 value={integrationSearch}
                 onChange={(event) => setIntegrationSearch(event.target.value)}
                 placeholder="Search services and project links..."
-                className="h-10 bg-[var(--app-control)] pl-9 shadow-none"
+                className="h-10 bg-page pl-9 shadow-none"
               />
             </div>
           }
@@ -257,7 +257,7 @@ export function IntegrationsDesignPage({
               return (
                 <li
                   key={name}
-                  className="flex flex-col justify-between gap-3 bg-[var(--app-soft-panel)] p-4 transition-colors hover:bg-[var(--app-hover)] focus-within:bg-[var(--app-hover)] sm:flex-row sm:items-center"
+                  className="flex flex-col justify-between gap-3 bg-well p-4 transition-colors hover:bg-hover focus-within:bg-hover sm:flex-row sm:items-center"
                 >
                   <div className="flex min-w-0 items-center gap-3">
                     <span
@@ -360,7 +360,7 @@ export function IntegrationsDesignPage({
               {visibleProjectLinks.map((project) => (
                 <li
                   key={project.id}
-                  className="flex flex-col justify-between gap-3 bg-[var(--app-soft-panel)] p-4 transition-colors hover:bg-[var(--app-hover)] focus-within:bg-[var(--app-hover)] md:flex-row md:items-center"
+                  className="flex flex-col justify-between gap-3 bg-well p-4 transition-colors hover:bg-hover focus-within:bg-hover md:flex-row md:items-center"
                 >
                   <div className="min-w-0">
                     <h3 className="truncate text-sm font-semibold">

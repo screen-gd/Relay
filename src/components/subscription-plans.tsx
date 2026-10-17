@@ -60,8 +60,7 @@ export function CapabilityUpgradePrompt({
     <div
       className={cn(
         "flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between",
-        !inline &&
-          "rounded-[var(--radius-panel)] border bg-[var(--surface-sunken)] p-4"
+        !inline && "rounded-[var(--radius-panel)] border bg-well p-4"
       )}
     >
       <div>

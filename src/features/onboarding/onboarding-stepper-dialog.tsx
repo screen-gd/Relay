@@ -126,7 +126,7 @@ export function OnboardingStepperDialog({
       <DialogContent
         showCloseButton={false}
         data-testid="onboarding-dialog"
-        className="max-h-[calc(100dvh-2rem)] gap-0 overflow-y-auto border-[var(--app-border)] bg-[var(--app-panel)] p-6 text-[var(--app-ink)] sm:max-w-lg"
+        className="max-h-[calc(100dvh-2rem)] gap-0 overflow-y-auto border-line-row bg-well p-6 text-text-1 sm:max-w-lg"
         onEscapeKeyDown={(event) => event.preventDefault()}
         onPointerDownOutside={(event) => event.preventDefault()}
       >
@@ -158,7 +158,7 @@ export function OnboardingStepperDialog({
                 <h2 className="text-xl font-semibold tracking-[-0.02em]">
                   {titles[id].title}
                 </h2>
-                <p className="mt-1 text-sm text-[var(--app-muted)]">
+                <p className="mt-1 text-sm text-text-2">
                   {titles[id].description}
                 </p>
               </header>
@@ -186,7 +186,7 @@ export function OnboardingStepperDialog({
 
 function WelcomeStep() {
   return (
-    <p className="text-sm leading-relaxed text-[var(--app-ink)]">
+    <p className="text-sm leading-relaxed text-text-1">
       If you find a bug, tell us on X at{" "}
       <a
         className="font-medium underline underline-offset-4"
@@ -238,20 +238,16 @@ function ModeStep({
         <Button
           type="button"
           variant="link"
-          className="h-auto px-0 text-[var(--app-ink)]"
+          className="h-auto px-0 text-text-1"
           onClick={onSignIn}
         >
           Sign in
         </Button>
-        <Button
-          asChild
-          variant="link"
-          className="h-auto px-0 text-[var(--app-ink)]"
-        >
+        <Button asChild variant="link" className="h-auto px-0 text-text-1">
           <Link to="/sample-studio">Open sample workspace</Link>
         </Button>
       </div>
-      <p className="text-xs leading-relaxed text-[var(--app-muted)]">
+      <p className="text-xs leading-relaxed text-text-2">
         Read the{" "}
         <Link to="/privacy" className="underline underline-offset-2">
           Privacy Policy
@@ -262,7 +258,7 @@ function ModeStep({
         </Link>
         .
       </p>
-      <p className="text-xs leading-relaxed text-[var(--app-muted)]">
+      <p className="text-xs leading-relaxed text-text-2">
         <TrustLinks />
       </p>
     </>
@@ -337,7 +333,7 @@ function AnalyticsStep({
 }) {
   return (
     <>
-      <p className="text-sm leading-relaxed text-[var(--app-ink)]">
+      <p className="text-sm leading-relaxed text-text-1">
         Relay never sends client names, project names, comments, files, links,
         portal tokens, or money.
       </p>
@@ -395,10 +391,8 @@ function Choice({
       aria-checked={selected}
       onClick={onSelect}
       className={cn(
-        "h-auto w-full justify-start items-start gap-3 rounded-md border px-4 py-3 text-left font-normal whitespace-normal hover:bg-transparent hover:text-current dark:hover:bg-transparent focus-visible:ring-2 focus-visible:ring-ring active:translate-y-0 active:scale-100",
-        selected
-          ? "border-[var(--app-ink)]"
-          : "border-[var(--app-border)] hover:border-[var(--app-muted)]"
+        "h-auto w-full justify-start items-start gap-3 rounded-md border px-4 py-3 text-left font-normal whitespace-normal hover:bg-transparent hover:text-current dark:hover:bg-transparent active:translate-y-0 active:scale-100",
+        selected ? "border-ink" : "border-line-row hover:border-text-2"
       )}
     >
       <span
@@ -406,21 +400,17 @@ function Choice({
         className={cn(
           "mt-0.5 grid size-4 shrink-0 place-items-center rounded-full border",
           selected
-            ? "border-[var(--primary)] bg-[var(--primary)] text-[var(--primary-foreground)]"
-            : "border-[var(--app-border)]"
+            ? "border-primary bg-primary text-primary-foreground"
+            : "border-line-row"
         )}
       >
         {selected ? <Check className="size-3" strokeWidth={3} /> : null}
       </span>
       <span className="min-w-0">
         <span className="block text-sm font-medium">{title}</span>
-        <span className="mt-0.5 block text-xs text-[var(--app-muted)]">
-          {body}
-        </span>
+        <span className="mt-0.5 block text-xs text-text-2">{body}</span>
         {note ? (
-          <span className="mt-1.5 block text-xs text-[var(--app-warning)]">
-            {note}
-          </span>
+          <span className="mt-1.5 block text-xs text-warn-text">{note}</span>
         ) : null}
       </span>
     </Button>

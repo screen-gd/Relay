@@ -36,7 +36,7 @@ export function DataTableFrame({
         aria-label={bodyLabel}
         tabIndex={bounded && bodyLabel ? 0 : undefined}
         className={cn(
-          "min-w-0 overflow-x-auto focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset",
+          "min-w-0 overflow-x-auto focus-visible:outline-none focus-visible:focus-ring-inset",
           // Unbounded frames must never become a vertical scroller: sub-pixel
           // overflow would latch wheel input and stop the page from scrolling.
           bounded

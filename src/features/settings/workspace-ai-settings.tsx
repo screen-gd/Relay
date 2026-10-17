@@ -206,7 +206,7 @@ export function WorkspaceAiSettings({
           {gap?.control === "workspace" ? (
             <a
               href="/team"
-              className="text-xs font-semibold text-[var(--app-highlight)] hover:underline"
+              className="text-xs font-semibold text-text-1 hover:underline"
             >
               Connect a workspace
             </a>

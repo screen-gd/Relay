@@ -224,14 +224,14 @@ export function ResourcesDesignPage({
             <div className="relative min-w-0 flex-1 sm:max-w-md">
               <Link2
                 aria-hidden="true"
-                className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-[var(--app-muted)]"
+                className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-text-2"
               />
               <OwnedInput
                 aria-label="Search resources"
                 value={resourceSearch}
                 onChange={(event) => setResourceSearch(event.target.value)}
                 placeholder="Search resources, links, or projects..."
-                className="h-10 bg-[var(--app-control)] pl-9 shadow-none"
+                className="h-10 bg-page pl-9 shadow-none"
               />
             </div>
           }
@@ -280,11 +280,11 @@ export function ResourcesDesignPage({
               visibleResources.map((resource) => (
                 <article
                   key={resource.id}
-                  className="grid items-start gap-4 px-4 py-4 transition-colors hover:bg-[var(--app-soft-panel)] focus-within:bg-[var(--app-soft-panel)] lg:grid-cols-[minmax(0,1.4fr)_160px_minmax(0,1fr)_140px]"
+                  className="grid items-start gap-4 px-4 py-4 transition-colors hover:bg-well focus-within:bg-well lg:grid-cols-[minmax(0,1.4fr)_160px_minmax(0,1fr)_140px]"
                 >
                   <div className="flex min-w-0 items-start gap-3">
                     <span
-                      className="grid size-9 shrink-0 place-items-center rounded-md border border-[var(--app-border)] bg-[var(--app-soft-panel)] text-[var(--primary)]"
+                      className="grid size-9 shrink-0 place-items-center rounded-md border border-line-row bg-well text-primary"
                       aria-hidden="true"
                     >
                       <Link2 className="size-4" />
@@ -301,11 +301,11 @@ export function ResourcesDesignPage({
                           {resource.category}
                         </OwnedBadge>
                       </div>
-                      <p className="truncate text-xs text-[var(--app-muted)]">
+                      <p className="truncate text-xs text-text-2">
                         {resource.url}
                       </p>
                       {resource.notes ? (
-                        <p className="mt-1 text-xs leading-relaxed text-[var(--app-muted)]">
+                        <p className="mt-1 text-xs leading-relaxed text-text-2">
                           {resource.notes}
                         </p>
                       ) : null}
@@ -317,7 +317,7 @@ export function ResourcesDesignPage({
                       : "General"}
                   </p>
                   <time
-                    className="truncate text-xs text-[var(--app-muted)]"
+                    className="truncate text-xs text-text-2"
                     dateTime={resource.updatedAt || resource.createdAt}
                   >
                     Updated{" "}

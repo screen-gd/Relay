@@ -5,6 +5,7 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { Tabs as TabsPrimitive } from "radix-ui";
 
 import { cn } from "@/lib/utils";
+import { segmentedItemClassName, segmentedTrackClassName } from "./segmented";
 
 function Tabs({
   className,
@@ -17,7 +18,7 @@ function Tabs({
       data-orientation={orientation}
       orientation={orientation}
       className={cn(
-        "group/tabs flex gap-2 data-[orientation=horizontal]:flex-col",
+        "group/tabs flex min-w-0 gap-3 data-[orientation=horizontal]:flex-col",
         className
       )}
       {...props}
@@ -25,15 +26,19 @@ function Tabs({
   );
 }
 
+/**
+ * `default` is the segmented control, for views of one thing. `line` is a
+ * row of plain tabs over a hairline, for the sections of a page or record.
+ * `ghost` drops the track; the chosen tab takes the selected wash.
+ */
 const tabsListVariants = cva(
-  "group/tabs-list inline-flex !h-9 w-fit items-center justify-center gap-0.5 !rounded-lg !border-0 !bg-[var(--surface-inset)] !p-1 text-muted-foreground group-data-[orientation=vertical]/tabs:!h-fit group-data-[orientation=vertical]/tabs:flex-col",
+  "group/tabs-list min-w-0 overflow-x-auto scrollbar-none group-data-[orientation=vertical]/tabs:h-fit group-data-[orientation=vertical]/tabs:flex-col",
   {
     variants: {
       variant: {
-        // Segmented control: inset track, filled active item.
-        default: "",
-        // Trackless tabs: only the active item is filled. No baseline.
-        ghost: "!h-auto justify-start gap-1 !bg-transparent !p-0",
+        default: segmentedTrackClassName,
+        line: "flex w-full items-center gap-1 shadow-[inset_0_-1px_0_var(--line-row)]",
+        ghost: "inline-flex w-fit items-center gap-1",
       },
     },
     defaultVariants: {
@@ -66,7 +71,12 @@ function TabsTrigger({
     <TabsPrimitive.Trigger
       data-slot="tabs-trigger"
       className={cn(
-        "inline-flex !h-7 flex-1 items-center justify-center gap-1.5 !rounded-md !border-0 px-2.5 py-1 text-sm font-medium whitespace-nowrap text-[var(--app-muted)] !shadow-none transition-colors group-data-[orientation=vertical]/tabs:w-full group-data-[orientation=vertical]/tabs:justify-start hover:text-[var(--app-ink)] focus-visible:ring-2 focus-visible:ring-[var(--primary)] focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50 data-[state=active]:!bg-[var(--app-active)] data-[state=active]:!text-[var(--app-ink)] group-data-[variant=ghost]/tabs-list:!h-8 group-data-[variant=ghost]/tabs-list:flex-none group-data-[variant=ghost]/tabs-list:px-3 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+        segmentedItemClassName,
+        "group-data-[orientation=vertical]/tabs:w-full group-data-[orientation=vertical]/tabs:justify-start",
+        "group-data-[variant=default]/tabs-list:flex-1 group-data-[variant=default]/tabs-list:data-[state=active]:bg-page group-data-[variant=default]/tabs-list:data-[state=active]:text-text-1 group-data-[variant=default]/tabs-list:data-[state=active]:control-edge",
+        "group-data-[variant=line]/tabs-list:h-(--control) group-data-[variant=line]/tabs-list:rounded-soft group-data-[variant=line]/tabs-list:px-2 group-data-[variant=line]/tabs-list:hover:bg-hover group-data-[variant=line]/tabs-list:data-[state=active]:text-text-1",
+        "group-data-[variant=line]/tabs-list:after:absolute group-data-[variant=line]/tabs-list:after:inset-x-2 group-data-[variant=line]/tabs-list:after:-bottom-px group-data-[variant=line]/tabs-list:after:h-px group-data-[variant=line]/tabs-list:data-[state=active]:after:bg-ink",
+        "group-data-[variant=ghost]/tabs-list:h-(--control-sm) group-data-[variant=ghost]/tabs-list:rounded-soft group-data-[variant=ghost]/tabs-list:hover:bg-hover group-data-[variant=ghost]/tabs-list:data-[state=active]:bg-selected group-data-[variant=ghost]/tabs-list:data-[state=active]:text-text-1",
         className
       )}
       {...props}
@@ -81,7 +91,10 @@ function TabsContent({
   return (
     <TabsPrimitive.Content
       data-slot="tabs-content"
-      className={cn("flex-1 outline-none", className)}
+      className={cn(
+        "min-w-0 flex-1 outline-none data-[state=active]:animate-[relay-fade-in_var(--dur-base)_var(--ease-step)_both]",
+        className
+      )}
       {...props}
     />
   );

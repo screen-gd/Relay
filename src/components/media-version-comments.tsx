@@ -61,10 +61,7 @@ function CommentRow({
   onSeek?: (seconds: number) => void;
 }) {
   return (
-    <article
-      id={`comment-${comment.id}`}
-      className="rounded-lg bg-[var(--surface-inset)] p-3"
-    >
+    <article id={`comment-${comment.id}`} className="rounded-lg bg-well p-3">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="flex items-center gap-2 text-sm font-medium">
           <MessageCircle
@@ -144,7 +141,7 @@ function LocalCommentForm({
 
   return (
     <form
-      className="mt-1 grid gap-2 rounded-lg bg-[var(--surface-inset)] p-3"
+      className="mt-1 grid gap-2 rounded-lg bg-well p-3"
       onSubmit={(event) => {
         event.preventDefault();
         if (!body.trim()) {
@@ -321,7 +318,7 @@ export function PublicMediaVersionComments({
             />
           ))
         ) : (
-          <p className="rounded-lg bg-[var(--surface-inset)] p-3 text-sm text-muted-foreground">
+          <p className="rounded-lg bg-well p-3 text-sm text-muted-foreground">
             No comments on this version yet.
           </p>
         )}
@@ -329,7 +326,7 @@ export function PublicMediaVersionComments({
       {!disabled && !loading ? (
         <form
           onSubmit={(event) => void submit(event)}
-          className="mt-4 grid gap-3 rounded-lg bg-[var(--surface-inset)] p-3"
+          className="mt-4 grid gap-3 rounded-lg bg-well p-3"
         >
           <div className="flex flex-wrap items-center justify-between gap-2">
             <Label
@@ -517,7 +514,7 @@ export function MediaVersionComments({
               key={`${version.id}-${openByDefault}`}
               defaultOpen={openByDefault}
             >
-              <CollapsibleTrigger className="group -mx-3 flex w-[calc(100%+1.5rem)] items-center gap-1 rounded-md px-3 py-2 text-left text-sm outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary)]">
+              <CollapsibleTrigger className="group -mx-3 flex w-[calc(100%+1.5rem)] items-center gap-1 rounded-md px-3 py-2 text-left text-sm outline-none">
                 <ChevronRight
                   aria-hidden="true"
                   className="size-3.5 shrink-0 text-muted-foreground transition-transform group-data-[state=open]:rotate-90"

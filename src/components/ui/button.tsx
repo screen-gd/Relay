@@ -4,31 +4,44 @@ import { Slot } from "radix-ui";
 
 import { cn } from "@/lib/utils";
 
+/**
+ * Quartz button on Radix Slot. One `default` (ink, the primary) per view;
+ * `outline` is the framed secondary key, `secondary` the grey field; `ghost`
+ * is for toolbars and rows; `destructive` keeps a fail edge, never a red fill.
+ */
 const buttonVariants = cva(
-  "inline-flex shrink-0 items-center justify-center gap-2 rounded-md text-sm font-medium whitespace-nowrap transition-[color,background-color,border-color,box-shadow,opacity,transform] duration-150 ease-out outline-none active:translate-y-px active:scale-[0.985] motion-reduce:active:translate-y-0 motion-reduce:active:scale-100 focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+  [
+    "group/button relative inline-flex max-w-full shrink-0 items-center justify-center gap-2 rounded-soft whitespace-nowrap select-none type-label",
+    "transition-[background-color,color,scale,box-shadow,opacity] duration-(--dur-fast) ease-(--ease-step)",
+    "active:not-disabled:scale-(--scale-press) active:duration-(--dur-press) motion-reduce:active:scale-100",
+    "disabled:cursor-not-allowed aria-busy:cursor-progress",
+    "[&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+  ],
   {
     variants: {
       variant: {
         default:
-          "bg-primary text-primary-foreground motion-safe:hover:-translate-y-px hover:bg-primary/90",
-        destructive:
-          "bg-destructive text-[var(--primary-foreground)] dark:text-white hover:bg-destructive/90 focus-visible:ring-destructive/20 dark:bg-destructive/60 dark:focus-visible:ring-destructive/40",
+          "key key-primary text-primary-foreground disabled:opacity-(--dim-opacity) disabled:shadow-none",
         outline:
-          "border bg-background text-foreground hover:text-foreground dark:border-input",
+          "key key-secondary text-text-1 hover:not-disabled:[--frame-color:var(--line-control-hover)] disabled:text-text-disabled",
         secondary:
-          "bg-secondary text-secondary-foreground motion-safe:hover:-translate-y-px",
-        ghost: "text-foreground/80 hover:text-foreground",
-        link: "text-primary underline-offset-4 hover:underline",
+          "bg-secondary text-text-1 hover:not-disabled:bg-button-secondary-hover active:not-disabled:bg-pressed disabled:text-text-disabled",
+        ghost:
+          "touch-target text-text-2 hover:not-disabled:bg-ghost-hover hover:not-disabled:text-text-1 active:not-disabled:bg-pressed aria-expanded:bg-selected aria-expanded:text-text-1 disabled:text-text-disabled",
+        destructive:
+          "key key-secondary text-fail-text [--frame-color:var(--fail-line)] hover:not-disabled:[--frame-color:var(--fail-text)] disabled:text-text-disabled disabled:[--frame-color:var(--text-disabled)]",
+        link: "h-auto! min-h-6 gap-1 px-0! text-text-1 underline-offset-4 decoration-1 hover:underline",
       },
       size: {
-        default: "h-9 px-4 py-2 has-[>svg]:px-3",
-        xs: "h-6 gap-1 rounded-md px-2 text-xs has-[>svg]:px-1.5 [&_svg:not([class*='size-'])]:size-3",
-        sm: "h-8 gap-1.5 rounded-md px-3 has-[>svg]:px-2.5",
-        lg: "h-10 rounded-md px-6 has-[>svg]:px-4",
-        icon: "size-9",
-        "icon-xs": "size-6 rounded-md [&_svg:not([class*='size-'])]:size-3",
-        "icon-sm": "size-8",
-        "icon-lg": "size-10",
+        default: "h-(--control) px-3",
+        xs: "h-(--control-xs) gap-1 px-2 type-label-sm [&_svg:not([class*='size-'])]:size-3.5",
+        sm: "h-(--control-sm) gap-1.5 px-2.5",
+        lg: "h-(--control-lg) px-5 type-button",
+        icon: "size-(--control) px-0",
+        "icon-xs":
+          "size-(--control-xs) px-0 [&_svg:not([class*='size-'])]:size-3.5",
+        "icon-sm": "size-(--control-sm) px-0",
+        "icon-lg": "size-(--control-lg) px-0",
       },
     },
     defaultVariants: {

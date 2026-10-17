@@ -890,7 +890,7 @@ function PublicFilesSection({
                   href={file.url}
                   target="_blank"
                   rel="noreferrer"
-                  className="inline-flex items-center gap-2 text-sm font-medium underline decoration-border underline-offset-4 hover:decoration-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  className="inline-flex items-center gap-2 text-sm font-medium underline decoration-border underline-offset-4 hover:decoration-foreground focus-visible:outline-none"
                 >
                   Open <ArrowUpRight className="size-4" aria-hidden="true" />
                 </a>
@@ -898,7 +898,7 @@ function PublicFilesSection({
                   <a
                     href={file.url}
                     download={file.fileName}
-                    className="inline-flex items-center gap-2 text-sm font-medium underline decoration-border underline-offset-4 hover:decoration-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    className="inline-flex items-center gap-2 text-sm font-medium underline decoration-border underline-offset-4 hover:decoration-foreground focus-visible:outline-none"
                   >
                     Download <Download className="size-4" aria-hidden="true" />
                   </a>
@@ -977,7 +977,7 @@ export function PublicOutputRow({
           href={currentVersion.source.url}
           target="_blank"
           rel="noreferrer"
-          className="inline-flex w-fit items-center gap-2 text-sm font-medium underline decoration-border underline-offset-4 hover:decoration-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          className="inline-flex w-fit items-center gap-2 text-sm font-medium underline decoration-border underline-offset-4 hover:decoration-foreground focus-visible:outline-none"
         >
           Open current version{" "}
           <ArrowUpRight className="size-4" aria-hidden="true" />

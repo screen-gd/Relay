@@ -262,7 +262,7 @@ export function ProjectOutputsPanel({
                         {" · "}Next: {nextAction[output.reviewState]}
                       </p>
                       {unresolvedOld ? (
-                        <p className="mt-2 text-[13px] font-medium text-[var(--status-warning)]">
+                        <p className="mt-2 text-[13px] font-medium text-warn-text">
                           {unresolvedOld} unresolved{" "}
                           {unresolvedOld === 1 ? "Comment" : "Comments"} on
                           older versions
@@ -344,7 +344,7 @@ export function ProjectOutputsPanel({
 
                   <div className="mt-4 grid gap-4">
                     {current ? (
-                      <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg bg-[var(--surface-inset)] px-4 py-3">
+                      <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg bg-well px-4 py-3">
                         <div>
                           <p className="text-sm font-medium">
                             Current: {current.label}
@@ -369,13 +369,13 @@ export function ProjectOutputsPanel({
                         </Button>
                       </div>
                     ) : (
-                      <p className="rounded-lg bg-[var(--surface-inset)] px-4 py-3 text-sm text-muted-foreground">
+                      <p className="rounded-lg bg-well px-4 py-3 text-sm text-muted-foreground">
                         No Media Version yet.
                       </p>
                     )}
                     {versions.length > 1 ? (
                       <Collapsible>
-                        <CollapsibleTrigger className="group inline-flex items-center gap-1 rounded-md outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary)] text-[13px] font-medium text-muted-foreground hover:text-foreground">
+                        <CollapsibleTrigger className="group inline-flex items-center gap-1 rounded-md outline-none text-[13px] font-medium text-muted-foreground hover:text-foreground">
                           <ChevronRight
                             aria-hidden="true"
                             className="size-3.5 shrink-0 text-muted-foreground transition-transform group-data-[state=open]:rotate-90"
@@ -388,7 +388,7 @@ export function ProjectOutputsPanel({
                             {versions.map((version) => (
                               <li
                                 key={version.id}
-                                className="flex items-center justify-between gap-3 rounded-md px-3 py-2 text-sm hover:bg-[var(--app-hover)]"
+                                className="flex items-center justify-between gap-3 rounded-md px-3 py-2 text-sm hover:bg-hover"
                               >
                                 <span>
                                   v{version.versionNumber} · {version.label}

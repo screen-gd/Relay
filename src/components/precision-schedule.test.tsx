@@ -59,7 +59,7 @@ describe("calendar date grid", () => {
         "October 8, 2026, 1 scheduled; Launch film, In Progress"
       );
       expect(selected).toContain('aria-current="date"');
-      expect(selected).toContain("focus-visible:ring-inset");
+      expect(selected).toContain("focus-visible:focus-ring-inset");
     }
   );
 });

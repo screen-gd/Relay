@@ -23,7 +23,7 @@ export function AiBadge({ className }: { className?: string }) {
   return (
     <span
       className={cn(
-        "text-[10px] font-semibold uppercase tracking-[0.08em] text-[var(--app-highlight)]",
+        "text-[10px] font-semibold uppercase tracking-[0.08em] text-text-1",
         className
       )}
     >
@@ -53,12 +53,12 @@ export function AiLockedNotice({
     <div
       data-slot="ai-locked-notice"
       className={cn(
-        "flex flex-wrap items-center gap-x-3 gap-y-1.5 text-xs text-[var(--app-muted)]",
+        "flex flex-wrap items-center gap-x-3 gap-y-1.5 text-xs text-text-2",
         className
       )}
     >
       <LockKeyhole className="size-3.5 shrink-0" aria-hidden="true" />
-      <span className="font-medium text-[var(--app-ink)]">{feature}</span>
+      <span className="font-medium text-text-1">{feature}</span>
       {hint ? <span>{hint}</span> : null}
       {access === "signIn" ? (
         <Button
@@ -73,7 +73,7 @@ export function AiLockedNotice({
       ) : (
         <Link
           to="/settings"
-          className="font-semibold text-[var(--app-highlight)] hover:underline"
+          className="font-semibold text-text-1 hover:underline"
         >
           Turn on AI in Settings
         </Link>

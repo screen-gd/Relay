@@ -55,7 +55,7 @@ export function AppToast({
         >
           <div
             role="status"
-            className="flex max-w-[360px] items-center gap-3 rounded-md border px-3 py-2.5 shadow-[var(--app-shadow-2)]"
+            className="flex max-w-[360px] items-center gap-3 rounded-md border px-3 py-2.5 shadow-overlay"
             style={{
               backgroundColor: palette.bg,
               borderColor: palette.border,
@@ -121,7 +121,7 @@ export function AuthLoadingGate({
     return (
       <div
         role="status"
-        className="fixed inset-0 z-[1450] grid place-items-center bg-[var(--app-canvas)] text-sm text-[var(--app-muted)]"
+        className="fixed inset-0 z-[1450] grid place-items-center bg-page text-sm text-text-2"
       >
         Loading Relay…
       </div>
@@ -129,19 +129,16 @@ export function AuthLoadingGate({
   }
 
   return (
-    <div className="fixed inset-0 z-[1450] grid place-items-center bg-[var(--app-canvas)] p-6">
+    <div className="fixed inset-0 z-[1450] grid place-items-center bg-page p-6">
       <div
         role="alert"
         aria-labelledby="auth-gate-title"
         className="grid max-w-md gap-4"
       >
-        <h2
-          id="auth-gate-title"
-          className="text-lg font-semibold text-[var(--app-ink)]"
-        >
+        <h2 id="auth-gate-title" className="text-lg font-semibold text-text-1">
           Sign-in is unavailable
         </h2>
-        <p className="text-sm leading-6 text-[var(--app-muted)]">
+        <p className="text-sm leading-6 text-text-2">
           {clerkStatus === "error"
             ? "Relay could not start account sign-in."
             : "Account sign-in is taking too long."}{" "}

@@ -40,7 +40,7 @@ export function PageActions({ primary, more, className }: PageActionsProps) {
           <DropdownMenuTrigger asChild>
             <Button
               variant="outline"
-              className="h-9 shrink-0 gap-2 rounded-lg !bg-[var(--app-panel)]"
+              className="h-9 shrink-0 gap-2 rounded-lg !bg-well"
             >
               <MoreHorizontal className="size-3.5" />
               More

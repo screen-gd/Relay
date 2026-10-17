@@ -81,13 +81,13 @@ export function TeamChatPage() {
             chatReady && teamData ? (
               <div
                 data-slot="conversation-header"
-                className="flex flex-col justify-between gap-3 border-b border-[var(--app-border)] bg-[var(--app-panel)] px-4 py-4 sm:flex-row sm:items-center sm:px-5"
+                className="flex flex-col justify-between gap-3 border-b border-line-row bg-well px-4 py-4 sm:flex-row sm:items-center sm:px-5"
               >
                 <div>
                   <h2 className="text-lg font-semibold">
                     {teamData.workspace.name}
                   </h2>
-                  <p className="mt-1 text-xs text-[var(--app-muted)]">
+                  <p className="mt-1 text-xs text-text-2">
                     {
                       teamData.members.filter(
                         (member) => member.status === "active"
@@ -112,7 +112,7 @@ export function TeamChatPage() {
             chatReady && teamData ? (
               <form
                 data-slot="conversation-composer"
-                className="team-chat-composer border-t border-[var(--app-border)] bg-[var(--app-soft-panel)] p-3 sm:p-4"
+                className="team-chat-composer border-t border-line-row bg-well p-3 sm:p-4"
                 onSubmit={(event) => {
                   event.preventDefault();
                   void submitMessage();
@@ -166,10 +166,7 @@ export function TeamChatPage() {
                       {sending ? "Sending..." : "Send"}
                     </OwnedButton>
                   </div>
-                  <p
-                    id={messageCountId}
-                    className="text-xs text-[var(--app-muted)]"
-                  >
+                  <p id={messageCountId} className="text-xs text-text-2">
                     {message.length}/{TEAM_CHAT_MESSAGE_LIMIT} characters
                   </p>
                 </div>
@@ -178,7 +175,7 @@ export function TeamChatPage() {
           }
         >
           {!isUserLoaded ? (
-            <OwnedCard className="p-6 shadow-[var(--app-shadow-1)]">
+            <OwnedCard className="p-6 shadow-none">
               <div
                 role="status"
                 className="flex items-center gap-3 text-sm text-muted-foreground"
@@ -203,7 +200,7 @@ export function TeamChatPage() {
               </div>
             </div>
           ) : isConvexAuthLoading ? (
-            <OwnedCard className="p-6 shadow-[var(--app-shadow-1)]">
+            <OwnedCard className="p-6 shadow-none">
               <div
                 role="status"
                 className="flex items-center gap-3 text-sm text-muted-foreground"
@@ -229,7 +226,7 @@ export function TeamChatPage() {
               </p>
             </OwnedCard>
           ) : teamData === undefined ? (
-            <OwnedCard className="p-6 shadow-[var(--app-shadow-1)]">
+            <OwnedCard className="p-6 shadow-none">
               <div
                 role="status"
                 className="flex items-center gap-3 text-sm text-muted-foreground"
@@ -242,7 +239,7 @@ export function TeamChatPage() {
               </div>
             </OwnedCard>
           ) : !teamData ? (
-            <OwnedCard className="grid min-h-72 place-items-center p-6 text-center shadow-[var(--app-shadow-1)]">
+            <OwnedCard className="grid min-h-72 place-items-center p-6 text-center shadow-none">
               <div className="max-w-md">
                 <Users
                   className="mx-auto size-8 text-muted-foreground"
@@ -257,7 +254,7 @@ export function TeamChatPage() {
               </div>
             </OwnedCard>
           ) : !canUseChat ? (
-            <OwnedCard className="p-6 shadow-[var(--app-shadow-1)]">
+            <OwnedCard className="p-6 shadow-none">
               <h2 className="text-xl font-semibold">
                 Chat unavailable for your role
               </h2>
@@ -269,7 +266,7 @@ export function TeamChatPage() {
           ) : (
             <div
               data-slot="conversation-history"
-              className="min-h-full bg-[var(--app-panel)]"
+              className="min-h-full bg-well"
             >
               <ol
                 aria-label="Team chat messages"

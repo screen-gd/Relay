@@ -170,7 +170,7 @@ function ActivityFeedItem({
   return (
     <div className="grid grid-cols-[16px_minmax(0,1fr)] gap-x-3">
       <div className="relative flex justify-center">
-        <span className="z-10 mt-[7px] size-2 rounded-sm bg-[var(--app-ink)]" />
+        <span className="z-10 mt-[7px] size-2 rounded-sm bg-ink" />
       </div>
       <div className={last ? "" : "pb-5"}>
         <p className="text-sm leading-6">{message}</p>
@@ -521,7 +521,7 @@ export function ProjectFileManager({
         }
       >
         {canEdit && isConvexAuthenticated && !canUploadFiles ? (
-          <div className="mb-4 rounded-lg bg-[var(--surface-inset)] p-4">
+          <div className="mb-4 rounded-lg bg-well p-4">
             <CapabilityUpgradePrompt capability="fileUploads" inline />
           </div>
         ) : null}
@@ -603,7 +603,7 @@ export function ProjectFileManager({
                           value={file._id}
                           data-testid="project-file-card"
                           data-file-title={file.title}
-                          className="-mx-3 rounded-lg border-b-0 px-3 transition-colors hover:bg-[var(--app-hover)] data-[state=open]:bg-[var(--app-hover)]"
+                          className="-mx-3 rounded-lg border-b-0 px-3 transition-colors hover:bg-hover data-[state=open]:bg-hover"
                         >
                           <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
                             <OwnedAccordionTrigger className="min-w-0 flex-1 py-3 hover:no-underline">
@@ -716,7 +716,7 @@ export function ProjectFileManager({
                               {file.versions.map((version) => (
                                 <div
                                   key={version._id}
-                                  className="flex flex-col justify-between gap-2 rounded-lg bg-[var(--surface-inset)] px-4 py-3 sm:flex-row"
+                                  className="flex flex-col justify-between gap-2 rounded-lg bg-well px-4 py-3 sm:flex-row"
                                 >
                                   <div className="min-w-0">
                                     <p className="text-sm font-medium">
@@ -861,7 +861,7 @@ export function ProjectFileManager({
                     return (
                       <div
                         key={version._id}
-                        className="-mx-3 flex gap-3 rounded-lg px-3 py-3 hover:bg-[var(--app-hover)]"
+                        className="-mx-3 flex gap-3 rounded-lg px-3 py-3 hover:bg-hover"
                       >
                         <History
                           className="mt-0.5 size-4 shrink-0 text-muted-foreground"
@@ -1160,10 +1160,7 @@ export function ProjectDetailCollaborationPanel({
           <p className="text-sm text-muted-foreground">Loading comments...</p>
         ) : projectComments.length ? (
           projectComments.map((comment) => (
-            <article
-              key={comment._id}
-              className="rounded-lg bg-[var(--surface-inset)] p-3"
-            >
+            <article key={comment._id} className="rounded-lg bg-well p-3">
               <p className="text-sm font-semibold">
                 {comment.authorName}{" "}
                 <span

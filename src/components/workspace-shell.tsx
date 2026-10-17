@@ -388,7 +388,7 @@ function ContextNavigation({
   }, [items.length, onActionsHost]);
   if (!hub || !items.length) return null;
   return (
-    <div className="flex shrink-0 items-center justify-between gap-4 border-b border-[var(--app-border)] px-5">
+    <div className="flex shrink-0 items-center justify-between gap-4 border-b border-line-row px-5">
       <nav
         aria-label={`${hub.label} navigation`}
         className="flex min-w-0 flex-wrap gap-5"
@@ -399,10 +399,10 @@ function ContextNavigation({
             to={item.href}
             aria-current={page === item.page ? "page" : undefined}
             className={cn(
-              "-mb-px flex min-h-11 items-center border-b-2 text-[13px] font-medium outline-none transition-colors duration-150 focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)]",
+              "-mb-px flex min-h-11 items-center border-b-2 text-[13px] font-medium outline-none transition-colors duration-150",
               page === item.page
-                ? "border-[var(--app-ink)] text-[var(--app-ink)]"
-                : "border-transparent text-[var(--app-muted)] hover:text-[var(--app-ink)]"
+                ? "border-ink text-text-1"
+                : "border-transparent text-text-2 hover:text-text-1"
             )}
           >
             {item.label}
@@ -526,7 +526,7 @@ export function WorkspaceShell({
       <div
         data-testid="workspace-shell"
         data-sidebar={sidebarOpen ? "open" : "rail"}
-        className="relay-density-balanced min-h-dvh bg-[var(--app-canvas)] text-[var(--app-ink)] lg:h-dvh lg:overflow-hidden lg:bg-[var(--app-sidebar)]"
+        className="relay-density-balanced min-h-dvh bg-page text-text-1 lg:h-dvh lg:overflow-hidden lg:bg-canvas"
       >
         <DesktopSidebar
           page={page}
@@ -538,7 +538,7 @@ export function WorkspaceShell({
         />
 
         <div className="min-h-dvh transition-[padding] duration-200 ease-out motion-reduce:transition-none lg:pl-[var(--sidebar-width)]">
-          <header className="workspace-topbar fixed inset-x-0 top-0 z-30 flex h-[54px] items-center border-b border-[var(--app-border)] bg-[var(--app-canvas)] px-2.5 transition-[left] duration-200 ease-out motion-reduce:transition-none lg:left-[var(--sidebar-width)] lg:right-2 lg:top-2 lg:justify-between lg:rounded-t-xl lg:px-4">
+          <header className="workspace-topbar fixed inset-x-0 top-0 z-30 flex h-[54px] items-center border-b border-line-row bg-page px-2.5 transition-[left] duration-200 ease-out motion-reduce:transition-none lg:left-[var(--sidebar-width)] lg:right-2 lg:top-2 lg:justify-between lg:rounded-t-xl lg:px-4">
             <div className="flex h-full min-w-0 flex-1 items-center gap-2 lg:flex-none">
               <RelayBrand compact className="lg:hidden" />
               <p className="truncate text-sm font-semibold lg:hidden">
@@ -550,9 +550,7 @@ export function WorkspaceShell({
               >
                 <BreadcrumbList className="min-w-0 flex-nowrap gap-1.5 text-xs">
                   <BreadcrumbItem>
-                    <span className="font-medium text-[var(--app-subtle)]">
-                      Relay
-                    </span>
+                    <span className="font-medium text-text-3">Relay</span>
                   </BreadcrumbItem>
                   <BreadcrumbSeparator className="text-[var(--app-strong-border)]">
                     /
@@ -561,9 +559,7 @@ export function WorkspaceShell({
                     <span
                       className={cn(
                         "min-w-0 truncate font-medium",
-                        breadcrumb
-                          ? "text-[var(--app-subtle)]"
-                          : "text-[var(--app-ink)]"
+                        breadcrumb ? "text-text-3" : "text-text-1"
                       )}
                     >
                       {title}
@@ -575,7 +571,7 @@ export function WorkspaceShell({
                         /
                       </BreadcrumbSeparator>
                       <BreadcrumbItem className="min-w-0">
-                        <span className="max-w-[min(32vw,28rem)] truncate text-sm font-semibold text-[var(--app-ink)]">
+                        <span className="max-w-[min(32vw,28rem)] truncate text-sm font-semibold text-text-1">
                           {breadcrumb}
                         </span>
                       </BreadcrumbItem>
@@ -587,13 +583,13 @@ export function WorkspaceShell({
 
             <Button
               variant="outline"
-              className="absolute left-1/2 top-1/2 hidden h-9 w-[240px] -translate-x-1/2 -translate-y-1/2 justify-start rounded-lg border-[var(--app-border)] !bg-[var(--surface-panel)] px-3 text-xs text-[var(--app-muted)] shadow-none hover:text-[var(--app-ink)] active:-translate-y-1/2 active:scale-100 lg:flex"
+              className="absolute left-1/2 top-1/2 hidden h-9 w-[240px] -translate-x-1/2 -translate-y-1/2 justify-start rounded-lg border-line-row !bg-well px-3 text-xs text-text-2 shadow-none hover:text-text-1 active:-translate-y-1/2 active:scale-100 lg:flex"
               onClick={openCommand}
               aria-label="Quick Search (Ctrl K)"
             >
               <Search className="size-3.5 shrink-0" />
               <span className="truncate">Quick Search</span>
-              <Kbd className="ml-auto h-auto min-w-0 rounded-none bg-transparent px-0 font-mono text-[9px] text-[var(--app-subtle)]">
+              <Kbd className="ml-auto h-auto min-w-0 rounded-none bg-transparent px-0 font-mono text-[9px] text-text-3">
                 Ctrl K
               </Kbd>
             </Button>
@@ -633,7 +629,7 @@ export function WorkspaceShell({
             id="main-content"
             data-testid="workspace-content-surface"
             tabIndex={-1}
-            className="workspace-scrollbar-hidden h-[calc(100dvh_-_68px_-_env(safe-area-inset-bottom))] overflow-y-auto bg-[var(--app-canvas)] pt-12 outline-none transition-[left] duration-200 ease-out motion-reduce:transition-none lg:fixed lg:bottom-2 lg:right-2 lg:top-[62px] lg:left-[var(--sidebar-width)] lg:h-auto lg:min-h-0 lg:overscroll-contain lg:rounded-b-xl lg:pt-0"
+            className="workspace-scrollbar-hidden h-[calc(100dvh_-_68px_-_env(safe-area-inset-bottom))] overflow-y-auto bg-page pt-12 outline-none transition-[left] duration-200 ease-out motion-reduce:transition-none lg:fixed lg:bottom-2 lg:right-2 lg:top-[62px] lg:left-[var(--sidebar-width)] lg:h-auto lg:min-h-0 lg:overscroll-contain lg:rounded-b-xl lg:pt-0"
           >
             <div className="flex min-h-full flex-col lg:h-full">
               <ContextNavigation page={page} onActionsHost={setActionsHost} />
@@ -648,7 +644,7 @@ export function WorkspaceShell({
           <Button
             type="button"
             aria-label="New Project"
-            className="fixed bottom-[calc(80px+env(safe-area-inset-bottom))] right-4 z-40 flex min-h-12 items-center gap-2 rounded-md bg-[var(--primary)] px-4 text-sm font-semibold text-[var(--primary-foreground)] shadow-[var(--app-shadow-2)] outline-none hover:bg-[var(--primary)]/90 focus-visible:ring-2 focus-visible:ring-[var(--primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--app-canvas)] sm:hidden"
+            className="fixed bottom-[calc(80px+env(safe-area-inset-bottom))] right-4 z-40 flex min-h-12 items-center gap-2 rounded-md bg-primary px-4 text-sm font-semibold text-primary-foreground shadow-overlay outline-none hover:bg-primary/90 sm:hidden"
             onClick={onNewProject}
           >
             <Plus className="size-4" />
@@ -761,7 +757,7 @@ function DesktopSidebar({
           type="button"
           variant="ghost"
           size="icon"
-          className="size-9 text-[var(--app-muted)] hover:text-[var(--app-ink)]"
+          className="size-9 text-text-2 hover:text-text-1"
           aria-label={open ? "Close sidebar" : "Open sidebar"}
           aria-expanded={open}
           aria-controls="workspace-sidebar-panel"
@@ -779,7 +775,7 @@ function DesktopSidebar({
   return (
     <div className="fixed inset-y-0 left-0 z-40 hidden lg:flex">
       <aside
-        className="flex h-full flex-col items-center bg-[var(--app-sidebar)] py-2"
+        className="flex h-full flex-col items-center bg-canvas py-2"
         style={{ width: RAIL_WIDTH }}
       >
         <div className="flex h-[46px] items-center">
@@ -805,7 +801,7 @@ function DesktopSidebar({
         id="workspace-sidebar-panel"
         aria-label={hub ? `${hub.label} sidebar` : "Sidebar"}
         hidden={!open}
-        className="flex h-full w-[248px] flex-col border-l border-[var(--app-border)] bg-[var(--app-sidebar)]"
+        className="flex h-full w-[248px] flex-col border-l border-line-row bg-canvas"
       >
         <div className="flex h-[54px] shrink-0 items-center px-4">
           <h2 className="truncate text-sm font-semibold">
@@ -818,9 +814,9 @@ function DesktopSidebar({
             <button
               type="button"
               onClick={onNewProject}
-              className="flex min-h-9 w-full items-center gap-2.5 rounded-[10px] bg-[var(--sidebar-active)] px-3 text-[13px] font-medium text-[var(--app-ink)] outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)] focus-visible:ring-inset"
+              className="flex min-h-9 w-full items-center gap-2.5 rounded-[10px] bg-selected px-3 text-[13px] font-medium text-text-1 outline-none focus-visible:focus-ring-inset"
             >
-              <Plus className="size-4 text-[var(--app-highlight)]" />
+              <Plus className="size-4 text-text-1" />
               New project
             </button>
           ) : null}
@@ -835,10 +831,8 @@ function DesktopSidebar({
                     to={item.href}
                     aria-current={current ? "page" : undefined}
                     className={cn(
-                      "relative flex min-h-9 items-center rounded-[10px] px-3 text-[13px] font-medium outline-none transition-colors duration-150 focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)] focus-visible:ring-inset",
-                      current
-                        ? "text-[var(--app-ink)]"
-                        : "text-[var(--app-muted)] hover:text-[var(--app-ink)]"
+                      "relative flex min-h-9 items-center rounded-[10px] px-3 text-[13px] font-medium outline-none transition-colors duration-150 focus-visible:focus-ring-inset",
+                      current ? "text-text-1" : "text-text-2 hover:text-text-1"
                     )}
                   >
                     {current ? (
@@ -848,7 +842,7 @@ function DesktopSidebar({
                         transition={
                           reduceMotion ? { duration: 0 } : markerTransition
                         }
-                        className="absolute inset-0 rounded-[10px] bg-[var(--sidebar-active)]"
+                        className="absolute inset-0 rounded-[10px] bg-selected"
                       />
                     ) : null}
                     <span className="relative truncate">{item.label}</span>
@@ -860,7 +854,7 @@ function DesktopSidebar({
 
           {aiHere.length ? (
             <nav aria-label="AI tools" className="mt-4">
-              <p className="px-3 pb-1 text-[11px] font-medium text-[var(--app-subtle)]">
+              <p className="px-3 pb-1 text-[11px] font-medium text-text-3">
                 AI
               </p>
               <ul className="space-y-0.5">
@@ -868,9 +862,9 @@ function DesktopSidebar({
                   <li key={tool.id}>
                     <HrefLink
                       href={aiToolHref(tool, pathname)}
-                      className="flex min-h-8 items-center gap-2.5 rounded-[10px] px-3 text-[13px] text-[var(--app-muted)] outline-none transition-colors duration-150 hover:text-[var(--app-ink)] focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)] focus-visible:ring-inset"
+                      className="flex min-h-8 items-center gap-2.5 rounded-[10px] px-3 text-[13px] text-text-2 outline-none transition-colors duration-150 hover:text-text-1 focus-visible:focus-ring-inset"
                     >
-                      <Sparkles className="size-4 shrink-0 text-[var(--app-highlight)]" />
+                      <Sparkles className="size-4 shrink-0 text-text-1" />
                       <span className="truncate">{tool.label}</span>
                     </HrefLink>
                   </li>
@@ -881,7 +875,7 @@ function DesktopSidebar({
 
           {recentProjects.length ? (
             <nav aria-label="Recent Projects" className="mt-4">
-              <p className="px-3 pb-1 text-[11px] font-medium text-[var(--app-subtle)]">
+              <p className="px-3 pb-1 text-[11px] font-medium text-text-3">
                 Recent projects
               </p>
               <ul className="space-y-0.5">
@@ -889,12 +883,12 @@ function DesktopSidebar({
                   <li key={record.id}>
                     <HrefLink
                       href={record.href ?? "/projects"}
-                      className="group flex min-h-8 flex-col justify-center rounded-[10px] px-3 py-1 outline-none transition-colors duration-150 focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)] focus-visible:ring-inset"
+                      className="group flex min-h-8 flex-col justify-center rounded-[10px] px-3 py-1 outline-none transition-colors duration-150 focus-visible:focus-ring-inset"
                     >
-                      <span className="truncate text-[13px] text-[var(--app-muted)] transition-colors group-hover:text-[var(--app-ink)]">
+                      <span className="truncate text-[13px] text-text-2 transition-colors group-hover:text-text-1">
                         {record.title}
                       </span>
-                      <span className="truncate text-[11px] text-[var(--app-subtle)]">
+                      <span className="truncate text-[11px] text-text-3">
                         {record.detail}
                       </span>
                     </HrefLink>
@@ -907,7 +901,7 @@ function DesktopSidebar({
 
         <nav
           aria-label="Support and legal"
-          className="flex shrink-0 flex-wrap gap-x-3 gap-y-1 border-t border-[var(--app-border)] px-4 py-3 text-[11px] text-[var(--app-subtle)]"
+          className="flex shrink-0 flex-wrap gap-x-3 gap-y-1 border-t border-line-row px-4 py-3 text-[11px] text-text-3"
         >
           {compactSupportLinks.map((link) =>
             link.external ? (
@@ -916,7 +910,7 @@ function DesktopSidebar({
                 href={link.href}
                 target="_blank"
                 rel="noreferrer"
-                className="rounded-sm outline-none hover:text-[var(--app-ink)] focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)]"
+                className="rounded-sm outline-none hover:text-text-1"
               >
                 {link.label}
               </a>
@@ -924,7 +918,7 @@ function DesktopSidebar({
               <Link
                 key={link.label}
                 to={link.href}
-                className="rounded-sm outline-none hover:text-[var(--app-ink)] focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)]"
+                className="rounded-sm outline-none hover:text-text-1"
               >
                 {link.label}
               </Link>
@@ -955,10 +949,8 @@ function RailRoute({
           aria-label={item.label}
           aria-current={active ? "page" : undefined}
           className={cn(
-            "group relative flex size-10 items-center justify-center rounded-[10px] outline-none transition-colors duration-150 focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)] focus-visible:ring-inset",
-            active
-              ? "text-[var(--app-ink)]"
-              : "text-[var(--app-muted)] hover:text-[var(--app-ink)]"
+            "group relative flex size-10 items-center justify-center rounded-[10px] outline-none transition-colors duration-150 focus-visible:focus-ring-inset",
+            active ? "text-text-1" : "text-text-2 hover:text-text-1"
           )}
         >
           {active ? (
@@ -966,20 +958,17 @@ function RailRoute({
               aria-hidden="true"
               layoutId="rail-active-item"
               transition={reduceMotion ? { duration: 0 } : markerTransition}
-              className="absolute inset-0 rounded-[10px] bg-[var(--sidebar-active)]"
+              className="absolute inset-0 rounded-[10px] bg-selected"
             />
           ) : null}
           <Icon
-            className={cn(
-              "relative size-[18px]",
-              active && "text-[var(--app-highlight)]"
-            )}
+            className={cn("relative size-[18px]", active && "text-text-1")}
           />
           {aiHere.length ? (
             <span
               aria-hidden="true"
               data-slot="ai-nav-badge"
-              className="absolute right-1.5 top-1.5 size-1.5 rounded-full bg-[var(--app-highlight)]"
+              className="absolute right-1.5 top-1.5 size-1.5 rounded-full bg-ink"
             />
           ) : null}
         </Link>
@@ -1019,7 +1008,7 @@ function ProfileMenu({
             type="button"
             variant="ghost"
             className={cn(
-              "group flex items-center rounded-md text-left outline-none transition-[background-color,box-shadow] hover:bg-[var(--app-hover)] active:translate-y-0 active:scale-100 focus-visible:ring-2 focus-visible:ring-[var(--primary)] data-[state=open]:bg-[var(--app-active)]",
+              "group flex items-center rounded-md text-left outline-none transition-[background-color,box-shadow] hover:bg-hover active:translate-y-0 active:scale-100 data-[state=open]:bg-selected",
               compact
                 ? "h-9 w-9 justify-center p-0"
                 : collapsed
@@ -1028,13 +1017,13 @@ function ProfileMenu({
             )}
             aria-label="Open profile menu"
           >
-            <Avatar className="size-8 border border-[var(--app-strong-border)] bg-[var(--app-avatar-surface)] ring-1 ring-transparent transition-[border-color,box-shadow] group-data-[state=open]:border-[var(--primary)]">
+            <Avatar className="size-8 border border-strong bg-tile ring-1 ring-transparent transition-[border-color,box-shadow] group-data-[state=open]:border-primary">
               <AvatarImage
                 src={settings.profileImageUrl || undefined}
                 alt={name}
                 className="object-cover"
               />
-              <AvatarFallback className="bg-[var(--app-avatar-surface)] text-[11px] font-semibold text-[var(--app-ink)]">
+              <AvatarFallback className="bg-tile text-[11px] font-semibold text-text-1">
                 {initials(name)}
               </AvatarFallback>
             </Avatar>
@@ -1044,7 +1033,7 @@ function ProfileMenu({
                   <span className="block truncate text-[12px] font-semibold">
                     {name}
                   </span>
-                  <span className="block truncate text-[11px] text-[var(--app-muted)]">
+                  <span className="block truncate text-[11px] text-text-2">
                     {handle}
                   </span>
                 </span>
@@ -1054,7 +1043,7 @@ function ProfileMenu({
                     open && "rotate-180"
                   )}
                 >
-                  <ChevronDown className="size-3.5 text-[var(--app-muted)]" />
+                  <ChevronDown className="size-3.5 text-text-2" />
                 </span>
               </>
             ) : null}
@@ -1064,16 +1053,16 @@ function ProfileMenu({
           side={compact ? "bottom" : collapsed ? "right" : "top"}
           align={compact ? "end" : "start"}
           sideOffset={8}
-          className="workspace-flyout w-[280px] rounded-xl border-[var(--app-border)] bg-[var(--app-panel)] p-1.5 text-[var(--app-ink)] shadow-[var(--app-shadow-2)] [&_[data-slot=dropdown-menu-item]]:h-9 [&_[data-slot=dropdown-menu-item]]:rounded-lg [&_[data-slot=dropdown-menu-item]]:text-[13px] [&_[data-slot=dropdown-menu-item]]:transition-colors"
+          className="workspace-flyout w-[280px] rounded-xl border-line-row bg-well p-1.5 text-text-1 shadow-overlay [&_[data-slot=dropdown-menu-item]]:h-9 [&_[data-slot=dropdown-menu-item]]:rounded-lg [&_[data-slot=dropdown-menu-item]]:text-[13px] [&_[data-slot=dropdown-menu-item]]:transition-colors"
         >
           <DropdownMenuLabel className="flex items-center gap-3 px-2.5 py-2.5">
-            <Avatar className="size-9 border border-[var(--app-strong-border)] bg-[var(--app-avatar-surface)]">
+            <Avatar className="size-9 border border-strong bg-tile">
               <AvatarImage
                 src={settings.profileImageUrl || undefined}
                 alt=""
                 className="object-cover"
               />
-              <AvatarFallback className="bg-[var(--app-avatar-surface)] text-xs font-semibold text-[var(--app-ink)]">
+              <AvatarFallback className="bg-tile text-xs font-semibold text-text-1">
                 {initials(name)}
               </AvatarFallback>
             </Avatar>
@@ -1081,12 +1070,12 @@ function ProfileMenu({
               <span className="block truncate text-[13px] font-semibold">
                 {name}
               </span>
-              <span className="block truncate text-xs font-normal text-[var(--app-muted)]">
+              <span className="block truncate text-xs font-normal text-text-2">
                 {handle}
               </span>
             </span>
           </DropdownMenuLabel>
-          <DropdownMenuSeparator className="mx-0.5 bg-[var(--app-border)]" />
+          <DropdownMenuSeparator className="mx-0.5 bg-line-row" />
           {!isSignedIn ? (
             <>
               <DropdownMenuLabel className="text-xs font-normal text-muted-foreground">
@@ -1235,7 +1224,7 @@ function WorkspaceCommand({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
-        className="overflow-hidden border-[var(--app-strong-border)] p-0 shadow-[0_24px_80px_color-mix(in_srgb,var(--app-ink)_18%,transparent)] sm:max-w-[620px]"
+        className="overflow-hidden border-strong p-0 shadow-[0_24px_80px_color-mix(in_srgb,var(--app-ink)_18%,transparent)] sm:max-w-[620px]"
         onCloseAutoFocus={(event) => {
           event.preventDefault();
           returnFocusRef.current?.focus();
@@ -1371,7 +1360,7 @@ function MobileNavigation({
   return (
     <nav
       aria-label="Mobile navigation"
-      className="fixed inset-x-0 bottom-0 z-40 grid h-[calc(68px+env(safe-area-inset-bottom))] grid-cols-5 border-t border-[var(--app-border)] bg-[color-mix(in_srgb,var(--app-panel)_94%,transparent)] px-1 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl lg:hidden"
+      className="fixed inset-x-0 bottom-0 z-40 grid h-[calc(68px+env(safe-area-inset-bottom))] grid-cols-5 border-t border-line-row bg-[color-mix(in_srgb,var(--app-panel)_94%,transparent)] px-1 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl lg:hidden"
     >
       {primaryRoutes.map((item) => {
         const Icon = item.icon;
@@ -1382,12 +1371,12 @@ function MobileNavigation({
             to={item.href}
             aria-current={active ? "page" : undefined}
             className={cn(
-              "relative flex flex-col items-center justify-center gap-1 rounded-md text-[10px] font-medium outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary)] focus-visible:ring-inset",
-              active ? "text-[var(--app-highlight)]" : "text-[var(--app-muted)]"
+              "relative flex flex-col items-center justify-center gap-1 rounded-md text-[10px] font-medium outline-none focus-visible:focus-ring-inset",
+              active ? "text-text-1" : "text-text-2"
             )}
           >
             {active ? (
-              <span className="absolute inset-x-3 top-0 h-0.5 rounded-full bg-[var(--primary)]" />
+              <span className="absolute inset-x-3 top-0 h-0.5 rounded-full bg-primary" />
             ) : null}
             <span className="flex flex-col items-center justify-center gap-1">
               <Icon className="size-[19px]" strokeWidth={active ? 2.2 : 1.8} />
@@ -1401,7 +1390,7 @@ function MobileNavigation({
           <Button
             type="button"
             variant="ghost"
-            className="h-full w-full flex-col items-center justify-center gap-1 rounded-md text-[10px] font-medium text-[var(--app-muted)] outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary)] focus-visible:ring-inset"
+            className="h-full w-full flex-col items-center justify-center gap-1 rounded-md text-[10px] font-medium text-text-2 outline-none focus-visible:focus-ring-inset"
             aria-label="Open more workspace pages"
           >
             <motion.span
@@ -1440,51 +1429,51 @@ function MobileNavigation({
                     aria-current={
                       routeIsActive(page, item) ? "page" : undefined
                     }
-                    className="group flex items-center gap-3 rounded-md border border-[var(--app-border)] bg-[var(--app-panel)] p-3 text-sm font-medium outline-none transition-[background-color,border-color] hover:border-[var(--app-strong-border)] hover:bg-[var(--app-soft-panel)] focus-visible:ring-2 focus-visible:ring-[var(--primary)]"
+                    className="group flex items-center gap-3 rounded-md border border-line-row bg-well p-3 text-sm font-medium outline-none transition-[background-color,border-color] hover:border-strong hover:bg-well"
                   >
                     <span className="flex">
-                      <Icon className="size-[18px] text-[var(--app-muted)] transition-colors group-hover:text-[var(--app-ink)]" />
+                      <Icon className="size-[18px] text-text-2 transition-colors group-hover:text-text-1" />
                     </span>
                     {item.label}
                   </Link>
                 );
               })}
           </div>
-          <div className="mt-4 border-t border-[var(--app-border)] pt-4">
-            <p className="px-1 text-xs font-semibold text-[var(--app-muted)]">
+          <div className="mt-4 border-t border-line-row pt-4">
+            <p className="px-1 text-xs font-semibold text-text-2">
               Support and legal
             </p>
             <div className="mt-2 grid grid-cols-2 gap-2 text-sm">
               <Link
-                className="min-h-12 rounded-md border border-[var(--app-border)] p-3"
+                className="min-h-12 rounded-md border border-line-row p-3"
                 to="/contact"
                 onClick={() => onOpenChange(false)}
               >
                 Contact
               </Link>
               <Link
-                className="min-h-12 rounded-md border border-[var(--app-border)] p-3"
+                className="min-h-12 rounded-md border border-line-row p-3"
                 to="/privacy"
                 onClick={() => onOpenChange(false)}
               >
                 Privacy
               </Link>
               <Link
-                className="min-h-12 rounded-md border border-[var(--app-border)] p-3"
+                className="min-h-12 rounded-md border border-line-row p-3"
                 to="/terms"
                 onClick={() => onOpenChange(false)}
               >
                 Terms
               </Link>
               <Link
-                className="min-h-12 rounded-md border border-[var(--app-border)] p-3"
+                className="min-h-12 rounded-md border border-line-row p-3"
                 to="/accessibility"
                 onClick={() => onOpenChange(false)}
               >
                 Accessibility
               </Link>
             </div>
-            <p className="mt-3 px-1 text-xs text-[var(--app-subtle)]">
+            <p className="mt-3 px-1 text-xs text-text-3">
               © {new Date().getFullYear()} Relay
             </p>
           </div>

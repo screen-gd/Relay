@@ -29,7 +29,7 @@ type ContentSectionProps = Omit<ComponentPropsWithoutRef<"div">, "title"> & {
 export const sectionListClassName = "grid gap-px";
 
 export const sectionRowClassName =
-  "rounded-lg px-3 py-2 transition-colors hover:bg-[var(--app-hover)]";
+  "rounded-lg px-3 py-2 transition-colors hover:bg-hover";
 
 /**
  * The standard block for workspace content: a title row (title, metadata,

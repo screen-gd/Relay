@@ -5,6 +5,7 @@ import { Switch as SwitchPrimitive } from "radix-ui";
 
 import { cn } from "@/lib/utils";
 
+/** A setting that applies immediately. Ink when on, framed track when off. */
 function Switch({
   className,
   ...props
@@ -13,14 +14,19 @@ function Switch({
     <SwitchPrimitive.Root
       data-slot="switch"
       className={cn(
-        "peer inline-flex h-[1.15rem] w-8 shrink-0 items-center rounded-full border border-transparent shadow-xs transition-all outline-none data-[state=checked]:bg-primary data-[state=unchecked]:bg-input focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-destructive/20 dark:data-[state=unchecked]:bg-input/80 dark:aria-invalid:ring-destructive/40",
+        "group/switch peer relative inline-flex h-5 w-9 shrink-0 cursor-pointer items-center rounded-full p-0.5 touch-target",
+        "bg-page control-edge [--frame-color:var(--border-control)] transition-[background-color,box-shadow] duration-(--dur-fast) ease-(--ease-step)",
+        "hover:not-disabled:data-[state=unchecked]:[--frame-color:var(--ink)]",
+        "data-[state=checked]:bg-ink data-[state=checked]:[--frame-color:var(--ink)]",
+        "aria-invalid:[--frame-color:var(--fail-line)]",
+        "disabled:cursor-not-allowed disabled:[--frame-color:var(--text-disabled)] disabled:[--control-lift:var(--elev-none)] disabled:data-[state=checked]:bg-text-disabled",
         className
       )}
       {...props}
     >
       <SwitchPrimitive.Thumb
         data-slot="switch-thumb"
-        className="pointer-events-none block size-4 rounded-full bg-[var(--app-switch-thumb)] ring-0 transition-transform data-[state=checked]:translate-x-[calc(100%-2px)] data-[state=unchecked]:translate-x-0 dark:data-[state=checked]:bg-primary-foreground dark:data-[state=unchecked]:bg-foreground"
+        className="pointer-events-none block size-4 rounded-full bg-text-2 transition-[translate,background-color] duration-(--dur-fast) ease-(--ease-step) data-[state=checked]:translate-x-4 data-[state=checked]:bg-paper rtl:data-[state=checked]:-translate-x-4"
       />
     </SwitchPrimitive.Root>
   );

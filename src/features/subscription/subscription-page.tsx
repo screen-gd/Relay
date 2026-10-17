@@ -30,7 +30,7 @@ export function SubscriptionPage() {
   return (
     <WorkspacePage
       family="administration"
-      className="[&_[data-slot=content-section]]:shadow-[var(--app-shadow-1)]"
+      className="[&_[data-slot=content-section]]:shadow-none"
     >
       <PageHeader
         title="Plans and billing"
@@ -57,7 +57,7 @@ export function SubscriptionPage() {
             >
               <LoaderCircle
                 aria-hidden="true"
-                className="size-7 animate-spin text-[var(--primary)]"
+                className="size-7 animate-spin text-primary"
               />
             </div>
           ) : isSignedIn ? (

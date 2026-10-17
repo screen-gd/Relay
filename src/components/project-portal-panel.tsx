@@ -402,7 +402,7 @@ export function ProjectPortalPanel({
       {data.error || formError ? (
         <p
           role="alert"
-          className="bg-[var(--status-danger-bg)] px-4 py-3 text-sm text-[var(--status-danger)]"
+          className="bg-fail-wash px-4 py-3 text-sm text-fail-text"
         >
           {formError || data.error}
         </p>
@@ -650,14 +650,14 @@ export function ProjectPortalPanel({
           </PortalSettingRow>
         </div>
         <Collapsible className="mt-3">
-          <CollapsibleTrigger className="group inline-flex items-center gap-1 rounded-md outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary)] text-[13px] text-muted-foreground hover:text-foreground">
+          <CollapsibleTrigger className="group inline-flex items-center gap-1 rounded-md outline-none text-[13px] text-muted-foreground hover:text-foreground">
             <ChevronRight
               aria-hidden="true"
               className="size-3.5 shrink-0 text-muted-foreground transition-transform group-data-[state=open]:rotate-90"
             />
             Preview
           </CollapsibleTrigger>
-          <CollapsibleContent className="mt-3 space-y-2 rounded-lg bg-[var(--surface-inset)] p-4 text-sm">
+          <CollapsibleContent className="mt-3 space-y-2 rounded-lg bg-well p-4 text-sm">
             <p className="font-semibold">{project.title}</p>
             {draft.publicNotes ? (
               <p className="whitespace-pre-wrap text-muted-foreground">

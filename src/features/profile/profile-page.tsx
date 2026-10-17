@@ -147,7 +147,7 @@ export function OrganizationProfilePage({
           primary={
             <section
               aria-labelledby="organization-team-heading"
-              className="rounded-xl border border-border bg-card p-5 text-card-foreground shadow-[var(--app-shadow-1)]"
+              className="rounded-xl border border-border bg-card p-5 text-card-foreground shadow-none"
             >
               <div className="flex items-center gap-2">
                 <Users className="size-5 text-primary" aria-hidden="true" />
@@ -206,7 +206,7 @@ export function OrganizationProfilePage({
           secondary={
             <section
               aria-labelledby="organization-work-heading"
-              className="rounded-xl border border-border bg-card p-5 text-card-foreground shadow-[var(--app-shadow-1)]"
+              className="rounded-xl border border-border bg-card p-5 text-card-foreground shadow-none"
             >
               <div className="flex items-center gap-2">
                 <FolderKanban
@@ -406,7 +406,7 @@ export function ProfileDesignPage({
       <main className="mt-5">
         <section
           aria-labelledby="public-profile-name"
-          className="grid items-center gap-8 rounded-2xl border border-border bg-card p-5 text-card-foreground shadow-[var(--app-shadow-1)] md:p-8 lg:grid-cols-[minmax(0,1.3fr)_minmax(420px,0.8fr)] lg:gap-14"
+          className="grid items-center gap-8 rounded-2xl border border-border bg-card p-5 text-card-foreground shadow-none md:p-8 lg:grid-cols-[minmax(0,1.3fr)_minmax(420px,0.8fr)] lg:gap-14"
         >
           <div className="flex flex-col items-start gap-6 sm:flex-row sm:items-center">
             <PublicProfileAvatar settings={settings} size={128} fontSize={36} />
@@ -459,7 +459,7 @@ export function ProfileDesignPage({
 
         <section
           aria-labelledby="recent-work-heading"
-          className="mt-5 grid items-start gap-6 rounded-2xl border border-border bg-card p-5 text-card-foreground shadow-[var(--app-shadow-1)] md:p-8 xl:grid-cols-[240px_minmax(0,1fr)] xl:gap-12"
+          className="mt-5 grid items-start gap-6 rounded-2xl border border-border bg-card p-5 text-card-foreground shadow-none md:p-8 xl:grid-cols-[240px_minmax(0,1fr)] xl:gap-12"
         >
           <div className="xl:sticky xl:top-6">
             <h2
@@ -589,7 +589,7 @@ export function ProfileEditPage({
           master={
             <OwnedCard
               aria-label="Profile photo"
-              className="p-5 shadow-[var(--app-shadow-1)] sm:p-6"
+              className="p-5 shadow-none sm:p-6"
             >
               <div className="grid place-items-center">
                 <ProfileEditAvatar settings={settings} />
@@ -630,7 +630,7 @@ export function ProfileEditPage({
             </OwnedCard>
           }
           detail={
-            <OwnedCard className="grid gap-4 p-5 shadow-[var(--app-shadow-1)] sm:p-6">
+            <OwnedCard className="grid gap-4 p-5 shadow-none sm:p-6">
               <div className="grid gap-3 sm:grid-cols-2">
                 <FieldLayout label="Profile Name">
                   <OwnedInput
@@ -817,7 +817,7 @@ export function ProfileEditPage({
                       <OwnedToggleGroupItem
                         key={day}
                         value={day}
-                        className="h-9 w-full min-w-0 border border-input bg-background px-2 text-xs text-foreground shadow-xs hover:bg-accent hover:text-accent-foreground focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--app-canvas)] data-[state=on]:border-transparent data-[state=on]:bg-primary data-[state=on]:text-primary-foreground data-[state=on]:hover:bg-primary/90 dark:data-[state=off]:bg-input/30 dark:data-[state=off]:hover:bg-input/50"
+                        className="h-9 w-full min-w-0 border border-input bg-background px-2 text-xs text-foreground shadow-xs hover:bg-accent hover:text-accent-foreground data-[state=on]:border-transparent data-[state=on]:bg-primary data-[state=on]:text-primary-foreground data-[state=on]:hover:bg-primary/90 dark:data-[state=off]:bg-input/30 dark:data-[state=off]:hover:bg-input/50"
                       >
                         {day}
                       </OwnedToggleGroupItem>

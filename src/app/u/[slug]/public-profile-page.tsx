@@ -15,8 +15,7 @@ import { RelayBrand } from "@/app/relay-brand";
 import { api } from "../../../../convex/_generated/api";
 import { emptyStateAssets } from "../../brand-assets";
 
-const panelClass =
-  "rounded-[6px] border border-[var(--app-border)] bg-[var(--app-panel)]";
+const panelClass = "rounded-[6px] border border-line-row bg-well";
 
 export function PublicProfilePage({ slug }: { slug: string }) {
   const profile = useQuery(
@@ -30,11 +29,11 @@ export function PublicProfilePage({ slug }: { slug: string }) {
         <div className="grid min-h-[70dvh] place-items-center">
           <div
             role="status"
-            className="flex flex-col items-center gap-3 text-[var(--app-muted)]"
+            className="flex flex-col items-center gap-3 text-text-2"
           >
             <LoaderCircle
               aria-hidden="true"
-              className="size-[30px] text-[var(--primary)]"
+              className="size-[30px] text-primary"
             />
             <p className="text-[13px]">Loading public profile...</p>
           </div>
@@ -50,7 +49,7 @@ export function PublicProfilePage({ slug }: { slug: string }) {
           <h1 className="font-[family-name:var(--font-geist-sans)] text-[34px] font-bold">
             Profile not found
           </h1>
-          <p className="mt-2 text-sm text-[var(--app-muted)]">
+          <p className="mt-2 text-sm text-text-2">
             This public Relay profile has not been published or the link is
             incorrect.
           </p>
@@ -77,17 +76,17 @@ export function PublicProfilePage({ slug }: { slug: string }) {
               {profile.profileName || "Relay Editor"}
             </h1>
             {profile.profileUsername ? (
-              <p className="mt-1 text-sm font-bold text-[var(--app-highlight)]">
+              <p className="mt-1 text-sm font-bold text-text-1">
                 @{profile.profileUsername}
               </p>
             ) : null}
             <p className="mt-2 text-[15px]">
               {profile.profileTitle || "Video Editor"}
             </p>
-            <p className="mt-4 max-w-[420px] text-sm text-[var(--app-muted)]">
+            <p className="mt-4 max-w-[420px] text-sm text-text-2">
               {profile.profileBio || "Portfolio profile published from Relay."}
             </p>
-            <div className="mt-4 flex flex-wrap gap-x-4 gap-y-2 text-[var(--app-muted)]">
+            <div className="mt-4 flex flex-wrap gap-x-4 gap-y-2 text-text-2">
               {profile.profileLocation ? (
                 <InfoPill icon={<MapPin />} text={profile.profileLocation} />
               ) : null}
@@ -115,17 +114,17 @@ export function PublicProfilePage({ slug }: { slug: string }) {
           </dl>
         </header>
 
-        <div className="border-t border-[var(--app-border)]" />
+        <div className="border-t border-line-row" />
 
         <section className="grid items-start gap-6 p-4 md:p-6 lg:grid-cols-[220px_minmax(0,1fr)]">
           <div>
             <h2 className="text-[28px] font-bold leading-tight">
               Portfolio timeline
             </h2>
-            <p className="mt-2 max-w-[260px] text-[13px] text-[var(--app-muted)]">
+            <p className="mt-2 max-w-[260px] text-[13px] text-text-2">
               Recent public delivery context shared from Relay.
             </p>
-            <p className="mt-4 text-xs text-[var(--app-muted)]">
+            <p className="mt-4 text-xs text-text-2">
               Updated {formatPublicDate(profile.updatedAt.slice(0, 10))}
             </p>
           </div>
@@ -137,20 +136,20 @@ export function PublicProfilePage({ slug }: { slug: string }) {
                 return (
                   <li
                     key={`${project.title}-${project.dueDate}`}
-                    className="grid items-center gap-3 rounded-[6px] border border-[var(--app-border)] bg-[var(--app-panel)] p-3 md:grid-cols-[minmax(0,1fr)_120px_150px]"
+                    className="grid items-center gap-3 rounded-[6px] border border-line-row bg-well p-3 md:grid-cols-[minmax(0,1fr)_120px_150px]"
                   >
                     <div className="min-w-0">
                       <p className="text-[15px] font-bold">{project.title}</p>
-                      <p className="mt-1 text-xs text-[var(--app-muted)]">
+                      <p className="mt-1 text-xs text-text-2">
                         {project.workType}
                       </p>
                     </div>
-                    <time className="text-xs text-[var(--app-muted)]">
+                    <time className="text-xs text-text-2">
                       {formatPublicDate(project.dueDate)}
                     </time>
                     <div>
                       <div className="mb-1.5 flex items-center justify-between">
-                        <Badge className="rounded-md border-transparent bg-[var(--app-soft-panel)] text-[11px] font-bold text-[var(--app-ink)]">
+                        <Badge className="rounded-md border-transparent bg-well text-[11px] font-bold text-text-1">
                           {project.status}
                         </Badge>
                         <span className="text-xs font-bold">{progress}%</span>
@@ -165,7 +164,7 @@ export function PublicProfilePage({ slug }: { slug: string }) {
               })}
             </ul>
           ) : (
-            <div className="rounded-[6px] border border-[var(--app-border)] bg-[var(--app-soft-panel)] p-6 text-center">
+            <div className="rounded-[6px] border border-line-row bg-well p-6 text-center">
               <img
                 src={emptyStateAssets.projects}
                 alt=""
@@ -173,7 +172,7 @@ export function PublicProfilePage({ slug }: { slug: string }) {
                 className="mx-auto mb-3 h-[126px] w-[180px] object-contain"
               />
               <p className="text-sm font-bold">No public projects shared yet</p>
-              <p className="mt-1 text-xs text-[var(--app-muted)]">
+              <p className="mt-1 text-xs text-text-2">
                 The editor can publish updated public work from their Relay
                 profile.
               </p>
@@ -187,7 +186,7 @@ export function PublicProfilePage({ slug }: { slug: string }) {
 
 function PublicShell({ children }: { children: React.ReactNode }) {
   return (
-    <main className="min-h-dvh bg-[var(--app-canvas)] px-4 py-6 text-[var(--app-ink)] md:px-8 md:py-10">
+    <main className="min-h-dvh bg-page px-4 py-6 text-text-1 md:px-8 md:py-10">
       <div className="mx-auto w-full max-w-4xl">
         <RelayBrand compact />
         {children}
@@ -198,7 +197,7 @@ function PublicShell({ children }: { children: React.ReactNode }) {
 
 function PublicAvatar({ name, imageUrl }: { name: string; imageUrl: string }) {
   return (
-    <div className="grid size-[148px] place-items-center overflow-hidden rounded-full border border-[var(--app-border)] bg-[var(--app-avatar-surface)] text-[40px] font-bold">
+    <div className="grid size-[148px] place-items-center overflow-hidden rounded-full border border-line-row bg-tile text-[40px] font-bold">
       {imageUrl ? (
         <img src={imageUrl} alt={name} className="size-full object-cover" />
       ) : (
@@ -218,11 +217,9 @@ function ProfileMetric({
   value: string;
 }) {
   return (
-    <div className="flex flex-col rounded-md border border-[var(--app-border)] bg-[var(--app-soft-panel)] p-3">
-      <span className="text-[var(--primary)] [&_svg]:size-5">{icon}</span>
-      <dt className="order-3 mt-1 text-[11px] text-[var(--app-muted)]">
-        {label}
-      </dt>
+    <div className="flex flex-col rounded-md border border-line-row bg-well p-3">
+      <span className="text-primary [&_svg]:size-5">{icon}</span>
+      <dt className="order-3 mt-1 text-[11px] text-text-2">{label}</dt>
       <dd className="order-2 mt-2 text-xl font-bold">{value}</dd>
     </div>
   );
@@ -230,8 +227,8 @@ function ProfileMetric({
 
 function InfoPill({ icon, text }: { icon: React.ReactNode; text: string }) {
   return (
-    <span className="flex items-center gap-1.5 text-[13px] text-[var(--app-muted)]">
-      <span className="text-[var(--primary)] [&_svg]:size-[17px]">{icon}</span>
+    <span className="flex items-center gap-1.5 text-[13px] text-text-2">
+      <span className="text-primary [&_svg]:size-[17px]">{icon}</span>
       {text}
     </span>
   );
@@ -246,10 +243,10 @@ function ProgressBar({ value, label }: { value: number; label: string }) {
       aria-valuemin={0}
       aria-valuemax={100}
       aria-valuenow={boundedValue}
-      className="h-1.5 overflow-hidden rounded-full bg-[var(--app-header-panel)]"
+      className="h-1.5 overflow-hidden rounded-full bg-well"
     >
       <span
-        className="block h-full rounded-full bg-[var(--primary)]"
+        className="block h-full rounded-full bg-primary"
         style={{ width: `${boundedValue}%` }}
       />
     </div>

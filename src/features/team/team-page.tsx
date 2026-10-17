@@ -267,7 +267,7 @@ export function TeamDesignPage({
 
         {!isUserLoaded ? (
           <ContentSection
-            bodyClassName="flex min-h-28 items-center gap-3 p-6 text-sm text-[var(--app-muted)]"
+            bodyClassName="flex min-h-28 items-center gap-3 p-6 text-sm text-text-2"
             role="status"
           >
             <LoaderCircle
@@ -280,7 +280,7 @@ export function TeamDesignPage({
           <ContentSection
             title="Team access"
             description="Shared workspaces keep members, project comments, notifications, activity, and chat in sync."
-            className="shadow-[var(--app-shadow-1)]"
+            className="shadow-none"
           >
             <div className="max-w-3xl">
               <h2 className="text-xl font-semibold leading-tight md:text-2xl">
@@ -307,7 +307,7 @@ export function TeamDesignPage({
           </ContentSection>
         ) : isConvexAuthLoading ? (
           <ContentSection
-            bodyClassName="flex min-h-28 items-center gap-3 p-6 text-sm text-[var(--app-muted)]"
+            bodyClassName="flex min-h-28 items-center gap-3 p-6 text-sm text-text-2"
             role="status"
           >
             <LoaderCircle
@@ -334,7 +334,7 @@ export function TeamDesignPage({
           </ContentSection>
         ) : teamData === undefined ? (
           <ContentSection
-            bodyClassName="flex min-h-28 items-center gap-3 p-6 text-sm text-[var(--app-muted)]"
+            bodyClassName="flex min-h-28 items-center gap-3 p-6 text-sm text-text-2"
             role="status"
           >
             <LoaderCircle
@@ -430,7 +430,7 @@ export function TeamDesignPage({
                     canManageTeam ? (
                       <span>
                         Invite code{" "}
-                        <span className="font-mono font-bold tracking-widest text-[var(--app-highlight)]">
+                        <span className="font-mono font-bold tracking-widest text-text-1">
                           {teamData.workspace.inviteCode}
                         </span>
                       </span>
@@ -476,7 +476,7 @@ export function TeamDesignPage({
                   }
                   bodyMode="flush"
                 >
-                  <div className="max-h-[min(560px,calc(100dvh-21rem))] divide-y divide-[var(--app-border)] overflow-y-auto overscroll-contain">
+                  <div className="max-h-[min(560px,calc(100dvh-21rem))] divide-y divide-line-row overflow-y-auto overscroll-contain">
                     {teamData.members.map((member) => (
                       <article
                         key={member._id}
@@ -498,8 +498,8 @@ export function TeamDesignPage({
                               className={cn(
                                 "rounded-md",
                                 member.status === "active"
-                                  ? "bg-[var(--status-success-bg)] text-[var(--status-success)]"
-                                  : "bg-[var(--status-warning-bg)] text-[var(--status-warning)]"
+                                  ? "bg-well text-text-1"
+                                  : "bg-warn-wash text-warn-text"
                               )}
                             >
                               {member.status}
@@ -633,7 +633,7 @@ export function TeamDesignPage({
                   </div>
 
                   {canManageTeam ? (
-                    <div className="border-t border-[var(--app-border)] p-5">
+                    <div className="border-t border-line-row p-5">
                       <h3 className="text-sm font-semibold">Invite member</h3>
                       <div className="mt-3 grid items-end gap-3 md:grid-cols-[minmax(0,1fr)_160px_120px]">
                         <FieldLayout
@@ -714,7 +714,7 @@ export function TeamDesignPage({
                 >
                   {selectedProject ? (
                     <div className="grid gap-4">
-                      <div className="rounded-md border border-[var(--app-border)] bg-[var(--app-soft-panel)] p-3">
+                      <div className="rounded-md border border-line-row bg-well p-3">
                         <p className="text-sm font-semibold">
                           {selectedProject.title}
                         </p>
@@ -739,7 +739,7 @@ export function TeamDesignPage({
                           projectComments.map((comment) => (
                             <article
                               key={comment._id}
-                              className="rounded-md border border-[var(--app-border)] bg-[var(--app-panel)] p-3"
+                              className="rounded-md border border-line-row bg-well p-3"
                             >
                               <p className="text-sm font-semibold">
                                 {comment.authorName}{" "}
@@ -869,8 +869,8 @@ export function TeamDesignPage({
                         key={notification._id}
                         className={
                           notification.read
-                            ? "flex justify-between gap-3 rounded-md border border-[var(--app-border)] p-3"
-                            : "flex justify-between gap-3 rounded-md border border-[var(--primary)] bg-[var(--app-active)] p-3"
+                            ? "flex justify-between gap-3 rounded-md border border-line-row p-3"
+                            : "flex justify-between gap-3 rounded-md border border-primary bg-selected p-3"
                         }
                       >
                         <div className="min-w-0">
@@ -942,7 +942,7 @@ export function TeamDesignPage({
                     teamData.activity.map((activity) => (
                       <article
                         key={activity._id}
-                        className="rounded-md border-l-2 border-[var(--primary)] bg-[var(--app-soft-panel)] p-3"
+                        className="rounded-md border-l-2 border-primary bg-well p-3"
                       >
                         <p className="text-sm font-medium">
                           {activity.message}

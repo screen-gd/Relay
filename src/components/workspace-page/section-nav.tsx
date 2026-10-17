@@ -42,8 +42,8 @@ export function SectionNav<T extends string>({
             size="sm"
             aria-current={active ? "page" : undefined}
             className={cn(
-              "h-8 shrink-0 whitespace-nowrap text-[var(--app-muted)] hover:bg-transparent hover:text-[var(--app-ink)] dark:hover:bg-transparent focus-visible:ring-2 focus-visible:ring-[var(--primary)] active:translate-y-0 active:scale-100",
-              active && "bg-[var(--app-active)] text-[var(--app-ink)]"
+              "h-8 shrink-0 whitespace-nowrap text-text-2 hover:bg-transparent hover:text-text-1 dark:hover:bg-transparent active:translate-y-0 active:scale-100",
+              active && "bg-selected text-text-1"
             )}
             onClick={() => onValueChange(item.id)}
           >

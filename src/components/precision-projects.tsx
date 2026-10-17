@@ -134,14 +134,14 @@ function ProjectDropdown<T extends string>({
           variant="outline"
           aria-label={ariaLabel}
           className={cn(
-            "h-9 min-w-0 shrink-0 justify-between gap-3 overflow-hidden rounded-lg border-[var(--app-border)] !bg-[var(--app-panel)] text-xs font-normal",
+            "h-9 min-w-0 shrink-0 justify-between gap-3 overflow-hidden rounded-lg border-line-row !bg-well text-xs font-normal",
             className
           )}
         >
           <span className="truncate">
             {selectedOption?.label ?? "Choose an option"}
           </span>
-          <ChevronDown className="size-3.5 shrink-0 text-[var(--app-muted)]" />
+          <ChevronDown className="size-3.5 shrink-0 text-text-2" />
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent
@@ -280,7 +280,7 @@ function ProjectThumbnail({
       )}
       style={{ background: projectColor(project) }}
     >
-      <span className="absolute -right-3 top-1/2 h-[130%] w-[52%] -translate-y-1/2 rotate-12 bg-[var(--primary)] opacity-45" />
+      <span className="absolute -right-3 top-1/2 h-[130%] w-[52%] -translate-y-1/2 rotate-12 bg-primary opacity-45" />
       <span className="absolute inset-x-2 top-2 flex items-center justify-between text-[var(--app-thumb-icon)]">
         <Film className="size-3.5" />
         <span className="size-1.5 rounded-full bg-current opacity-60" />
@@ -351,7 +351,7 @@ function ProjectBoardCard({
       disabled={disabled}
       className={cn(
         "border-0 border-b border-[var(--panel-edge)] rounded-none",
-        selected && "bg-[var(--app-active)]"
+        selected && "bg-selected"
       )}
     >
       {({ attributes, listeners, setActivatorNodeRef }) => (
@@ -361,7 +361,7 @@ function ProjectBoardCard({
             type="button"
             variant="ghost"
             className={cn(
-              "h-auto min-w-0 flex-1 touch-none flex-col items-start justify-start gap-0 rounded-none px-0 py-0 text-left font-normal whitespace-normal hover:bg-transparent hover:text-current dark:hover:bg-transparent focus-visible:ring-2 focus-visible:ring-[var(--primary)] active:translate-y-0 active:scale-100",
+              "h-auto min-w-0 flex-1 touch-none flex-col items-start justify-start gap-0 rounded-none px-0 py-0 text-left font-normal whitespace-normal hover:bg-transparent hover:text-current dark:hover:bg-transparent active:translate-y-0 active:scale-100",
               !disabled && "cursor-grab active:cursor-grabbing"
             )}
             onClick={onSelect}
@@ -372,10 +372,10 @@ function ProjectBoardCard({
             <span className="block w-full truncate text-[13px] font-semibold">
               {project.title}
             </span>
-            <span className="mt-1 block w-full truncate text-xs text-[var(--app-muted)]">
+            <span className="mt-1 block w-full truncate text-xs text-text-2">
               {project.client || "No client"}
             </span>
-            <span className="mt-3 block text-xs text-[var(--app-muted)]">
+            <span className="mt-3 block text-xs text-text-2">
               {formatDate(project.dueDate)}
             </span>
           </Button>
@@ -384,7 +384,7 @@ function ProjectBoardCard({
               <Button
                 variant="ghost"
                 size="icon-sm"
-                className="shrink-0 !bg-transparent text-[var(--app-muted)]"
+                className="shrink-0 !bg-transparent text-text-2"
                 aria-label={`Change stage for ${project.title}`}
               >
                 <MoreHorizontal />
@@ -424,10 +424,10 @@ function ProjectBoardDragOverlay({ projects }: { projects: WorkItem[] }) {
               <span className="truncate text-[13px] font-semibold">
                 {project.title}
               </span>
-              <span className="truncate text-xs text-[var(--app-muted)]">
+              <span className="truncate text-xs text-text-2">
                 {project.client || "No client"}
               </span>
-              <span className="mt-2 text-xs text-[var(--app-muted)]">
+              <span className="mt-2 text-xs text-text-2">
                 {formatDate(project.dueDate)}
               </span>
             </Card>
@@ -456,10 +456,10 @@ function ProjectBoardColumn({
     >
       <KanbanHeader
         data-board-wheel
-        className="flex shrink-0 items-center justify-between px-3 py-3 text-sm font-medium text-[var(--app-ink)]"
+        className="flex shrink-0 items-center justify-between px-3 py-3 text-sm font-medium text-text-1"
       >
         <span>{stage.label}</span>
-        <span className="text-[11px] font-normal tabular-nums text-[var(--app-muted)]">
+        <span className="text-[11px] font-normal tabular-nums text-text-2">
           {projects}
         </span>
       </KanbanHeader>
@@ -472,9 +472,7 @@ function ProjectBoardColumn({
         data-board-wheel={projects === 0 ? true : undefined}
       >
         {projects === 0 ? (
-          <span className="mt-3 block text-xs text-[var(--app-muted)]">
-            Drop here
-          </span>
+          <span className="mt-3 block text-xs text-text-2">Drop here</span>
         ) : (
           <div className="grid gap-2">{children}</div>
         )}
@@ -598,7 +596,7 @@ export function PrecisionProjects(props: PrecisionProjectsProps) {
               <p className="truncate text-[13px] font-semibold">
                 {row.original.title}
               </p>
-              <p className="mt-0.5 max-w-[300px] truncate text-[11px] text-[var(--app-muted)]">
+              <p className="mt-0.5 max-w-[300px] truncate text-[11px] text-text-2">
                 {row.original.notes || "No notes"}
               </p>
             </div>
@@ -691,7 +689,7 @@ export function PrecisionProjects(props: PrecisionProjectsProps) {
               <Button
                 variant="ghost"
                 size="icon-sm"
-                className="!bg-[var(--app-panel)] transition-transform active:scale-95"
+                className="!bg-well transition-transform active:scale-95"
                 aria-label={`Actions for ${row.original.title}`}
                 onClick={(event) => event.stopPropagation()}
               >
@@ -800,7 +798,7 @@ export function PrecisionProjects(props: PrecisionProjectsProps) {
               primary={
                 <>
                   <div className="relative min-w-0 flex-1 sm:max-w-[560px]">
-                    <Search className="pointer-events-none absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-[var(--app-muted)]" />
+                    <Search className="pointer-events-none absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-text-2" />
                     <Input
                       value={tableState.query}
                       onChange={(event) =>
@@ -811,19 +809,19 @@ export function PrecisionProjects(props: PrecisionProjectsProps) {
                       }
                       placeholder="Search project, client, or note..."
                       aria-label="Search projects"
-                      className="h-9 rounded-lg border-[var(--app-border)] !bg-[var(--app-panel)] pl-8 text-xs transition-shadow focus-visible:ring-2"
+                      className="h-9 rounded-lg border-line-row !bg-well pl-8 text-xs transition-shadow "
                     />
                   </div>
                   <Button
                     variant="outline"
-                    className="h-9 shrink-0 gap-2 rounded-lg !bg-[var(--app-panel)]"
+                    className="h-9 shrink-0 gap-2 rounded-lg !bg-well"
                     onClick={() => setFiltersOpen(true)}
                     aria-label="Open project filters"
                   >
                     <SlidersHorizontal className="size-3.5" />
                     Filters
                     {activeFilterCount ? (
-                      <span className="grid size-4 place-items-center rounded-full bg-[var(--app-active)] text-[10px] tabular-nums">
+                      <span className="grid size-4 place-items-center rounded-full bg-selected text-[10px] tabular-nums">
                         {activeFilterCount}
                       </span>
                     ) : null}
@@ -844,7 +842,7 @@ export function PrecisionProjects(props: PrecisionProjectsProps) {
                   >
                     <TabsList
                       aria-label="Project view"
-                      className="h-9 rounded-lg bg-[var(--app-panel)] p-0.5"
+                      className="h-9 rounded-lg bg-well p-0.5"
                     >
                       <TabsTrigger
                         id="project-table-tab"
@@ -875,7 +873,7 @@ export function PrecisionProjects(props: PrecisionProjectsProps) {
                   >
                     <TabsList
                       aria-label="Project scope"
-                      className="h-9 rounded-lg bg-[var(--app-panel)] p-0.5"
+                      className="h-9 rounded-lg bg-well p-0.5"
                     >
                       <TabsTrigger
                         id="project-personal-tab"
@@ -938,9 +936,9 @@ export function PrecisionProjects(props: PrecisionProjectsProps) {
             <Sheet open={filtersOpen} onOpenChange={setFiltersOpen}>
               <SheetContent
                 side="right"
-                className="w-[min(92vw,400px)] gap-0 border-[var(--app-border)] bg-[var(--app-panel)] p-0"
+                className="w-[min(92vw,400px)] gap-0 border-line-row bg-well p-0"
               >
-                <SheetHeader className="border-b border-[var(--app-border)] px-5 py-4">
+                <SheetHeader className="border-b border-line-row px-5 py-4">
                   <SheetTitle>Project filters</SheetTitle>
                   <SheetDescription>
                     Narrow the project list without crowding the workspace
@@ -1076,8 +1074,8 @@ export function PrecisionProjects(props: PrecisionProjectsProps) {
                     </FilterField>
                   ) : null}
                 </div>
-                <div className="mt-auto flex items-center justify-between border-t border-[var(--app-border)] px-5 py-4">
-                  <span className="text-xs text-[var(--app-muted)]">
+                <div className="mt-auto flex items-center justify-between border-t border-line-row px-5 py-4">
+                  <span className="text-xs text-text-2">
                     {activeFilterCount} active{" "}
                     {activeFilterCount === 1 ? "filter" : "filters"}
                   </span>
@@ -1121,12 +1119,12 @@ export function PrecisionProjects(props: PrecisionProjectsProps) {
                     bodyClassName="flex min-h-0 flex-1 flex-col max-lg:flex-none max-lg:overflow-visible"
                   >
                     {isUpdating ? (
-                      <div className="absolute inset-x-0 top-0 z-20 h-0.5 bg-[var(--primary)]" />
+                      <div className="absolute inset-x-0 top-0 z-20 h-0.5 bg-primary" />
                     ) : null}
                     {tableState.view === "table" ? (
-                      <header className="flex h-12 items-center justify-between border-b border-[var(--app-border)] px-4">
+                      <header className="flex h-12 items-center justify-between border-b border-line-row px-4">
                         <span
-                          className="flex items-center gap-2 text-[11px] text-[var(--app-muted)]"
+                          className="flex items-center gap-2 text-[11px] text-text-2"
                           aria-live="polite"
                         >
                           <AnimatePresence mode="popLayout" initial={false}>
@@ -1169,7 +1167,7 @@ export function PrecisionProjects(props: PrecisionProjectsProps) {
                           <div
                             ref={boardRef}
                             data-board-wheel
-                            className="grid min-h-0 flex-1 auto-cols-[minmax(232px,1fr)] grid-flow-col items-stretch gap-3 overflow-x-auto overflow-y-hidden bg-[var(--app-panel)] px-3 pb-3 pt-3"
+                            className="grid min-h-0 flex-1 auto-cols-[minmax(232px,1fr)] grid-flow-col items-stretch gap-3 overflow-x-auto overflow-y-hidden bg-well px-3 pb-3 pt-3"
                             aria-label="Project board"
                           >
                             {board.map(
@@ -1212,7 +1210,7 @@ export function PrecisionProjects(props: PrecisionProjectsProps) {
                       ) : (
                         <>
                           <div
-                            className="divide-y divide-[var(--app-border)] lg:hidden"
+                            className="divide-y divide-line-row lg:hidden"
                             aria-label="Project cards"
                           >
                             {table.getRowModel().rows.map((row) => (
@@ -1225,9 +1223,9 @@ export function PrecisionProjects(props: PrecisionProjectsProps) {
                                 data-project-title={row.original.title}
                                 aria-label={`Open ${row.original.title} project details`}
                                 className={cn(
-                                  "h-auto w-full grid grid-cols-[48px_minmax(0,1fr)_auto] justify-start items-center gap-3 px-3 py-3 text-left font-normal whitespace-normal hover:bg-[var(--app-hover)] dark:hover:bg-[var(--app-hover)] focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--primary)] active:translate-y-0 active:scale-100",
+                                  "h-auto w-full grid grid-cols-[48px_minmax(0,1fr)_auto] justify-start items-center gap-3 px-3 py-3 text-left font-normal whitespace-normal hover:bg-hover dark:hover:bg-hover focus-visible:focus-ring-inset active:translate-y-0 active:scale-100",
                                   selected?.id === row.original.id &&
-                                    "bg-[var(--app-active)]"
+                                    "bg-selected"
                                 )}
                                 onClick={() => {
                                   setSelectedId(row.original.id);
@@ -1242,7 +1240,7 @@ export function PrecisionProjects(props: PrecisionProjectsProps) {
                                   <span className="block truncate text-sm font-semibold">
                                     {row.original.title}
                                   </span>
-                                  <span className="mt-1 block truncate text-xs text-[var(--app-muted)]">
+                                  <span className="mt-1 block truncate text-xs text-text-2">
                                     {row.original.client ||
                                       row.original.workType}
                                   </span>
@@ -1278,13 +1276,13 @@ export function PrecisionProjects(props: PrecisionProjectsProps) {
                                 {table.getHeaderGroups().map((group) => (
                                   <TableRow
                                     key={group.id}
-                                    className="border-b border-[var(--app-border)] bg-[var(--app-soft-panel)]"
+                                    className="border-b border-line-row bg-well"
                                   >
                                     {group.headers.map((header) => (
                                       <TableHead
                                         key={header.id}
                                         className={cn(
-                                          "h-8 px-3 text-left text-[10px] font-semibold uppercase text-[var(--app-subtle)]",
+                                          "h-8 px-3 text-left text-[10px] font-semibold uppercase text-text-3",
                                           header.column.id === "title" &&
                                             "w-[25%]",
                                           header.column.id === "client" &&
@@ -1314,7 +1312,7 @@ export function PrecisionProjects(props: PrecisionProjectsProps) {
                                   </TableRow>
                                 ))}
                               </TableHeader>
-                              <TableBody className="divide-y divide-[var(--app-border)]">
+                              <TableBody className="divide-y divide-line-row">
                                 {table.getRowModel().rows.map((row) => (
                                   <motion.tr
                                     key={row.id}
@@ -1327,9 +1325,9 @@ export function PrecisionProjects(props: PrecisionProjectsProps) {
                                     }
                                     aria-label={`Select ${row.original.title}. ${row.original.status}. Due ${formatDate(row.original.dueDate)}.`}
                                     className={cn(
-                                      "h-[var(--workspace-row-height,70px)] cursor-pointer outline-none transition-colors hover:bg-[var(--app-hover)] focus-visible:bg-[var(--app-hover)] focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--primary)] active:bg-[var(--app-active)]",
+                                      "h-[var(--workspace-row-height,70px)] cursor-pointer outline-none transition-colors hover:bg-hover focus-visible:bg-hover focus-visible:focus-ring-inset active:bg-selected",
                                       selected?.id === row.original.id &&
-                                        "bg-[var(--app-active)]"
+                                        "bg-selected"
                                     )}
                                     animate={{ opacity: 1 }}
                                     initial={
@@ -1410,13 +1408,13 @@ export function PrecisionProjects(props: PrecisionProjectsProps) {
                         className="grid min-h-72 flex-none place-items-center gap-0 rounded-none border-0 px-5 py-6 text-center [text-wrap:wrap] md:px-5 md:py-6"
                       >
                         <div className="max-w-xs">
-                          <FolderKanban className="mx-auto size-7 text-[var(--app-muted)]" />
+                          <FolderKanban className="mx-auto size-7 text-text-2" />
                           <p className="mt-2 text-sm font-semibold">
                             {hasFilters
                               ? "No projects match these filters"
                               : "No projects in this workspace"}
                           </p>
-                          <p className="mt-1 text-xs leading-5 text-[var(--app-muted)]">
+                          <p className="mt-1 text-xs leading-5 text-text-2">
                             {hasFilters
                               ? "Clear the filters to bring projects back into view."
                               : "Create your first project to track deadlines, reviews, and delivery."}
@@ -1424,7 +1422,7 @@ export function PrecisionProjects(props: PrecisionProjectsProps) {
                           {hasFilters ? (
                             <Button
                               variant="outline"
-                              className="mt-3 h-8 !bg-[var(--app-panel)] active:scale-[0.98]"
+                              className="mt-3 h-8 !bg-well active:scale-[0.98]"
                               size="sm"
                               onClick={() =>
                                 setTableState((state) => ({
@@ -1520,11 +1518,11 @@ function ProjectInspector({
     return (
       <MotionCard
         className={cn(
-          "border-0 bg-transparent p-6 text-center text-xs text-[var(--app-muted)] shadow-none",
+          "border-0 bg-transparent p-6 text-center text-xs text-text-2 shadow-none",
           className
         )}
       >
-        <Empty className="flex-none gap-0 rounded-none border-0 p-0 text-center text-xs text-[var(--app-muted)] [text-wrap:wrap] md:p-0">
+        <Empty className="flex-none gap-0 rounded-none border-0 p-0 text-center text-xs text-text-2 [text-wrap:wrap] md:p-0">
           <EmptyHeader className="max-w-none gap-0">
             <EmptyMedia
               variant="default"
@@ -1555,12 +1553,12 @@ function ProjectInspector({
             className="mb-3 aspect-video h-auto w-full"
           />
           <div>
-            <div className="border-b border-[var(--app-border)] pb-4">
+            <div className="border-b border-line-row pb-4">
               <div className="min-w-0 flex-1">
                 <h2 className="truncate text-sm font-semibold">
                   {project.title}
                 </h2>
-                <p className="mt-0.5 truncate text-[11px] text-[var(--app-muted)]">
+                <p className="mt-0.5 truncate text-[11px] text-text-2">
                   {project.client || "No client"}
                 </p>
                 <Badge
@@ -1596,21 +1594,21 @@ function ProjectInspector({
                 <SegmentedMeter value={value} segments={24} className="mt-2" />
               </div>
               <div>
-                <p className="text-xs text-[var(--app-muted)]">Project note</p>
-                <p className="mt-2 text-xs leading-5 text-[var(--app-muted)]">
+                <p className="text-xs text-text-2">Project note</p>
+                <p className="mt-2 text-xs leading-5 text-text-2">
                   {project.notes || "No project notes yet."}
                 </p>
               </div>
               <div>
-                <p className="text-xs text-[var(--app-muted)]">Next action</p>
-                <p className="mt-2 text-xs leading-5 text-[var(--app-ink)]">
+                <p className="text-xs text-text-2">Next action</p>
+                <p className="mt-2 text-xs leading-5 text-text-1">
                   {projectNextAction(project)}
                 </p>
               </div>
               <div className="grid grid-cols-2 gap-2 pt-1">
                 <Button
                   variant="outline"
-                  className="h-9 !bg-[var(--app-panel)] transition-transform active:scale-[0.98]"
+                  className="h-9 !bg-well transition-transform active:scale-[0.98]"
                   disabled={!canEdit && Boolean(project.teamId)}
                   onClick={() => onEdit(project)}
                 >
@@ -1634,7 +1632,7 @@ function ProjectInspector({
 function Detail({ label, value }: { label: string; value: string }) {
   return (
     <div>
-      <p className="text-xs text-[var(--app-muted)]">{label}</p>
+      <p className="text-xs text-text-2">{label}</p>
       <p className="mt-1 text-xs font-medium">{value}</p>
     </div>
   );
@@ -1647,27 +1645,27 @@ function ProjectTableSkeleton({
 }) {
   return (
     <div
-      className="min-h-72 border-t border-[var(--app-border)]"
+      className="min-h-72 border-t border-line-row"
       aria-label="Updating projects"
     >
       {Array.from({ length: 4 }, (_, index) => (
         <motion.div
           key={index}
-          className="grid h-[58px] grid-cols-[minmax(180px,1.6fr)_minmax(80px,0.7fr)_minmax(100px,0.9fr)_minmax(72px,0.7fr)_minmax(100px,1fr)] items-center gap-3 border-b border-[var(--app-border)] px-3"
+          className="grid h-[58px] grid-cols-[minmax(180px,1.6fr)_minmax(80px,0.7fr)_minmax(100px,0.9fr)_minmax(72px,0.7fr)_minmax(100px,1fr)] items-center gap-3 border-b border-line-row px-3"
           initial={false}
           animate={{ opacity: reduceMotion ? 0.65 : 0.72 }}
         >
           <div className="flex items-center gap-3">
-            <span className="h-9 w-12 rounded-md bg-[var(--app-soft-panel)]" />
+            <span className="h-9 w-12 rounded-md bg-well" />
             <span className="space-y-1.5">
-              <span className="block h-2.5 w-36 rounded bg-[var(--app-soft-panel)]" />
-              <span className="block h-2 w-24 rounded bg-[var(--app-soft-panel)]" />
+              <span className="block h-2.5 w-36 rounded bg-well" />
+              <span className="block h-2 w-24 rounded bg-well" />
             </span>
           </div>
-          <span className="h-2.5 w-16 rounded bg-[var(--app-soft-panel)]" />
-          <span className="h-2.5 w-20 rounded bg-[var(--app-soft-panel)]" />
-          <span className="h-5 w-16 rounded bg-[var(--app-soft-panel)]" />
-          <span className="h-1 w-full max-w-28 rounded bg-[var(--app-soft-panel)]" />
+          <span className="h-2.5 w-16 rounded bg-well" />
+          <span className="h-2.5 w-20 rounded bg-well" />
+          <span className="h-5 w-16 rounded bg-well" />
+          <span className="h-1 w-full max-w-28 rounded bg-well" />
         </motion.div>
       ))}
     </div>
