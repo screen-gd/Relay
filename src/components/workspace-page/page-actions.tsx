@@ -26,7 +26,7 @@ type PageActionsProps = {
 
 /**
  * Header actions for a workspace page: one primary button, with every other
- * action behind "More" so the page reads as a single job.
+ * action behind the More menu, so the page reads as a single job.
  */
 export function PageActions({ primary, more, className }: PageActionsProps) {
   return (
@@ -38,9 +38,13 @@ export function PageActions({ primary, more, className }: PageActionsProps) {
       {more?.length ? (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="outline" className="shrink-0">
-              <MoreHorizontal className="size-3.5" />
-              More
+            <Button
+              variant="ghost"
+              size="icon-sm"
+              aria-label="More actions"
+              className="shrink-0"
+            >
+              <MoreHorizontal />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">

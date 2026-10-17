@@ -5,7 +5,6 @@ import {
   ArrowUp,
   ArrowUpDown,
   Edit3,
-  ListFilter,
   MoreHorizontal,
   Plus,
   Search,
@@ -28,6 +27,7 @@ import type { ProjectStatus } from "@/lib/domain-values";
 import { useHydratedReducedMotion } from "@/lib/motion";
 import { projectStatusColor } from "@/lib/project-status-style";
 import { cn } from "@/lib/utils";
+import { FilterMenu } from "@/components/filter-menu";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { SegmentedMeter } from "@/components/ui/segmented-meter";
@@ -41,9 +41,6 @@ import {
   DropdownMenuRadioGroup,
   DropdownMenuRadioItem,
   DropdownMenuSeparator,
-  DropdownMenuSub,
-  DropdownMenuSubContent,
-  DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
@@ -802,10 +799,56 @@ export function PrecisionDashboard(props: DashboardProps) {
                     className="h-(--control-sm) ps-8"
                   />
                 </div>
-                <ProjectFilterMenu
-                  {...props}
-                  activeFilterCount={activeFilterCount}
+                <FilterMenu
+                  subject="projects"
+                  activeCount={activeFilterCount}
                   onClear={clearFilters}
+                  filters={[
+                    {
+                      label: "Status",
+                      value: props.statusFilter,
+                      options: statusOptions.map((value) => ({
+                        value,
+                        label: value === "All" ? "Any status" : value,
+                      })),
+                      onChange: (value) =>
+                        props.setStatusFilter(value as ProjectStatus | "All"),
+                    },
+                    {
+                      label: "Type",
+                      value: props.kindFilter,
+                      options: props.projectTagOptions.map((value) => ({
+                        value,
+                        label: value === "ALL" ? "Any type" : value,
+                      })),
+                      onChange: props.setKindFilter,
+                    },
+                    {
+                      label: "Client",
+                      value: props.clientFilter,
+                      options: props.clientOptions.map((value) => ({
+                        value,
+                        label: value === "ALL" ? "Any client" : value,
+                      })),
+                      onChange: props.setClientFilter,
+                    },
+                    {
+                      label: "Due",
+                      value: props.dueFilter,
+                      options: dueOptions,
+                      onChange: (value) =>
+                        props.setDueFilter(value as DueFilter),
+                    },
+                    {
+                      label: "Payment",
+                      value: props.billingFilter,
+                      options: billingOptions,
+                      onChange: (value) =>
+                        props.setBillingFilter(
+                          value as "ALL" | "Paid" | "Unpaid"
+                        ),
+                    },
+                  ]}
                 />
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
@@ -1113,121 +1156,6 @@ export function PrecisionDashboard(props: DashboardProps) {
         </SheetContent>
       </Sheet>
     </WorkspacePage>
-  );
-}
-
-/**
- * Every ledger filter in one menu, as Linear's Filter button: each filter is
- * a submenu showing its current choice, and Clear resets them all.
- */
-function ProjectFilterMenu(
-  props: DashboardProps & { activeFilterCount: number; onClear: () => void }
-) {
-  const filters = [
-    {
-      label: "Status",
-      value: props.statusFilter,
-      options: statusOptions.map((value) => ({
-        value,
-        label: value === "All" ? "Any status" : value,
-      })),
-      onChange: (value: string) =>
-        props.setStatusFilter(value as ProjectStatus | "All"),
-    },
-    {
-      label: "Type",
-      value: props.kindFilter,
-      options: props.projectTagOptions.map((value) => ({
-        value,
-        label: value === "ALL" ? "Any type" : value,
-      })),
-      onChange: props.setKindFilter,
-    },
-    {
-      label: "Client",
-      value: props.clientFilter,
-      options: props.clientOptions.map((value) => ({
-        value,
-        label: value === "ALL" ? "Any client" : value,
-      })),
-      onChange: props.setClientFilter,
-    },
-    {
-      label: "Due",
-      value: props.dueFilter,
-      options: dueOptions,
-      onChange: (value: string) => props.setDueFilter(value as DueFilter),
-    },
-    {
-      label: "Payment",
-      value: props.billingFilter,
-      options: billingOptions,
-      onChange: (value: string) =>
-        props.setBillingFilter(value as "ALL" | "Paid" | "Unpaid"),
-    },
-  ];
-
-  return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button
-          variant="ghost"
-          size="sm"
-          aria-label={
-            props.activeFilterCount
-              ? `Filter projects, ${props.activeFilterCount} active`
-              : "Filter projects"
-          }
-        >
-          <ListFilter />
-          <span className="hidden sm:inline">Filter</span>
-          {props.activeFilterCount ? (
-            <span className="rounded-inner bg-tile px-1 type-label-sm data">
-              {props.activeFilterCount}
-            </span>
-          ) : null}
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-56">
-        {filters.map((filter) => {
-          const current = filter.options.find(
-            (option) => option.value === filter.value
-          );
-          return (
-            <DropdownMenuSub key={filter.label}>
-              <DropdownMenuSubTrigger>
-                <span>{filter.label}</span>
-                <span className="ms-auto truncate ps-3 type-label-sm text-text-3">
-                  {current?.label}
-                </span>
-              </DropdownMenuSubTrigger>
-              <DropdownMenuSubContent className="max-h-80 w-52">
-                <DropdownMenuRadioGroup
-                  value={filter.value}
-                  onValueChange={filter.onChange}
-                >
-                  {filter.options.map((option) => (
-                    <DropdownMenuRadioItem
-                      key={option.value}
-                      value={option.value}
-                    >
-                      {option.label}
-                    </DropdownMenuRadioItem>
-                  ))}
-                </DropdownMenuRadioGroup>
-              </DropdownMenuSubContent>
-            </DropdownMenuSub>
-          );
-        })}
-        <DropdownMenuSeparator />
-        <DropdownMenuItem
-          disabled={!props.activeFilterCount && !props.query}
-          onSelect={props.onClear}
-        >
-          Clear filters
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
   );
 }
 

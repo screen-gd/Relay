@@ -49,7 +49,7 @@ export function MasterDetail({
         {detail}
       </div>
       {inspector ? (
-        <aside className="h-full min-h-0 min-w-0 lg:col-span-2 xl:col-span-1 xl:border-l xl:border-line-row xl:pl-5">
+        <aside className="h-full min-h-0 min-w-0 lg:col-span-2 xl:col-span-1">
           {inspector}
         </aside>
       ) : null}
