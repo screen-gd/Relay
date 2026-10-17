@@ -188,13 +188,9 @@ export function ResourcesDesignPage({
         title="Resources"
         description="Save asset folders, references, review pages, and delivery links."
         actions={
-          <OwnedButton
-            type="button"
-            variant="outline"
-            onClick={openNewResource}
-          >
+          <OwnedButton type="button" size="sm" onClick={openNewResource}>
             <Plus aria-hidden="true" />
-            New Resource
+            New resource
           </OwnedButton>
         }
       />
@@ -207,7 +203,7 @@ export function ResourcesDesignPage({
             supporting="Saved asset and reference links"
           />
           <MetricItem
-            label="Project Linked"
+            label="Linked to projects"
             value={linkedToProjects}
             supporting="Attached to tracked projects"
           />
@@ -230,7 +226,7 @@ export function ResourcesDesignPage({
                 aria-label="Search resources"
                 value={resourceSearch}
                 onChange={(event) => setResourceSearch(event.target.value)}
-                placeholder="Search resources, links, or projects..."
+                placeholder="Search resources, links or projects"
                 className="pl-9"
               />
             </div>
@@ -259,36 +255,27 @@ export function ResourcesDesignPage({
         />
 
         <ContentSection
-          title="Resource Library"
+          title="Library"
           description={
             resourceSearch || resourceCategory !== "all"
               ? `${visibleResources.length} matching resources`
-              : "Manual links for now; this can later map to cloud storage APIs or OAuth providers."
+              : "Links you save by hand to folders, references and review pages."
           }
           metadata={
-            <OwnedBadge
-              variant="secondary"
-              className="self-start bg-primary/15 text-primary sm:self-auto"
-            >
-              {resources.length} saved
-            </OwnedBadge>
+            <span className="text-text-3 type-label-sm data">
+              {resources.length}
+            </span>
           }
           bodyMode="flush"
         >
-          <div className="divide-y divide-border">
+          <div>
             {visibleResources.length ? (
               visibleResources.map((resource) => (
                 <article
                   key={resource.id}
-                  className="grid items-start gap-4 px-4 py-4 transition-colors hover:bg-well focus-within:bg-well lg:grid-cols-[minmax(0,1.4fr)_160px_minmax(0,1fr)_140px]"
+                  className="grid items-start gap-4 rule-row px-4 py-3 transition-colors duration-(--dur-fast) hover:bg-hover lg:grid-cols-[minmax(0,1.4fr)_160px_minmax(0,1fr)_120px] lg:items-center"
                 >
                   <div className="flex min-w-0 items-start gap-3">
-                    <span
-                      className="grid size-9 shrink-0 place-items-center rounded-md border border-line-row bg-well text-primary"
-                      aria-hidden="true"
-                    >
-                      <Link2 className="size-4" />
-                    </span>
                     <div className="min-w-0">
                       <div className="mb-1 flex flex-wrap items-center gap-2">
                         <h3 className="truncate type-label">
@@ -308,7 +295,7 @@ export function ResourcesDesignPage({
                       ) : null}
                     </div>
                   </div>
-                  <p className="text-muted-foreground lg:text-foreground type-body">
+                  <p className="text-text-2 type-label">
                     {resource.projectId
                       ? projectName(resource.projectId) || "Linked project"
                       : "General"}
@@ -333,7 +320,6 @@ export function ResourcesDesignPage({
                       aria-label={`Open ${resource.title}`}
                       title="Open resource"
                       onClick={() => openResource(resource.url)}
-                      className="text-primary"
                     >
                       <ExternalLink aria-hidden="true" />
                     </OwnedButton>
@@ -354,7 +340,7 @@ export function ResourcesDesignPage({
                       aria-label={`Delete ${resource.title}`}
                       title="Delete resource"
                       onClick={() => removeResource(resource.id)}
-                      className="text-destructive hover:bg-destructive/10 hover:text-destructive"
+                      className="hover:text-fail-text"
                     >
                       <Trash2 aria-hidden="true" />
                     </OwnedButton>

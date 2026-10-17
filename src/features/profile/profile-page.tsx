@@ -3,11 +3,6 @@
 import { projectStatusTone } from "@/lib/project-status-style";
 import { useRef, useState } from "react";
 import { RelayBrand } from "@/app/relay-brand";
-import {
-  accent,
-  successColor,
-  warningColor,
-} from "@/features/routes/shared/route-theme";
 import type { SettingsState, WorkItem } from "@/lib/types";
 import {
   ContentSection,

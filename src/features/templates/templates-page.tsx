@@ -39,7 +39,7 @@ import {
   SelectValue as OwnedSelectValue,
 } from "@/components/ui/select";
 import { Textarea as OwnedTextarea } from "@/components/ui/textarea";
-import { Copy, FileText, Pencil, Plus, Trash2 } from "@/components/icons";
+import { Copy, Pencil, Plus, Trash2 } from "@/components/icons";
 
 type TemplateFormState = {
   id: string;
@@ -271,19 +271,19 @@ export function TemplatesDesignPage({
         title="Templates"
         description="Start with a practical editing workflow, or save your own recurring setup for the next project."
         actions={
-          <div className="flex flex-wrap justify-end gap-2">
+          <div className="flex items-center gap-2">
             <OwnedButton
               type="button"
               variant="outline"
+              size="sm"
               onClick={() => openBuilder()}
               disabled={!canManageTemplates || customTemplatesLocked}
             >
               <Plus aria-hidden="true" />
-              Custom Template
+              New template
             </OwnedButton>
-            <OwnedButton type="button" variant="outline" onClick={onUseBlank}>
-              <Plus aria-hidden="true" />
-              Blank Project
+            <OwnedButton type="button" size="sm" onClick={onUseBlank}>
+              Blank project
             </OwnedButton>
           </div>
         }
@@ -292,7 +292,7 @@ export function TemplatesDesignPage({
         {templateError && !builderOpen ? (
           <p
             role="alert"
-            className="rounded-md bg-destructive/10 px-3 py-2 text-destructive type-body"
+            className="rounded-frame px-3 py-2 text-fail-text shadow-[0_0_0_1px_var(--fail-line)] type-body-sm"
           >
             {templateError}
           </p>
@@ -303,25 +303,25 @@ export function TemplatesDesignPage({
         <ContentSection
           title="Template library"
           metadata={
-            <OwnedBadge variant="secondary">
-              {templates.length} templates
-            </OwnedBadge>
+            <span className="text-text-3 type-label-sm data">
+              {templates.length}
+            </span>
           }
           aria-label="Project templates"
-          bodyClassName="grid gap-4 md:grid-cols-2 xl:grid-cols-3"
+          bodyMode="flush"
         >
           {templates.map((template) => (
             <article
               key={template.id}
               data-slot="template-card"
-              className="group flex min-h-[250px] flex-col justify-between rounded-xl border border-line-row bg-well p-4 text-foreground shadow-none transition-[background-color,border-color,transform,box-shadow] duration-200 hover:-translate-y-0.5 hover:border-strong hover:bg-hover hover:shadow-overlay focus-within:border-primary"
+              className="group grid gap-3 rule-row p-4 text-text-1 transition-colors duration-(--dur-fast) hover:bg-hover lg:grid-cols-[minmax(0,1fr)_auto] lg:items-start lg:gap-6"
             >
               <div>
                 <header className="flex items-start justify-between gap-4">
                   <div className="min-w-0">
                     <div className="flex flex-wrap items-center gap-2">
                       <h2 className="type-heading-xs">{template.name}</h2>
-                      <OwnedBadge variant="secondary" className="uppercase">
+                      <OwnedBadge variant="secondary">
                         {template.archived
                           ? "Archived"
                           : template.custom
@@ -329,32 +329,29 @@ export function TemplatesDesignPage({
                             : "Built-in"}
                       </OwnedBadge>
                     </div>
-                    <p className="mt-1 max-w-lg text-muted-foreground type-body">
+                    <p className="mt-1 max-w-2xl text-text-2 type-body-sm">
                       {template.description}
                     </p>
                   </div>
-                  <span className="grid size-9 shrink-0 place-items-center rounded-md border border-line-row bg-well text-primary">
-                    <FileText aria-hidden="true" className="size-4" />
-                  </span>
                 </header>
 
-                <dl className="mt-4 grid grid-cols-2 gap-3 border-y border-line-row py-3 type-label-sm">
+                <dl className="mt-3 flex flex-wrap gap-x-6 gap-y-2 type-label-sm">
                   <div>
                     <dt className="text-text-2 type-label-sm">Project type</dt>
-                    <dd className="mt-1 font-semibold text-text-1">
+                    <dd className="mt-0.5 text-text-1">
                       {template.projectType}
                     </dd>
                   </div>
                   <div>
                     <dt className="text-text-2 type-label-sm">Setup time</dt>
-                    <dd className="mt-1 text-foreground">
+                    <dd className="mt-0.5 text-text-1 data">
                       {template.durationDays} days
                     </dd>
                   </div>
                 </dl>
 
-                <div className="mt-4">
-                  <div className="flex items-center justify-between gap-2">
+                <div className="mt-3">
+                  <div className="flex items-center gap-3">
                     <h3 className="text-muted-foreground type-label-sm">
                       Workflow preview
                     </h3>
@@ -385,7 +382,7 @@ export function TemplatesDesignPage({
                         >
                           <span
                             role="listitem"
-                            className="rounded-md border border-line-row bg-well px-2 py-1 text-foreground type-label-sm"
+                            className="rounded-inner bg-tile px-1.5 py-0.5 text-text-1 type-label-sm"
                           >
                             {stage.label}
                           </span>
@@ -403,18 +400,20 @@ export function TemplatesDesignPage({
                       </span>
                     ) : null}
                   </div>
-                  <p className="mt-3 text-muted-foreground type-label-sm">
-                    {template.deliverables.length} deliverables ·{" "}
-                    {template.checklistItems.length} checklist items
+                  <p className="mt-2 flex gap-3 text-text-3 type-label-sm">
+                    <span>{template.deliverables.length} deliverables</span>
+                    <span>
+                      {template.checklistItems.length} checklist items
+                    </span>
                   </p>
                 </div>
               </div>
 
-              <footer className="mt-5 flex flex-wrap items-center justify-between gap-2">
+              <footer className="flex flex-wrap items-center gap-2 lg:justify-end">
                 <OwnedButton
                   type="button"
-                  variant="link"
-                  className="h-auto p-0"
+                  variant="outline"
+                  size="sm"
                   onClick={() => onUseTemplate(template)}
                   disabled={
                     template.archived ||
@@ -422,7 +421,6 @@ export function TemplatesDesignPage({
                   }
                 >
                   Use template
-                  <Plus aria-hidden="true" />
                 </OwnedButton>
                 <OwnedButton
                   type="button"
