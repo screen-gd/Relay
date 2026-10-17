@@ -8,8 +8,6 @@ import { readFileSync, writeFileSync, readdirSync, statSync } from "node:fs";
 import { join } from "node:path";
 import ts from "typescript";
 
-const borderTokens =
-  /^(border|border-(line-row|border|strong|dashed|input)|border-y|divide-y|divide-(line-row|border))$/;
 const fillTokens =
   /^(bg-(well|card|muted(\/\d+)?|muted\/20|page)|bg-well\/\d+)$/;
 const radiusTokens = /^rounded(-(sm|md|lg|xl|2xl|\[[0-9]+px\]))?$/;

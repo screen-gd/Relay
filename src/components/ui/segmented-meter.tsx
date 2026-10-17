@@ -6,9 +6,8 @@ type SegmentedMeterProps = {
   /** Number of cells. Wider meters read better with more cells. */
   segments?: number;
   /**
-   * `scale` shades filled cells from danger through warning to success by
-   * position, so low values read as early and high values as nearly done.
-   * `accent` fills every cell with the brand accent.
+   * `scale` fills cells with ink; progress is not trouble, so no cell is
+   * warm. `accent` fills every cell with the primary color.
    */
   tone?: "scale" | "accent";
   /** Accessible name. Without one the meter is decorative and hidden. */
@@ -18,10 +17,8 @@ type SegmentedMeterProps = {
 
 function cellColor(index: number, segments: number, tone: "scale" | "accent") {
   if (tone === "accent") return "var(--primary)";
-  const position = (index + 1) / segments;
-  if (position <= 0.35) return "var(--status-danger)";
-  if (position <= 0.65) return "var(--status-warning)";
-  return "var(--status-success)";
+  // Later cells sit slightly stronger so a full meter still reads as a row.
+  return (index + 1) / segments > 0.5 ? "var(--ink)" : "var(--text-2)";
 }
 
 /** A row of small cells filled up to `value`, used for progress at a glance. */
@@ -56,7 +53,7 @@ export function SegmentedMeter({
             backgroundColor:
               index < filled
                 ? cellColor(index, segments, tone)
-                : "var(--app-strong-border)",
+                : "var(--surface-tile)",
           }}
         />
       ))}

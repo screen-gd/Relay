@@ -32,7 +32,7 @@ export function WelcomeChoiceDialog({
       >
         <RelayBrand compact />
         <OwnedDialogHeader>
-          <OwnedDialogTitle className="sm:text-[28px] type-heading-lg">
+          <OwnedDialogTitle className="type-heading">
             Choose how to use Relay
           </OwnedDialogTitle>
           <OwnedDialogDescription>

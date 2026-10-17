@@ -13,8 +13,8 @@
     "build": "vite build",
     "preview": "vite preview",
     "cf-typegen": "wrangler types --env-interface CloudflareEnv cloudflare-env.d.ts",
-    "check": "pnpm check:mui-allowlist && pnpm lint && pnpm --dir website lint && pnpm build && pnpm audit --prod",
-    "check:full": "pnpm check:mui-allowlist && pnpm lint && pnpm --dir website lint && pnpm build && pnpm test:unit && pnpm test:convex && pnpm test:stripe-csp && pnpm verify:browser && pnpm audit --prod",
+    "check": "pnpm check:mui-allowlist && pnpm check:design && pnpm lint && pnpm --dir website lint && pnpm build && pnpm audit --prod",
+    "check:full": "pnpm check:mui-allowlist && pnpm check:design:self-test && pnpm check:design && pnpm lint && pnpm --dir website lint && pnpm build && pnpm test:unit && pnpm test:convex && pnpm test:stripe-csp && pnpm verify:browser && pnpm audit --prod",
     "start": "node .output/server/index.mjs",
     "lint": "tsc --noEmit",
     "test:unit": "vitest run --config vitest.unit.config.mts",
@@ -34,7 +34,9 @@
     "prepare": "husky",
     "dev:web": "vite dev",
     "build:cloudflare": "vite build --mode cloudflare",
-    "deploy:cloudflare": "pnpm build:cloudflare && wrangler deploy"
+    "deploy:cloudflare": "pnpm build:cloudflare && wrangler deploy",
+    "check:design": "node scripts/design/check-design.mjs",
+    "check:design:self-test": "node scripts/design/check-design.mjs --self-test"
   },
   "dependencies": {
     "@ai-sdk/google": "^4.0.93",

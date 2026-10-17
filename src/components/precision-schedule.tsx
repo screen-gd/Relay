@@ -983,7 +983,7 @@ export function PrecisionTimeline({
                           onClick={() => onViewProject(project)}
                         >
                           <span
-                            className="absolute -left-[31px] top-1/2 grid size-3 -translate-y-1/2 place-items-center rounded-full border-2 border-[var(--app-panel)]"
+                            className="absolute -left-[31px] top-1/2 grid size-3 -translate-y-1/2 place-items-center rounded-full border-2 border-[var(--surface-card)]"
                             style={{
                               background: projectStatusColor(project.status),
                             }}
