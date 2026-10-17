@@ -65,7 +65,6 @@ export function AiLockedNotice({
           type="button"
           size="sm"
           variant="outline"
-          className="h-7"
           onClick={() => signIn()}
         >
           Sign in to use AI

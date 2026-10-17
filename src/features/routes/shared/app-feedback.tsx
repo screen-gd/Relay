@@ -148,7 +148,6 @@ export function AuthLoadingGate({
           <OwnedButton
             ref={retryRef}
             type="button"
-            className="min-h-11"
             onClick={() => window.location.reload()}
           >
             Retry
@@ -156,7 +155,6 @@ export function AuthLoadingGate({
           <OwnedButton
             type="button"
             variant="outline"
-            className="min-h-11"
             onClick={onContinueLocally}
           >
             Use Local Mode

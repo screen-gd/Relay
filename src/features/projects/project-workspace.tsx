@@ -548,7 +548,7 @@ export function ProjectWorkspace({
                     <ContentSection
                       title="External links"
                       metadata={
-                        <OwnedBadge variant="secondary" className="rounded-sm">
+                        <OwnedBadge variant="secondary">
                           {configuredLinks.length}
                         </OwnedBadge>
                       }
@@ -663,7 +663,7 @@ function ProjectStatusBadge({ status }: { status: string }) {
     <OwnedBadge
       variant="outline"
       className={cn(
-        "rounded-sm",
+        "",
         projectStatusTone(isDoneStatus(status) ? "Delivered" : status)
       )}
     >

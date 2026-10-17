@@ -32,7 +32,7 @@ export function AiToolsMenu() {
           size="icon"
           title="AI tools"
           aria-label="AI tools"
-          className="text-text-1 transition-colors data-[state=open]:bg-selected"
+          className="text-text-1 data-[state=open]:bg-selected"
         >
           <Sparkles aria-hidden="true" className="size-[18px]" />
         </Button>

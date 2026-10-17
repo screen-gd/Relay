@@ -219,7 +219,7 @@ export function ChangeOrderDraft({
         Extra work hours
         <Input
           inputMode="decimal"
-          className="h-8 w-20"
+          className="w-20"
           placeholder="0"
           value={hoursText}
           disabled={running}

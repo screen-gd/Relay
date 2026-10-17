@@ -128,7 +128,7 @@ export function FeedbackButton() {
           size="icon"
           title="Send feedback"
           aria-label="Send feedback"
-          className="text-text-1 transition-colors data-[state=open]:bg-selected"
+          className="text-text-1 data-[state=open]:bg-selected"
         >
           <MessageSquarePlus aria-hidden="true" className="size-[18px]" />
         </OwnedButton>

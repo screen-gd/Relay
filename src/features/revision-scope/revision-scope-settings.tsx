@@ -102,7 +102,7 @@ function ScopeForm({
           {label}
           <Input
             inputMode={inputMode}
-            className="h-8 w-28"
+            className="w-28"
             value={value}
             disabled={disabled}
             placeholder="None"
@@ -129,7 +129,7 @@ function ScopeForm({
               {template.name}
               <Input
                 inputMode="numeric"
-                className="h-8 w-28"
+                className="w-28"
                 value={templateRounds[template.id] ?? ""}
                 disabled={disabled}
                 placeholder="Default"

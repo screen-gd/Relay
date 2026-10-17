@@ -244,11 +244,9 @@ export function ProjectOutputsPanel({
                         <h3 className="text-sm font-semibold">
                           {output.title}
                         </h3>
-                        <Badge variant="secondary" className="rounded-sm">
-                          {output.category}
-                        </Badge>
+                        <Badge variant="secondary">{output.category}</Badge>
                         {canEdit ? null : (
-                          <Badge variant="secondary" className="rounded-sm">
+                          <Badge variant="secondary">
                             {reviewStates.find(
                               ({ value }) => value === output.reviewState
                             )?.label ?? output.reviewState}

@@ -38,10 +38,7 @@ export function PageActions({ primary, more, className }: PageActionsProps) {
       {more?.length ? (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button
-              variant="outline"
-              className="h-9 shrink-0 gap-2 rounded-lg !bg-well"
-            >
+            <Button variant="outline" className="shrink-0">
               <MoreHorizontal className="size-3.5" />
               More
             </Button>

@@ -231,7 +231,7 @@ export function ResourcesDesignPage({
                 value={resourceSearch}
                 onChange={(event) => setResourceSearch(event.target.value)}
                 placeholder="Search resources, links, or projects..."
-                className="h-10 bg-page pl-9 shadow-none"
+                className="pl-9"
               />
             </div>
           }
@@ -242,7 +242,7 @@ export function ResourcesDesignPage({
             >
               <OwnedSelectTrigger
                 aria-label="Filter resources by category"
-                className="h-10 w-full sm:w-44"
+                className="w-full sm:w-44"
               >
                 <OwnedSelectValue placeholder="All categories" />
               </OwnedSelectTrigger>
@@ -268,7 +268,7 @@ export function ResourcesDesignPage({
           metadata={
             <OwnedBadge
               variant="secondary"
-              className="self-start rounded-md bg-primary/15 text-primary sm:self-auto"
+              className="self-start bg-primary/15 text-primary sm:self-auto"
             >
               {resources.length} saved
             </OwnedBadge>
@@ -294,10 +294,7 @@ export function ResourcesDesignPage({
                         <h3 className="truncate text-sm font-semibold">
                           {resource.title}
                         </h3>
-                        <OwnedBadge
-                          variant="secondary"
-                          className="rounded-md text-[11px] font-medium"
-                        >
+                        <OwnedBadge variant="secondary">
                           {resource.category}
                         </OwnedBadge>
                       </div>

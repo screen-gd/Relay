@@ -185,10 +185,7 @@ export function OrganizationProfilePage({
                           {member.email || "No email saved"}
                         </span>
                       </span>
-                      <OwnedBadge
-                        variant="outline"
-                        className="rounded-md bg-card"
-                      >
+                      <OwnedBadge variant="outline" className="bg-card">
                         {member.role}
                       </OwnedBadge>
                     </li>
@@ -304,7 +301,6 @@ function OrganizationStatusBadge({ status }: { status: string }) {
               ? "secondary"
               : "outline"
       }
-      className="rounded-md px-2 py-1 font-semibold"
     >
       {status}
     </OwnedBadge>
@@ -383,12 +379,7 @@ export function ProfileDesignPage({
     <div className="mx-auto min-h-dvh w-full max-w-[1480px] bg-background px-4 py-5 text-foreground md:px-8 md:py-7 xl:px-10">
       <header className="flex flex-col items-stretch justify-between gap-4 border-b border-border pb-5 sm:flex-row sm:items-center">
         <RelayBrand compact subtitle="Video editing tracker" />
-        <OwnedButton
-          type="button"
-          variant="outline"
-          className="min-h-10"
-          onClick={shareProfile}
-        >
+        <OwnedButton type="button" variant="outline" onClick={shareProfile}>
           <Share2 aria-hidden="true" />
           {shareCopied ? "Published + Copied" : "Share Profile"}
         </OwnedButton>
@@ -605,7 +596,6 @@ export function ProfileEditPage({
                 <OwnedButton
                   type="button"
                   variant="outline"
-                  className="min-h-10"
                   onClick={() => fileInputRef.current?.click()}
                 >
                   <Upload aria-hidden="true" />
@@ -810,14 +800,14 @@ export function ProfileEditPage({
                   onValueChange={(value) => {
                     if (value) setSettings({ ...settings, weekStart: value });
                   }}
-                  className="grid h-auto w-full grid-cols-4 gap-2 rounded-none bg-transparent p-0 sm:grid-cols-7"
+                  className="grid h-auto w-full grid-cols-4 gap-2 bg-transparent p-0 sm:grid-cols-7"
                 >
                   {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map(
                     (day) => (
                       <OwnedToggleGroupItem
                         key={day}
                         value={day}
-                        className="h-9 w-full min-w-0 border border-input bg-background px-2 text-xs text-foreground shadow-xs hover:bg-accent hover:text-accent-foreground data-[state=on]:border-transparent data-[state=on]:bg-primary data-[state=on]:text-primary-foreground data-[state=on]:hover:bg-primary/90 dark:data-[state=off]:bg-input/30 dark:data-[state=off]:hover:bg-input/50"
+                        className="w-full min-w-0 border border-input bg-background text-foreground hover:bg-accent hover:text-accent-foreground data-[state=on]:border-transparent data-[state=on]:bg-primary data-[state=on]:text-primary-foreground data-[state=on]:hover:bg-primary/90 dark:data-[state=off]:bg-input/30 dark:data-[state=off]:hover:bg-input/50"
                       >
                         {day}
                       </OwnedToggleGroupItem>

@@ -554,7 +554,6 @@ function SalaryPlanRow({
                       <Input
                         aria-label={`Correction note for batch ${batch.number}`}
                         placeholder="Add a note"
-                        className="h-8 text-xs"
                         maxLength={4000}
                         disabled={locked || busy === `note-${batch._id}`}
                         value={correctionNotes[batch._id] ?? ""}

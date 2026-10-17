@@ -498,7 +498,7 @@ export function ProjectFileManager({
         titleId="project-files-title"
         title="Project Files"
         metadata={
-          <OwnedBadge variant="secondary" className="rounded-sm">
+          <OwnedBadge variant="secondary">
             {files.length} {files.length === 1 ? "file" : "files"}
           </OwnedBadge>
         }
@@ -612,17 +612,11 @@ export function ProjectFileManager({
                                   <span className="truncate font-semibold">
                                     {file.title}
                                   </span>
-                                  <OwnedBadge
-                                    variant="secondary"
-                                    className="rounded-sm"
-                                  >
+                                  <OwnedBadge variant="secondary">
                                     {file.category}
                                   </OwnedBadge>
                                   {file.archived ? (
-                                    <OwnedBadge
-                                      variant="outline"
-                                      className="rounded-sm"
-                                    >
+                                    <OwnedBadge variant="outline">
                                       Archived
                                     </OwnedBadge>
                                   ) : null}
@@ -633,7 +627,6 @@ export function ProjectFileManager({
                                           ? "outline"
                                           : "default"
                                       }
-                                      className="rounded-sm"
                                     >
                                       {file.status === "draft"
                                         ? "Share when sent"
@@ -685,10 +678,7 @@ export function ProjectFileManager({
                                   </OwnedSelectContent>
                                 </OwnedSelect>
                               ) : (
-                                <OwnedBadge
-                                  variant="outline"
-                                  className="rounded-sm"
-                                >
+                                <OwnedBadge variant="outline">
                                   {approvalStatusLabel(file.status)}
                                 </OwnedBadge>
                               )}
@@ -1131,18 +1121,12 @@ export function ProjectDetailCollaborationPanel({
       actions={
         assignedMembers.length ? (
           assignedMembers.map((member) => (
-            <OwnedBadge
-              key={member.userId}
-              variant="secondary"
-              className="rounded-sm"
-            >
+            <OwnedBadge key={member.userId} variant="secondary">
               {member.name || member.email}
             </OwnedBadge>
           ))
         ) : (
-          <OwnedBadge variant="outline" className="rounded-sm">
-            Unassigned
-          </OwnedBadge>
+          <OwnedBadge variant="outline">Unassigned</OwnedBadge>
         )
       }
     >

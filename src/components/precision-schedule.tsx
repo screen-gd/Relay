@@ -408,17 +408,14 @@ export function PrecisionCalendar({
               }
               className="block"
             >
-              <TabsList
-                aria-label="Calendar view"
-                className="h-9 rounded-md bg-well p-0.5"
-              >
+              <TabsList aria-label="Calendar view" className="p-0.5">
                 {(["month", "week", "agenda"] as const).map((mode) => (
                   <TabsTrigger
                     key={mode}
                     id={`calendar-${mode}-tab`}
                     aria-controls="calendar-view-panel"
                     value={mode}
-                    className="h-8 px-3 text-xs capitalize"
+                    className="capitalize"
                   >
                     {mode}
                   </TabsTrigger>
@@ -509,10 +506,10 @@ export function PrecisionCalendar({
                                   }
                                   onClick={() => selectDay(key)}
                                   className={cn(
-                                    "h-full min-h-0 w-full min-w-0 flex-col items-stretch justify-start gap-1.5 overflow-hidden rounded-none p-2 text-left font-normal whitespace-normal focus-visible:focus-ring-inset active:translate-y-0 active:scale-100",
+                                    "h-full min-h-0 w-full min-w-0 flex-col items-stretch justify-start overflow-hidden p-2 text-left whitespace-normal focus-visible:focus-ring-inset",
                                     isSelected
-                                      ? "bg-selected hover:bg-selected dark:hover:bg-selected"
-                                      : "bg-well hover:bg-hover dark:hover:bg-hover"
+                                      ? "bg-selected hover:bg-selected"
+                                      : "hover:bg-hover"
                                   )}
                                 >
                                   <span
@@ -603,7 +600,7 @@ export function PrecisionCalendar({
                               onFocus={() => setFocusedDate(key)}
                               onKeyDown={(event) => navigateDay(event, date)}
                               onClick={() => selectDay(key)}
-                              className="h-auto justify-start gap-2 px-1 py-1 font-normal hover:bg-transparent dark:hover:bg-transparent focus-visible:focus-ring-inset active:translate-y-0 active:scale-100"
+                              className="h-auto justify-start px-1 py-1 hover:bg-transparent focus-visible:focus-ring-inset"
                             >
                               <span className="text-xs text-text-2">
                                 {formatDate(key, { weekday: "short" })}
@@ -633,7 +630,7 @@ export function PrecisionCalendar({
                                     selectDay(key);
                                     if (project) onViewProject(project);
                                   }}
-                                  className="h-auto w-full min-w-0 flex-col items-stretch gap-0.5 rounded-md px-2 py-1.5 text-left font-normal whitespace-normal hover:bg-hover dark:hover:bg-hover active:translate-y-0 active:scale-100"
+                                  className="h-auto w-full min-w-0 flex-col items-stretch gap-0.5 px-2 py-1.5 text-left whitespace-normal hover:bg-hover"
                                 >
                                   <span className="flex min-w-0 items-center gap-1.5">
                                     <span
@@ -679,7 +676,7 @@ export function PrecisionCalendar({
                         }}
                         className={cn(
                           sectionRowClassName,
-                          "h-auto w-full grid justify-start gap-3 text-left font-normal whitespace-normal dark:hover:bg-hover focus-visible:focus-ring-inset active:translate-y-0 active:scale-100 sm:grid-cols-[120px_minmax(0,1fr)_120px] sm:items-center"
+                          "h-auto w-full grid justify-start gap-3 text-left whitespace-normal focus-visible:focus-ring-inset sm:grid-cols-[120px_minmax(0,1fr)_120px] sm:items-center"
                         )}
                       >
                         <span className="text-xs font-medium text-text-2">
@@ -924,7 +921,7 @@ export function PrecisionTimeline({
                     aria-pressed={filter === option}
                     onClick={() => setFilter(option)}
                     className={cn(
-                      "h-8 gap-0 rounded-md px-3 text-xs text-text-2 hover:bg-hover hover:text-text-1 dark:hover:bg-hover active:translate-y-0 active:scale-100",
+                      "gap-0 px-3 text-text-2 hover:bg-hover hover:text-text-1",
                       filter === option && "bg-selected text-text-1"
                     )}
                   >
@@ -1027,7 +1024,7 @@ export function PrecisionTimeline({
                           <Badge
                             variant="outline"
                             className={cn(
-                              "h-5 w-fit rounded px-1.5 text-[10px]",
+                              "w-fit",
                               projectStatusTone(project.status)
                             )}
                           >

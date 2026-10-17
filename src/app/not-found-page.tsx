@@ -32,7 +32,7 @@ export function NotFound() {
               tracking work.
             </p>
           </div>
-          <Button asChild className="min-h-11 w-fit">
+          <Button asChild className="w-fit">
             <Link to="/">Back to Dashboard</Link>
           </Button>
         </div>

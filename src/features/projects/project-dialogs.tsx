@@ -266,7 +266,7 @@ function ProjectClientCombobox({
             role="combobox"
             disabled={disabled}
             aria-expanded={open}
-            className="w-full justify-between font-normal"
+            className="w-full justify-between"
           >
             <span
               className={value ? "truncate" : "truncate text-muted-foreground"}
@@ -346,7 +346,7 @@ function ProjectAssigneeCombobox({
             variant="outline"
             role="combobox"
             aria-expanded={open}
-            className="h-auto min-h-9 w-full justify-between whitespace-normal font-normal"
+            className="h-auto w-full justify-between whitespace-normal"
           >
             <span
               className={

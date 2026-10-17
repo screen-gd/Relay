@@ -57,7 +57,7 @@ export function RoundBasisSelect({
     >
       <SelectTrigger
         size="sm"
-        className="w-40 bg-transparent dark:bg-black dark:text-white"
+        className="w-40 dark:text-white"
         aria-label="Included rounds apply"
       >
         <SelectValue />
@@ -146,7 +146,7 @@ function OutputRow({
           <Input
             aria-label={`Rounds for ${output.title}`}
             inputMode="numeric"
-            className="h-8 w-20"
+            className="w-20"
             value={value}
             onChange={(event) => setValue(event.target.value)}
           />
@@ -244,7 +244,7 @@ function LimitEditor({
             ? String(summary.includedRounds)
             : "None"
         }
-        className="h-8 w-20"
+        className="w-20"
         value={value}
         onChange={(event) => setValue(event.target.value)}
       />

@@ -323,10 +323,7 @@ export function TemplatesDesignPage({
                       <h2 className="text-base font-semibold">
                         {template.name}
                       </h2>
-                      <OwnedBadge
-                        variant="secondary"
-                        className="rounded-md text-[10px] uppercase tracking-wide"
-                      >
+                      <OwnedBadge variant="secondary" className="uppercase">
                         {template.archived
                           ? "Archived"
                           : template.custom

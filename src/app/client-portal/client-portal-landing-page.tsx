@@ -27,11 +27,7 @@ export function ClientPortalLandingPage() {
           No account required. Open the unique portal link shared by your editor
           to track progress, review deliverables, and submit revision requests.
         </p>
-        <Button
-          asChild
-          variant="outline"
-          className="mt-6 border-line-row text-text-1"
-        >
+        <Button asChild variant="outline" className="mt-6 text-text-1">
           <Link to="/">
             <ArrowLeft aria-hidden="true" />
             Back to Relay

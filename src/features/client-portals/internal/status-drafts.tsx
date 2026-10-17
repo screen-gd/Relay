@@ -209,7 +209,7 @@ export function StatusDrafts({
             disabled={running}
           >
             <SelectTrigger
-              className="w-36 bg-transparent dark:bg-black dark:text-white"
+              className="w-36 dark:text-white"
               aria-label="Update channel"
             >
               <SelectValue />

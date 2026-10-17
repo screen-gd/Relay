@@ -371,7 +371,7 @@ export function PrecisionClients({
         actions={
           <PageActions
             primary={
-              <Button className="h-9" onClick={() => setAddOpen(true)}>
+              <Button onClick={() => setAddOpen(true)}>
                 <Plus /> New Client
               </Button>
             }
@@ -431,7 +431,7 @@ export function PrecisionClients({
                       onChange={(event) => setQuery(event.target.value)}
                       placeholder="Search clients..."
                       aria-label="Search clients"
-                      className="h-9 bg-well pl-8 pr-8 text-xs"
+                      className="pl-8 pr-8"
                     />
                     {query ? (
                       <Tooltip>
@@ -528,15 +528,17 @@ export function PrecisionClients({
                         </p>
                       </div>
                       <Button
+                        size="sm"
                         variant="outline"
-                        className="h-8 self-start rounded-lg text-xs"
+                        className="self-start"
                         onClick={() => setEditingClient(selected)}
                       >
                         Edit
                       </Button>
                       <Button
+                        size="sm"
                         variant="outline"
-                        className="h-8 self-start rounded-lg text-xs"
+                        className="self-start"
                         onClick={() =>
                           onUpdateClient({
                             ...selected,
@@ -547,8 +549,9 @@ export function PrecisionClients({
                         {selected.archived ? "Restore" : "Archive"}
                       </Button>
                       <Button
+                        size="sm"
                         variant="outline"
-                        className="h-8 self-start rounded-lg border-line-row bg-well text-xs"
+                        className="self-start"
                         onClick={() => void copyClientName(selected.name)}
                         aria-label={
                           copiedName === selected.name
@@ -663,7 +666,7 @@ export function PrecisionClients({
                                 key={project.id}
                                 type="button"
                                 variant="ghost"
-                                className="h-auto w-full grid justify-start gap-2 px-3 py-3 text-left font-normal whitespace-normal hover:bg-hover dark:hover:bg-hover focus-visible:z-10 focus-visible:focus-ring-inset active:translate-y-0 active:scale-100 sm:grid-cols-[minmax(0,1fr)_120px_100px_auto] sm:items-center"
+                                className="h-auto w-full grid justify-start px-3 py-3 text-left whitespace-normal hover:bg-hover focus-visible:z-10 focus-visible:focus-ring-inset sm:grid-cols-[minmax(0,1fr)_120px_100px_auto] sm:items-center"
                                 aria-label={`Open ${project.title}`}
                                 onClick={() => onViewProject(project)}
                               >
@@ -681,7 +684,7 @@ export function PrecisionClients({
                                 <Badge
                                   variant="outline"
                                   className={cn(
-                                    "h-5 w-fit rounded px-1.5 text-[10px]",
+                                    "w-fit",
                                     projectStatusTone(project.status)
                                   )}
                                 >
@@ -713,11 +716,7 @@ export function PrecisionClients({
                       title="Add your first client"
                       description="Create your first client to group projects, deliverables, and payment history."
                       action={
-                        <Button
-                          className="h-8"
-                          size="sm"
-                          onClick={() => setAddOpen(true)}
-                        >
+                        <Button size="sm" onClick={() => setAddOpen(true)}>
                           <Plus /> New Client
                         </Button>
                       }
@@ -949,10 +948,7 @@ export function PrecisionFeedback({
                   }
                   className="block"
                 >
-                  <TabsList
-                    aria-label="Filter review queue"
-                    className="h-8 rounded-md bg-well p-0.5"
-                  >
+                  <TabsList aria-label="Filter review queue" className="p-0.5">
                     {(["All", "Review", "Revision"] as const).map((option) => {
                       const count =
                         option === "All"
@@ -968,7 +964,6 @@ export function PrecisionFeedback({
                           id={`review-${option.toLowerCase()}-tab`}
                           aria-controls="review-queue-panel"
                           value={option}
-                          className="h-7 px-2.5 text-[10px]"
                         >
                           {option}{" "}
                           <span className="tabular-nums opacity-70">
@@ -1047,7 +1042,7 @@ export function PrecisionFeedback({
                           <Badge
                             variant="outline"
                             className={cn(
-                              "h-5 w-fit rounded px-1.5 text-[10px]",
+                              "w-fit",
                               projectStatusTone(project.status)
                             )}
                           >
@@ -1115,10 +1110,7 @@ export function PrecisionFeedback({
                   >
                     <Badge
                       variant="outline"
-                      className={cn(
-                        "h-5 rounded px-1.5 text-[10px]",
-                        projectStatusTone(selected.status)
-                      )}
+                      className={cn("", projectStatusTone(selected.status))}
                     >
                       {selected.status}
                     </Badge>
@@ -1494,10 +1486,7 @@ export function PrecisionReports({
                 if (nextPeriod) setPeriod(nextPeriod);
               }}
             >
-              <SelectTrigger
-                className="h-8 w-[138px] text-xs"
-                aria-label="Payout period"
-              >
+              <SelectTrigger className="w-[138px]" aria-label="Payout period">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -1514,7 +1503,6 @@ export function PrecisionReports({
                   <Button
                     variant="outline"
                     size="sm"
-                    className="h-8"
                     onClick={exportReport}
                     disabled={!canManageFinance}
                   >
@@ -1628,10 +1616,7 @@ export function PrecisionReports({
                   }
                   className="block"
                 >
-                  <TabsList
-                    aria-label="Earnings trend range"
-                    className="h-8 rounded-md bg-well p-0.5"
-                  >
+                  <TabsList aria-label="Earnings trend range" className="p-0.5">
                     {[
                       { value: "3", label: "3M" },
                       { value: "6", label: "6M" },
@@ -1642,7 +1627,6 @@ export function PrecisionReports({
                         id={`earnings-${option.value}-tab`}
                         aria-controls="earnings-trend-panel"
                         value={option.value}
-                        className="h-7 px-2.5 text-[10px]"
                       >
                         {option.label}
                       </TabsTrigger>
@@ -1962,10 +1946,7 @@ export function PrecisionReports({
                     <TableCell className="px-4">
                       <Badge
                         variant="outline"
-                        className={cn(
-                          "h-5 rounded px-1.5 text-[10px]",
-                          paymentStatusTone(batch.paid)
-                        )}
+                        className={cn("", paymentStatusTone(batch.paid))}
                       >
                         {batch.paid ? "Paid" : "Unpaid"}
                       </Badge>
@@ -1974,7 +1955,6 @@ export function PrecisionReports({
                       <Button
                         variant="ghost"
                         size="sm"
-                        className="h-7 text-xs"
                         aria-label={`${batch.paid ? "Mark unpaid" : "Mark paid"} for batch ${batch.number}`}
                         disabled={!canManageFinance || batchesLocked}
                         onClick={() =>
@@ -2010,7 +1990,6 @@ export function PrecisionReports({
               <Button
                 variant="outline"
                 size="sm"
-                className="h-8"
                 onClick={exportInvoiceDrafts}
                 disabled={!invoiceDrafts.length}
               >

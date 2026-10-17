@@ -487,16 +487,13 @@ export function TeamDesignPage({
                             <h3 className="text-sm font-semibold">
                               {member.name}
                             </h3>
-                            <OwnedBadge
-                              variant="outline"
-                              className="rounded-md text-[10px]"
-                            >
+                            <OwnedBadge variant="outline">
                               {displayTeamRole(member.role)}
                             </OwnedBadge>
                             <OwnedBadge
                               variant="secondary"
                               className={cn(
-                                "rounded-md",
+                                "",
                                 member.status === "active"
                                   ? "bg-well text-text-1"
                                   : "bg-warn-wash text-warn-text"
@@ -538,7 +535,6 @@ export function TeamDesignPage({
                                 <OwnedBadge
                                   key={permission}
                                   variant="secondary"
-                                  className="rounded-md text-[10px]"
                                 >
                                   {permission}
                                 </OwnedBadge>

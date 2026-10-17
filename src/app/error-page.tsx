@@ -38,14 +38,8 @@ export function RouteError({ error, reset }: ErrorComponentProps) {
             </p>
           </div>
           <div className="flex flex-col gap-2 sm:flex-row">
-            <Button onClick={reset} className="min-h-11">
-              Try Again
-            </Button>
-            <Button
-              asChild
-              variant="outline"
-              className="min-h-11 border-line-row text-text-1"
-            >
+            <Button onClick={reset}>Try Again</Button>
+            <Button asChild variant="outline" className="text-text-1">
               <Link to="/">Back to Dashboard</Link>
             </Button>
           </div>

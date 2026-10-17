@@ -445,7 +445,7 @@ export function SettingsDesignPage({
                         aria-current={activeSection === id ? "page" : undefined}
                         onClick={() => setActiveSection(id)}
                         className={cn(
-                          "h-9 w-full justify-start gap-3 rounded-md px-3 text-left text-[13px] font-medium",
+                          "w-full justify-start gap-3 px-3 text-left",
                           activeSection === id
                             ? "bg-selected text-foreground"
                             : "text-muted-foreground hover:text-foreground"
@@ -460,7 +460,7 @@ export function SettingsDesignPage({
                 <div className="border-t border-border p-3">
                   <OwnedButton
                     variant="ghost"
-                    className="h-9 w-full justify-start px-3 text-[13px] text-destructive"
+                    className="w-full justify-start px-3 text-destructive"
                     onClick={resetSettings}
                   >
                     Reset preferences
@@ -1030,7 +1030,7 @@ export function SettingsDesignPage({
                             if (color)
                               setSettings({ ...settings, accentColor: color });
                           }}
-                          className="h-auto gap-3 rounded-none bg-transparent p-0"
+                          className="h-auto gap-3 bg-transparent p-0"
                         >
                           {[
                             relay.color.lime,
@@ -1045,7 +1045,7 @@ export function SettingsDesignPage({
                               key={color}
                               value={color}
                               aria-label={`Use accent color ${color}`}
-                              className="size-7 cursor-pointer rounded-full border p-0 transition-shadow hover:opacity-90 data-[state=on]:border-foreground data-[state=on]:ring-2 data-[state=on]:ring-foreground data-[state=on]:ring-offset-2 data-[state=on]:ring-offset-card data-[state=off]:border-border"
+                              className="size-7 cursor-pointer border p-0 hover:opacity-90 data-[state=on]:border-foreground data-[state=on]:ring-2 data-[state=on]:ring-foreground data-[state=on]:ring-offset-2 data-[state=on]:ring-offset-card data-[state=off]:border-border"
                               style={{ backgroundColor: color }}
                             />
                           ))}

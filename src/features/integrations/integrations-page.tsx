@@ -213,7 +213,7 @@ export function IntegrationsDesignPage({
                 value={integrationSearch}
                 onChange={(event) => setIntegrationSearch(event.target.value)}
                 placeholder="Search services and project links..."
-                className="h-10 bg-page pl-9 shadow-none"
+                className="pl-9"
               />
             </div>
           }
@@ -224,7 +224,7 @@ export function IntegrationsDesignPage({
             >
               <OwnedSelectTrigger
                 aria-label="Filter integrations"
-                className="h-10 w-full sm:w-40"
+                className="w-full sm:w-40"
               >
                 <OwnedSelectValue />
               </OwnedSelectTrigger>

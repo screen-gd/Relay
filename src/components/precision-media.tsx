@@ -248,7 +248,7 @@ export function PrecisionMedia({
                               onChange={(event) => setQuery(event.target.value)}
                               placeholder="Search packages..."
                               aria-label="Search media packages"
-                              className="h-9 bg-page pl-8 text-xs transition-colors"
+                              className="pl-8"
                             />
                           </div>
                           <div
@@ -276,7 +276,7 @@ export function PrecisionMedia({
                                   variant="ghost"
                                   size="icon-sm"
                                   className={cn(
-                                    "relative overflow-hidden text-text-2 transition-colors active:scale-[0.96]",
+                                    "relative overflow-hidden text-text-2 active:scale-[0.96]",
                                     active && "text-text-1"
                                   )}
                                   onClick={() => setMode(view.id)}
@@ -438,7 +438,7 @@ export function PrecisionMedia({
                                           <Badge
                                             variant="outline"
                                             className={cn(
-                                              "relative z-10 h-5 w-fit rounded px-1.5 text-[10px]",
+                                              "relative z-10 w-fit",
                                               projectStatusTone(project.status)
                                             )}
                                           >
@@ -622,7 +622,7 @@ export function PrecisionMedia({
                             <Badge
                               variant="outline"
                               className={cn(
-                                "mt-3 h-5 rounded px-1.5 text-[10px]",
+                                "mt-3",
                                 projectStatusTone(selected.status)
                               )}
                             >
@@ -643,7 +643,7 @@ export function PrecisionMedia({
                               />
                             </div>
                             <Button
-                              className="mt-5 w-full transition-transform active:scale-[0.985]"
+                              className="mt-5 w-full active:scale-[0.985]"
                               onClick={() => onViewProject(selected)}
                             >
                               Open project <ArrowRight />

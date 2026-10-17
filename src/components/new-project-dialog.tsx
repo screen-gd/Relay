@@ -111,7 +111,7 @@ function ContextMenuSelect({
           type="button"
           variant="outline"
           {...buttonProps}
-          className="w-full justify-between rounded-md border-input bg-input/30 text-left font-normal"
+          className="w-full justify-between bg-input/30 text-left"
         >
           <span
             className={

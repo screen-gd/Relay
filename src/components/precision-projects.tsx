@@ -134,7 +134,7 @@ function ProjectDropdown<T extends string>({
           variant="outline"
           aria-label={ariaLabel}
           className={cn(
-            "h-9 min-w-0 shrink-0 justify-between gap-3 overflow-hidden rounded-lg border-line-row !bg-well text-xs font-normal",
+            "min-w-0 shrink-0 justify-between gap-3 overflow-hidden",
             className
           )}
         >
@@ -361,7 +361,7 @@ function ProjectBoardCard({
             type="button"
             variant="ghost"
             className={cn(
-              "h-auto min-w-0 flex-1 touch-none flex-col items-start justify-start gap-0 rounded-none px-0 py-0 text-left font-normal whitespace-normal hover:bg-transparent hover:text-current dark:hover:bg-transparent active:translate-y-0 active:scale-100",
+              "h-auto min-w-0 flex-1 touch-none flex-col items-start justify-start gap-0 px-0 py-0 text-left whitespace-normal hover:bg-transparent hover:text-current",
               !disabled && "cursor-grab active:cursor-grabbing"
             )}
             onClick={onSelect}
@@ -621,10 +621,7 @@ export function PrecisionProjects(props: PrecisionProjectsProps) {
         cell: (info) => (
           <Badge
             variant="outline"
-            className={cn(
-              "h-5 rounded px-1.5 text-[10px] font-semibold",
-              projectStatusTone(info.getValue())
-            )}
+            className={cn("", projectStatusTone(info.getValue()))}
           >
             {info.getValue()}
           </Badge>
@@ -689,7 +686,7 @@ export function PrecisionProjects(props: PrecisionProjectsProps) {
               <Button
                 variant="ghost"
                 size="icon-sm"
-                className="!bg-well transition-transform active:scale-95"
+                className="active:scale-95"
                 aria-label={`Actions for ${row.original.title}`}
                 onClick={(event) => event.stopPropagation()}
               >
@@ -768,7 +765,6 @@ export function PrecisionProjects(props: PrecisionProjectsProps) {
               <PageActions
                 primary={
                   <Button
-                    className="h-9"
                     onClick={() => props.onNewProject(scope)}
                     disabled={
                       scope === "personal"
@@ -809,12 +805,12 @@ export function PrecisionProjects(props: PrecisionProjectsProps) {
                       }
                       placeholder="Search project, client, or note..."
                       aria-label="Search projects"
-                      className="h-9 rounded-lg border-line-row !bg-well pl-8 text-xs transition-shadow "
+                      className="pl-8"
                     />
                   </div>
                   <Button
                     variant="outline"
-                    className="h-9 shrink-0 gap-2 rounded-lg !bg-well"
+                    className="shrink-0"
                     onClick={() => setFiltersOpen(true)}
                     aria-label="Open project filters"
                   >
@@ -840,15 +836,11 @@ export function PrecisionProjects(props: PrecisionProjectsProps) {
                     }
                     className="block"
                   >
-                    <TabsList
-                      aria-label="Project view"
-                      className="h-9 rounded-lg bg-well p-0.5"
-                    >
+                    <TabsList aria-label="Project view" className="p-0.5">
                       <TabsTrigger
                         id="project-table-tab"
                         aria-controls="project-library-panel"
                         value="table"
-                        className="h-8 px-3 text-xs"
                       >
                         Table
                       </TabsTrigger>
@@ -856,7 +848,6 @@ export function PrecisionProjects(props: PrecisionProjectsProps) {
                         id="project-board-tab"
                         aria-controls="project-library-panel"
                         value="board"
-                        className="h-8 px-3 text-xs"
                       >
                         Board
                       </TabsTrigger>
@@ -871,15 +862,11 @@ export function PrecisionProjects(props: PrecisionProjectsProps) {
                     }
                     className="block"
                   >
-                    <TabsList
-                      aria-label="Project scope"
-                      className="h-9 rounded-lg bg-well p-0.5"
-                    >
+                    <TabsList aria-label="Project scope" className="p-0.5">
                       <TabsTrigger
                         id="project-personal-tab"
                         aria-controls="project-library-panel"
                         value="personal"
-                        className="h-8 px-3 text-xs"
                       >
                         My Projects{" "}
                         <span className="text-[10px]">
@@ -891,7 +878,6 @@ export function PrecisionProjects(props: PrecisionProjectsProps) {
                         aria-controls="project-library-panel"
                         value="team"
                         disabled={!hasTeam}
-                        className="h-8 px-3 text-xs"
                       >
                         Team Projects{" "}
                         <span className="text-[10px]">
@@ -1223,7 +1209,7 @@ export function PrecisionProjects(props: PrecisionProjectsProps) {
                                 data-project-title={row.original.title}
                                 aria-label={`Open ${row.original.title} project details`}
                                 className={cn(
-                                  "h-auto w-full grid grid-cols-[48px_minmax(0,1fr)_auto] justify-start items-center gap-3 px-3 py-3 text-left font-normal whitespace-normal hover:bg-hover dark:hover:bg-hover focus-visible:focus-ring-inset active:translate-y-0 active:scale-100",
+                                  "h-auto w-full grid grid-cols-[48px_minmax(0,1fr)_auto] justify-start items-center gap-3 px-3 py-3 text-left whitespace-normal hover:bg-hover focus-visible:focus-ring-inset",
                                   selected?.id === row.original.id &&
                                     "bg-selected"
                                 )}
@@ -1248,7 +1234,7 @@ export function PrecisionProjects(props: PrecisionProjectsProps) {
                                 <Badge
                                   variant="outline"
                                   className={cn(
-                                    "h-5 rounded px-1.5 text-[10px] font-semibold",
+                                    "",
                                     projectStatusTone(row.original.status)
                                   )}
                                 >
@@ -1422,7 +1408,7 @@ export function PrecisionProjects(props: PrecisionProjectsProps) {
                           {hasFilters ? (
                             <Button
                               variant="outline"
-                              className="mt-3 h-8 !bg-well active:scale-[0.98]"
+                              className="mt-3 active:scale-[0.98]"
                               size="sm"
                               onClick={() =>
                                 setTableState((state) => ({
@@ -1435,7 +1421,7 @@ export function PrecisionProjects(props: PrecisionProjectsProps) {
                             </Button>
                           ) : (
                             <Button
-                              className="mt-3 h-8 active:scale-[0.98]"
+                              className="mt-3 active:scale-[0.98]"
                               size="sm"
                               onClick={() => props.onNewProject(scope)}
                               disabled={
@@ -1563,10 +1549,7 @@ function ProjectInspector({
                 </p>
                 <Badge
                   variant="outline"
-                  className={cn(
-                    "mt-2 h-5 rounded px-1.5 text-[10px] font-semibold",
-                    projectStatusTone(project.status)
-                  )}
+                  className={cn("mt-2", projectStatusTone(project.status))}
                 >
                   {project.status}
                 </Badge>
@@ -1608,14 +1591,14 @@ function ProjectInspector({
               <div className="grid grid-cols-2 gap-2 pt-1">
                 <Button
                   variant="outline"
-                  className="h-9 !bg-well transition-transform active:scale-[0.98]"
+                  className="active:scale-[0.98]"
                   disabled={!canEdit && Boolean(project.teamId)}
                   onClick={() => onEdit(project)}
                 >
                   <Edit3 /> Edit
                 </Button>
                 <Button
-                  className="h-9 transition-transform active:scale-[0.98]"
+                  className="active:scale-[0.98]"
                   onClick={() => onOpen(project)}
                 >
                   Open <ArrowRight />

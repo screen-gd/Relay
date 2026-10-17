@@ -217,12 +217,10 @@ function DashboardDropdown<T extends string>({
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button
+          size="sm"
           variant="outline"
           aria-label={ariaLabel}
-          className={cn(
-            "h-8 w-full justify-between rounded-lg border-line-row bg-page px-3 text-[11px] shadow-none",
-            className
-          )}
+          className={cn("w-full justify-between px-3", className)}
         >
           <span className="truncate">{selectedOption?.label ?? value}</span>
           <ChevronDown
@@ -733,7 +731,7 @@ export function PrecisionDashboard(props: DashboardProps) {
                 onChange={(event) => props.setQuery(event.target.value)}
                 placeholder="Search projects"
                 aria-label="Search dashboard projects"
-                className="h-9 rounded-lg border-line-row bg-well pl-9 text-xs shadow-none focus-visible:border-primary"
+                className="pl-9"
               />
             </div>
           }
@@ -741,7 +739,7 @@ export function PrecisionDashboard(props: DashboardProps) {
             <>
               <Button
                 variant="outline"
-                className="h-9 rounded-lg border-line-row bg-well px-3 text-[11px] shadow-none"
+                className="px-3"
                 aria-expanded={showFilters}
                 aria-controls="dashboard-filters"
                 onClick={() => setShowFilters((value) => !value)}
@@ -761,7 +759,7 @@ export function PrecisionDashboard(props: DashboardProps) {
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="h-9 px-2 text-[11px] text-text-2"
+                  className="px-2 text-text-2"
                   onClick={clearFilters}
                 >
                   Clear all
@@ -928,7 +926,7 @@ export function PrecisionDashboard(props: DashboardProps) {
                         type="button"
                         variant="outline"
                         size="sm"
-                        className="h-7 px-2 text-[11px] shadow-none"
+                        className="px-2"
                         disabled={!pendingSalaryBatch}
                         aria-label={
                           pendingSalaryBatch
@@ -991,7 +989,7 @@ export function PrecisionDashboard(props: DashboardProps) {
                         variant="ghost"
                         className={cn(
                           sectionRowClassName,
-                          "h-auto min-h-9 w-full grid gap-3 whitespace-normal px-3 py-2 text-left font-normal hover:bg-hover dark:hover:bg-hover focus-visible:focus-ring-inset active:translate-y-0 active:scale-100 sm:grid-cols-[minmax(180px,0.8fr)_minmax(220px,1.4fr)_auto] sm:items-center",
+                          "h-auto w-full grid gap-3 whitespace-normal px-3 py-2 text-left hover:bg-hover focus-visible:focus-ring-inset sm:grid-cols-[minmax(180px,0.8fr)_minmax(220px,1.4fr)_auto] sm:items-center",
                           selected?.id === project.id && "bg-selected"
                         )}
                         onClick={() => {
@@ -1071,7 +1069,7 @@ export function PrecisionDashboard(props: DashboardProps) {
                         <Button
                           variant="ghost"
                           size="sm"
-                          className="h-8 px-2 text-xs text-text-2 hover:text-text-1"
+                          className="px-2 text-text-2 hover:text-text-1"
                           onClick={() => setShowCompleted((value) => !value)}
                           aria-pressed={showCompleted}
                         >
@@ -1083,7 +1081,7 @@ export function PrecisionDashboard(props: DashboardProps) {
                           asChild
                           variant="ghost"
                           size="sm"
-                          className="h-8 px-2 text-xs text-text-2 hover:text-text-1"
+                          className="px-2 text-text-2 hover:text-text-1"
                         >
                           <Link to="/projects">
                             View all projects
@@ -1206,7 +1204,7 @@ export function PrecisionDashboard(props: DashboardProps) {
                                             type="button"
                                             variant="ghost"
                                             size="sm"
-                                            className="group h-auto gap-1 rounded-sm px-0 py-1 text-left text-xs hover:bg-transparent hover:text-text-1 dark:hover:bg-transparent active:translate-y-0 active:scale-100"
+                                            className="group h-auto px-0 py-1 text-left hover:bg-transparent hover:text-text-1"
                                             onClick={header.column.getToggleSortingHandler()}
                                           >
                                             {flexRender(
@@ -1337,7 +1335,7 @@ export function PrecisionDashboard(props: DashboardProps) {
                               {activeFilterCount || props.query ? (
                                 <Button
                                   variant="outline"
-                                  className="h-9 rounded-lg shadow-none transition-transform active:scale-[0.98]"
+                                  className="active:scale-[0.98]"
                                   size="sm"
                                   onClick={clearFilters}
                                 >
@@ -1345,7 +1343,7 @@ export function PrecisionDashboard(props: DashboardProps) {
                                 </Button>
                               ) : null}
                               <Button
-                                className="h-9 rounded-lg bg-primary text-primary-foreground shadow-none hover:bg-primary/90"
+                                className="bg-primary text-primary-foreground hover:bg-primary/90"
                                 size="sm"
                                 onClick={props.onNewProject}
                                 disabled={!props.canCreateProjects}
@@ -1403,7 +1401,6 @@ export function PrecisionDashboard(props: DashboardProps) {
                       id="activity-recent-tab"
                       aria-controls="activity-panel"
                       value="recent"
-                      className="text-xs"
                     >
                       Recent
                     </TabsTrigger>
@@ -1411,7 +1408,6 @@ export function PrecisionDashboard(props: DashboardProps) {
                       id="activity-team-tab"
                       aria-controls="activity-panel"
                       value="team"
-                      className="text-xs"
                     >
                       Team
                     </TabsTrigger>
@@ -1710,7 +1706,8 @@ function ProjectInspector({
               </p>
             </div>
             <Button
-              className="h-8 rounded-md bg-primary px-3 text-[11px] font-semibold text-primary-foreground shadow-none hover:bg-primary/90"
+              size="sm"
+              className="bg-primary px-3 text-primary-foreground hover:bg-primary/90"
               onClick={() => onOpen(project)}
               aria-label={`Open project ${project.title}`}
             >

@@ -411,11 +411,7 @@ export function ProjectPortalPanel({
       <ContentSection
         titleId="project-portal-title"
         title="Client Portal"
-        metadata={
-          <Badge variant="secondary" className="rounded-sm">
-            {statusLabel}
-          </Badge>
-        }
+        metadata={<Badge variant="secondary">{statusLabel}</Badge>}
         footer={
           canEdit ? (
             <>
@@ -455,7 +451,7 @@ export function ProjectPortalPanel({
                       readOnly
                       value={portalUrl}
                       aria-label="Client Portal link"
-                      className="min-w-0 flex-1 font-mono text-xs"
+                      className="min-w-0 flex-1 font-mono"
                     />
                     <Button
                       type="button"

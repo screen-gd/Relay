@@ -391,8 +391,8 @@ function Choice({
       aria-checked={selected}
       onClick={onSelect}
       className={cn(
-        "h-auto w-full justify-start items-start gap-3 rounded-md border px-4 py-3 text-left font-normal whitespace-normal hover:bg-transparent hover:text-current dark:hover:bg-transparent active:translate-y-0 active:scale-100",
-        selected ? "border-ink" : "border-line-row hover:border-text-2"
+        "h-auto w-full justify-start items-start gap-3 px-4 py-3 text-left whitespace-normal hover:bg-transparent hover:text-current",
+        selected ? "border-ink" : "hover:border-text-2"
       )}
     >
       <span

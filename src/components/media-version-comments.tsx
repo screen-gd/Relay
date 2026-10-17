@@ -71,7 +71,7 @@ function CommentRow({
           {comment.authorName}
         </div>
         <div className="flex items-center gap-2">
-          <Badge variant="secondary" className="rounded-sm">
+          <Badge variant="secondary">
             {comment.resolved ? "Resolved" : "Open"}
           </Badge>
           <time

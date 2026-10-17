@@ -149,7 +149,7 @@ export function PublicProfilePage({ slug }: { slug: string }) {
                     </time>
                     <div>
                       <div className="mb-1.5 flex items-center justify-between">
-                        <Badge className="rounded-md border-transparent bg-well text-[11px] font-bold text-text-1">
+                        <Badge className="bg-well text-text-1">
                           {project.status}
                         </Badge>
                         <span className="text-xs font-bold">{progress}%</span>

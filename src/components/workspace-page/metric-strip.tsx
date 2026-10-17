@@ -1,19 +1,22 @@
 import type { ComponentPropsWithoutRef, ReactNode } from "react";
 
-import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 
 const columnClasses = {
-  2: "sm:grid-cols-2",
-  3: "sm:grid-cols-3",
-  4: "sm:grid-cols-2 xl:grid-cols-4",
-  5: "sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5",
+  2: "grid-cols-2",
+  3: "grid-cols-2 sm:grid-cols-3",
+  4: "grid-cols-2 xl:grid-cols-4",
+  5: "grid-cols-2 sm:grid-cols-3 xl:grid-cols-5",
 } as const;
 
 type MetricStripProps = ComponentPropsWithoutRef<"dl"> & {
   columns?: keyof typeof columnClasses;
 };
 
+/**
+ * Several numbers as one strip: a single grey field split by column rules,
+ * never a row of equal cards, so the numbers read as one fact set.
+ */
 export function MetricStrip({
   columns = 4,
   className,
@@ -29,7 +32,7 @@ export function MetricStrip({
         (props["aria-label"] || props["aria-labelledby"] ? "region" : undefined)
       }
       className={cn(
-        "grid min-w-0 gap-2 text-card-foreground",
+        "grid min-w-0 gap-px overflow-hidden rounded-frame bg-line-row shadow-[0_0_0_1px_var(--line-row)]",
         columnClasses[columns],
         className
       )}
@@ -44,42 +47,37 @@ type MetricItemProps = Omit<ComponentPropsWithoutRef<"div">, "title"> & {
   label: ReactNode;
   value: ReactNode;
   supporting?: ReactNode;
+  /** Kept for callers; Quartz shows numbers without icon tiles. */
   icon?: ReactNode;
   action?: ReactNode;
 };
 
+/** One number in a MetricStrip: its label, the value, and one quiet line. */
 export function MetricItem({
   label,
   value,
   supporting,
-  icon,
   action,
   className,
+  icon: _icon,
   ...props
 }: MetricItemProps) {
   return (
-    <Card
+    <div
       data-slot="metric-item"
-      className={cn("min-w-0 px-4 py-3", className)}
+      className={cn("min-w-0 bg-page px-4 py-3", className)}
       {...props}
     >
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <dt className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
-            {icon}
-            {label}
-          </dt>
-          <dd className="mt-1.5 text-xl font-semibold leading-none tracking-[-0.02em] text-foreground tabular-nums">
-            {value}
-          </dd>
+          <dt className="type-label-sm text-text-2">{label}</dt>
+          <dd className="mt-1 type-heading-sm text-text-1 data">{value}</dd>
         </div>
         {action}
       </div>
       {supporting ? (
-        <div className="mt-1.5 text-xs leading-4 text-muted-foreground">
-          {supporting}
-        </div>
+        <div className="mt-1 type-label-sm text-text-3">{supporting}</div>
       ) : null}
-    </Card>
+    </div>
   );
 }

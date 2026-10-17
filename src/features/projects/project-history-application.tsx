@@ -98,7 +98,6 @@ export function ProjectHistoryApplication() {
         actions={
           <Button
             variant="outline"
-            className="h-9"
             onClick={() => void navigate({ to: "/projects" })}
           >
             Projects
@@ -130,7 +129,6 @@ export function ProjectHistoryApplication() {
               cloud && history.status !== "Exhausted" ? (
                 <Button
                   variant="outline"
-                  className="h-9"
                   disabled={history.status !== "CanLoadMore"}
                   onClick={() => history.loadMore(PAGE_SIZE)}
                 >

@@ -141,7 +141,7 @@ export function TeamChatPage() {
                       value={message}
                       rows={2}
                       {...chatInputProps}
-                      className="max-h-28 min-h-10 flex-1 bg-background"
+                      className="max-h-28 flex-1"
                       onChange={(event) => {
                         setMessage(event.target.value);
                         if (chatError) setChatError("");

@@ -533,7 +533,6 @@ export function ClientPortalView({ token }: { token: string }) {
             autoComplete="current-password"
             autoFocus
             aria-invalid={Boolean(pinError)}
-            className="bg-background"
           />
           <p
             className={cn(
