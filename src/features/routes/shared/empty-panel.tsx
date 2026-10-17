@@ -1,12 +1,15 @@
 "use client";
 
-import { emptyStateAssetFor, emptyStateAssets } from "@/app/brand-assets";
-import { headingFont } from "./route-theme";
+import type { emptyStateAssets } from "@/app/brand-assets";
 
+/**
+ * An empty region: a title, one line on why, and the action that fills it,
+ * at the top-left where content would start. Quartz empty states carry no
+ * art, so `assetKey` is accepted for callers and not drawn.
+ */
 export function EmptyPanel({
   title,
   body,
-  assetKey,
   action,
 }: {
   title: string;
@@ -14,24 +17,11 @@ export function EmptyPanel({
   assetKey?: keyof typeof emptyStateAssets;
   action?: React.ReactNode;
 }) {
-  const inferredAsset = emptyStateAssets[emptyStateAssetFor(title)];
-  const asset = assetKey ? emptyStateAssets[assetKey] : inferredAsset;
   return (
-    <div className="grid justify-items-center px-4 py-8 text-center md:py-10">
-      <img
-        src={asset}
-        alt=""
-        aria-hidden="true"
-        className="mb-4 h-36 w-44 object-contain drop-shadow-[0_12px_24px_rgba(0,8,12,0.16)] sm:w-[216px]"
-      />
-      <h3
-        className="text-text-1 type-heading-xs"
-        style={{ fontFamily: headingFont }}
-      >
-        {title}
-      </h3>
-      <p className="mt-2 max-w-[440px] text-text-2 type-body-sm">{body}</p>
-      {action ? <div className="mt-4">{action}</div> : null}
+    <div className="grid justify-items-start gap-1 px-4 py-5 text-start">
+      <h3 className="text-text-1 type-label">{title}</h3>
+      <p className="max-w-(--measure-short) text-text-2 type-body-sm">{body}</p>
+      {action ? <div className="mt-2">{action}</div> : null}
     </div>
   );
 }

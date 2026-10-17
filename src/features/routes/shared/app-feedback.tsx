@@ -6,13 +6,6 @@ import { useHydratedReducedMotion } from "@/lib/motion";
 import { Button as OwnedButton } from "@/components/ui/button";
 import { X } from "@/components/icons";
 import type { ToastState } from "./route-types";
-import {
-  accent,
-  activeBg,
-  border,
-  successColor,
-  warningColor,
-} from "./route-theme";
 
 export function AppToast({
   toast,
@@ -22,20 +15,8 @@ export function AppToast({
   onClose: () => void;
 }) {
   const reduceMotion = useHydratedReducedMotion();
-  const palette =
-    toast?.tone === "warning"
-      ? {
-          bg: "var(--app-warning-bg, rgba(245,166,35,0.14))",
-          fg: warningColor,
-          border,
-        }
-      : toast?.tone === "info"
-        ? { bg: activeBg, fg: accent, border }
-        : {
-            bg: "var(--app-success-bg, rgba(35,181,142,0.14))",
-            fg: successColor,
-            border,
-          };
+  // Quartz toasts are the raised surface; only a warning is warm.
+  const warning = toast?.tone === "warning";
 
   return (
     <AnimatePresence>
@@ -55,22 +36,24 @@ export function AppToast({
         >
           <div
             role="status"
-            className="flex max-w-[360px] items-center gap-3 rounded-md border px-3 py-2.5 shadow-overlay"
-            style={{
-              backgroundColor: palette.bg,
-              borderColor: palette.border,
-              color: palette.fg,
-            }}
+            className="flex max-w-[360px] items-center gap-3 rounded-frame bg-raised py-2 ps-3 pe-1.5 text-text-1 shadow-overlay"
           >
-            <p className="min-w-0 flex-1 type-label">{toast.message}</p>
+            <p
+              className={
+                warning
+                  ? "min-w-0 flex-1 text-warn-text type-label"
+                  : "min-w-0 flex-1 type-label"
+              }
+            >
+              {toast.message}
+            </p>
             <OwnedButton
               type="button"
               variant="ghost"
               size="icon-sm"
               aria-label="Dismiss notification"
               onClick={onClose}
-              className="shrink-0 hover:bg-current/10"
-              style={{ color: palette.fg }}
+              className="shrink-0"
             >
               <X aria-hidden="true" className="size-4" />
             </OwnedButton>

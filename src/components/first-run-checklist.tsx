@@ -7,7 +7,6 @@ import {
   Sparkles,
 } from "@/components/icons";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
 import { useData } from "@/lib/data-context";
 
 export function FirstRunChecklist({
@@ -68,12 +67,8 @@ export function FirstRunChecklist({
       className="mx-auto max-w-5xl px-4 py-8 sm:px-6 sm:py-12"
       aria-labelledby="first-run-title"
     >
-      <Card className="p-5 shadow-none sm:p-8">
-        <p className="text-text-1 type-label-sm">Your first production</p>
-        <h2
-          id="first-run-title"
-          className="mt-2 max-w-2xl sm:text-3xl type-heading-lg"
-        >
+      <div>
+        <h2 id="first-run-title" className="max-w-2xl type-heading">
           {canLoadSample
             ? "See Relay filled with a sample production"
             : "Turn one active edit into a clear production plan"}
@@ -85,43 +80,34 @@ export function FirstRunChecklist({
         </p>
         <div className="mt-6 flex flex-wrap items-center gap-3">
           {canLoadSample ? (
-            <Button className="min-h-12 px-5" onClick={loadSample}>
-              Load sample data
-            </Button>
+            <Button onClick={loadSample}>Load sample data</Button>
           ) : null}
           <Button
             variant={canLoadSample ? "outline" : "default"}
-            className="min-h-12 px-5"
             onClick={onCreateProject}
           >
             {canLoadSample ? "Create a blank project" : "Create first project"}
           </Button>
         </div>
 
-        <ol className="mt-8 grid gap-3 lg:grid-cols-3">
+        <ol className="mt-8 grid overflow-hidden rounded-frame bg-well p-1 lg:grid-cols-3 lg:gap-1">
           {steps.map((step, index) => {
-            const Icon = step.icon;
             return (
               <li
                 key={step.title}
-                className="rounded-lg border border-line-row bg-well p-4"
+                className="rounded-soft bg-page p-4 shadow-[0_0_0_1px_var(--line-frame)]"
               >
-                <div className="flex items-center gap-3">
-                  <span className="grid size-9 place-items-center rounded-md bg-selected text-text-1">
-                    <Icon className="size-4" />
-                  </span>
-                  <span className="font-mono text-text-3 type-label-sm">
-                    0{index + 1}
-                  </span>
-                </div>
-                <h2 className="mt-4 type-label">{step.title}</h2>
-                <p className="mt-2 text-text-2 type-body">{step.body}</p>
+                <span className="text-text-3 type-label-sm data">
+                  Step {index + 1}
+                </span>
+                <h3 className="mt-1 type-label">{step.title}</h3>
+                <p className="mt-1 text-text-2 type-body-sm">{step.body}</p>
               </li>
             );
           })}
         </ol>
 
-        <div className="mt-5 flex flex-col gap-3 border-t border-line-row pt-5 text-text-2 sm:flex-row sm:items-center sm:justify-between type-body">
+        <div className="mt-4 flex flex-col gap-3 text-text-3 sm:flex-row sm:items-center sm:justify-between type-body-sm">
           <p className="flex items-center gap-2">
             <LockKeyhole className="size-4" />
             {mode === "local"
@@ -129,7 +115,7 @@ export function FirstRunChecklist({
               : "Account mode syncs supported workspace records."}
           </p>
         </div>
-      </Card>
+      </div>
       <p className="sr-only">
         <Check /> The checklist completes when your first project is saved.
       </p>

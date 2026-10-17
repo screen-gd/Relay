@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { trackOnboardingEvent } from "@/lib/onboarding";
 
 const barClassName =
-  "flex min-h-12 shrink-0 flex-col gap-3 border-b border-strong bg-selected px-4 py-3 text-sm sm:flex-row sm:items-center sm:justify-between";
+  "flex min-h-10 shrink-0 flex-col gap-2 bg-well px-4 py-2 shadow-[inset_0_-1px_0_var(--line-row)] type-label sm:flex-row sm:items-center sm:justify-between sm:px-6";
 
 export function SampleModeBar() {
   return (
