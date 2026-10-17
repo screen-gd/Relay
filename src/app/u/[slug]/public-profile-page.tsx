@@ -15,7 +15,7 @@ import { RelayBrand } from "@/app/relay-brand";
 import { api } from "../../../../convex/_generated/api";
 import { emptyStateAssets } from "../../brand-assets";
 
-const panelClass = "rounded-[6px] border border-line-row bg-well";
+const panelClass = "bg-well rounded-frame";
 
 export function PublicProfilePage({ slug }: { slug: string }) {
   const profile = useQuery(
@@ -46,9 +46,7 @@ export function PublicProfilePage({ slug }: { slug: string }) {
     return (
       <PublicShell>
         <section className={cn(panelClass, "mt-6 p-5 md:p-8")}>
-          <h1 className="font-[family-name:var(--font-geist-sans)] type-display">
-            Profile not found
-          </h1>
+          <h1 className="type-heading-lg">Profile not found</h1>
           <p className="mt-2 text-text-2 type-body">
             This public Relay profile has not been published or the link is
             incorrect.
@@ -134,7 +132,7 @@ export function PublicProfilePage({ slug }: { slug: string }) {
                 return (
                   <li
                     key={`${project.title}-${project.dueDate}`}
-                    className="grid items-center gap-3 rounded-[6px] border border-line-row bg-well p-3 md:grid-cols-[minmax(0,1fr)_120px_150px]"
+                    className="grid items-center gap-3 bg-well p-3 md:grid-cols-[minmax(0,1fr)_120px_150px] rounded-frame"
                   >
                     <div className="min-w-0">
                       <p className="type-heading-xs">{project.title}</p>
@@ -162,7 +160,7 @@ export function PublicProfilePage({ slug }: { slug: string }) {
               })}
             </ul>
           ) : (
-            <div className="rounded-[6px] border border-line-row bg-well p-6 text-center">
+            <div className="bg-well p-6 text-center rounded-frame">
               <img
                 src={emptyStateAssets.projects}
                 alt=""
@@ -215,7 +213,7 @@ function ProfileMetric({
   value: string;
 }) {
   return (
-    <div className="flex flex-col rounded-md border border-line-row bg-well p-3">
+    <div className="flex flex-col bg-well p-3 rounded-frame">
       <span className="text-primary [&_svg]:size-5">{icon}</span>
       <dt className="order-3 mt-1 text-text-2 type-label-sm">{label}</dt>
       <dd className="order-2 mt-2 type-heading">{value}</dd>

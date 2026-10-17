@@ -12,17 +12,13 @@ export function NotFound() {
       className="grid min-h-dvh place-items-center bg-page px-4 py-8 text-text-1"
     >
       <Card
-        className="w-full max-w-[560px] bg-well p-6 text-text-1 shadow-none md:p-8"
+        className="w-full max-w-[520px] bg-well p-6 text-text-1 md:p-8"
         aria-labelledby="not-found-heading"
       >
         <div className="space-y-4">
           <RelayBrand compact />
           <div>
-            <p className="text-text-2 type-label-sm">Relay</p>
-            <h1
-              id="not-found-heading"
-              className="mt-2 font-[family-name:var(--font-geist-sans)] type-heading-lg"
-            >
+            <h1 id="not-found-heading" className="type-heading">
               Page not found
             </h1>
             <p className="mt-2 text-text-2 type-body">

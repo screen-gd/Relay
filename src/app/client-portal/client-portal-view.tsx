@@ -584,7 +584,7 @@ function AccessState({
 }) {
   return (
     <main className="grid min-h-dvh place-items-center bg-background px-5 py-10 text-foreground">
-      <section className="w-full max-w-lg border border-border bg-card p-6 text-card-foreground sm:p-10">
+      <section className="w-full max-w-lg p-6 sm:p-10 bg-well rounded-frame">
         <RelayBrand compact />
         <div className="mt-14 flex flex-col items-center text-center">
           <span
@@ -802,7 +802,7 @@ function ActivePortal({
               ))}
             </div>
           ) : (
-            <div className="mt-6 border border-dashed border-border p-8 text-center text-muted-foreground type-body">
+            <div className="mt-6 p-8 text-center text-muted-foreground type-body bg-well rounded-frame">
               No outputs have been shared yet.
             </div>
           )}
@@ -903,7 +903,7 @@ function PublicFilesSection({
           ))}
         </div>
       ) : (
-        <p className="mt-6 border border-dashed border-border p-8 text-center text-muted-foreground type-body">
+        <p className="mt-6 p-8 text-center text-muted-foreground type-body bg-well rounded-frame">
           No files have been shared yet.
         </p>
       )}
