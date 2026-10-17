@@ -915,7 +915,7 @@ export function ProjectFileManager({
           if (!open) cancelUpload();
         }}
       >
-        <OwnedDialogContent className="max-h-[min(92dvh,760px)] overflow-y-auto border-border bg-background text-foreground sm:max-w-xl">
+        <OwnedDialogContent className="max-h-[min(92dvh,760px)] overflow-y-auto sm:max-w-xl">
           <OwnedDialogHeader>
             <OwnedDialogTitle>
               {targetFileId ? "Add File Version" : "Add Project File"}

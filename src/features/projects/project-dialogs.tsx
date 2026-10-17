@@ -109,15 +109,15 @@ export function ProjectDialog({
       }}
     >
       <OwnedDialogContent
-        className="max-h-[min(94dvh,900px)] overflow-y-auto border-border bg-background text-foreground sm:max-w-2xl"
+        className="max-h-[min(94dvh,900px)] overflow-y-auto sm:max-w-2xl"
         onCloseAutoFocus={(event) => {
           event.preventDefault();
           returnFocusRef.current?.focus();
         }}
       >
         <OwnedDialogHeader>
-          <OwnedDialogTitle className="type-heading-lg">
-            {editing ? "Edit Project" : "New Project"}
+          <OwnedDialogTitle>
+            {editing ? "Edit project" : "New project"}
           </OwnedDialogTitle>
           <OwnedDialogDescription>
             Set the schedule, ownership, and production details for this
@@ -607,10 +607,7 @@ export function DeleteProjectDialog({
         if (!open) onCancel();
       }}
     >
-      <OwnedAlertDialogContent
-        size="sm"
-        className="border-border bg-background text-foreground"
-      >
+      <OwnedAlertDialogContent size="sm">
         <OwnedAlertDialogHeader>
           <OwnedAlertDialogTitle>Delete project?</OwnedAlertDialogTitle>
           <OwnedAlertDialogDescription>

@@ -252,7 +252,7 @@ export function NewProjectDialog({
       }}
     >
       <DialogContent
-        className="max-h-[min(94dvh,900px)] overflow-y-auto border-border bg-background text-foreground sm:max-w-2xl"
+        className="max-h-[min(94dvh,900px)] overflow-y-auto sm:max-w-2xl"
         onCloseAutoFocus={(event) => {
           const target = returnFocusRef.current;
           if (!target?.isConnected) return;
@@ -261,7 +261,7 @@ export function NewProjectDialog({
         }}
       >
         <DialogHeader>
-          <DialogTitle className="type-heading-lg">New Project</DialogTitle>
+          <DialogTitle>New project</DialogTitle>
           <DialogDescription>
             Set the schedule, ownership, and production details for this
             project.
@@ -582,7 +582,7 @@ export function NewProjectDialog({
                   Cancel
                 </Button>
                 <Button type="submit" disabled={!canSubmit || isSubmitting}>
-                  {isSubmitting ? "Creating..." : "Create Project"}
+                  {isSubmitting ? "Creating..." : "Create project"}
                 </Button>
               </DialogFooter>
             )}

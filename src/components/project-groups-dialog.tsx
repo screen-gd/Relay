@@ -136,7 +136,7 @@ export function ProjectGroupsDialog({
         if (!next) void requestClose();
       }}
     >
-      <DialogContent className="max-h-[90dvh] overflow-y-auto border-border bg-background text-foreground sm:max-w-3xl">
+      <DialogContent className="max-h-[90dvh] overflow-y-auto sm:max-w-3xl">
         <DialogHeader>
           <DialogTitle>Project Groups</DialogTitle>
           <DialogDescription>
@@ -216,7 +216,7 @@ export function ProjectGroupsDialog({
           </div>
           <div className="grid content-start gap-4 border-l pl-5">
             <h3 className="type-label">
-              {editing ? "Edit Project Group" : "New Project Group"}
+              {editing ? "Edit project group" : "New project group"}
             </h3>
             <FieldLayout label="Name">
               <Input
