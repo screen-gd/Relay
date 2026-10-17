@@ -62,9 +62,7 @@ export function AppToast({
               color: palette.fg,
             }}
           >
-            <p className="min-w-0 flex-1 text-[13px] font-semibold">
-              {toast.message}
-            </p>
+            <p className="min-w-0 flex-1 type-label">{toast.message}</p>
             <OwnedButton
               type="button"
               variant="ghost"
@@ -121,7 +119,7 @@ export function AuthLoadingGate({
     return (
       <div
         role="status"
-        className="fixed inset-0 z-[1450] grid place-items-center bg-page text-sm text-text-2"
+        className="fixed inset-0 z-[1450] grid place-items-center bg-page text-text-2 type-body"
       >
         Loading Relay…
       </div>
@@ -135,10 +133,10 @@ export function AuthLoadingGate({
         aria-labelledby="auth-gate-title"
         className="grid max-w-md gap-4"
       >
-        <h2 id="auth-gate-title" className="text-lg font-semibold text-text-1">
+        <h2 id="auth-gate-title" className="text-text-1 type-heading-sm">
           Sign-in is unavailable
         </h2>
-        <p className="text-sm leading-6 text-text-2">
+        <p className="text-text-2 type-body">
           {clerkStatus === "error"
             ? "Relay could not start account sign-in."
             : "Account sign-in is taking too long."}{" "}

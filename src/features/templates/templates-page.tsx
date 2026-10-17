@@ -292,7 +292,7 @@ export function TemplatesDesignPage({
         {templateError && !builderOpen ? (
           <p
             role="alert"
-            className="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive"
+            className="rounded-md bg-destructive/10 px-3 py-2 text-destructive type-body"
           >
             {templateError}
           </p>
@@ -320,9 +320,7 @@ export function TemplatesDesignPage({
                 <header className="flex items-start justify-between gap-4">
                   <div className="min-w-0">
                     <div className="flex flex-wrap items-center gap-2">
-                      <h2 className="text-base font-semibold">
-                        {template.name}
-                      </h2>
+                      <h2 className="type-heading-xs">{template.name}</h2>
                       <OwnedBadge variant="secondary" className="uppercase">
                         {template.archived
                           ? "Archived"
@@ -331,7 +329,7 @@ export function TemplatesDesignPage({
                             : "Built-in"}
                       </OwnedBadge>
                     </div>
-                    <p className="mt-1 max-w-lg text-sm leading-relaxed text-muted-foreground">
+                    <p className="mt-1 max-w-lg text-muted-foreground type-body">
                       {template.description}
                     </p>
                   </div>
@@ -340,19 +338,15 @@ export function TemplatesDesignPage({
                   </span>
                 </header>
 
-                <dl className="mt-4 grid grid-cols-2 gap-3 border-y border-line-row py-3 text-xs">
+                <dl className="mt-4 grid grid-cols-2 gap-3 border-y border-line-row py-3 type-label-sm">
                   <div>
-                    <dt className="text-[10px] uppercase tracking-[0.12em] text-text-2">
-                      Project type
-                    </dt>
+                    <dt className="text-text-2 type-label-sm">Project type</dt>
                     <dd className="mt-1 font-semibold text-text-1">
                       {template.projectType}
                     </dd>
                   </div>
                   <div>
-                    <dt className="text-[10px] uppercase tracking-[0.12em] text-text-2">
-                      Setup time
-                    </dt>
+                    <dt className="text-text-2 type-label-sm">Setup time</dt>
                     <dd className="mt-1 text-foreground">
                       {template.durationDays} days
                     </dd>
@@ -361,10 +355,10 @@ export function TemplatesDesignPage({
 
                 <div className="mt-4">
                   <div className="flex items-center justify-between gap-2">
-                    <h3 className="text-xs font-semibold text-muted-foreground">
+                    <h3 className="text-muted-foreground type-label-sm">
                       Workflow preview
                     </h3>
-                    <span className="font-mono text-[10px] text-text-2">
+                    <span className="font-mono text-text-2 type-label-sm">
                       {template.workflowStages.length} stages
                     </span>
                   </div>
@@ -391,7 +385,7 @@ export function TemplatesDesignPage({
                         >
                           <span
                             role="listitem"
-                            className="rounded-md border border-line-row bg-well px-2 py-1 text-[11px] text-foreground"
+                            className="rounded-md border border-line-row bg-well px-2 py-1 text-foreground type-label-sm"
                           >
                             {stage.label}
                           </span>
@@ -404,12 +398,12 @@ export function TemplatesDesignPage({
                         </span>
                       ))}
                     {template.workflowStages.length > 4 ? (
-                      <span className="text-[11px] text-text-2">
+                      <span className="text-text-2 type-label-sm">
                         +{template.workflowStages.length - 4}
                       </span>
                     ) : null}
                   </div>
-                  <p className="mt-3 text-xs text-muted-foreground">
+                  <p className="mt-3 text-muted-foreground type-label-sm">
                     {template.deliverables.length} deliverables ·{" "}
                     {template.checklistItems.length} checklist items
                   </p>
@@ -614,7 +608,7 @@ export function TemplatesDesignPage({
             </div>
 
             {templateError ? (
-              <p role="alert" className="text-sm text-destructive">
+              <p role="alert" className="text-destructive type-body">
                 {templateError}
               </p>
             ) : null}

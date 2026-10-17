@@ -262,19 +262,19 @@ export function IntegrationsDesignPage({
                   <div className="flex min-w-0 items-center gap-3">
                     <span
                       aria-hidden="true"
-                      className="grid size-9 shrink-0 place-items-center rounded-md text-sm font-semibold text-white"
+                      className="grid size-9 shrink-0 place-items-center rounded-md text-white type-label"
                       style={{ backgroundColor: integrationColors[name] }}
                     >
                       {integrationIcons[name]}
                     </span>
                     <div className="min-w-0">
                       <div className="flex flex-wrap items-center gap-2">
-                        <h3 className="text-sm font-semibold">{name}</h3>
+                        <h3 className="type-label">{name}</h3>
                         <OwnedBadge variant={connected ? "default" : "outline"}>
                           {connected ? "Connected" : "Not connected"}
                         </OwnedBadge>
                       </div>
-                      <p className="mt-1 truncate text-xs text-muted-foreground">
+                      <p className="mt-1 truncate text-muted-foreground type-label-sm">
                         {connected
                           ? account || "Connected locally"
                           : integrationDescriptions[name]}
@@ -363,10 +363,8 @@ export function IntegrationsDesignPage({
                   className="flex flex-col justify-between gap-3 bg-well p-4 transition-colors hover:bg-hover focus-within:bg-hover md:flex-row md:items-center"
                 >
                   <div className="min-w-0">
-                    <h3 className="truncate text-sm font-semibold">
-                      {project.title}
-                    </h3>
-                    <p className="mt-1 text-xs text-muted-foreground">
+                    <h3 className="truncate type-label">{project.title}</h3>
+                    <p className="mt-1 text-muted-foreground type-label-sm">
                       {configuredIntegrationCount(project.integrationLinks)}{" "}
                       saved{" "}
                       {configuredIntegrationCount(project.integrationLinks) ===
@@ -659,19 +657,19 @@ export function IntegrationLinkManager({
               <div className="flex min-w-0 items-center gap-3">
                 <span
                   aria-hidden="true"
-                  className="grid size-9 shrink-0 place-items-center rounded-md text-sm font-semibold text-white"
+                  className="grid size-9 shrink-0 place-items-center rounded-md text-white type-label"
                   style={{ backgroundColor: service.color }}
                 >
                   {service.icon}
                 </span>
                 <div className="min-w-0">
                   <div className="flex flex-wrap items-center gap-2">
-                    <h3 className="text-sm font-semibold">{service.name}</h3>
+                    <h3 className="type-label">{service.name}</h3>
                     <OwnedBadge variant={linked ? "default" : "outline"}>
                       {integrationStatusLabel(link)}
                     </OwnedBadge>
                   </div>
-                  <p className="mt-1 max-w-xl truncate text-xs text-muted-foreground">
+                  <p className="mt-1 max-w-xl truncate text-muted-foreground type-label-sm">
                     {integrationDisplayText(link, service.description)}
                   </p>
                 </div>

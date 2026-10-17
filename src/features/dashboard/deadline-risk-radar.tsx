@@ -88,7 +88,7 @@ export function DeadlineRiskRadar({
       title="Deadline risk"
       metadata={
         radar.evaluatedOn ? (
-          <span className="text-[11px] text-foreground">
+          <span className="text-foreground type-label-sm">
             Checked {radar.evaluatedOn}
           </span>
         ) : null
@@ -130,7 +130,7 @@ export function DeadlineRiskRadar({
           {radar.findings.map((finding) => (
             <li
               key={finding._id}
-              className="grid gap-1 text-xs sm:grid-cols-[minmax(0,1fr)_auto] sm:items-baseline sm:gap-3"
+              className="grid gap-1 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-baseline sm:gap-3 type-label-sm"
             >
               <Link
                 {...sourceLink(finding)}
@@ -154,26 +154,26 @@ export function DeadlineRiskRadar({
           ))}
         </ul>
       ) : (
-        <p className="text-xs text-foreground">No deadlines at risk.</p>
+        <p className="text-foreground type-label-sm">No deadlines at risk.</p>
       )}
       {radar.truncated ? (
-        <p className="mt-2 text-xs text-foreground">
+        <p className="mt-2 text-foreground type-label-sm">
           Showing the first findings only.
         </p>
       ) : null}
       {status ? (
-        <p role="status" className="mt-3 text-xs text-foreground">
+        <p role="status" className="mt-3 text-foreground type-label-sm">
           {status}
         </p>
       ) : null}
       {error ? (
-        <p role="alert" className="mt-3 text-xs text-destructive">
+        <p role="alert" className="mt-3 text-destructive type-label-sm">
           {error}
         </p>
       ) : null}
       {digest?.status === "succeeded" && lines.length ? (
         <div className="mt-4 grid gap-2">
-          <p className="text-xs font-medium text-foreground">
+          <p className="text-foreground type-label-sm">
             AI-drafted · {digest.evaluatedOn}
             {digest.totalFindings > digest.items.length
               ? ` · first ${digest.items.length} of ${digest.totalFindings}`
@@ -183,12 +183,12 @@ export function DeadlineRiskRadar({
             {lines.map((item) => (
               <li
                 key={`${item.projectId}:${item.outputId ?? ""}`}
-                className="text-sm text-foreground"
+                className="text-foreground type-body"
               >
                 {item.line}{" "}
                 <Link
                   {...sourceLink(item)}
-                  className="text-xs underline underline-offset-4"
+                  className="underline underline-offset-4 type-label-sm"
                 >
                   Source
                 </Link>

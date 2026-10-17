@@ -91,7 +91,9 @@ export function FeedbackDialog({
             placeholder="What happened?"
             onChange={(event) => setNote(event.target.value)}
           />
-          <p className="truncate text-xs text-muted-foreground">{pageUrl}</p>
+          <p className="truncate text-muted-foreground type-label-sm">
+            {pageUrl}
+          </p>
         </div>
         <OwnedDialogFooter>
           <OwnedButton

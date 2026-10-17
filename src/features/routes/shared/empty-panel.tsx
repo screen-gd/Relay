@@ -25,14 +25,12 @@ export function EmptyPanel({
         className="mb-4 h-36 w-44 object-contain drop-shadow-[0_12px_24px_rgba(0,8,12,0.16)] sm:w-[216px]"
       />
       <h3
-        className="text-base font-semibold text-text-1"
+        className="text-text-1 type-heading-xs"
         style={{ fontFamily: headingFont }}
       >
         {title}
       </h3>
-      <p className="mt-2 max-w-[440px] text-[13px] leading-relaxed text-text-2">
-        {body}
-      </p>
+      <p className="mt-2 max-w-[440px] text-text-2 type-body-sm">{body}</p>
       {action ? <div className="mt-4">{action}</div> : null}
     </div>
   );

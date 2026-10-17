@@ -71,10 +71,10 @@ export function SubscriptionPage() {
           ) : (
             <>
               <div className="grid max-w-[620px] gap-4 p-5 md:p-6">
-                <h2 className="text-xl font-semibold text-foreground">
+                <h2 className="text-foreground type-heading">
                   Account required
                 </h2>
-                <p className="text-sm leading-6 text-muted-foreground">
+                <p className="text-muted-foreground type-body">
                   Sign in or create an account to start a Free Workspace. No
                   payment is required.
                 </p>

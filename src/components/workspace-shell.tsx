@@ -984,7 +984,7 @@ function WorkspaceMenu({
               alt=""
               className="object-cover"
             />
-            <AvatarFallback className="rounded-inner bg-inverse text-[10px] text-text-inverse">
+            <AvatarFallback className="rounded-inner bg-inverse text-text-inverse type-label-sm">
               {initials(workspaceName)}
             </AvatarFallback>
           </Avatar>

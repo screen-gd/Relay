@@ -368,7 +368,7 @@ export function SettingsDesignPage({
         description="Your workspace details, project defaults, and preferences."
         actions={
           <div className="flex flex-wrap justify-end gap-2">
-            <span className="inline-flex h-9 items-center gap-2 rounded-md px-3 text-xs font-medium text-text-2">
+            <span className="inline-flex h-9 items-center gap-2 rounded-md px-3 text-text-2 type-label-sm">
               {settingsSaveState === "saved" ? (
                 <CircleCheckBig className="size-4 text-text-1" />
               ) : null}
@@ -432,7 +432,7 @@ export function SettingsDesignPage({
                   {settingsNavigation.map(({ id, label, icon: Icon }) => (
                     <Fragment key={id}>
                       {id === "workspace" || id === "notifications" ? (
-                        <p className="px-3 pt-4 pb-1.5 text-[11px] font-medium text-muted-foreground first:pt-1">
+                        <p className="px-3 pt-4 pb-1.5 text-muted-foreground first:pt-1 type-label-sm">
                           {id === "workspace"
                             ? "Workspace defaults"
                             : "Personal preferences"}
@@ -600,12 +600,12 @@ export function SettingsDesignPage({
                                 });
                             }}
                           />
-                          <OwnedLabel className="flex items-center justify-between gap-3 rounded-md border border-border px-3 py-2 text-sm font-normal">
+                          <OwnedLabel className="flex items-center justify-between gap-3 rounded-md border border-border px-3 py-2 type-body">
                             <span>
                               <span className="block font-medium">
                                 Editors see all Team Projects
                               </span>
-                              <span className="mt-0.5 block text-xs text-muted-foreground">
+                              <span className="mt-0.5 block text-muted-foreground type-label-sm">
                                 Otherwise Editors see owned or assigned work.
                               </span>
                             </span>
@@ -669,7 +669,7 @@ export function SettingsDesignPage({
                           }}
                         />
                       </div>
-                      <p className="mt-3 text-xs text-muted-foreground">
+                      <p className="mt-3 text-muted-foreground type-label-sm">
                         Import replaces Local Mode data. Cloud import works only
                         when the Workspace has no projects, files, or Salary
                         Batches.
@@ -752,7 +752,10 @@ export function SettingsDesignPage({
                           Add Tag
                         </OwnedButton>
                         {tagIssues ? (
-                          <p role="alert" className="text-sm text-destructive">
+                          <p
+                            role="alert"
+                            className="text-destructive type-body"
+                          >
                             {tagIssues}
                           </p>
                         ) : null}
@@ -798,7 +801,7 @@ export function SettingsDesignPage({
                             />
                           </FieldLayout>
                         </div>
-                        <p className="text-xs text-muted-foreground">
+                        <p className="text-muted-foreground type-label-sm">
                           Completed projects tagged "
                           {canonicalWorkType(
                             settings.salaryWorkType,
@@ -879,7 +882,7 @@ export function SettingsDesignPage({
                       Add Stage
                     </OwnedButton>
                     {stageIssues ? (
-                      <p role="alert" className="text-sm text-destructive">
+                      <p role="alert" className="text-destructive type-body">
                         {stageIssues}
                       </p>
                     ) : null}
@@ -897,10 +900,8 @@ export function SettingsDesignPage({
                         className="flex items-center justify-between gap-4 border-b py-3"
                       >
                         <div>
-                          <p className="text-sm font-semibold text-foreground">
-                            {item}
-                          </p>
-                          <p className="mt-0.5 text-xs text-muted-foreground">
+                          <p className="text-foreground type-label">{item}</p>
+                          <p className="mt-0.5 text-muted-foreground type-label-sm">
                             {notificationCopy(item)}
                           </p>
                         </div>
@@ -924,10 +925,8 @@ export function SettingsDesignPage({
                     />
                     <div className="flex items-center justify-between gap-4 border-t pt-4">
                       <div>
-                        <p className="text-sm font-semibold">
-                          Optional product analytics
-                        </p>
-                        <p className="mt-0.5 text-xs text-muted-foreground">
+                        <p className="type-label">Optional product analytics</p>
+                        <p className="mt-0.5 text-muted-foreground type-label-sm">
                           Anonymous feature-use events only. Work content and
                           money never leave the privacy boundary.
                         </p>
@@ -976,7 +975,7 @@ export function SettingsDesignPage({
                                       : successColor,
                               }}
                             />
-                            <h3 className="text-sm font-semibold text-foreground">
+                            <h3 className="text-foreground type-label">
                               {role}
                             </h3>
                           </div>
@@ -984,7 +983,7 @@ export function SettingsDesignPage({
                             {permissions.map((permission) => (
                               <li
                                 key={permission}
-                                className="flex items-start gap-2 text-xs leading-5 text-muted-foreground"
+                                className="flex items-start gap-2 text-muted-foreground type-label-sm"
                               >
                                 <Check
                                   aria-hidden="true"
@@ -997,7 +996,7 @@ export function SettingsDesignPage({
                         </div>
                       ))}
                     </div>
-                    <p className="text-xs text-muted-foreground">
+                    <p className="text-muted-foreground type-label-sm">
                       Clients collaborate through private Client Portal links
                       and are not workspace members.
                     </p>
@@ -1019,7 +1018,7 @@ export function SettingsDesignPage({
                         }
                       />
                       <div>
-                        <p className="mb-2 text-xs font-medium text-muted-foreground">
+                        <p className="mb-2 text-muted-foreground type-label-sm">
                           Accent Color
                         </p>
                         <OwnedToggleGroup

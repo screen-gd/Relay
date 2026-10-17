@@ -18,16 +18,14 @@ export function NotFound() {
         <div className="space-y-4">
           <RelayBrand compact />
           <div>
-            <p className="text-xs font-bold uppercase tracking-[0.12em] text-text-2">
-              Relay
-            </p>
+            <p className="text-text-2 type-label-sm">Relay</p>
             <h1
               id="not-found-heading"
-              className="mt-2 font-[family-name:var(--font-geist-sans)] text-[30px] font-bold leading-tight"
+              className="mt-2 font-[family-name:var(--font-geist-sans)] type-heading-lg"
             >
               Page not found
             </h1>
-            <p className="mt-2 text-sm leading-relaxed text-text-2">
+            <p className="mt-2 text-text-2 type-body">
               This Relay route does not exist. Return to the dashboard to keep
               tracking work.
             </p>

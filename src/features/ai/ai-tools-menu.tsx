@@ -50,7 +50,9 @@ export function AiToolsMenu() {
           >
             <span className="grid min-w-0 gap-0.5">
               <span className="truncate">{tool.label}</span>
-              <span className="text-xs text-muted-foreground">{tool.home}</span>
+              <span className="text-muted-foreground type-label-sm">
+                {tool.home}
+              </span>
             </span>
           </DropdownMenuItem>
         ))}

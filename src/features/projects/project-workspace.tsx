@@ -405,7 +405,7 @@ export function ProjectWorkspace({
                     >
                       <p
                         className={cn(
-                          "whitespace-pre-wrap text-sm leading-6",
+                          "whitespace-pre-wrap type-body",
                           !project.notes && "text-muted-foreground"
                         )}
                       >
@@ -442,12 +442,12 @@ export function ProjectWorkspace({
                     aria-label="Project details"
                     className={cn(
                       cardSurfaceClassName,
-                      "h-fit text-sm lg:sticky lg:top-0"
+                      "h-fit lg:sticky lg:top-0 type-body"
                     )}
                   >
                     <div className="flex items-center justify-between gap-3 px-5 pt-5">
-                      <h2 className="text-sm font-semibold">Details</h2>
-                      <span className="font-mono text-xs tabular-nums text-muted-foreground">
+                      <h2 className="type-label">Details</h2>
+                      <span className="font-mono tabular-nums text-muted-foreground type-label-sm">
                         {progress}%
                       </span>
                     </div>
@@ -457,12 +457,12 @@ export function ProjectWorkspace({
                         aria-label="Project workflow progress"
                         className="h-1"
                       />
-                      <p className="mt-2 text-xs text-muted-foreground">
+                      <p className="mt-2 text-muted-foreground type-label-sm">
                         {clientPortalStage(project.status)}
                       </p>
                     </div>
                     <dl className="grid px-5 pt-3 pb-4">
-                      <div className="flex min-h-9 items-center justify-between gap-4 text-xs">
+                      <div className="flex min-h-9 items-center justify-between gap-4 type-label-sm">
                         <dt className="shrink-0 text-muted-foreground">
                           Stage
                         </dt>
@@ -476,7 +476,7 @@ export function ProjectWorkspace({
                                   onStatusChange(project, status);
                               }}
                               compact
-                              className="!h-7 min-w-[8.5rem] text-xs"
+                              className="!h-7 min-w-[8.5rem] type-label-sm"
                             />
                           ) : (
                             <ProjectStatusBadge status={project.status} />
@@ -565,7 +565,7 @@ export function ProjectWorkspace({
                                 rel="noreferrer"
                                 className={cn(
                                   sectionRowClassName,
-                                  "flex items-center justify-between gap-3 text-sm"
+                                  "flex items-center justify-between gap-3 type-body"
                                 )}
                               >
                                 <span className="min-w-0 truncate">
@@ -580,7 +580,7 @@ export function ProjectWorkspace({
                           )}
                         </div>
                       ) : (
-                        <p className="px-5 pb-5 text-sm text-muted-foreground">
+                        <p className="px-5 pb-5 text-muted-foreground type-body">
                           No external links yet.
                         </p>
                       )}
@@ -627,7 +627,7 @@ function ProjectStageTracker({ status }: { status: string }) {
             />
             <span
               className={cn(
-                "mt-2 block text-xs",
+                "mt-2 block type-label-sm",
                 reached ? "text-foreground" : "text-muted-foreground",
                 index === currentIndex && "font-medium"
               )}
@@ -649,7 +649,7 @@ function ProjectMetadataRow({
   value: string;
 }) {
   return (
-    <div className="flex min-h-9 items-center justify-between gap-4 text-xs">
+    <div className="flex min-h-9 items-center justify-between gap-4 type-label-sm">
       <dt className="shrink-0 text-muted-foreground">{label}</dt>
       <dd className="text-right font-medium [overflow-wrap:anywhere]">
         {value}

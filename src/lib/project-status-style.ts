@@ -1,26 +1,24 @@
+/**
+ * Project and payment status, styled the Quartz way: the status is a word,
+ * and only trouble is warm. A Project's stage is not trouble, so stages read
+ * in the text ramp: active work strongest, waiting and finished work quieter.
+ * Lateness is trouble and is marked where dates are shown, not here.
+ */
+const activeStatuses = ["In Progress", "Revision", "Review", "Client Review"];
+
 export function projectStatusColor(status: string) {
-  if (status === "Delivered") return "var(--status-success)";
-  if (["Review", "Revision", "Client Review"].includes(status))
-    return "var(--status-warning)";
-  if (status === "Cancelled") return "var(--status-danger)";
-  if (status === "In Progress") return "var(--status-info)";
-  return "var(--text-muted)";
+  if (activeStatuses.includes(status)) return "var(--text-1)";
+  if (status === "Cancelled") return "var(--text-3)";
+  return "var(--text-2)";
 }
 
+/** Badge classes for a Project status: a tinted word, never a pill or ring. */
 export function projectStatusTone(status: string) {
-  if (status === "Delivered")
-    return "border-[color-mix(in_srgb,var(--status-success)_40%,transparent)] bg-well text-text-1";
-  if (["Review", "Revision", "Client Review"].includes(status))
-    return "border-[color-mix(in_srgb,var(--status-warning)_40%,transparent)] bg-warn-wash text-warn-text";
-  if (status === "Cancelled")
-    return "border-[color-mix(in_srgb,var(--status-danger)_40%,transparent)] bg-fail-wash text-fail-text";
-  if (status === "In Progress")
-    return "border-[color-mix(in_srgb,var(--status-info)_40%,transparent)] bg-well text-text-1";
-  return "border-line-row bg-well text-text-2";
+  if (activeStatuses.includes(status)) return "bg-tile text-text-1";
+  if (status === "Cancelled") return "bg-transparent text-text-3";
+  return "bg-tile text-text-2";
 }
 
 export function paymentStatusTone(paid: boolean) {
-  return paid
-    ? "border-[color-mix(in_srgb,var(--status-success)_40%,transparent)] bg-well text-text-1"
-    : "border-[color-mix(in_srgb,var(--status-warning)_40%,transparent)] bg-warn-wash text-warn-text";
+  return paid ? "bg-tile text-text-2" : "bg-tile text-text-1";
 }

@@ -72,9 +72,7 @@ export function RelayBrand({
         />
       </span>
       {subtitle ? (
-        <span className="pl-0.5 text-[10px] font-semibold uppercase tracking-[0.11em] text-text-2">
-          {subtitle}
-        </span>
+        <span className="pl-0.5 text-text-2 type-label-sm">{subtitle}</span>
       ) : null}
     </Link>
   );

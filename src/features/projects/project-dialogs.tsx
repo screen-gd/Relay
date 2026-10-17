@@ -116,7 +116,7 @@ export function ProjectDialog({
         }}
       >
         <OwnedDialogHeader>
-          <OwnedDialogTitle className="text-2xl">
+          <OwnedDialogTitle className="type-heading-lg">
             {editing ? "Edit Project" : "New Project"}
           </OwnedDialogTitle>
           <OwnedDialogDescription>
@@ -218,7 +218,7 @@ export function ProjectDialog({
             />
           ) : null}
           {formError ? (
-            <p role="alert" className="text-sm text-destructive">
+            <p role="alert" className="text-destructive type-body">
               {formError}
             </p>
           ) : null}
@@ -394,7 +394,7 @@ function ProjectAssigneeCombobox({
                       <span className="font-medium">
                         {option.name || option.email || "Team member"}
                       </span>
-                      <span className="text-xs text-muted-foreground">
+                      <span className="text-muted-foreground type-label-sm">
                         {option.role} · {option.email || "No email"}
                       </span>
                     </span>
@@ -430,7 +430,7 @@ function TemplateSetupEditor({
       <div className="flex items-start justify-between gap-3">
         <div>
           <h3 className="font-semibold">Template Setup</h3>
-          <p className="mt-1 text-xs text-muted-foreground">
+          <p className="mt-1 text-muted-foreground type-label-sm">
             These are suggestions, not locked rules. Edit or remove anything.
           </p>
         </div>
@@ -467,7 +467,7 @@ function TemplateSetupEditor({
         </FieldLayout>
         <div>
           <div className="mb-2 flex items-center justify-between gap-2">
-            <h4 className="text-sm font-semibold">Suggested deliverables</h4>
+            <h4 className="type-label">Suggested deliverables</h4>
             <OwnedButton
               type="button"
               size="sm"

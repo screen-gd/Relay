@@ -14,16 +14,16 @@ export function ClientPortalLandingPage() {
             aria-label="Relay home"
             className="inline-flex items-center gap-2 text-foreground no-underline"
           >
-            <span className="grid size-8 place-items-center rounded-[6px] bg-foreground text-sm font-bold text-background">
+            <span className="grid size-8 place-items-center rounded-[6px] bg-foreground text-background type-label">
               R
             </span>
-            <span className="text-lg font-bold tracking-tight">Relay</span>
+            <span className="type-heading-sm">Relay</span>
           </a>
         </div>
-        <h1 className="font-[family-name:var(--font-geist-sans)] text-[28px] font-bold md:text-4xl">
+        <h1 className="font-[family-name:var(--font-geist-sans)] md:text-4xl type-heading-lg">
           A project link is required
         </h1>
-        <p className="mx-auto mt-2 max-w-[500px] text-sm leading-relaxed text-muted-foreground">
+        <p className="mx-auto mt-2 max-w-[500px] text-muted-foreground type-body">
           No account required. Open the unique portal link shared by your editor
           to track progress, review deliverables, and submit revision requests.
         </p>

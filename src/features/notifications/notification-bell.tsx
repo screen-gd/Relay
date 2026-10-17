@@ -56,7 +56,7 @@ export function NotificationBell() {
           {unreadCount ? (
             <span
               aria-hidden="true"
-              className="absolute -top-0.5 -right-0.5 grid h-3.5 min-w-3.5 place-items-center rounded-inner bg-ink px-0.5 text-[10px] leading-none text-text-inverse data"
+              className="absolute -top-0.5 -right-0.5 grid h-3.5 min-w-3.5 place-items-center rounded-inner bg-ink px-0.5 text-text-inverse data type-label-sm"
             >
               {unreadCount > 9 ? "9+" : unreadCount}
             </span>
@@ -100,11 +100,11 @@ export function NotificationBell() {
         </div>
         <div className="mx-0.5 my-1 h-px bg-line-row" />
         {isConvexAuthLoading ? (
-          <p className="px-3 py-2.5 text-xs leading-relaxed text-text-2">
+          <p className="px-3 py-2.5 text-text-2 type-label-sm">
             Waiting for Convex auth before loading Team notifications.
           </p>
         ) : teamNotificationSyncUnavailable ? (
-          <p className="px-3 py-2.5 text-xs leading-relaxed text-fail-text">
+          <p className="px-3 py-2.5 text-fail-text type-label-sm">
             Clerk is signed in, but Convex auth is not connected. Check Team
             sync before relying on shared notifications.
           </p>
@@ -116,7 +116,7 @@ export function NotificationBell() {
                 className={`rounded-soft px-2.5 py-2 transition-colors duration-(--dur-fast) hover:bg-hover ${notification.read ? "" : "bg-selected"}`}
               >
                 <p className="type-label text-text-1">{notification.message}</p>
-                <p className="mt-0.5 text-xs text-text-2">
+                <p className="mt-0.5 text-text-2 type-label-sm">
                   {new Intl.DateTimeFormat("en", {
                     month: "short",
                     day: "numeric",

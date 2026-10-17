@@ -23,16 +23,14 @@ export function RouteError({ error, reset }: ErrorComponentProps) {
         <div className="space-y-4">
           <RelayBrand compact />
           <div>
-            <p className="text-xs font-bold uppercase tracking-[0.12em] text-text-2">
-              Unexpected error
-            </p>
+            <p className="text-text-2 type-label-sm">Unexpected error</p>
             <h1
               id="error-heading"
-              className="mt-2 font-[family-name:var(--font-geist-sans)] text-[30px] font-bold leading-tight"
+              className="mt-2 font-[family-name:var(--font-geist-sans)] type-heading-lg"
             >
               Relay needs a refresh
             </h1>
-            <p className="mt-2 text-sm leading-relaxed text-text-2">
+            <p className="mt-2 text-text-2 type-body">
               The tracker hit an unexpected app error. Your saved projects stay
               in local browser storage.
             </p>

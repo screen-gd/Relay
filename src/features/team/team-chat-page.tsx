@@ -84,10 +84,8 @@ export function TeamChatPage() {
                 className="flex flex-col justify-between gap-3 border-b border-line-row bg-well px-4 py-4 sm:flex-row sm:items-center sm:px-5"
               >
                 <div>
-                  <h2 className="text-lg font-semibold">
-                    {teamData.workspace.name}
-                  </h2>
-                  <p className="mt-1 text-xs text-text-2">
+                  <h2 className="type-heading-sm">{teamData.workspace.name}</h2>
+                  <p className="mt-1 text-text-2 type-label-sm">
                     {
                       teamData.members.filter(
                         (member) => member.status === "active"
@@ -121,16 +119,13 @@ export function TeamChatPage() {
                 {chatError ? (
                   <p
                     role="alert"
-                    className="mb-2 text-xs font-semibold text-destructive"
+                    className="mb-2 text-destructive type-label-sm"
                   >
                     {chatError}
                   </p>
                 ) : null}
                 <div className="grid gap-2">
-                  <OwnedLabel
-                    htmlFor={messageInputId}
-                    className="text-sm font-medium"
-                  >
+                  <OwnedLabel htmlFor={messageInputId} className="type-label">
                     Message
                   </OwnedLabel>
                   <div className="flex flex-col items-stretch gap-2 sm:flex-row sm:items-start">
@@ -166,7 +161,7 @@ export function TeamChatPage() {
                       {sending ? "Sending..." : "Send"}
                     </OwnedButton>
                   </div>
-                  <p id={messageCountId} className="text-xs text-text-2">
+                  <p id={messageCountId} className="text-text-2 type-label-sm">
                     {message.length}/{TEAM_CHAT_MESSAGE_LIMIT} characters
                   </p>
                 </div>
@@ -178,7 +173,7 @@ export function TeamChatPage() {
             <OwnedCard className="p-6 shadow-none">
               <div
                 role="status"
-                className="flex items-center gap-3 text-sm text-muted-foreground"
+                className="flex items-center gap-3 text-muted-foreground type-body"
               >
                 <LoaderCircle
                   className="size-4 animate-spin"
@@ -194,7 +189,7 @@ export function TeamChatPage() {
                   className="mx-auto size-8 text-muted-foreground"
                   aria-hidden="true"
                 />
-                <h2 className="mt-4 text-lg font-semibold">
+                <h2 className="mt-4 type-heading-sm">
                   Team chat is coming later
                 </h2>
               </div>
@@ -203,7 +198,7 @@ export function TeamChatPage() {
             <OwnedCard className="p-6 shadow-none">
               <div
                 role="status"
-                className="flex items-center gap-3 text-sm text-muted-foreground"
+                className="flex items-center gap-3 text-muted-foreground type-body"
               >
                 <LoaderCircle
                   className="size-4 animate-spin"
@@ -217,10 +212,8 @@ export function TeamChatPage() {
               role="alert"
               className="border-destructive/40 bg-destructive/10 p-6 text-destructive shadow-sm"
             >
-              <h2 className="text-lg font-semibold">
-                Team Chat is not connected
-              </h2>
-              <p className="mt-2 text-sm">
+              <h2 className="type-heading-sm">Team Chat is not connected</h2>
+              <p className="mt-2 type-body">
                 Convex has not received your Clerk session. Sign out and back
                 in, then retry.
               </p>
@@ -229,7 +222,7 @@ export function TeamChatPage() {
             <OwnedCard className="p-6 shadow-none">
               <div
                 role="status"
-                className="flex items-center gap-3 text-sm text-muted-foreground"
+                className="flex items-center gap-3 text-muted-foreground type-body"
               >
                 <LoaderCircle
                   className="size-4 animate-spin"
@@ -245,20 +238,16 @@ export function TeamChatPage() {
                   className="mx-auto size-8 text-muted-foreground"
                   aria-hidden="true"
                 />
-                <h2 className="mt-4 text-lg font-semibold">
-                  No team workspace yet
-                </h2>
-                <p className="mt-2 text-sm text-muted-foreground">
+                <h2 className="mt-4 type-heading-sm">No team workspace yet</h2>
+                <p className="mt-2 text-muted-foreground type-body">
                   Create or join a workspace before using Team Chat.
                 </p>
               </div>
             </OwnedCard>
           ) : !canUseChat ? (
             <OwnedCard className="p-6 shadow-none">
-              <h2 className="text-xl font-semibold">
-                Chat unavailable for your role
-              </h2>
-              <p className="mt-2 text-sm text-muted-foreground">
+              <h2 className="type-heading">Chat unavailable for your role</h2>
+              <p className="mt-2 text-muted-foreground type-body">
                 Your current role can access the workspace but does not have
                 permission to view or send chat messages.
               </p>
@@ -286,18 +275,18 @@ export function TeamChatPage() {
                           className={`mb-1 flex items-center gap-2 ${isOwnMessage ? "justify-end" : "justify-between"}`}
                         >
                           {!isOwnMessage ? (
-                            <span className="text-xs font-semibold">
+                            <span className="type-label-sm">
                               {chatMessage.authorName}
                             </span>
                           ) : null}
-                          <time className="text-[11px] text-muted-foreground">
+                          <time className="text-muted-foreground type-label-sm">
                             {formatChatTime(chatMessage.createdAt)}
                           </time>
                         </div>
                         <div
                           className={`rounded-lg border px-3 py-2.5 ${isOwnMessage ? "border-primary bg-primary/10" : "border-border bg-muted"}`}
                         >
-                          <p className="whitespace-pre-wrap text-sm leading-relaxed [overflow-wrap:anywhere]">
+                          <p className="whitespace-pre-wrap [overflow-wrap:anywhere] type-body">
                             {chatMessage.body}
                           </p>
                         </div>
@@ -311,7 +300,7 @@ export function TeamChatPage() {
                       aria-hidden="true"
                     />
                     <h3 className="mt-4 font-semibold">No messages yet</h3>
-                    <p className="mt-2 text-sm text-muted-foreground">
+                    <p className="mt-2 text-muted-foreground type-body">
                       Share an update, a blocker, or a delivery note.
                     </p>
                   </li>

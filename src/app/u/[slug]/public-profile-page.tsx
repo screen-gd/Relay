@@ -35,7 +35,7 @@ export function PublicProfilePage({ slug }: { slug: string }) {
               aria-hidden="true"
               className="size-[30px] text-primary"
             />
-            <p className="text-[13px]">Loading public profile...</p>
+            <p className="type-body-sm">Loading public profile...</p>
           </div>
         </div>
       </PublicShell>
@@ -46,10 +46,10 @@ export function PublicProfilePage({ slug }: { slug: string }) {
     return (
       <PublicShell>
         <section className={cn(panelClass, "mt-6 p-5 md:p-8")}>
-          <h1 className="font-[family-name:var(--font-geist-sans)] text-[34px] font-bold">
+          <h1 className="font-[family-name:var(--font-geist-sans)] type-display">
             Profile not found
           </h1>
-          <p className="mt-2 text-sm text-text-2">
+          <p className="mt-2 text-text-2 type-body">
             This public Relay profile has not been published or the link is
             incorrect.
           </p>
@@ -72,18 +72,18 @@ export function PublicProfilePage({ slug }: { slug: string }) {
             imageUrl={profile.profileImageUrl}
           />
           <div>
-            <h1 className="text-[34px] font-bold leading-tight">
+            <h1 className="type-display">
               {profile.profileName || "Relay Editor"}
             </h1>
             {profile.profileUsername ? (
-              <p className="mt-1 text-sm font-bold text-text-1">
+              <p className="mt-1 text-text-1 type-label">
                 @{profile.profileUsername}
               </p>
             ) : null}
-            <p className="mt-2 text-[15px]">
+            <p className="mt-2 type-heading-xs">
               {profile.profileTitle || "Video Editor"}
             </p>
-            <p className="mt-4 max-w-[420px] text-sm text-text-2">
+            <p className="mt-4 max-w-[420px] text-text-2 type-body">
               {profile.profileBio || "Portfolio profile published from Relay."}
             </p>
             <div className="mt-4 flex flex-wrap gap-x-4 gap-y-2 text-text-2">
@@ -118,13 +118,11 @@ export function PublicProfilePage({ slug }: { slug: string }) {
 
         <section className="grid items-start gap-6 p-4 md:p-6 lg:grid-cols-[220px_minmax(0,1fr)]">
           <div>
-            <h2 className="text-[28px] font-bold leading-tight">
-              Portfolio timeline
-            </h2>
-            <p className="mt-2 max-w-[260px] text-[13px] text-text-2">
+            <h2 className="type-heading-lg">Portfolio timeline</h2>
+            <p className="mt-2 max-w-[260px] text-text-2 type-body-sm">
               Recent public delivery context shared from Relay.
             </p>
-            <p className="mt-4 text-xs text-text-2">
+            <p className="mt-4 text-text-2 type-label-sm">
               Updated {formatPublicDate(profile.updatedAt.slice(0, 10))}
             </p>
           </div>
@@ -139,12 +137,12 @@ export function PublicProfilePage({ slug }: { slug: string }) {
                     className="grid items-center gap-3 rounded-[6px] border border-line-row bg-well p-3 md:grid-cols-[minmax(0,1fr)_120px_150px]"
                   >
                     <div className="min-w-0">
-                      <p className="text-[15px] font-bold">{project.title}</p>
-                      <p className="mt-1 text-xs text-text-2">
+                      <p className="type-heading-xs">{project.title}</p>
+                      <p className="mt-1 text-text-2 type-label-sm">
                         {project.workType}
                       </p>
                     </div>
-                    <time className="text-xs text-text-2">
+                    <time className="text-text-2 type-label-sm">
                       {formatPublicDate(project.dueDate)}
                     </time>
                     <div>
@@ -152,7 +150,7 @@ export function PublicProfilePage({ slug }: { slug: string }) {
                         <Badge className="bg-well text-text-1">
                           {project.status}
                         </Badge>
-                        <span className="text-xs font-bold">{progress}%</span>
+                        <span className="type-label-sm">{progress}%</span>
                       </div>
                       <ProgressBar
                         value={progress}
@@ -171,8 +169,8 @@ export function PublicProfilePage({ slug }: { slug: string }) {
                 aria-hidden="true"
                 className="mx-auto mb-3 h-[126px] w-[180px] object-contain"
               />
-              <p className="text-sm font-bold">No public projects shared yet</p>
-              <p className="mt-1 text-xs text-text-2">
+              <p className="type-label">No public projects shared yet</p>
+              <p className="mt-1 text-text-2 type-label-sm">
                 The editor can publish updated public work from their Relay
                 profile.
               </p>
@@ -197,7 +195,7 @@ function PublicShell({ children }: { children: React.ReactNode }) {
 
 function PublicAvatar({ name, imageUrl }: { name: string; imageUrl: string }) {
   return (
-    <div className="grid size-[148px] place-items-center overflow-hidden rounded-full border border-line-row bg-tile text-[40px] font-bold">
+    <div className="grid size-[148px] place-items-center overflow-hidden rounded-full border border-line-row bg-tile type-display">
       {imageUrl ? (
         <img src={imageUrl} alt={name} className="size-full object-cover" />
       ) : (
@@ -219,15 +217,15 @@ function ProfileMetric({
   return (
     <div className="flex flex-col rounded-md border border-line-row bg-well p-3">
       <span className="text-primary [&_svg]:size-5">{icon}</span>
-      <dt className="order-3 mt-1 text-[11px] text-text-2">{label}</dt>
-      <dd className="order-2 mt-2 text-xl font-bold">{value}</dd>
+      <dt className="order-3 mt-1 text-text-2 type-label-sm">{label}</dt>
+      <dd className="order-2 mt-2 type-heading">{value}</dd>
     </div>
   );
 }
 
 function InfoPill({ icon, text }: { icon: React.ReactNode; text: string }) {
   return (
-    <span className="flex items-center gap-1.5 text-[13px] text-text-2">
+    <span className="flex items-center gap-1.5 text-text-2 type-body-sm">
       <span className="text-primary [&_svg]:size-[17px]">{icon}</span>
       {text}
     </span>

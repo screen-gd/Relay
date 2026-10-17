@@ -483,14 +483,14 @@ export function PrecisionClients({
                       {selected?.name === client.name ? (
                         <span className="absolute inset-y-2 left-0 w-0.5 rounded-full bg-ink" />
                       ) : null}
-                      <span className="grid size-9 shrink-0 place-items-center rounded-md bg-well text-xs font-semibold text-text-1 ring-1 ring-[var(--app-border)]">
+                      <span className="grid size-9 shrink-0 place-items-center rounded-md bg-well text-text-1 ring-1 ring-[var(--app-border)] type-label-sm">
                         {clientInitials(client.name)}
                       </span>
                       <span className="min-w-0 flex-1">
-                        <span className="block truncate text-xs font-semibold">
+                        <span className="block truncate type-label-sm">
                           {client.name}
                         </span>
-                        <span className="mt-0.5 block text-[10px] text-text-2">
+                        <span className="mt-0.5 block text-text-2 type-label-sm">
                           {client.projects.length} projects · {client.active}{" "}
                           active
                         </span>
@@ -499,7 +499,7 @@ export function PrecisionClients({
                     </MotionButton>
                   ))}
                   {!clients.length ? (
-                    <Empty className="flex-none gap-0 rounded-none border-0 p-6 text-center text-xs text-text-2 [text-wrap:wrap] md:p-6">
+                    <Empty className="flex-none gap-0 rounded-none border-0 p-6 text-center text-text-2 [text-wrap:wrap] md:p-6 type-label-sm">
                       {query.trim()
                         ? `No clients match "${query.trim()}". Clear the search to see them all.`
                         : showArchived
@@ -515,14 +515,14 @@ export function PrecisionClients({
                 {selected ? (
                   <main className="flex min-h-0 min-w-0 flex-col overflow-hidden lg:h-full">
                     <div className="flex flex-col gap-4 border-b border-line-row p-5 sm:flex-row sm:items-start">
-                      <span className="grid size-12 shrink-0 place-items-center rounded-lg bg-selected text-sm font-semibold text-text-1 ring-1 ring-[var(--app-border)]">
+                      <span className="grid size-12 shrink-0 place-items-center rounded-lg bg-selected text-text-1 ring-1 ring-[var(--app-border)] type-label">
                         {clientInitials(selected.name)}
                       </span>
                       <div className="min-w-0 flex-1">
-                        <h2 className="truncate text-lg font-semibold">
+                        <h2 className="truncate type-heading-sm">
                           {selected.name}
                         </h2>
-                        <p className="mt-1 text-xs text-text-2">
+                        <p className="mt-1 text-text-2 type-label-sm">
                           {selected.company ||
                             `${selected.active} active projects · ${selected.delivered} delivered`}
                         </p>
@@ -594,7 +594,7 @@ export function PrecisionClients({
                       selected.phone,
                       selected.notes,
                     ].some(Boolean) ? (
-                      <dl className="grid gap-3 border-b border-line-row p-5 text-xs sm:grid-cols-2">
+                      <dl className="grid gap-3 border-b border-line-row p-5 sm:grid-cols-2 type-label-sm">
                         {[
                           ["Contact", selected.contactName],
                           ["Email", selected.email],
@@ -604,7 +604,7 @@ export function PrecisionClients({
                           .filter((entry) => entry[1])
                           .map(([label, value]) => (
                             <div key={label}>
-                              <dt className="text-[11px] text-text-2">
+                              <dt className="text-text-2 type-label-sm">
                                 {label}
                               </dt>
                               <dd className="mt-1 text-text-1">{value}</dd>
@@ -638,7 +638,9 @@ export function PrecisionClients({
                         Add Hub access
                       </Button>
                       {hubMessage ? (
-                        <p className="text-xs sm:col-span-3">{hubMessage}</p>
+                        <p className="sm:col-span-3 type-label-sm">
+                          {hubMessage}
+                        </p>
                       ) : null}
                     </div>
                     <section
@@ -648,10 +650,8 @@ export function PrecisionClients({
                     >
                       <div className="mb-3 flex items-center justify-between">
                         <div>
-                          <h3 className="text-sm font-semibold">
-                            Project history
-                          </h3>
-                          <p className="mt-0.5 text-[11px] text-text-2">
+                          <h3 className="type-label">Project history</h3>
+                          <p className="mt-0.5 text-text-2 type-label-sm">
                             Current and completed work for this client.
                           </p>
                         </div>
@@ -671,14 +671,14 @@ export function PrecisionClients({
                                 onClick={() => onViewProject(project)}
                               >
                                 <span className="min-w-0">
-                                  <span className="block truncate text-xs font-semibold">
+                                  <span className="block truncate type-label-sm">
                                     {project.title}
                                   </span>
-                                  <span className="mt-0.5 block truncate text-[10px] text-text-2">
+                                  <span className="mt-0.5 block truncate text-text-2 type-label-sm">
                                     {project.notes || project.workType}
                                   </span>
                                 </span>
-                                <span className="text-[11px] text-text-2">
+                                <span className="text-text-2 type-label-sm">
                                   {formatDate(project.dueDate)}
                                 </span>
                                 <Badge
@@ -698,10 +698,8 @@ export function PrecisionClients({
                         <Empty className="min-h-56 flex-none gap-0 rounded-xl border border-dashed border-line-row p-0 text-center [text-wrap:wrap] md:p-0">
                           <div>
                             <BriefcaseBusiness className="mx-auto size-6 text-text-2" />
-                            <p className="mt-2 text-sm font-semibold">
-                              No projects yet
-                            </p>
-                            <p className="mt-1 text-xs text-text-2">
+                            <p className="mt-2 type-label">No projects yet</p>
+                            <p className="mt-1 text-text-2 type-label-sm">
                               Assign this client when creating a project.
                             </p>
                           </div>
@@ -1028,15 +1026,15 @@ export function PrecisionFeedback({
                           }}
                         >
                           <span className="min-w-0">
-                            <span className="block truncate text-[13px] font-semibold">
+                            <span className="block truncate type-label">
                               {project.title}
                             </span>
-                            <span className="mt-1 block truncate text-[11px] text-text-2">
+                            <span className="mt-1 block truncate text-text-2 type-label-sm">
                               {project.client || project.workType} ·{" "}
                               {project.notes || "No review note"}
                             </span>
                           </span>
-                          <span className="text-[11px] text-text-2">
+                          <span className="text-text-2 type-label-sm">
                             Due {formatDate(project.dueDate)}
                           </span>
                           <Badge
@@ -1048,7 +1046,7 @@ export function PrecisionFeedback({
                           >
                             {project.status}
                           </Badge>
-                          <span className="inline-flex h-7 items-center gap-1 justify-self-start rounded-md px-2 text-xs font-medium text-text-1 sm:justify-self-end">
+                          <span className="inline-flex h-7 items-center gap-1 justify-self-start rounded-md px-2 text-text-1 sm:justify-self-end type-label-sm">
                             Open <ArrowRight className="size-3.5" />
                           </span>
                         </MotionButton>
@@ -1067,12 +1065,12 @@ export function PrecisionFeedback({
                     >
                       <div>
                         <CheckCircle2 className="mx-auto size-7 text-text-1" />
-                        <p className="mt-2 text-sm font-semibold">
+                        <p className="mt-2 type-label">
                           {filter === "All"
                             ? "Review queue is clear"
                             : `No ${filter.toLowerCase()} items`}
                         </p>
-                        <p className="mt-1 text-xs text-text-2">
+                        <p className="mt-1 text-text-2 type-label-sm">
                           {filter === "All"
                             ? "Nothing is waiting on feedback. Request review on a project to start a new thread."
                             : filter === "Revision"
@@ -1125,20 +1123,20 @@ export function PrecisionFeedback({
                       />
                     </dl>
                     <div className="border-t border-line-row pt-4">
-                      <p className="text-[11px] font-semibold text-text-2">
+                      <p className="text-text-2 type-label-sm">
                         Latest review note
                       </p>
-                      <p className="mt-2 text-xs leading-5 text-text-1">
+                      <p className="mt-2 text-text-1 type-label-sm">
                         {selected.notes ||
                           "No review note has been recorded yet."}
                       </p>
                     </div>
                     <div className="border-t border-line-row pt-4">
-                      <p className="text-[11px] font-semibold text-text-2">
+                      <p className="text-text-2 type-label-sm">
                         Review history
                       </p>
                       <div className="mt-3 space-y-3">
-                        <div className="flex gap-3 text-xs">
+                        <div className="flex gap-3 type-label-sm">
                           <span className="mt-1 size-2 shrink-0 rounded-full bg-ink" />
                           <div>
                             <p className="font-medium">
@@ -1146,18 +1144,18 @@ export function PrecisionFeedback({
                                 ? "Revision requested"
                                 : "Review requested"}
                             </p>
-                            <p className="mt-0.5 text-[11px] text-text-2">
+                            <p className="mt-0.5 text-text-2 type-label-sm">
                               Current production stage
                             </p>
                           </div>
                         </div>
-                        <div className="flex gap-3 text-xs">
+                        <div className="flex gap-3 type-label-sm">
                           <span className="mt-1 size-2 shrink-0 rounded-full bg-line-row" />
                           <div>
                             <p className="font-medium">
                               Project prepared for feedback
                             </p>
-                            <p className="mt-0.5 text-[11px] text-text-2">
+                            <p className="mt-0.5 text-text-2 type-label-sm">
                               Open the project for files and comments
                             </p>
                           </div>
@@ -1180,10 +1178,8 @@ export function PrecisionFeedback({
                 <div className="grid min-h-56 place-items-center text-center">
                   <div>
                     <MessageSquareText className="mx-auto size-7 text-text-2" />
-                    <p className="mt-2 text-sm font-semibold">
-                      Select a review item
-                    </p>
-                    <p className="mt-1 text-xs text-text-2">
+                    <p className="mt-2 type-label">Select a review item</p>
+                    <p className="mt-1 text-text-2 type-label-sm">
                       Open a queue item to read its notes and jump into the
                       project.
                     </p>
@@ -1600,10 +1596,8 @@ export function PrecisionReports({
             >
               <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                 <div>
-                  <h2 className="text-sm font-semibold">
-                    Delivery and earnings trend
-                  </h2>
-                  <p className="mt-0.5 text-[10px] text-text-2">
+                  <h2 className="type-label">Delivery and earnings trend</h2>
+                  <p className="mt-0.5 text-text-2 type-label-sm">
                     Delivered value and payment batches grouped by month.
                   </p>
                 </div>
@@ -1671,14 +1665,14 @@ export function PrecisionReports({
                       <Area dataKey="earned" variant="gradient" />
                     </AreaChart>
                   ) : (
-                    <div className="grid h-full place-items-center text-xs text-text-2">
+                    <div className="grid h-full place-items-center text-text-2 type-label-sm">
                       Mark a project as delivered to start the earnings trend.
                     </div>
                   )}
                 </motion.div>
               </div>
               <p
-                className="mt-auto min-h-9 pt-3 text-xs leading-5 text-text-2"
+                className="mt-auto min-h-9 pt-3 text-text-2 type-label-sm"
                 aria-label="Earnings trend summary"
               >
                 {trendData.length
@@ -1702,8 +1696,8 @@ export function PrecisionReports({
               className="flex h-full min-w-0 flex-col"
             >
               <div>
-                <h2 className="text-sm font-semibold">Work mix</h2>
-                <p className="mt-0.5 text-[10px] text-text-2">
+                <h2 className="type-label">Work mix</h2>
+                <p className="mt-0.5 text-text-2 type-label-sm">
                   Distribution across project types.
                 </p>
               </div>
@@ -1733,7 +1727,7 @@ export function PrecisionReports({
                     <ChartTooltip labelKey="name" />
                   </PieChart>
                 ) : (
-                  <div className="grid h-full place-items-center rounded-md border border-dashed border-line-row px-4 text-center text-xs text-text-2">
+                  <div className="grid h-full place-items-center rounded-md border border-dashed border-line-row px-4 text-center text-text-2 type-label-sm">
                     Deliver projects to see how your work splits across types.
                   </div>
                 )}
@@ -1742,7 +1736,7 @@ export function PrecisionReports({
                 {mixData.map((item, index) => (
                   <div
                     key={item.name}
-                    className="flex items-center gap-2 text-xs leading-5"
+                    className="flex items-center gap-2 type-label-sm"
                   >
                     <span
                       className="size-2 shrink-0 rounded-full"
@@ -1858,7 +1852,7 @@ export function PrecisionReports({
                 <div
                   className={cn(
                     clientTotalsGrid,
-                    "h-8 items-center bg-well text-[11px] font-medium text-text-2"
+                    "h-8 items-center bg-well text-text-2 type-label-sm"
                   )}
                 >
                   <span>Client</span>
@@ -1870,7 +1864,7 @@ export function PrecisionReports({
               {report.clients.map((client) => (
                 <div
                   key={client.id}
-                  className={cn(clientTotalsGrid, "py-3 text-xs")}
+                  className={cn(clientTotalsGrid, "py-3 type-label-sm")}
                 >
                   <span className="truncate font-semibold">{client.name}</span>
                   <span className="text-right tabular-nums">
@@ -1889,7 +1883,7 @@ export function PrecisionReports({
                 </div>
               ))}
               {!report.clients.length ? (
-                <div className="grid min-h-24 place-items-center text-xs text-text-2">
+                <div className="grid min-h-24 place-items-center text-text-2 type-label-sm">
                   Deliver a client project in this period to see its totals.
                 </div>
               ) : null}
@@ -1902,7 +1896,7 @@ export function PrecisionReports({
           title="Payment batches"
           description="Completed batches and whether they are paid."
           metadata={
-            <span className="text-[11px] text-muted-foreground">
+            <span className="text-muted-foreground type-label-sm">
               {report.batches.length} batches
             </span>
           }
@@ -1916,7 +1910,7 @@ export function PrecisionReports({
           <div className="overflow-x-auto border-t border-line-row">
             <Table className="w-full min-w-[720px] border-collapse">
               <TableHeader>
-                <TableRow className="bg-well text-left text-[11px] font-semibold text-text-3">
+                <TableRow className="bg-well text-left text-text-3 type-label-sm">
                   <TableHead className="h-8 px-4">Batch</TableHead>
                   <TableHead className="px-4">Completed</TableHead>
                   <TableHead className="px-4">Edits</TableHead>
@@ -1929,7 +1923,7 @@ export function PrecisionReports({
                 {report.batches.map((batch) => (
                   <TableRow
                     key={batch.id}
-                    className="h-12 text-xs transition-colors hover:bg-hover"
+                    className="h-12 transition-colors hover:bg-hover type-label-sm"
                   >
                     <TableCell className="px-4 font-semibold">
                       Batch #{batch.number}
@@ -1970,7 +1964,7 @@ export function PrecisionReports({
                   <TableRow>
                     <TableCell
                       colSpan={6}
-                      className="h-32 text-center text-xs text-text-2"
+                      className="h-32 text-center text-text-2 type-label-sm"
                     >
                       Finish the next salary batch to record its payment here.
                     </TableCell>
@@ -2000,7 +1994,7 @@ export function PrecisionReports({
             <div className="overflow-x-auto border-t border-line-row">
               <Table className="w-full min-w-[760px] border-collapse">
                 <TableHeader>
-                  <TableRow className="bg-well text-left text-[11px] font-semibold text-text-3">
+                  <TableRow className="bg-well text-left text-text-3 type-label-sm">
                     <TableHead className="h-8 px-4">Draft</TableHead>
                     <TableHead className="px-4">Client</TableHead>
                     <TableHead className="px-4">Projects</TableHead>
@@ -2012,7 +2006,7 @@ export function PrecisionReports({
                   {invoiceDrafts.map((draft) => (
                     <TableRow
                       key={draft.id}
-                      className="h-12 text-xs transition-colors hover:bg-hover"
+                      className="h-12 transition-colors hover:bg-hover type-label-sm"
                     >
                       <TableCell className="px-4 font-semibold">
                         {draft.invoiceNumber}
@@ -2035,7 +2029,7 @@ export function PrecisionReports({
                     <TableRow>
                       <TableCell
                         colSpan={5}
-                        className="h-28 text-center text-xs text-text-2"
+                        className="h-28 text-center text-text-2 type-label-sm"
                       >
                         Deliver a freelance project for a named client to draft
                         its invoice.
@@ -2055,7 +2049,7 @@ export function PrecisionReports({
                 title="Editor Summary"
                 description="Delivered work attributed to workspace editors."
                 metadata={
-                  <span className="text-[11px] text-muted-foreground">
+                  <span className="text-muted-foreground type-label-sm">
                     {editorSummary.length} editors
                   </span>
                 }
@@ -2067,7 +2061,7 @@ export function PrecisionReports({
                       key={editor.userId}
                       className="flex items-center gap-3 px-4 py-3"
                     >
-                      <span className="grid size-8 place-items-center rounded-full bg-selected text-[10px] font-semibold text-text-1">
+                      <span className="grid size-8 place-items-center rounded-full bg-selected text-text-1 type-label-sm">
                         {editor.name
                           .split(/\s+/)
                           .slice(0, 2)
@@ -2075,14 +2069,14 @@ export function PrecisionReports({
                           .join("")}
                       </span>
                       <span className="min-w-0 flex-1">
-                        <span className="block truncate text-xs font-semibold">
+                        <span className="block truncate type-label-sm">
                           {editor.name}
                         </span>
-                        <span className="mt-0.5 block text-[10px] text-text-2">
+                        <span className="mt-0.5 block text-text-2 type-label-sm">
                           {editor.delivered} delivered edits
                         </span>
                       </span>
-                      <span className="text-xs font-semibold">
+                      <span className="type-label-sm">
                         {money(editor.value, settings.currencyCode)}
                       </span>
                     </div>
@@ -2095,7 +2089,7 @@ export function PrecisionReports({
                 title="Delivered Projects"
                 description="Most recently completed editing work."
                 metadata={
-                  <span className="text-[11px] text-muted-foreground">
+                  <span className="text-muted-foreground type-label-sm">
                     {report.deliveredProjects.length} projects
                   </span>
                 }
@@ -2108,17 +2102,17 @@ export function PrecisionReports({
                       className="grid grid-cols-[minmax(0,1fr)_100px_auto] items-center gap-3 px-4 py-3"
                     >
                       <span className="min-w-0">
-                        <span className="block truncate text-xs font-semibold">
+                        <span className="block truncate type-label-sm">
                           {project.title}
                         </span>
-                        <span className="mt-0.5 block truncate text-[10px] text-text-2">
+                        <span className="mt-0.5 block truncate text-text-2 type-label-sm">
                           {project.editorName} · {project.workType}
                         </span>
                       </span>
-                      <span className="text-[10px] text-text-2">
+                      <span className="text-text-2 type-label-sm">
                         {formatDate(project.date)}
                       </span>
-                      <span className="text-xs font-semibold">
+                      <span className="type-label-sm">
                         {project.isSalaryEdit
                           ? "Batch"
                           : money(project.amount, settings.currencyCode)}
@@ -2126,7 +2120,7 @@ export function PrecisionReports({
                     </div>
                   ))}
                   {!report.deliveredProjects.length ? (
-                    <div className="grid min-h-28 place-items-center text-xs text-text-2">
+                    <div className="grid min-h-28 place-items-center text-text-2 type-label-sm">
                       Deliver a project to list it here.
                     </div>
                   ) : null}
@@ -2147,8 +2141,8 @@ const clientTotalsGrid =
 function ClientMetric({ label, value }: { label: string; value: string }) {
   return (
     <div className="rounded-lg bg-well px-3 py-2.5">
-      <p className="text-[11px] font-semibold text-text-3">{label}</p>
-      <p className="mt-1 text-sm font-semibold">{value}</p>
+      <p className="text-text-3 type-label-sm">{label}</p>
+      <p className="mt-1 type-label">{value}</p>
     </div>
   );
 }
@@ -2157,8 +2151,8 @@ function ClientMetric({ label, value }: { label: string; value: string }) {
 function PeriodMetric({ label, value }: { label: string; value: string }) {
   return (
     <div className="min-w-0">
-      <dt className="text-xs text-text-2">{label}</dt>
-      <dd className="mt-1 text-lg font-semibold tabular-nums">{value}</dd>
+      <dt className="text-text-2 type-label-sm">{label}</dt>
+      <dd className="mt-1 tabular-nums type-heading-sm">{value}</dd>
     </div>
   );
 }

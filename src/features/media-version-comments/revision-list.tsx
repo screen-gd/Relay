@@ -33,7 +33,7 @@ function RevisionRow({
   }
   return (
     <li id={`revision-${item._id}`} className="grid gap-2 py-3">
-      <p className="text-xs">
+      <p className="type-label-sm">
         {item.status === "draft"
           ? "AI-drafted"
           : item.status === "resolved"
@@ -73,16 +73,16 @@ function RevisionRow({
           </div>
         </form>
       ) : (
-        <p className="whitespace-pre-wrap text-sm">{item.text}</p>
+        <p className="whitespace-pre-wrap type-body">{item.text}</p>
       )}
       {item.vague ? (
-        <p className="text-sm">Vague note · {item.clarifyingQuestion}</p>
+        <p className="type-body">Vague note · {item.clarifyingQuestion}</p>
       ) : null}
       <TranscriptLine commentIds={item.sourceCommentIds} />
       {item.possibleNewScope ? (
-        <p className="text-xs">Possible new scope</p>
+        <p className="type-label-sm">Possible new scope</p>
       ) : null}
-      <div className="flex flex-wrap gap-3 text-xs">
+      <div className="flex flex-wrap gap-3 type-label-sm">
         {item.sourceCommentIds.map((id, index) => (
           <a
             key={id}
@@ -217,7 +217,7 @@ export function RevisionList({
       className="mt-3 text-foreground dark:bg-black dark:text-white [&_button]:bg-transparent [&_button:hover]:bg-transparent [&_button]:dark:text-white [&_textarea]:dark:bg-black"
     >
       <div className="flex flex-wrap items-center gap-3">
-        <h4 className="text-sm font-semibold">Revision list</h4>
+        <h4 className="type-label">Revision list</h4>
         {canEdit ? (
           <>
             <Button
@@ -243,7 +243,7 @@ export function RevisionList({
         ) : null}
       </div>
       {run ? (
-        <p role="status" className="mt-2 text-xs">
+        <p role="status" className="mt-2 type-label-sm">
           {run.status === "queued"
             ? "Queued"
             : run.status === "running"
@@ -254,13 +254,13 @@ export function RevisionList({
         </p>
       ) : null}
       {error ? (
-        <p role="alert" className="mt-2 text-sm text-destructive">
+        <p role="alert" className="mt-2 text-destructive type-body">
           {error}
         </p>
       ) : null}
       {[...groups].map(([theme, rows]) => (
         <div key={theme} className="mt-4">
-          <h5 className="text-sm font-medium">{theme}</h5>
+          <h5 className="type-label">{theme}</h5>
           <ul className="divide-y divide-border">
             {rows
               .sort(

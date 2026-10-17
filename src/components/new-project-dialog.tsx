@@ -261,7 +261,7 @@ export function NewProjectDialog({
         }}
       >
         <DialogHeader>
-          <DialogTitle className="text-2xl">New Project</DialogTitle>
+          <DialogTitle className="type-heading-lg">New Project</DialogTitle>
           <DialogDescription>
             Set the schedule, ownership, and production details for this
             project.
@@ -387,7 +387,10 @@ export function NewProjectDialog({
                           />
                         </div>
                         {clientError ? (
-                          <p role="alert" className="text-sm text-destructive">
+                          <p
+                            role="alert"
+                            className="text-destructive type-body"
+                          >
                             {clientError}
                           </p>
                         ) : null}

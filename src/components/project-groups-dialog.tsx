@@ -156,10 +156,8 @@ export function ProjectGroupsDialog({
                   <section key={group.id} className="py-3">
                     <div className="flex items-start justify-between gap-3">
                       <div className="min-w-0">
-                        <h3 className="truncate text-sm font-semibold">
-                          {group.name}
-                        </h3>
-                        <p className="mt-1 text-xs text-muted-foreground">
+                        <h3 className="truncate type-label">{group.name}</h3>
+                        <p className="mt-1 text-muted-foreground type-label-sm">
                           {client?.name ?? "Unknown Client"}
                           {group.archived ? " · Archived" : ""}
                         </p>
@@ -181,7 +179,7 @@ export function ProjectGroupsDialog({
                         </Button>
                       </div>
                     </div>
-                    <dl className="mt-3 grid grid-cols-4 gap-2 text-xs">
+                    <dl className="mt-3 grid grid-cols-4 gap-2 type-label-sm">
                       <div>
                         <dt className="text-muted-foreground">Projects</dt>
                         <dd className="mt-1 font-semibold">
@@ -211,13 +209,13 @@ export function ProjectGroupsDialog({
                 );
               })
             ) : (
-              <p className="py-8 text-center text-sm text-muted-foreground">
+              <p className="py-8 text-center text-muted-foreground type-body">
                 No Project Groups yet.
               </p>
             )}
           </div>
           <div className="grid content-start gap-4 border-l pl-5">
-            <h3 className="text-sm font-semibold">
+            <h3 className="type-label">
               {editing ? "Edit Project Group" : "New Project Group"}
             </h3>
             <FieldLayout label="Name">
@@ -258,7 +256,7 @@ export function ProjectGroupsDialog({
               />
             </FieldLayout>
             {error ? (
-              <p role="alert" className="text-sm text-destructive">
+              <p role="alert" className="text-destructive type-body">
                 {error}
               </p>
             ) : null}

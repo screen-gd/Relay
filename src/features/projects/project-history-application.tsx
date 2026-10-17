@@ -154,24 +154,24 @@ export function ProjectHistoryApplication() {
                     }
                   >
                     <span className="min-w-0">
-                      <span className="block truncate text-sm font-medium text-foreground">
+                      <span className="block truncate text-foreground type-label">
                         {project.title}
                       </span>
-                      <span className="block truncate text-xs text-muted-foreground">
+                      <span className="block truncate text-muted-foreground type-label-sm">
                         {(project.clientId &&
                           clientNames.get(project.clientId)) ||
                           "No client"}
                       </span>
                     </span>
-                    <span className="hidden text-xs text-muted-foreground sm:block">
+                    <span className="hidden text-muted-foreground sm:block type-label-sm">
                       {formatDay(project.completedAt ?? project.updatedAt)}
                     </span>
-                    <span className="hidden text-right text-sm tabular-nums text-foreground sm:block">
+                    <span className="hidden text-right tabular-nums text-foreground sm:block type-body">
                       {project.earnings > 0
                         ? money(project.earnings, settings.currencyCode)
                         : ""}
                     </span>
-                    <span className="text-right text-xs text-muted-foreground">
+                    <span className="text-right text-muted-foreground type-label-sm">
                       {rowLabel(project)}
                     </span>
                   </button>

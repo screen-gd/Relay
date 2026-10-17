@@ -39,7 +39,7 @@ export function TranscriptLine({
       return true;
     })
     .map((match) => (
-      <p key={match.segmentId} className="text-sm dark:text-white">
+      <p key={match.segmentId} className="dark:text-white type-body">
         {match.aiDrafted ? "AI-drafted · " : ""}
         <a
           href={`#transcript-${match.segmentId}`}
@@ -130,7 +130,7 @@ function ConnectedTranscriptReview({
   const replacing = Boolean(data?.transcript);
   // Uploading again replaces the transcript and clears its AI matches.
   const uploadControl = canEdit ? (
-    <label className="grid gap-1 text-xs">
+    <label className="grid gap-1 type-label-sm">
       {replacing ? "Replace transcript" : "Upload transcript"}
       <Input
         type="file"
@@ -177,9 +177,9 @@ function ConnectedTranscriptReview({
                     <li
                       id={`transcript-${segment._id}`}
                       key={segment._id}
-                      className="py-2 text-sm"
+                      className="py-2 type-body"
                     >
-                      <span className="font-mono text-xs">
+                      <span className="font-mono type-label-sm">
                         {formatReviewTimestamp(segment.startSeconds)}
                       </span>{" "}
                       {segment.text}
@@ -218,7 +218,7 @@ function ConnectedTranscriptReview({
           uploadControl
         )}
         {run ? (
-          <p role="status" className="text-xs">
+          <p role="status" className="type-label-sm">
             {run.status === "queued" || run.status === "running"
               ? "Matching..."
               : run.status === "failed"
@@ -227,7 +227,7 @@ function ConnectedTranscriptReview({
           </p>
         ) : null}
         {error ? (
-          <p role="alert" className="text-sm text-destructive">
+          <p role="alert" className="text-destructive type-body">
             {error}
           </p>
         ) : null}

@@ -182,7 +182,7 @@ export function PrecisionMedia({
                   className="h-full min-h-0 overflow-hidden"
                   master={
                     <aside className="min-h-0 overflow-auto border-b border-line-row pb-3 lg:border-b-0">
-                      <p className="px-2 text-[11px] font-semibold text-text-3">
+                      <p className="px-2 text-text-3 type-label-sm">
                         Collections
                       </p>
                       <nav
@@ -197,7 +197,7 @@ export function PrecisionMedia({
                               key={item.id}
                               type="button"
                               className={cn(
-                                "relative flex h-9 w-full items-center gap-2 overflow-hidden rounded-md px-2 text-xs font-medium outline-none transition-colors",
+                                "relative flex h-9 w-full items-center gap-2 overflow-hidden rounded-md px-2 outline-none transition-colors type-label-sm",
                                 active
                                   ? "text-text-1"
                                   : "text-text-2 hover:text-text-1"
@@ -222,7 +222,7 @@ export function PrecisionMedia({
                               </span>
                               <motion.span
                                 key={item.count}
-                                className="relative z-10 ml-auto min-w-4 text-right text-[10px] tabular-nums"
+                                className="relative z-10 ml-auto min-w-4 text-right tabular-nums type-label-sm"
                                 initial={
                                   reduceMotion ? false : { opacity: 0.4, y: -2 }
                                 }
@@ -302,7 +302,7 @@ export function PrecisionMedia({
                         <AnimatePresence mode="popLayout" initial={false}>
                           <motion.h2
                             key={collection}
-                            className="text-xs font-semibold"
+                            className="type-label-sm"
                             initial={
                               reduceMotion ? false : { opacity: 0, x: -4 }
                             }
@@ -320,7 +320,7 @@ export function PrecisionMedia({
                         </AnimatePresence>
                         <motion.span
                           key={`${collection}-${filtered.length}`}
-                          className="ml-auto text-[10px] tabular-nums text-text-2"
+                          className="ml-auto tabular-nums text-text-2 type-label-sm"
                           aria-live="polite"
                           initial={reduceMotion ? false : { opacity: 0 }}
                           animate={{ opacity: 1 }}
@@ -404,17 +404,17 @@ export function PrecisionMedia({
                                             reduceMotion={Boolean(reduceMotion)}
                                           />
                                           <span className="relative z-10 min-w-0">
-                                            <span className="block truncate text-xs font-semibold">
+                                            <span className="block truncate type-label-sm">
                                               {project.title}
                                             </span>
-                                            <span className="mt-1 block truncate text-[10px] text-text-2">
+                                            <span className="mt-1 block truncate text-text-2 type-label-sm">
                                               {project.notes ||
                                                 project.client ||
                                                 "No package note"}
                                             </span>
                                           </span>
                                           <span className="relative z-10">
-                                            <span className="mb-1 flex justify-between text-[10px]">
+                                            <span className="mb-1 flex justify-between type-label-sm">
                                               <span>Package progress</span>
                                               <span className="tabular-nums">
                                                 {value}%
@@ -515,14 +515,14 @@ export function PrecisionMedia({
                                           />
                                           <span className="block p-3">
                                             <span className="flex items-center gap-2">
-                                              <span className="min-w-0 flex-1 truncate text-xs font-semibold">
+                                              <span className="min-w-0 flex-1 truncate type-label-sm">
                                                 {project.title}
                                               </span>
-                                              <span className="text-[10px] tabular-nums text-text-2">
+                                              <span className="tabular-nums text-text-2 type-label-sm">
                                                 {value}%
                                               </span>
                                             </span>
-                                            <span className="mt-1 block truncate text-[10px] text-text-2">
+                                            <span className="mt-1 block truncate text-text-2 type-label-sm">
                                               {project.client ||
                                                 project.workType}
                                             </span>
@@ -560,10 +560,10 @@ export function PrecisionMedia({
                                 >
                                   <FolderArchive className="size-5 text-text-2" />
                                 </motion.div>
-                                <p className="mt-3 text-sm font-semibold">
+                                <p className="mt-3 type-label">
                                   {emptyCopy.title}
                                 </p>
-                                <p className="mt-1 text-xs text-text-2">
+                                <p className="mt-1 text-text-2 type-label-sm">
                                   {emptyCopy.description}
                                 </p>
                                 {query ? (
@@ -609,14 +609,14 @@ export function PrecisionMedia({
                               large
                             />
                             <div className="mt-4 flex items-start justify-between gap-3">
-                              <h2 className="min-w-0 truncate text-sm font-semibold">
+                              <h2 className="min-w-0 truncate type-label">
                                 {selected.title}
                               </h2>
-                              <span className="shrink-0 text-xs font-semibold tabular-nums text-text-2">
+                              <span className="shrink-0 tabular-nums text-text-2 type-label-sm">
                                 {progress(selected)}%
                               </span>
                             </div>
-                            <p className="mt-1 text-[11px] text-text-2">
+                            <p className="mt-1 text-text-2 type-label-sm">
                               {selected.client || selected.workType}
                             </p>
                             <Badge
@@ -660,10 +660,10 @@ export function PrecisionMedia({
                           >
                             <div>
                               <FolderOpen className="mx-auto size-6 text-text-2" />
-                              <p className="mt-2 text-sm font-semibold">
+                              <p className="mt-2 type-label">
                                 Select a package
                               </p>
-                              <p className="mt-1 text-xs text-text-2">
+                              <p className="mt-1 text-text-2 type-label-sm">
                                 Select a package to preview it and open the
                                 project.
                               </p>
@@ -735,8 +735,8 @@ function MediaPreview({
 function Detail({ label, value }: { label: string; value: string }) {
   return (
     <div>
-      <p className="text-[11px] font-semibold text-text-3">{label}</p>
-      <p className="mt-1 text-xs leading-5 text-text-2">{value}</p>
+      <p className="text-text-3 type-label-sm">{label}</p>
+      <p className="mt-1 text-text-2 type-label-sm">{value}</p>
     </div>
   );
 }

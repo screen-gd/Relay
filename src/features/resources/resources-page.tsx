@@ -291,30 +291,30 @@ export function ResourcesDesignPage({
                     </span>
                     <div className="min-w-0">
                       <div className="mb-1 flex flex-wrap items-center gap-2">
-                        <h3 className="truncate text-sm font-semibold">
+                        <h3 className="truncate type-label">
                           {resource.title}
                         </h3>
                         <OwnedBadge variant="secondary">
                           {resource.category}
                         </OwnedBadge>
                       </div>
-                      <p className="truncate text-xs text-text-2">
+                      <p className="truncate text-text-2 type-label-sm">
                         {resource.url}
                       </p>
                       {resource.notes ? (
-                        <p className="mt-1 text-xs leading-relaxed text-text-2">
+                        <p className="mt-1 text-text-2 type-label-sm">
                           {resource.notes}
                         </p>
                       ) : null}
                     </div>
                   </div>
-                  <p className="text-sm text-muted-foreground lg:text-foreground">
+                  <p className="text-muted-foreground lg:text-foreground type-body">
                     {resource.projectId
                       ? projectName(resource.projectId) || "Linked project"
                       : "General"}
                   </p>
                   <time
-                    className="truncate text-xs text-text-2"
+                    className="truncate text-text-2 type-label-sm"
                     dateTime={resource.updatedAt || resource.createdAt}
                   >
                     Updated{" "}

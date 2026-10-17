@@ -59,7 +59,7 @@ export function AccountSettingsPage() {
               role="status"
               className="grid min-h-[220px] place-items-center p-6"
             >
-              <div className="flex flex-col items-center gap-3 text-sm text-text-2">
+              <div className="flex flex-col items-center gap-3 text-text-2 type-body">
                 <LoaderCircle
                   aria-hidden="true"
                   className="size-7 animate-spin text-primary"
@@ -74,11 +74,11 @@ export function AccountSettingsPage() {
             >
               <h2
                 id="account-required-title"
-                className="text-xl font-semibold text-foreground"
+                className="text-foreground type-heading"
               >
                 Account required
               </h2>
-              <p className="text-sm leading-6 text-muted-foreground">
+              <p className="text-muted-foreground type-body">
                 Local mode does not have an account record, email, password, or
                 connected login provider. Sign in or create an account to manage
                 private account settings.
@@ -97,7 +97,7 @@ export function AccountSettingsPage() {
                   </OwnedButton>
                 </div>
               ) : (
-                <p role="status" className="text-sm text-muted-foreground">
+                <p role="status" className="text-muted-foreground type-body">
                   Account sync is not configured for this deployment. Use local
                   mode, or add the Clerk and Convex public settings to enable
                   accounts.
@@ -132,10 +132,8 @@ export function AccountSettingsPage() {
         >
           <div className="flex flex-col justify-between gap-4 rounded-lg border border-border bg-muted/20 p-4 sm:flex-row sm:items-center">
             <div>
-              <p className="text-sm font-semibold">
-                Profile visibility and presentation
-              </p>
-              <p className="mt-1 max-w-2xl text-sm leading-6 text-muted-foreground">
+              <p className="type-label">Profile visibility and presentation</p>
+              <p className="mt-1 max-w-2xl text-muted-foreground type-body">
                 Update your public name, handle, bio, location, and published
                 work from the profile editor.
               </p>
@@ -157,7 +155,7 @@ export function AccountSettingsPage() {
                 Sign in to edit
               </OwnedButton>
             ) : (
-              <span className="text-sm text-muted-foreground">
+              <span className="text-muted-foreground type-body">
                 Account sign-in is not configured.
               </span>
             )}

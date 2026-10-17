@@ -300,7 +300,7 @@ export function SalaryPlansPanel({
         {!canCreatePlans ? (
           <div className="border-t border-border px-4 py-3">
             <CapabilityUpgradePrompt capability="salaryPlans" inline />
-            <p className="mt-2 text-xs text-muted-foreground">
+            <p className="mt-2 text-muted-foreground type-label-sm">
               Existing plans and batches stay visible. Creating plans,
               completing batches, and recording batch payments require Creator
               or Team.
@@ -310,13 +310,13 @@ export function SalaryPlansPanel({
         {error ? (
           <p
             role="alert"
-            className="border-t border-border px-4 py-3 text-sm text-destructive"
+            className="border-t border-border px-4 py-3 text-destructive type-body"
           >
             {error}
           </p>
         ) : null}
         {plans === undefined ? (
-          <p className="border-t border-border px-4 py-8 text-center text-xs text-muted-foreground">
+          <p className="border-t border-border px-4 py-8 text-center text-muted-foreground type-label-sm">
             Loading payment plans...
           </p>
         ) : visiblePlans.length ? (
@@ -351,14 +351,14 @@ export function SalaryPlansPanel({
             ))}
           </div>
         ) : (
-          <p className="border-t border-border px-4 py-8 text-center text-xs text-muted-foreground">
+          <p className="border-t border-border px-4 py-8 text-center text-muted-foreground type-label-sm">
             {clients.length
               ? "No payment plans yet."
               : "Add a client before creating a payment plan."}
           </p>
         )}
         {hasLegacyBatches ? (
-          <p className="border-t border-border px-4 py-3 text-xs text-muted-foreground">
+          <p className="border-t border-border px-4 py-3 text-muted-foreground type-label-sm">
             Older payment batches stay in the Payment batches list. New plans do
             not change them.
           </p>
@@ -430,15 +430,15 @@ function SalaryPlanRow({
     >
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
-          <h3 className="flex items-center gap-2 text-sm font-semibold">
+          <h3 className="flex items-center gap-2 type-label">
             <span className="truncate">{clientName}</span>
             {plan.archived ? (
-              <span className="text-xs font-normal text-muted-foreground">
+              <span className="text-muted-foreground type-label-sm">
                 Archived
               </span>
             ) : null}
           </h3>
-          <p className="mt-1 text-xs text-muted-foreground">
+          <p className="mt-1 text-muted-foreground type-label-sm">
             {money(plan.amount)} per {plan.requiredProjectCount} projects ·
             Started {formatDay(plan.startDate)}
           </p>
@@ -461,7 +461,7 @@ function SalaryPlanRow({
       </div>
 
       <div className="grid max-w-xl gap-1.5">
-        <div className="flex items-baseline justify-between gap-3 text-xs">
+        <div className="flex items-baseline justify-between gap-3 type-label-sm">
           <span className="text-muted-foreground">
             Batch #{batches.length + 1}
           </span>
@@ -485,26 +485,30 @@ function SalaryPlanRow({
       </div>
 
       {plan.notes ? (
-        <p className="max-w-3xl text-xs text-muted-foreground">{plan.notes}</p>
+        <p className="max-w-3xl text-muted-foreground type-label-sm">
+          {plan.notes}
+        </p>
       ) : null}
 
       {batches.length ? (
         <div className="overflow-hidden rounded-md border border-border">
-          <Table className="min-w-[640px] text-xs">
+          <Table className="min-w-[640px] type-label-sm">
             <TableHeader>
               <TableRow className="bg-well hover:bg-well">
-                <TableHead className="h-8 w-20 px-3 text-[11px]">
+                <TableHead className="h-8 w-20 px-3 type-label-sm">
                   Batch
                 </TableHead>
-                <TableHead className="h-8 px-3 text-[11px]">Amount</TableHead>
-                <TableHead className="h-8 px-3 text-[11px]">Projects</TableHead>
-                <TableHead className="h-8 px-3 text-[11px]">
+                <TableHead className="h-8 px-3 type-label-sm">Amount</TableHead>
+                <TableHead className="h-8 px-3 type-label-sm">
+                  Projects
+                </TableHead>
+                <TableHead className="h-8 px-3 type-label-sm">
                   Completed
                 </TableHead>
-                <TableHead className="h-8 w-36 px-3 text-[11px]">
+                <TableHead className="h-8 w-36 px-3 type-label-sm">
                   Payment
                 </TableHead>
-                <TableHead className="h-8 w-[34%] px-3 text-[11px]">
+                <TableHead className="h-8 w-[34%] px-3 type-label-sm">
                   Note
                 </TableHead>
               </TableRow>
@@ -573,7 +577,7 @@ function SalaryPlanRow({
           </Table>
         </div>
       ) : (
-        <p className="text-xs text-muted-foreground">
+        <p className="text-muted-foreground type-label-sm">
           No completed batches yet. Only delivered projects linked to this plan
           count toward a batch.
         </p>
@@ -685,7 +689,7 @@ function PlanDialog({
               </FieldLayout>
             </div>
             {error ? (
-              <p role="alert" className="text-sm text-destructive">
+              <p role="alert" className="text-destructive type-body">
                 {error}
               </p>
             ) : null}

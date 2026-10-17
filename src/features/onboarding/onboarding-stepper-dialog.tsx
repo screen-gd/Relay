@@ -155,10 +155,8 @@ export function OnboardingStepperDialog({
           {stepIds.map((id) => (
             <Step key={id}>
               <header>
-                <h2 className="text-xl font-semibold tracking-[-0.02em]">
-                  {titles[id].title}
-                </h2>
-                <p className="mt-1 text-sm text-text-2">
+                <h2 className="type-heading">{titles[id].title}</h2>
+                <p className="mt-1 text-text-2 type-body">
                   {titles[id].description}
                 </p>
               </header>
@@ -186,7 +184,7 @@ export function OnboardingStepperDialog({
 
 function WelcomeStep() {
   return (
-    <p className="text-sm leading-relaxed text-text-1">
+    <p className="text-text-1 type-body">
       If you find a bug, tell us on X at{" "}
       <a
         className="font-medium underline underline-offset-4"
@@ -234,7 +232,7 @@ function ModeStep({
           body="Sync your workspace and use Team features."
         />
       </ChoiceGroup>
-      <div className="flex flex-wrap items-center justify-between gap-2 text-sm">
+      <div className="flex flex-wrap items-center justify-between gap-2 type-body">
         <Button
           type="button"
           variant="link"
@@ -247,7 +245,7 @@ function ModeStep({
           <Link to="/sample-studio">Open sample workspace</Link>
         </Button>
       </div>
-      <p className="text-xs leading-relaxed text-text-2">
+      <p className="text-text-2 type-label-sm">
         Read the{" "}
         <Link to="/privacy" className="underline underline-offset-2">
           Privacy Policy
@@ -258,7 +256,7 @@ function ModeStep({
         </Link>
         .
       </p>
-      <p className="text-xs leading-relaxed text-text-2">
+      <p className="text-text-2 type-label-sm">
         <TrustLinks />
       </p>
     </>
@@ -333,7 +331,7 @@ function AnalyticsStep({
 }) {
   return (
     <>
-      <p className="text-sm leading-relaxed text-text-1">
+      <p className="text-text-1 type-body">
         Relay never sends client names, project names, comments, files, links,
         portal tokens, or money.
       </p>
@@ -407,10 +405,12 @@ function Choice({
         {selected ? <Check className="size-3" strokeWidth={3} /> : null}
       </span>
       <span className="min-w-0">
-        <span className="block text-sm font-medium">{title}</span>
-        <span className="mt-0.5 block text-xs text-text-2">{body}</span>
+        <span className="block type-label">{title}</span>
+        <span className="mt-0.5 block text-text-2 type-label-sm">{body}</span>
         {note ? (
-          <span className="mt-1.5 block text-xs text-warn-text">{note}</span>
+          <span className="mt-1.5 block text-warn-text type-label-sm">
+            {note}
+          </span>
         ) : null}
       </span>
     </Button>

@@ -32,15 +32,13 @@ export function ClientHubPage() {
     <main className="min-h-screen bg-black text-white">
       <header className="border-b border-white/15 px-6 py-5 md:px-10">
         <div className="mx-auto flex max-w-6xl items-center justify-between">
-          <span className="text-lg font-semibold">Relay Client Hub</span>
+          <span className="type-heading-sm">Relay Client Hub</span>
           {isSignedIn ? <UserButton /> : null}
         </div>
       </header>
       <div className="mx-auto max-w-6xl px-6 py-10 md:px-10">
-        <p className="text-xs font-semibold tracking-[0.16em] text-amber-400 uppercase">
-          Published work
-        </p>
-        <h1 className="mt-2 text-3xl font-semibold tracking-tight">
+        <p className="text-amber-400 type-label-sm">Published work</p>
+        <h1 className="mt-2 type-display">
           {hub
             ? `Good to see you, ${hub.contactName}`
             : authLoading
@@ -49,7 +47,7 @@ export function ClientHubPage() {
                 ? "Connecting your Client Hub"
                 : "Sign in to view your projects"}
         </h1>
-        <p className="mt-2 text-sm text-zinc-400">
+        <p className="mt-2 text-zinc-400 type-body">
           Only projects your Workspace has published to you appear here.
         </p>
 
@@ -58,7 +56,7 @@ export function ClientHubPage() {
             aria-label="Published projects"
             className="w-full min-w-[680px] border-collapse text-left"
           >
-            <TableHeader className="text-xs tracking-wider text-zinc-500 uppercase">
+            <TableHeader className="text-zinc-500 type-label-sm">
               <TableRow className="border-b border-white/15">
                 <TableHead className="h-auto px-2 py-3 font-medium text-zinc-500">
                   Project
@@ -94,7 +92,7 @@ export function ClientHubPage() {
             </TableBody>
           </Table>
           {hub && hub.projects.length === 0 ? (
-            <p className="py-10 text-sm text-zinc-400">
+            <p className="py-10 text-zinc-400 type-body">
               No projects have been published to you yet.
             </p>
           ) : null}

@@ -195,7 +195,7 @@ export function ProjectOutputsPanel({
     return (
       <p
         role="status"
-        className="py-8 text-center text-sm text-muted-foreground"
+        className="py-8 text-center text-muted-foreground type-body"
       >
         Loading Project Outputs...
       </p>
@@ -221,7 +221,7 @@ export function ProjectOutputsPanel({
         }
       >
         {data.error ? (
-          <p role="alert" className="mb-4 text-sm text-destructive">
+          <p role="alert" className="mb-4 text-destructive type-body">
             {data.error}
           </p>
         ) : null}
@@ -241,9 +241,7 @@ export function ProjectOutputsPanel({
                   <div className="flex flex-col justify-between gap-4 lg:flex-row lg:items-start">
                     <div className="min-w-0">
                       <div className="flex flex-wrap items-center gap-2">
-                        <h3 className="text-sm font-semibold">
-                          {output.title}
-                        </h3>
+                        <h3 className="type-label">{output.title}</h3>
                         <Badge variant="secondary">{output.category}</Badge>
                         {canEdit ? null : (
                           <Badge variant="secondary">
@@ -253,14 +251,14 @@ export function ProjectOutputsPanel({
                           </Badge>
                         )}
                       </div>
-                      <p className="mt-1 text-[13px] text-muted-foreground">
+                      <p className="mt-1 text-muted-foreground type-body-sm">
                         {output.dueDate
                           ? `Due ${output.dueDate}`
                           : "No output due date"}
                         {" · "}Next: {nextAction[output.reviewState]}
                       </p>
                       {unresolvedOld ? (
-                        <p className="mt-2 text-[13px] font-medium text-warn-text">
+                        <p className="mt-2 text-warn-text type-label">
                           {unresolvedOld} unresolved{" "}
                           {unresolvedOld === 1 ? "Comment" : "Comments"} on
                           older versions
@@ -344,10 +342,8 @@ export function ProjectOutputsPanel({
                     {current ? (
                       <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg bg-well px-4 py-3">
                         <div>
-                          <p className="text-sm font-medium">
-                            Current: {current.label}
-                          </p>
-                          <p className="mt-0.5 text-xs text-muted-foreground">
+                          <p className="type-label">Current: {current.label}</p>
+                          <p className="mt-0.5 text-muted-foreground type-label-sm">
                             Version {current.versionNumber} ·{" "}
                             {current.source.provider === "external"
                               ? "External link"
@@ -367,13 +363,13 @@ export function ProjectOutputsPanel({
                         </Button>
                       </div>
                     ) : (
-                      <p className="rounded-lg bg-well px-4 py-3 text-sm text-muted-foreground">
+                      <p className="rounded-lg bg-well px-4 py-3 text-muted-foreground type-body">
                         No Media Version yet.
                       </p>
                     )}
                     {versions.length > 1 ? (
                       <Collapsible>
-                        <CollapsibleTrigger className="group inline-flex items-center gap-1 rounded-md outline-none text-[13px] font-medium text-muted-foreground hover:text-foreground">
+                        <CollapsibleTrigger className="group inline-flex items-center gap-1 rounded-md outline-none text-muted-foreground hover:text-foreground type-label">
                           <ChevronRight
                             aria-hidden="true"
                             className="size-3.5 shrink-0 text-muted-foreground transition-transform group-data-[state=open]:rotate-90"
@@ -386,7 +382,7 @@ export function ProjectOutputsPanel({
                             {versions.map((version) => (
                               <li
                                 key={version.id}
-                                className="flex items-center justify-between gap-3 rounded-md px-3 py-2 text-sm hover:bg-hover"
+                                className="flex items-center justify-between gap-3 rounded-md px-3 py-2 hover:bg-hover type-body"
                               >
                                 <span>
                                   v{version.versionNumber} · {version.label}

@@ -54,7 +54,7 @@ export function PrecisionFiles({
           />
         </div>
         <p
-          className="shrink-0 text-xs text-muted-foreground"
+          className="shrink-0 text-muted-foreground type-label-sm"
           aria-live="polite"
         >
           {visibleFiles.length} active{" "}
@@ -62,7 +62,7 @@ export function PrecisionFiles({
         </p>
       </div>
       {loading ? (
-        <p className="py-12 text-center text-sm text-muted-foreground">
+        <p className="py-12 text-center text-muted-foreground type-body">
           Loading workspace files…
         </p>
       ) : visibleFiles.length ? (
@@ -83,11 +83,11 @@ export function PrecisionFiles({
                   aria-hidden="true"
                 />
                 <div className="min-w-0">
-                  <p className="truncate text-sm font-medium">{file.title}</p>
-                  <p className="truncate text-xs text-muted-foreground">
+                  <p className="truncate type-label">{file.title}</p>
+                  <p className="truncate text-muted-foreground type-label-sm">
                     {file.fileName || "No filename"} · {fileSizeLabel(file)}
                   </p>
-                  <p className="truncate text-xs text-muted-foreground">
+                  <p className="truncate text-muted-foreground type-label-sm">
                     {projectTitles[file.projectId] || "Project"}
                   </p>
                 </div>
@@ -122,10 +122,10 @@ export function PrecisionFiles({
         </div>
       ) : (
         <Empty className="flex-none gap-0 rounded-none border-y border-dashed p-0 py-12 text-center [text-wrap:wrap] md:px-0 md:py-12">
-          <p className="text-sm font-medium">
+          <p className="type-label">
             {query.trim() ? `No files match "${query.trim()}"` : "No files yet"}
           </p>
-          <p className="mt-1 text-xs text-muted-foreground">
+          <p className="mt-1 text-muted-foreground type-label-sm">
             {query.trim()
               ? "Clear the search to see every file in your workspace."
               : "Add a file inside a project to index it here."}

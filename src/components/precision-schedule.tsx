@@ -371,7 +371,7 @@ export function PrecisionCalendar({
           data-family-toolbar="calendar"
           primary={
             <>
-              <h2 className="min-w-[9.5rem] text-base font-semibold text-text-1">
+              <h2 className="min-w-[9.5rem] text-text-1 type-heading-xs">
                 {viewMode === "week" ? weekLabel : monthLabel}
               </h2>
               <div className="flex items-center">
@@ -392,7 +392,7 @@ export function PrecisionCalendar({
                   <ChevronRight className="size-4" />
                 </Button>
               </div>
-              <span className="text-xs text-text-2">
+              <span className="text-text-2 type-label-sm">
                 {viewMode === "week" ? weekEventCount : monthEventCount}{" "}
                 scheduled
               </span>
@@ -454,7 +454,7 @@ export function PrecisionCalendar({
                         <div
                           role="columnheader"
                           key={day}
-                          className="px-3 py-2 text-xs font-medium text-text-2"
+                          className="px-3 py-2 text-text-2 type-label-sm"
                         >
                           {day}
                         </div>
@@ -514,7 +514,7 @@ export function PrecisionCalendar({
                                 >
                                   <span
                                     className={cn(
-                                      "grid size-6 place-items-center rounded-full text-xs font-semibold tabular-nums",
+                                      "grid size-6 place-items-center rounded-full tabular-nums type-label-sm",
                                       isToday
                                         ? "bg-foreground text-background"
                                         : isCurrentMonth
@@ -527,7 +527,7 @@ export function PrecisionCalendar({
                                   {dayEvents.slice(0, 3).map((event) => (
                                     <span
                                       key={event.id}
-                                      className="flex min-w-0 items-center gap-1.5 text-xs text-text-1"
+                                      className="flex min-w-0 items-center gap-1.5 text-text-1 type-label-sm"
                                     >
                                       <span
                                         aria-hidden="true"
@@ -545,7 +545,7 @@ export function PrecisionCalendar({
                                     </span>
                                   ))}
                                   {dayEvents.length > 3 ? (
-                                    <span className="text-xs text-text-2">
+                                    <span className="text-text-2 type-label-sm">
                                       +{dayEvents.length - 3} more
                                     </span>
                                   ) : null}
@@ -602,12 +602,12 @@ export function PrecisionCalendar({
                               onClick={() => selectDay(key)}
                               className="h-auto justify-start px-1 py-1 hover:bg-transparent focus-visible:focus-ring-inset"
                             >
-                              <span className="text-xs text-text-2">
+                              <span className="text-text-2 type-label-sm">
                                 {formatDate(key, { weekday: "short" })}
                               </span>
                               <span
                                 className={cn(
-                                  "grid size-7 place-items-center rounded-full text-sm font-semibold tabular-nums",
+                                  "grid size-7 place-items-center rounded-full tabular-nums type-label",
                                   isToday
                                     ? "bg-foreground text-background"
                                     : "text-text-1"
@@ -642,11 +642,11 @@ export function PrecisionCalendar({
                                         ),
                                       }}
                                     />
-                                    <span className="truncate text-xs font-semibold text-text-1">
+                                    <span className="truncate text-text-1 type-label-sm">
                                       {event.title}
                                     </span>
                                   </span>
-                                  <span className="truncate pl-3 text-[11px] text-text-2 capitalize">
+                                  <span className="truncate pl-3 text-text-2 capitalize type-label-sm">
                                     {event.detail ?? event.kind}
                                   </span>
                                 </Button>
@@ -679,7 +679,7 @@ export function PrecisionCalendar({
                           "h-auto w-full grid justify-start gap-3 text-left whitespace-normal focus-visible:focus-ring-inset sm:grid-cols-[120px_minmax(0,1fr)_120px] sm:items-center"
                         )}
                       >
-                        <span className="text-xs font-medium text-text-2">
+                        <span className="text-text-2 type-label-sm">
                           {formatDate(project.dueDate, {
                             weekday: "short",
                             month: "short",
@@ -687,15 +687,15 @@ export function PrecisionCalendar({
                           })}
                         </span>
                         <span className="min-w-0">
-                          <span className="block truncate text-sm font-semibold">
+                          <span className="block truncate type-label">
                             {project.title}
                           </span>
-                          <span className="mt-0.5 block truncate text-xs text-text-2">
+                          <span className="mt-0.5 block truncate text-text-2 type-label-sm">
                             {project.client || project.workType}
                           </span>
                         </span>
                         <span
-                          className="flex items-center gap-1.5 text-xs"
+                          className="flex items-center gap-1.5 type-label-sm"
                           style={{ color: projectStatusColor(project.status) }}
                         >
                           <span
@@ -707,7 +707,7 @@ export function PrecisionCalendar({
                       </Button>
                     ))}
                     {!visibleMonthProjects.length ? (
-                      <p className="px-3 py-2 text-sm text-text-2">
+                      <p className="px-3 py-2 text-text-2 type-body">
                         Nothing due this month. Give a project a due date to
                         schedule it.
                       </p>
@@ -752,12 +752,12 @@ export function PrecisionCalendar({
                                 background: projectStatusColor(project.status),
                               }}
                             />
-                            <span className="min-w-0 flex-1 truncate text-sm font-semibold">
+                            <span className="min-w-0 flex-1 truncate type-label">
                               {event.title}
                             </span>
                             <ArrowRight className="size-3.5 shrink-0 text-text-2" />
                           </span>
-                          <span className="truncate pl-4 text-xs text-text-2 capitalize">
+                          <span className="truncate pl-4 text-text-2 capitalize type-label-sm">
                             {event.detail ?? event.kind}
                           </span>
                           <Progress
@@ -770,7 +770,7 @@ export function PrecisionCalendar({
                     })}
                   </div>
                 ) : (
-                  <p className="px-4 pb-4 text-sm text-text-2">
+                  <p className="px-4 pb-4 text-text-2 type-body">
                     Nothing due on this day. Pick another day, or give a project
                     this due date.
                   </p>
@@ -878,23 +878,23 @@ export function PrecisionTimeline({
         description="A chronological view of project milestones, reviews, and completed deliveries."
         actions={
           <div
-            className="flex flex-wrap items-center gap-2 text-xs"
+            className="flex flex-wrap items-center gap-2 type-label-sm"
             aria-label="Timeline summary"
           >
             <span className="rounded-md bg-well px-2.5 py-1.5">
-              <strong className="text-base tabular-nums text-text-1">
+              <strong className="tabular-nums text-text-1 type-body-lg">
                 {active}
               </strong>
               <span className="ml-1 text-text-2">active</span>
             </span>
             <span className="rounded-md bg-well px-2.5 py-1.5">
-              <strong className="text-base tabular-nums text-warn-text">
+              <strong className="tabular-nums text-warn-text type-body-lg">
                 {review}
               </strong>
               <span className="ml-1 text-text-2">in review</span>
             </span>
             <span className="rounded-md bg-well px-2.5 py-1.5">
-              <strong className="text-base tabular-nums text-text-1">
+              <strong className="tabular-nums text-text-1 type-body-lg">
                 {delivered}
               </strong>
               <span className="ml-1 text-text-2">delivered</span>
@@ -926,7 +926,7 @@ export function PrecisionTimeline({
                     )}
                   >
                     <span>{option}</span>
-                    <span className="ml-1 text-[10px] tabular-nums opacity-70">
+                    <span className="ml-1 tabular-nums opacity-70 type-label-sm">
                       {option === "All"
                         ? projects.length
                         : option === "Active"
@@ -941,7 +941,7 @@ export function PrecisionTimeline({
             </ButtonGroup>
           }
           secondary={
-            <span className="text-[10px] text-text-2" aria-live="polite">
+            <span className="text-text-2 type-label-sm" aria-live="polite">
               {visibleProjects.length} milestones shown
             </span>
           }
@@ -1002,10 +1002,10 @@ export function PrecisionTimeline({
                             }}
                           />
                           <span>
-                            <span className="block text-[11px] font-semibold text-text-3">
+                            <span className="block text-text-3 type-label-sm">
                               {isDelivered(project) ? "Delivered" : "Expected"}
                             </span>
-                            <span className="mt-1 block text-xs font-medium">
+                            <span className="mt-1 block type-label-sm">
                               {formatDate(project.dueDate, {
                                 month: "short",
                                 day: "numeric",
@@ -1013,10 +1013,10 @@ export function PrecisionTimeline({
                             </span>
                           </span>
                           <span className="min-w-0">
-                            <span className="block truncate text-[13px] font-semibold">
+                            <span className="block truncate type-label">
                               {project.title}
                             </span>
-                            <span className="mt-1 block truncate text-[11px] text-text-2">
+                            <span className="mt-1 block truncate text-text-2 type-label-sm">
                               {project.client || project.workType} ·{" "}
                               {project.notes || "No note"}
                             </span>
@@ -1030,7 +1030,7 @@ export function PrecisionTimeline({
                           >
                             {project.status}
                           </Badge>
-                          <span className="flex items-center justify-end gap-1 text-[10px] text-text-2">
+                          <span className="flex items-center justify-end gap-1 text-text-2 type-label-sm">
                             {isDelivered(project) ? (
                               <CheckCircle2 className="size-3.5 text-text-1" />
                             ) : (

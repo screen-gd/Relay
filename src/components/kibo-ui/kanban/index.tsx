@@ -17,7 +17,7 @@ export function KanbanBoard({
     <section
       ref={setNodeRef}
       className={cn(
-        "flex h-full min-h-40 flex-col overflow-hidden bg-well text-xs",
+        "flex h-full min-h-40 flex-col overflow-hidden bg-well type-label-sm",
         className
       )}
       {...props}
@@ -28,9 +28,7 @@ export function KanbanBoard({
 }
 
 export function KanbanHeader({ className, ...props }: ComponentProps<"h3">) {
-  return (
-    <h3 className={cn("m-0 p-3 text-sm font-semibold", className)} {...props} />
-  );
+  return <h3 className={cn("m-0 p-3 type-label", className)} {...props} />;
 }
 
 export function KanbanCard({

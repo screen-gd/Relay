@@ -49,9 +49,9 @@ function PortalSettingRow({
   return (
     <div className="grid gap-2 py-2 sm:grid-cols-[minmax(9rem,0.7fr)_minmax(0,1.3fr)] sm:items-center sm:gap-6">
       <div>
-        <p className="text-sm font-medium">{label}</p>
+        <p className="type-label">{label}</p>
         {hint ? (
-          <p className="mt-0.5 text-xs text-muted-foreground">{hint}</p>
+          <p className="mt-0.5 text-muted-foreground type-label-sm">{hint}</p>
         ) : null}
       </div>
       <div className="min-w-0">{children}</div>
@@ -382,7 +382,7 @@ export function ProjectPortalPanel({
     return (
       <p
         role="status"
-        className="py-8 text-center text-sm text-muted-foreground"
+        className="py-8 text-center text-muted-foreground type-body"
       >
         Loading Client Portal settings...
       </p>
@@ -402,7 +402,7 @@ export function ProjectPortalPanel({
       {data.error || formError ? (
         <p
           role="alert"
-          className="bg-fail-wash px-4 py-3 text-sm text-fail-text"
+          className="bg-fail-wash px-4 py-3 text-fail-text type-body"
         >
           {formError || data.error}
         </p>
@@ -415,7 +415,7 @@ export function ProjectPortalPanel({
         footer={
           canEdit ? (
             <>
-              <p className="text-xs text-muted-foreground">
+              <p className="text-muted-foreground type-label-sm">
                 Client access stays scoped to this project.
               </p>
               <Button
@@ -468,7 +468,7 @@ export function ProjectPortalPanel({
                     </Button>
                   </div>
                 ) : (
-                  <p className="text-xs text-muted-foreground">
+                  <p className="text-muted-foreground type-label-sm">
                     Link unavailable in this browser.
                   </p>
                 )}
@@ -509,7 +509,7 @@ export function ProjectPortalPanel({
                 ) : null}
               </div>
             ) : (
-              <p className="text-sm text-muted-foreground">
+              <p className="text-muted-foreground type-body">
                 Set the options below, then publish.
               </p>
             )}
@@ -532,7 +532,7 @@ export function ProjectPortalPanel({
             hint="Choose which dates clients can see."
           >
             <div className="flex flex-wrap gap-x-5 gap-y-2">
-              <Label className="flex items-center gap-2 text-sm font-normal">
+              <Label className="flex items-center gap-2 type-body">
                 <Checkbox
                   checked={draft.showStartDate}
                   onCheckedChange={(checked) =>
@@ -542,7 +542,7 @@ export function ProjectPortalPanel({
                 />
                 Start date
               </Label>
-              <Label className="flex items-center gap-2 text-sm font-normal">
+              <Label className="flex items-center gap-2 type-body">
                 <Checkbox
                   checked={draft.showDueDate}
                   onCheckedChange={(checked) =>
@@ -563,7 +563,7 @@ export function ProjectPortalPanel({
                 {outputs.map((output) => (
                   <Label
                     key={output.id}
-                    className="flex items-center gap-2 text-sm font-normal"
+                    className="flex items-center gap-2 type-body"
                   >
                     <Checkbox
                       checked={selectedOutputs.has(output.id)}
@@ -571,14 +571,14 @@ export function ProjectPortalPanel({
                       disabled={!canEdit}
                     />
                     <span className="min-w-0 truncate">{output.title}</span>
-                    <span className="shrink-0 text-xs text-muted-foreground">
+                    <span className="shrink-0 text-muted-foreground type-label-sm">
                       {output.hasCurrentVersion ? "Ready" : "No version"}
                     </span>
                   </Label>
                 ))}
               </div>
             ) : (
-              <p className="text-sm text-muted-foreground">
+              <p className="text-muted-foreground type-body">
                 No outputs to share.
               </p>
             )}
@@ -632,7 +632,7 @@ export function ProjectPortalPanel({
                   (!draft.pinProtected && Boolean(data.portal?.hasPin))
                 }
               />
-              <Label className="flex items-center gap-2 text-sm font-normal">
+              <Label className="flex items-center gap-2 type-body">
                 <Checkbox
                   checked={draft.pinProtected}
                   onCheckedChange={(checked) =>
@@ -646,14 +646,14 @@ export function ProjectPortalPanel({
           </PortalSettingRow>
         </div>
         <Collapsible className="mt-3">
-          <CollapsibleTrigger className="group inline-flex items-center gap-1 rounded-md outline-none text-[13px] text-muted-foreground hover:text-foreground">
+          <CollapsibleTrigger className="group inline-flex items-center gap-1 rounded-md outline-none text-muted-foreground hover:text-foreground type-body-sm">
             <ChevronRight
               aria-hidden="true"
               className="size-3.5 shrink-0 text-muted-foreground transition-transform group-data-[state=open]:rotate-90"
             />
             Preview
           </CollapsibleTrigger>
-          <CollapsibleContent className="mt-3 space-y-2 rounded-lg bg-well p-4 text-sm">
+          <CollapsibleContent className="mt-3 space-y-2 rounded-lg bg-well p-4 type-body">
             <p className="font-semibold">{project.title}</p>
             {draft.publicNotes ? (
               <p className="whitespace-pre-wrap text-muted-foreground">
@@ -695,7 +695,7 @@ export function ProjectPortalPanel({
                 label="Publish"
                 hint="Show this project to signed-in clients."
               >
-                <Label className="flex items-center gap-2 text-sm font-normal">
+                <Label className="flex items-center gap-2 type-body">
                   <Checkbox
                     checked={hubSettings.published}
                     onCheckedChange={(checked) =>

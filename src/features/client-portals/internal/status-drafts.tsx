@@ -45,7 +45,7 @@ function DraftEditor({
   }
   return (
     <div className="mt-3 grid gap-2">
-      <p className="text-xs">
+      <p className="type-label-sm">
         AI-drafted ·{" "}
         {draft.channel === "whatsapp"
           ? "WhatsApp"
@@ -96,7 +96,7 @@ function DraftEditor({
           </Button>
         ) : null}
       </div>
-      <p className="text-xs">
+      <p className="type-label-sm">
         Sources:{" "}
         <a
           className="underline"
@@ -124,7 +124,7 @@ function DraftEditor({
         ))}
       </p>
       {message ? (
-        <p role="status" className="text-sm">
+        <p role="status" className="type-body">
           {message}
         </p>
       ) : null}
@@ -179,7 +179,7 @@ export function StatusDrafts({
   if (!isAuthenticated) {
     return (
       <section aria-label="Client status draft" className={sectionClassName}>
-        <h4 className="mb-2 text-sm font-semibold">Client update</h4>
+        <h4 className="mb-2 type-label">Client update</h4>
         <AiLockedNotice
           feature="Draft a client status update"
           access={hasAccount ? "settings" : "signIn"}
@@ -193,7 +193,7 @@ export function StatusDrafts({
     drafts?.find((d) => d.channel === channel);
   return (
     <section aria-label="Client status draft" className={sectionClassName}>
-      <h4 className="mb-2 text-sm font-semibold">Client update</h4>
+      <h4 className="mb-2 type-label">Client update</h4>
       <div className="flex flex-wrap items-center gap-2">
         {aiEnabled || drafts?.length ? (
           <Select
@@ -252,7 +252,7 @@ export function StatusDrafts({
         )}
       </div>
       {run ? (
-        <p role="status" className="mt-2 text-xs">
+        <p role="status" className="mt-2 type-label-sm">
           {run.status === "queued"
             ? "Queued"
             : run.status === "running"
@@ -263,7 +263,7 @@ export function StatusDrafts({
         </p>
       ) : null}
       {error ? (
-        <p role="alert" className="mt-2 text-sm">
+        <p role="alert" className="mt-2 type-body">
           {error}
         </p>
       ) : null}

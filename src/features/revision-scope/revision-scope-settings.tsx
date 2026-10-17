@@ -97,7 +97,7 @@ function ScopeForm({
       ).map(([label, value, setValue, inputMode]) => (
         <label
           key={label}
-          className="flex items-center justify-between gap-4 text-sm"
+          className="flex items-center justify-between gap-4 type-body"
         >
           {label}
           <Input
@@ -110,7 +110,7 @@ function ScopeForm({
           />
         </label>
       ))}
-      <div className="flex items-center justify-between gap-4 text-sm">
+      <div className="flex items-center justify-between gap-4 type-body">
         Included rounds apply
         <RoundBasisSelect
           value={roundBasis}
@@ -120,11 +120,13 @@ function ScopeForm({
       </div>
       {templates.length ? (
         <fieldset className="grid gap-2">
-          <legend className="mb-1 text-xs">Included rounds by template</legend>
+          <legend className="mb-1 type-label-sm">
+            Included rounds by template
+          </legend>
           {templates.map((template) => (
             <label
               key={template.id}
-              className="flex items-center justify-between gap-4 text-sm"
+              className="flex items-center justify-between gap-4 type-body"
             >
               {template.name}
               <Input
@@ -153,7 +155,9 @@ function ScopeForm({
         Save
       </Button>
       {!settings.canManage ? (
-        <p className="text-xs">Only the Workspace Owner can change these.</p>
+        <p className="type-label-sm">
+          Only the Workspace Owner can change these.
+        </p>
       ) : null}
     </form>
   );

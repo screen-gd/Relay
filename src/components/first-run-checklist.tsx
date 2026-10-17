@@ -69,18 +69,16 @@ export function FirstRunChecklist({
       aria-labelledby="first-run-title"
     >
       <Card className="p-5 shadow-none sm:p-8">
-        <p className="text-xs font-semibold uppercase tracking-[0.12em] text-text-1">
-          Your first production
-        </p>
+        <p className="text-text-1 type-label-sm">Your first production</p>
         <h2
           id="first-run-title"
-          className="mt-2 max-w-2xl text-2xl font-semibold tracking-[-0.025em] sm:text-3xl"
+          className="mt-2 max-w-2xl sm:text-3xl type-heading-lg"
         >
           {canLoadSample
             ? "See Relay filled with a sample production"
             : "Turn one active edit into a clear production plan"}
         </h2>
-        <p className="mt-3 max-w-2xl text-sm leading-6 text-text-2">
+        <p className="mt-3 max-w-2xl text-text-2 type-body">
           {canLoadSample
             ? "Demo work you can clear at any time. Nothing you add yourself is removed with it."
             : "Create a real project first. Relay will reveal the full dashboard once there is useful work to organize."}
@@ -112,20 +110,18 @@ export function FirstRunChecklist({
                   <span className="grid size-9 place-items-center rounded-md bg-selected text-text-1">
                     <Icon className="size-4" />
                   </span>
-                  <span className="font-mono text-xs text-text-3">
+                  <span className="font-mono text-text-3 type-label-sm">
                     0{index + 1}
                   </span>
                 </div>
-                <h2 className="mt-4 text-sm font-semibold">{step.title}</h2>
-                <p className="mt-2 text-sm leading-6 text-text-2">
-                  {step.body}
-                </p>
+                <h2 className="mt-4 type-label">{step.title}</h2>
+                <p className="mt-2 text-text-2 type-body">{step.body}</p>
               </li>
             );
           })}
         </ol>
 
-        <div className="mt-5 flex flex-col gap-3 border-t border-line-row pt-5 text-sm text-text-2 sm:flex-row sm:items-center sm:justify-between">
+        <div className="mt-5 flex flex-col gap-3 border-t border-line-row pt-5 text-text-2 sm:flex-row sm:items-center sm:justify-between type-body">
           <p className="flex items-center gap-2">
             <LockKeyhole className="size-4" />
             {mode === "local"

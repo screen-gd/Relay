@@ -20,6 +20,24 @@ export const PageHeaderContext = createContext<{
   inShell?: boolean;
 }>({ actionsHost: null });
 
+/**
+ * Renders `children` where the page's actions live: the shell's top bar, or
+ * in place outside the shell. For pages whose heading is rendered elsewhere.
+ */
+export function TopBarActions({ children }: { children: ReactNode }) {
+  const { actionsHost, inShell } = useContext(PageHeaderContext);
+  const actions = (
+    <div
+      data-slot="page-header-actions"
+      className="flex shrink-0 items-center gap-2"
+    >
+      {children}
+    </div>
+  );
+  if (actionsHost) return createPortal(actions, actionsHost);
+  return inShell ? null : actions;
+}
+
 type PageHeaderProps = Omit<ComponentPropsWithoutRef<"header">, "title"> & {
   title: ReactNode;
   description?: ReactNode;

@@ -177,7 +177,7 @@ function FilterField({
 }) {
   return (
     <div className="grid gap-1.5">
-      <span className="text-xs font-medium text-muted-foreground">{label}</span>
+      <span className="text-muted-foreground type-label-sm">{label}</span>
       {children}
     </div>
   );
@@ -369,13 +369,13 @@ function ProjectBoardCard({
             {...listeners}
             {...attributes}
           >
-            <span className="block w-full truncate text-[13px] font-semibold">
+            <span className="block w-full truncate type-label">
               {project.title}
             </span>
-            <span className="mt-1 block w-full truncate text-xs text-text-2">
+            <span className="mt-1 block w-full truncate text-text-2 type-label-sm">
               {project.client || "No client"}
             </span>
-            <span className="mt-3 block text-xs text-text-2">
+            <span className="mt-3 block text-text-2 type-label-sm">
               {formatDate(project.dueDate)}
             </span>
           </Button>
@@ -421,13 +421,11 @@ function ProjectBoardDragOverlay({ projects }: { projects: WorkItem[] }) {
         <DragOverlay dropAnimation={null}>
           {project ? (
             <Card className="min-w-0 gap-1 p-3 text-left cursor-grabbing">
-              <span className="truncate text-[13px] font-semibold">
-                {project.title}
-              </span>
-              <span className="truncate text-xs text-text-2">
+              <span className="truncate type-label">{project.title}</span>
+              <span className="truncate text-text-2 type-label-sm">
                 {project.client || "No client"}
               </span>
-              <span className="mt-2 text-xs text-text-2">
+              <span className="mt-2 text-text-2 type-label-sm">
                 {formatDate(project.dueDate)}
               </span>
             </Card>
@@ -456,10 +454,10 @@ function ProjectBoardColumn({
     >
       <KanbanHeader
         data-board-wheel
-        className="flex shrink-0 items-center justify-between px-3 py-3 text-sm font-medium text-text-1"
+        className="flex shrink-0 items-center justify-between px-3 py-3 text-text-1 type-label"
       >
         <span>{stage.label}</span>
-        <span className="text-[11px] font-normal tabular-nums text-text-2">
+        <span className="tabular-nums text-text-2 type-label-sm">
           {projects}
         </span>
       </KanbanHeader>
@@ -472,7 +470,9 @@ function ProjectBoardColumn({
         data-board-wheel={projects === 0 ? true : undefined}
       >
         {projects === 0 ? (
-          <span className="mt-3 block text-xs text-text-2">Drop here</span>
+          <span className="mt-3 block text-text-2 type-label-sm">
+            Drop here
+          </span>
         ) : (
           <div className="grid gap-2">{children}</div>
         )}
@@ -593,10 +593,8 @@ export function PrecisionProjects(props: PrecisionProjectsProps) {
           <div className="flex min-w-0 items-center gap-3">
             <ProjectThumbnail project={row.original} />
             <div className="min-w-0">
-              <p className="truncate text-[13px] font-semibold">
-                {row.original.title}
-              </p>
-              <p className="mt-0.5 max-w-[300px] truncate text-[11px] text-text-2">
+              <p className="truncate type-label">{row.original.title}</p>
+              <p className="mt-0.5 max-w-[300px] truncate text-text-2 type-label-sm">
                 {row.original.notes || "No notes"}
               </p>
             </div>
@@ -607,7 +605,7 @@ export function PrecisionProjects(props: PrecisionProjectsProps) {
         id: "client",
         header: "Client",
         cell: ({ row }) => (
-          <span className="block truncate text-xs">
+          <span className="block truncate type-label-sm">
             {props.settings.clients.find(
               (client) => client.id === row.original.clientId
             )?.name ??
@@ -630,7 +628,7 @@ export function PrecisionProjects(props: PrecisionProjectsProps) {
       columnHelper.accessor("dueDate", {
         header: "Due",
         cell: (info) => (
-          <span className="whitespace-nowrap text-xs">
+          <span className="whitespace-nowrap type-label-sm">
             {formatDate(info.getValue())}
           </span>
         ),
@@ -639,7 +637,7 @@ export function PrecisionProjects(props: PrecisionProjectsProps) {
         id: "payment",
         header: "Payment",
         cell: ({ row }) => (
-          <span className="text-xs capitalize">
+          <span className="capitalize type-label-sm">
             {getPaymentState(row.original).replace("-", " ")}
           </span>
         ),
@@ -648,7 +646,7 @@ export function PrecisionProjects(props: PrecisionProjectsProps) {
         id: "salary",
         header: "Salary",
         cell: ({ row }) => (
-          <span className="whitespace-nowrap text-xs">
+          <span className="whitespace-nowrap type-label-sm">
             {isSalaryProject(row.original)
               ? "Salary"
               : money(row.original.earnings, props.settings.currencyCode)}
@@ -669,7 +667,7 @@ export function PrecisionProjects(props: PrecisionProjectsProps) {
                   )
                   .filter((name): name is string => Boolean(name));
                 return (
-                  <span className="block truncate text-xs">
+                  <span className="block truncate type-label-sm">
                     {names.join(", ") || "Unassigned"}
                   </span>
                 );
@@ -817,7 +815,7 @@ export function PrecisionProjects(props: PrecisionProjectsProps) {
                     <SlidersHorizontal className="size-3.5" />
                     Filters
                     {activeFilterCount ? (
-                      <span className="grid size-4 place-items-center rounded-full bg-selected text-[10px] tabular-nums">
+                      <span className="grid size-4 place-items-center rounded-full bg-selected tabular-nums type-label-sm">
                         {activeFilterCount}
                       </span>
                     ) : null}
@@ -869,7 +867,7 @@ export function PrecisionProjects(props: PrecisionProjectsProps) {
                         value="personal"
                       >
                         My Projects{" "}
-                        <span className="text-[10px]">
+                        <span className="type-label-sm">
                           {props.personalProjects.length}
                         </span>
                       </TabsTrigger>
@@ -880,7 +878,7 @@ export function PrecisionProjects(props: PrecisionProjectsProps) {
                         disabled={!hasTeam}
                       >
                         Team Projects{" "}
-                        <span className="text-[10px]">
+                        <span className="type-label-sm">
                           {props.teamProjects.length}
                         </span>
                       </TabsTrigger>
@@ -1061,7 +1059,7 @@ export function PrecisionProjects(props: PrecisionProjectsProps) {
                   ) : null}
                 </div>
                 <div className="mt-auto flex items-center justify-between border-t border-line-row px-5 py-4">
-                  <span className="text-xs text-text-2">
+                  <span className="text-text-2 type-label-sm">
                     {activeFilterCount} active{" "}
                     {activeFilterCount === 1 ? "filter" : "filters"}
                   </span>
@@ -1110,7 +1108,7 @@ export function PrecisionProjects(props: PrecisionProjectsProps) {
                     {tableState.view === "table" ? (
                       <header className="flex h-12 items-center justify-between border-b border-line-row px-4">
                         <span
-                          className="flex items-center gap-2 text-[11px] text-text-2"
+                          className="flex items-center gap-2 text-text-2 type-label-sm"
                           aria-live="polite"
                         >
                           <AnimatePresence mode="popLayout" initial={false}>
@@ -1135,7 +1133,7 @@ export function PrecisionProjects(props: PrecisionProjectsProps) {
                     {props.error ? (
                       <div
                         role="alert"
-                        className="grid min-h-72 place-items-center px-5 text-center text-sm text-destructive"
+                        className="grid min-h-72 place-items-center px-5 text-center text-destructive type-body"
                       >
                         {props.error}
                       </div>
@@ -1223,10 +1221,10 @@ export function PrecisionProjects(props: PrecisionProjectsProps) {
                                   className="h-12 w-16"
                                 />
                                 <span className="min-w-0">
-                                  <span className="block truncate text-sm font-semibold">
+                                  <span className="block truncate type-label">
                                     {row.original.title}
                                   </span>
-                                  <span className="mt-1 block truncate text-xs text-text-2">
+                                  <span className="mt-1 block truncate text-text-2 type-label-sm">
                                     {row.original.client ||
                                       row.original.workType}
                                   </span>
@@ -1268,7 +1266,7 @@ export function PrecisionProjects(props: PrecisionProjectsProps) {
                                       <TableHead
                                         key={header.id}
                                         className={cn(
-                                          "h-8 px-3 text-left text-[10px] font-semibold uppercase text-text-3",
+                                          "h-8 px-3 text-left text-text-3 type-label-sm",
                                           header.column.id === "title" &&
                                             "w-[25%]",
                                           header.column.id === "client" &&
@@ -1370,7 +1368,7 @@ export function PrecisionProjects(props: PrecisionProjectsProps) {
                                     {row.getVisibleCells().map((cell) => (
                                       <TableCell
                                         key={cell.id}
-                                        className="px-3 py-2 text-xs"
+                                        className="px-3 py-2 type-label-sm"
                                       >
                                         {flexRender(
                                           cell.column.columnDef.cell,
@@ -1395,12 +1393,12 @@ export function PrecisionProjects(props: PrecisionProjectsProps) {
                       >
                         <div className="max-w-xs">
                           <FolderKanban className="mx-auto size-7 text-text-2" />
-                          <p className="mt-2 text-sm font-semibold">
+                          <p className="mt-2 type-label">
                             {hasFilters
                               ? "No projects match these filters"
                               : "No projects in this workspace"}
                           </p>
-                          <p className="mt-1 text-xs leading-5 text-text-2">
+                          <p className="mt-1 text-text-2 type-label-sm">
                             {hasFilters
                               ? "Clear the filters to bring projects back into view."
                               : "Create your first project to track deadlines, reviews, and delivery."}
@@ -1504,11 +1502,11 @@ function ProjectInspector({
     return (
       <MotionCard
         className={cn(
-          "border-0 bg-transparent p-6 text-center text-xs text-text-2 shadow-none",
+          "border-0 bg-transparent p-6 text-center text-text-2 shadow-none type-label-sm",
           className
         )}
       >
-        <Empty className="flex-none gap-0 rounded-none border-0 p-0 text-center text-xs text-text-2 [text-wrap:wrap] md:p-0">
+        <Empty className="flex-none gap-0 rounded-none border-0 p-0 text-center text-text-2 [text-wrap:wrap] md:p-0 type-label-sm">
           <EmptyHeader className="max-w-none gap-0">
             <EmptyMedia
               variant="default"
@@ -1541,10 +1539,8 @@ function ProjectInspector({
           <div>
             <div className="border-b border-line-row pb-4">
               <div className="min-w-0 flex-1">
-                <h2 className="truncate text-sm font-semibold">
-                  {project.title}
-                </h2>
-                <p className="mt-0.5 truncate text-[11px] text-text-2">
+                <h2 className="truncate type-label">{project.title}</h2>
+                <p className="mt-0.5 truncate text-text-2 type-label-sm">
                   {project.client || "No client"}
                 </p>
                 <Badge
@@ -1570,21 +1566,21 @@ function ProjectInspector({
                 />
               </dl>
               <div className="pt-1">
-                <div className="flex justify-between text-xs font-semibold">
+                <div className="flex justify-between type-label-sm">
                   <span>Progress</span>
                   <span>{value}%</span>
                 </div>
                 <SegmentedMeter value={value} segments={24} className="mt-2" />
               </div>
               <div>
-                <p className="text-xs text-text-2">Project note</p>
-                <p className="mt-2 text-xs leading-5 text-text-2">
+                <p className="text-text-2 type-label-sm">Project note</p>
+                <p className="mt-2 text-text-2 type-label-sm">
                   {project.notes || "No project notes yet."}
                 </p>
               </div>
               <div>
-                <p className="text-xs text-text-2">Next action</p>
-                <p className="mt-2 text-xs leading-5 text-text-1">
+                <p className="text-text-2 type-label-sm">Next action</p>
+                <p className="mt-2 text-text-1 type-label-sm">
                   {projectNextAction(project)}
                 </p>
               </div>
@@ -1615,8 +1611,8 @@ function ProjectInspector({
 function Detail({ label, value }: { label: string; value: string }) {
   return (
     <div>
-      <p className="text-xs text-text-2">{label}</p>
-      <p className="mt-1 text-xs font-medium">{value}</p>
+      <p className="text-text-2 type-label-sm">{label}</p>
+      <p className="mt-1 type-label-sm">{value}</p>
     </div>
   );
 }

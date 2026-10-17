@@ -516,7 +516,7 @@ export function ClientPortalView({ token }: { token: string }) {
           onSubmit={(event) => void unlock(event)}
           className="w-full max-w-sm space-y-3 text-left"
         >
-          <Label htmlFor="portal-pin" className="text-sm font-medium">
+          <Label htmlFor="portal-pin" className="type-label">
             Portal PIN
           </Label>
           <Input
@@ -536,7 +536,7 @@ export function ClientPortalView({ token }: { token: string }) {
           />
           <p
             className={cn(
-              "text-xs text-muted-foreground",
+              "text-muted-foreground type-label-sm",
               (pinError || access.wrongPin) && "text-destructive"
             )}
             role={pinError || access.wrongPin ? "alert" : undefined}
@@ -597,15 +597,13 @@ function AccessState({
               <ShieldCheck className="size-6" />
             )}
           </span>
-          <h1 className="mt-6 text-2xl font-semibold tracking-tight">
-            {title}
-          </h1>
-          <p className="mt-2 max-w-sm text-sm leading-6 text-muted-foreground">
+          <h1 className="mt-6 type-heading-lg">{title}</h1>
+          <p className="mt-2 max-w-sm text-muted-foreground type-body">
             {body}
           </p>
           {children ? <div className="mt-8 w-full">{children}</div> : null}
         </div>
-        <p className="mt-14 text-xs text-muted-foreground">
+        <p className="mt-14 text-muted-foreground type-label-sm">
           Private project view · No account required
         </p>
       </section>
@@ -653,7 +651,7 @@ function ActivePortal({
         <header className="flex items-center justify-between gap-4 border-b border-border pb-5">
           {portal.branding ? (
             <span
-              className="text-base font-semibold"
+              className="type-heading-xs"
               style={{ color: portal.branding.accentColor }}
             >
               {portal.branding.name}
@@ -661,28 +659,26 @@ function ActivePortal({
           ) : (
             <RelayBrand compact />
           )}
-          <span className="text-xs font-medium text-muted-foreground">
+          <span className="text-muted-foreground type-label-sm">
             Client portal
           </span>
         </header>
         <section className="border-b border-border py-12">
-          <p className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">
-            Shared project
-          </p>
-          <h1 className="mt-3 max-w-2xl text-3xl font-semibold tracking-tight sm:text-5xl">
+          <p className="text-muted-foreground type-label-sm">Shared project</p>
+          <h1 className="mt-3 max-w-2xl sm:text-5xl type-display">
             {portal.title}
           </h1>
           {portal.clientName ? (
-            <p className="mt-3 text-sm text-muted-foreground">
+            <p className="mt-3 text-muted-foreground type-body">
               For {portal.clientName}
             </p>
           ) : null}
           {portal.summary ? (
-            <p className="mt-7 max-w-2xl text-base leading-7 text-muted-foreground">
+            <p className="mt-7 max-w-2xl text-muted-foreground type-body-lg">
               {portal.summary}
             </p>
           ) : null}
-          <div className="mt-8 flex flex-wrap gap-x-8 gap-y-3 text-sm">
+          <div className="mt-8 flex flex-wrap gap-x-8 gap-y-3 type-body">
             {portal.startDate ? (
               <span className="inline-flex items-center gap-2">
                 <CalendarDays
@@ -714,14 +710,14 @@ function ActivePortal({
         >
           <div className="flex items-end justify-between gap-4">
             <div>
-              <h2 id="progress-title" className="text-lg font-semibold">
+              <h2 id="progress-title" className="type-heading-sm">
                 Project progress
               </h2>
-              <p className="mt-1 text-sm text-muted-foreground">
+              <p className="mt-1 text-muted-foreground type-body">
                 A client-safe view of the current stage.
               </p>
             </div>
-            <span className="text-2xl font-semibold tabular-nums">
+            <span className="tabular-nums type-heading-lg">
               {portal.progress}%
             </span>
           </div>
@@ -746,11 +742,11 @@ function ActivePortal({
                 <li
                   key={stage}
                   aria-current={current ? "step" : undefined}
-                  className="flex items-center gap-2 text-sm"
+                  className="flex items-center gap-2 type-body"
                 >
                   <span
                     className={cn(
-                      "grid size-6 shrink-0 place-items-center border text-xs",
+                      "grid size-6 shrink-0 place-items-center border type-label-sm",
                       complete || current
                         ? "border-foreground bg-foreground text-background"
                         : "border-border text-muted-foreground"
@@ -777,10 +773,10 @@ function ActivePortal({
         <section aria-labelledby="outputs-title" className="py-10">
           <div className="flex items-end justify-between gap-4">
             <div>
-              <h2 id="outputs-title" className="text-lg font-semibold">
+              <h2 id="outputs-title" className="type-heading-sm">
                 Shared outputs
               </h2>
-              <p className="mt-1 text-sm text-muted-foreground">
+              <p className="mt-1 text-muted-foreground type-body">
                 Only the current version shared by your editor appears here.
               </p>
               <RevisionAllowance allowance={portal.revisions} />
@@ -806,7 +802,7 @@ function ActivePortal({
               ))}
             </div>
           ) : (
-            <div className="mt-6 border border-dashed border-border p-8 text-center text-sm text-muted-foreground">
+            <div className="mt-6 border border-dashed border-border p-8 text-center text-muted-foreground type-body">
               No outputs have been shared yet.
             </div>
           )}
@@ -817,15 +813,15 @@ function ActivePortal({
             aria-labelledby="notes-title"
             className="border-t border-border py-10"
           >
-            <h2 id="notes-title" className="text-lg font-semibold">
+            <h2 id="notes-title" className="type-heading-sm">
               Notes from your editor
             </h2>
-            <p className="mt-3 max-w-2xl whitespace-pre-wrap text-sm leading-6 text-muted-foreground">
+            <p className="mt-3 max-w-2xl whitespace-pre-wrap text-muted-foreground type-body">
               {portal.notes}
             </p>
           </section>
         ) : null}
-        <footer className="border-t border-border pt-5 text-xs text-muted-foreground">
+        <footer className="border-t border-border pt-5 text-muted-foreground type-label-sm">
           Shared securely through Relay.
         </footer>
       </div>
@@ -847,17 +843,17 @@ function PublicFilesSection({
     >
       <div className="flex items-end justify-between gap-4">
         <div>
-          <h2 id="files-title" className="text-lg font-semibold">
+          <h2 id="files-title" className="type-heading-sm">
             Files
           </h2>
-          <p className="mt-1 text-sm text-muted-foreground">
+          <p className="mt-1 text-muted-foreground type-body">
             Files your editor has chosen to share.
           </p>
         </div>
         <Badge variant="outline">{loading ? "…" : files.length}</Badge>
       </div>
       {loading ? (
-        <p className="mt-6 text-sm text-muted-foreground">
+        <p className="mt-6 text-muted-foreground type-body">
           Loading shared files…
         </p>
       ) : files.length ? (
@@ -874,11 +870,11 @@ function PublicFilesSection({
                 />
                 <div className="min-w-0">
                   <h3 className="truncate font-semibold">{file.title}</h3>
-                  <p className="mt-1 truncate text-xs text-muted-foreground">
+                  <p className="mt-1 truncate text-muted-foreground type-label-sm">
                     {fileKind(file.mimeType)} · {file.fileName}
                   </p>
                   {file.description ? (
-                    <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-muted-foreground">
+                    <p className="mt-2 whitespace-pre-wrap text-muted-foreground type-body">
                       {file.description}
                     </p>
                   ) : null}
@@ -889,7 +885,7 @@ function PublicFilesSection({
                   href={file.url}
                   target="_blank"
                   rel="noreferrer"
-                  className="inline-flex items-center gap-2 text-sm font-medium underline decoration-border underline-offset-4 hover:decoration-foreground focus-visible:outline-none"
+                  className="inline-flex items-center gap-2 underline decoration-border underline-offset-4 hover:decoration-foreground focus-visible:outline-none type-label"
                 >
                   Open <ArrowUpRight className="size-4" aria-hidden="true" />
                 </a>
@@ -897,7 +893,7 @@ function PublicFilesSection({
                   <a
                     href={file.url}
                     download={file.fileName}
-                    className="inline-flex items-center gap-2 text-sm font-medium underline decoration-border underline-offset-4 hover:decoration-foreground focus-visible:outline-none"
+                    className="inline-flex items-center gap-2 underline decoration-border underline-offset-4 hover:decoration-foreground focus-visible:outline-none type-label"
                   >
                     Download <Download className="size-4" aria-hidden="true" />
                   </a>
@@ -907,7 +903,7 @@ function PublicFilesSection({
           ))}
         </div>
       ) : (
-        <p className="mt-6 border border-dashed border-border p-8 text-center text-sm text-muted-foreground">
+        <p className="mt-6 border border-dashed border-border p-8 text-center text-muted-foreground type-body">
           No files have been shared yet.
         </p>
       )}
@@ -959,7 +955,7 @@ export function PublicOutputRow({
     <article className="grid gap-4 py-5 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
       <div className="min-w-0">
         <h3 className="font-semibold">{output.title}</h3>
-        <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
+        <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-muted-foreground type-label-sm">
           {state ? <span>{state}</span> : null}
           {output.dueDate ? (
             <span>Due {formatDate(output.dueDate)}</span>
@@ -976,13 +972,13 @@ export function PublicOutputRow({
           href={currentVersion.source.url}
           target="_blank"
           rel="noreferrer"
-          className="inline-flex w-fit items-center gap-2 text-sm font-medium underline decoration-border underline-offset-4 hover:decoration-foreground focus-visible:outline-none"
+          className="inline-flex w-fit items-center gap-2 underline decoration-border underline-offset-4 hover:decoration-foreground focus-visible:outline-none type-label"
         >
           Open current version{" "}
           <ArrowUpRight className="size-4" aria-hidden="true" />
         </a>
       ) : (
-        <span className="text-sm text-muted-foreground">
+        <span className="text-muted-foreground type-body">
           No version shared yet
         </span>
       )}
@@ -991,8 +987,8 @@ export function PublicOutputRow({
           aria-label="What changed"
           className="sm:col-span-2 dark:bg-black dark:text-white"
         >
-          <h4 className="text-sm font-semibold">What changed</h4>
-          <p className="mt-2 whitespace-pre-wrap text-sm">
+          <h4 className="type-label">What changed</h4>
+          <p className="mt-2 whitespace-pre-wrap type-body">
             {currentVersion.changelog}
           </p>
         </section>

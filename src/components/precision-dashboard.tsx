@@ -1,22 +1,16 @@
 import { getProjectProgress } from "@/features/projects/project-domain";
 
 import {
-  AlertCircle,
   ArrowDown,
-  ArrowRight,
   ArrowUp,
   ArrowUpDown,
-  CalendarClock,
-  Check,
-  ChevronDown,
   Edit3,
-  FolderKanban,
   ListFilter,
   MoreHorizontal,
+  Plus,
   Search,
+  SlidersHorizontal,
   Trash2,
-  UserRound,
-  UsersRound,
 } from "@/components/icons";
 import {
   createColumnHelper,
@@ -26,32 +20,30 @@ import {
   type SortingState,
   useReactTable,
 } from "@tanstack/react-table";
-import { AnimatePresence, animate, motion } from "motion/react";
+import { animate } from "motion/react";
 import { Link } from "@tanstack/react-router";
-import {
-  useEffect,
-  useLayoutEffect,
-  useMemo,
-  useRef,
-  useState,
-  type ReactNode,
-} from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import type { SalaryBatch, WorkItem, SettingsState } from "@/lib/types";
 import type { ProjectStatus } from "@/lib/domain-values";
 import { useHydratedReducedMotion } from "@/lib/motion";
 import { projectStatusColor } from "@/lib/project-status-style";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { Empty, EmptyHeader, EmptyMedia } from "@/components/ui/empty";
 import { Input } from "@/components/ui/input";
-import { Progress } from "@/components/ui/progress";
-import { Sparkline } from "@/components/dither-kit/sparkline";
 import { SegmentedMeter } from "@/components/ui/segmented-meter";
+import { Sparkline } from "@/components/ui/sparkline";
 import {
   DropdownMenu,
+  DropdownMenuCheckboxItem,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+  DropdownMenuSeparator,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
@@ -64,6 +56,7 @@ import {
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Table,
+  TableBody,
   TableCaption,
   TableCell,
   TableHead,
@@ -72,14 +65,12 @@ import {
 } from "@/components/ui/table";
 import {
   ContentSection,
-  DataTableFrame,
   MetricItem,
   MetricStrip,
-  PageContent,
-  PageToolbar,
+  PageEmptyState,
   sectionListClassName,
   sectionRowClassName,
-  SplitPane,
+  TopBarActions,
   WorkspacePage,
 } from "@/components/workspace-page";
 import { normalizedSalaryBatchSize } from "@/features/routes/utils/work-type-utils";
@@ -127,7 +118,7 @@ type DashboardProps = {
   }>;
   teamName?: string;
   teamLoading: boolean;
-  /** Workspace deadline-risk panel, shown below Needs attention when provided. */
+  /** Workspace deadline-risk panel, shown beside Activity when provided. */
   riskRadar?: ReactNode;
   query: string;
   setQuery: (value: string) => void;
@@ -183,7 +174,7 @@ const dueOptions = [
 ] as const satisfies ReadonlyArray<{ value: DueFilter; label: string }>;
 
 const billingOptions = [
-  { value: "ALL", label: "All Payments" },
+  { value: "ALL", label: "Any payment" },
   { value: "Paid", label: "Paid" },
   { value: "Unpaid", label: "Unpaid" },
 ] as const satisfies ReadonlyArray<{
@@ -191,81 +182,12 @@ const billingOptions = [
   label: string;
 }>;
 
-type DashboardMenuOption<T extends string> = {
-  value: T;
-  label: string;
-};
-
-function DashboardDropdown<T extends string>({
-  value,
-  options,
-  onChange,
-  ariaLabel,
-  className,
-  contentClassName,
-}: {
-  value: T;
-  options: ReadonlyArray<DashboardMenuOption<T>>;
-  onChange: (value: T) => void;
-  ariaLabel: string;
-  className?: string;
-  contentClassName?: string;
-}) {
-  const selectedOption = options.find((option) => option.value === value);
-
-  return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button
-          size="sm"
-          variant="outline"
-          aria-label={ariaLabel}
-          className={cn("w-full justify-between px-3", className)}
-        >
-          <span className="truncate">{selectedOption?.label ?? value}</span>
-          <ChevronDown
-            className="size-3.5 shrink-0 text-text-2"
-            strokeWidth={1.75}
-          />
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent
-        align="start"
-        className={cn("min-w-[10rem]", contentClassName)}
-      >
-        {options.map((option) => (
-          <DropdownMenuItem
-            key={option.value}
-            onSelect={() => onChange(option.value)}
-            className="justify-between gap-4"
-          >
-            <span className="truncate">{option.label}</span>
-            <Check
-              className={cn(
-                "size-4 shrink-0",
-                option.value === value ? "opacity-100" : "opacity-0"
-              )}
-              strokeWidth={1.75}
-            />
-          </DropdownMenuItem>
-        ))}
-      </DropdownMenuContent>
-    </DropdownMenu>
-  );
-}
-
-/** Minimalist motion: soft settle, never snappy SaaS bounce. */
-const easing = [0.16, 1, 0.3, 1] as const;
-
-const surface = "transition-colors duration-150";
-
-const MotionCard = motion.create(Card);
-const MotionButton = motion.create(Button);
-const MotionEmpty = motion.create(Empty);
-
-/** The dashboard ledger previews a fixed number of rows; Projects shows the rest. */
+/** The dashboard previews a fixed number of rows; Projects shows the rest. */
 const LEDGER_PREVIEW_ROWS = 5;
+const ATTENTION_ROWS = 5;
+const ACTIVITY_ROWS = 5;
 
+/** Counts up to a new value once; reduced motion shows the value at once. */
 function AnimatedNumber({
   value,
   format = (number) => Math.round(number).toLocaleString("en"),
@@ -281,13 +203,13 @@ function AnimatedNumber({
       setDisplayValue(value);
       return;
     }
-
     const controls = animate(displayValue, value, {
-      duration: 0.65,
-      ease: easing,
+      duration: 0.4,
+      ease: [0.2, 0, 0, 1],
       onUpdate: setDisplayValue,
     });
     return () => controls.stop();
+    // Animates from wherever the number is now; displayValue is not a trigger.
   }, [reduceMotion, value]);
 
   return <>{format(displayValue)}</>;
@@ -368,11 +290,11 @@ function relativeActivityTime(value: string) {
   return `${Math.round(hours / 24)}d ago`;
 }
 
-/** Keep status visible without turning every row into a collection of pills. */
-function StatusBadge({ status }: { status: WorkItem["status"] }) {
+/** A Project's stage as a word; stages are not trouble, so none is warm. */
+function StatusWord({ status }: { status: WorkItem["status"] }) {
   return (
     <span
-      className="text-[11px] font-medium"
+      className="type-label-sm whitespace-nowrap"
       style={{ color: projectStatusColor(status) }}
     >
       {status}
@@ -380,39 +302,41 @@ function StatusBadge({ status }: { status: WorkItem["status"] }) {
   );
 }
 
-function PriorityBadge({ project }: { project: WorkItem }) {
-  const priority = priorityFor(project);
-  const tone =
-    priority === "Urgent" || priority === "High"
-      ? "text-fail-text"
-      : priority === "Medium"
-        ? "text-warn-text"
-        : "text-text-2";
+/** When a Project is due, warm only when it is late. */
+function DueWord({ project }: { project: WorkItem }) {
+  const days = daysFromToday(project.dueDate);
+  const late = !delivered(project) && days < 0;
   return (
-    <span className={cn("text-[11px] font-medium", tone)}>{priority}</span>
+    <span
+      className={cn(
+        "type-label-sm whitespace-nowrap data",
+        late ? "text-fail-text" : "text-text-2"
+      )}
+    >
+      {late
+        ? `${Math.abs(days)}d late`
+        : days === 0
+          ? "Due today"
+          : formatDate(project.dueDate, { month: "short", day: "numeric" })}
+    </span>
   );
 }
 
 export function PrecisionDashboard(props: DashboardProps) {
-  const reduceMotion = useHydratedReducedMotion();
   const [selectedId, setSelectedId] = useState("");
+  const [inspectorOpen, setInspectorOpen] = useState(false);
   const [showCompleted, setShowCompleted] = useState(false);
   const [sorting, setSorting] = useState<SortingState>([]);
-  const [showFilters, setShowFilters] = useState(false);
   const [activityMode, setActivityMode] = useState<"recent" | "team">("recent");
-  const [mobileInspectorOpen, setMobileInspectorOpen] = useState(false);
-  const activityScrollTopRef = useRef<number | null>(null);
-
-  useLayoutEffect(() => {
-    if (activityScrollTopRef.current === null) return;
-    const contentViewport = document.getElementById("main-content");
-    if (contentViewport)
-      contentViewport.scrollTop = activityScrollTopRef.current;
-    activityScrollTopRef.current = null;
-  }, [activityMode]);
 
   const selected =
     props.projects.find((project) => project.id === selectedId) ?? null;
+
+  function peek(project: WorkItem) {
+    setSelectedId(project.id);
+    setInspectorOpen(true);
+  }
+
   /** Paid value per week over the last eight weeks, oldest first. */
   const paidTrend = useMemo(() => {
     const weeks = Array.from({ length: 8 }, () => 0);
@@ -427,7 +351,8 @@ export function PrecisionDashboard(props: DashboardProps) {
     }
     return weeks;
   }, [props.projects]);
-  const projectSummary = useMemo(() => {
+
+  const { overdue, dueThisWeek, waitingReviews, blockers } = useMemo(() => {
     const activeProjects = props.projects.filter(
       (project) => !delivered(project) && project.status !== "Cancelled"
     );
@@ -448,7 +373,7 @@ export function PrecisionDashboard(props: DashboardProps) {
       ),
     };
   }, [props.projects]);
-  const { overdue, dueThisWeek, waitingReviews, blockers } = projectSummary;
+
   const salarySize =
     props.stats.salaryBatchSize ??
     normalizedSalaryBatchSize(props.settings.salaryBatchSize);
@@ -481,39 +406,32 @@ export function PrecisionDashboard(props: DashboardProps) {
         cell: ({ row }) => {
           const project = row.original;
           return (
-            <div className="flex min-w-[220px] items-center gap-3">
-              <span className="min-w-0">
-                <span className="block truncate text-[13px] font-medium tracking-[-0.01em] text-text-1">
-                  {project.title}
-                </span>
-                <span className="mt-0.5 block max-w-[260px] truncate text-[11px] leading-relaxed text-text-2">
-                  {project.client ? `${project.client} · ` : ""}
-                  {project.notes}
-                </span>
+            <span className="block min-w-[200px]">
+              <span className="block truncate type-label text-text-1">
+                {project.title}
               </span>
-            </div>
+              <span className="mt-0.5 block max-w-[280px] truncate type-label-sm text-text-3">
+                {project.client || project.workType}
+              </span>
+            </span>
           );
         },
       }),
       columnHelper.accessor("workType", {
         header: "Type",
         cell: (info) => (
-          <span className="whitespace-nowrap text-xs text-text-2">
+          <span className="whitespace-nowrap type-label-sm text-text-2">
             {info.getValue()}
           </span>
         ),
       }),
       columnHelper.accessor("dueDate", {
-        header: "Due date",
-        cell: (info) => (
-          <span className="whitespace-nowrap font-mono text-[11px] tabular-nums text-text-2">
-            {formatDate(info.getValue(), { month: "short", day: "numeric" })}
-          </span>
-        ),
+        header: "Due",
+        cell: ({ row }) => <DueWord project={row.original} />,
       }),
       columnHelper.accessor("status", {
         header: "Status",
-        cell: (info) => <StatusBadge status={info.getValue()} />,
+        cell: (info) => <StatusWord status={info.getValue()} />,
       }),
       columnHelper.display({
         id: "progress",
@@ -521,14 +439,15 @@ export function PrecisionDashboard(props: DashboardProps) {
         cell: ({ row }) => {
           const progress = getProjectProgress(row.original);
           return (
-            <div className="w-[110px]">
-              <div className="mb-1.5 flex items-center justify-between text-[10px]">
-                <span className="font-mono tabular-nums text-text-2">
-                  {progress}%
-                </span>
-                <PriorityBadge project={row.original} />
-              </div>
-              <SegmentedMeter value={progress} segments={14} />
+            <div className="flex w-[120px] items-center gap-2">
+              <SegmentedMeter
+                value={progress}
+                segments={12}
+                className="flex-1"
+              />
+              <span className="w-8 text-end type-label-sm text-text-2 data">
+                {progress}%
+              </span>
             </div>
           );
         },
@@ -536,7 +455,7 @@ export function PrecisionDashboard(props: DashboardProps) {
       columnHelper.accessor("earnings", {
         header: "Value",
         cell: ({ getValue, row }) => (
-          <span className="whitespace-nowrap font-mono text-[11px] font-medium tabular-nums text-text-1">
+          <span className="whitespace-nowrap type-label text-text-1 data">
             {row.original.workType === props.settings.salaryWorkType
               ? "Batch"
               : formatMoney(getValue(), props.settings.currencyCode)}
@@ -545,7 +464,7 @@ export function PrecisionDashboard(props: DashboardProps) {
       }),
       columnHelper.display({
         id: "actions",
-        header: "",
+        header: () => <span className="sr-only">Actions</span>,
         cell: ({ row }) => {
           const project = row.original;
           return (
@@ -557,7 +476,7 @@ export function PrecisionDashboard(props: DashboardProps) {
                   aria-label={`Actions for ${project.title}`}
                   onClick={(event) => event.stopPropagation()}
                 >
-                  <MoreHorizontal className="size-4" strokeWidth={1.75} />
+                  <MoreHorizontal />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
@@ -568,14 +487,15 @@ export function PrecisionDashboard(props: DashboardProps) {
                   disabled={!props.canEditProjects && Boolean(project.teamId)}
                   onSelect={() => props.onEditProject(project)}
                 >
-                  <Edit3 strokeWidth={1.75} /> Edit project
+                  <Edit3 /> Edit project
                 </DropdownMenuItem>
+                <DropdownMenuSeparator />
                 <DropdownMenuItem
-                  className="text-destructive focus:text-destructive"
+                  variant="destructive"
                   disabled={!props.canDeleteProject(project)}
                   onSelect={() => props.onDeleteProject(project.id)}
                 >
-                  <Trash2 strokeWidth={1.75} /> Delete project
+                  <Trash2 /> Delete project
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -610,6 +530,7 @@ export function PrecisionDashboard(props: DashboardProps) {
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
   });
+  const ledgerRows = table.getRowModel().rows.slice(0, LEDGER_PREVIEW_ROWS);
 
   function clearFilters() {
     props.setQuery("");
@@ -621,13 +542,6 @@ export function PrecisionDashboard(props: DashboardProps) {
     props.setSortKey("createdAt_desc");
   }
 
-  function changeActivityMode(mode: "recent" | "team") {
-    if (mode === activityMode) return;
-    activityScrollTopRef.current =
-      document.getElementById("main-content")?.scrollTop ?? null;
-    setActivityMode(mode);
-  }
-
   const recentActivity = props.sessionActivity.length
     ? props.sessionActivity
     : props.projects
@@ -637,7 +551,7 @@ export function PrecisionDashboard(props: DashboardProps) {
             new Date(b.createdAt || b.dueDate).getTime() -
             new Date(a.createdAt || a.dueDate).getTime()
         )
-        .slice(0, 5)
+        .slice(0, ACTIVITY_ROWS)
         .map((project) => ({
           id: project.id,
           kind: delivered(project)
@@ -663,10 +577,6 @@ export function PrecisionDashboard(props: DashboardProps) {
           createdAt: item.createdAt,
         }));
 
-  const entry = reduceMotion
-    ? { initial: false as const, animate: { opacity: 1 } }
-    : { initial: { opacity: 0, y: 12 }, animate: { opacity: 1, y: 0 } };
-
   function handleRowKeyDown(
     event: React.KeyboardEvent<HTMLTableRowElement>,
     project: WorkItem,
@@ -680,18 +590,16 @@ export function PrecisionDashboard(props: DashboardProps) {
     }
     if (event.key === " ") {
       event.preventDefault();
-      setSelectedId(project.id);
+      peek(project);
       return;
     }
     if (event.key !== "ArrowDown" && event.key !== "ArrowUp") return;
-
     event.preventDefault();
-    const rows = table.getRowModel().rows.slice(0, LEDGER_PREVIEW_ROWS);
     const nextIndex = Math.min(
-      rows.length - 1,
+      ledgerRows.length - 1,
       Math.max(0, rowIndex + (event.key === "ArrowDown" ? 1 : -1))
     );
-    const nextProject = rows[nextIndex]?.original;
+    const nextProject = ledgerRows[nextIndex]?.original;
     if (!nextProject) return;
     setSelectedId(nextProject.id);
     requestAnimationFrame(() => {
@@ -703,808 +611,623 @@ export function PrecisionDashboard(props: DashboardProps) {
     });
   }
 
-  const attentionContext = [...blockers, ...overdue]
+  const attention = [...blockers, ...overdue]
     .filter(
       (project, index, projects) =>
         projects.findIndex((candidate) => candidate.id === project.id) === index
     )
-    .slice(0, 4);
+    .slice(0, ATTENTION_ROWS);
 
   return (
-    <WorkspacePage family="data-index">
-      <motion.div
-        className="contents"
-        initial={entry.initial}
-        animate={entry.animate}
-        transition={{ duration: reduceMotion ? 0 : 0.5, ease: easing }}
-      >
-        <PageToolbar
-          className="pb-4"
-          primary={
-            <div className="relative min-w-[220px] flex-1 lg:w-[300px] lg:flex-none">
-              <Search
-                className="pointer-events-none absolute left-3 top-1/2 size-3.5 -translate-y-1/2 text-text-2"
-                strokeWidth={1.75}
-              />
-              <Input
-                value={props.query}
-                onChange={(event) => props.setQuery(event.target.value)}
-                placeholder="Search projects"
-                aria-label="Search dashboard projects"
-                className="pl-9"
-              />
-            </div>
-          }
-          secondary={
-            <>
-              <Button
-                variant="outline"
-                className="px-3"
-                aria-expanded={showFilters}
-                aria-controls="dashboard-filters"
-                onClick={() => setShowFilters((value) => !value)}
-              >
-                <ListFilter className="size-3.5" strokeWidth={1.75} />
-                Filters{activeFilterCount ? ` · ${activeFilterCount}` : ""}
-              </Button>
-              <DashboardDropdown
-                value={props.sortKey}
-                options={sortOptions}
-                onChange={props.setSortKey}
-                ariaLabel="Sort dashboard projects"
-                className="h-9 w-[142px] bg-well"
-                contentClassName="min-w-[142px]"
-              />
-              {activeFilterCount > 0 || props.query ? (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="px-2 text-text-2"
-                  onClick={clearFilters}
-                >
-                  Clear all
-                </Button>
-              ) : null}
-            </>
+    <WorkspacePage family="data-index" className="gap-4">
+      {props.canCreateProjects ? (
+        <TopBarActions>
+          <Button size="sm" onClick={props.onNewProject}>
+            <Plus />
+            New project
+          </Button>
+        </TopBarActions>
+      ) : null}
+
+      <MetricStrip columns={showSalaryBatch ? 5 : 4} aria-label="Overview">
+        <MetricItem
+          label="Active"
+          value={<AnimatedNumber value={props.stats.active} />}
+          supporting={`of ${props.stats.total} projects`}
+        />
+        <MetricItem
+          label="Due this week"
+          value={<AnimatedNumber value={dueThisWeek.length} />}
+          supporting={
+            overdue.length ? (
+              <span className="text-fail-text">{overdue.length} overdue</span>
+            ) : (
+              "None overdue"
+            )
           }
         />
-        <PageContent className="flex flex-col gap-4 space-y-0">
-          <AnimatePresence initial={false}>
-            {showFilters ? (
-              <motion.div
-                id="dashboard-filters"
-                initial={
-                  reduceMotion
-                    ? { opacity: 1 }
-                    : { opacity: 0, height: 0, y: -8 }
-                }
-                animate={{ opacity: 1, height: "auto", y: 0 }}
-                exit={
-                  reduceMotion
-                    ? { opacity: 0 }
-                    : { opacity: 0, height: 0, y: -8 }
-                }
-                transition={{ duration: reduceMotion ? 0 : 0.28, ease: easing }}
-                className={cn(
-                  "my-3 grid overflow-hidden gap-2 p-3 sm:grid-cols-2 lg:grid-cols-5",
-                  surface
-                )}
-              >
-                <DashboardDropdown
-                  value={props.statusFilter}
-                  options={statusOptions.map((value) => ({
-                    value,
-                    label: value,
-                  }))}
-                  onChange={props.setStatusFilter}
-                  ariaLabel="Filter by project status"
-                />
-                <DashboardDropdown
-                  value={props.kindFilter}
-                  options={props.projectTagOptions.map((value) => ({
-                    value,
-                    label: value === "ALL" ? "All types" : value,
-                  }))}
-                  onChange={props.setKindFilter}
-                  ariaLabel="Filter by project type"
-                />
-                <DashboardDropdown
-                  value={props.clientFilter}
-                  options={props.clientOptions.map((value) => ({
-                    value,
-                    label: value === "ALL" ? "All clients" : value,
-                  }))}
-                  onChange={props.setClientFilter}
-                  ariaLabel="Filter by client"
-                />
-                <DashboardDropdown
-                  value={props.dueFilter}
-                  options={dueOptions}
-                  onChange={props.setDueFilter}
-                  ariaLabel="Filter by due date"
-                />
-                <DashboardDropdown
-                  value={props.billingFilter}
-                  options={billingOptions}
-                  onChange={props.setBillingFilter}
-                  ariaLabel="Filter by payment status"
-                />
-              </motion.div>
-            ) : null}
-          </AnimatePresence>
-
-          <motion.div
-            className="order-1"
-            initial={entry.initial}
-            animate={entry.animate}
-            transition={{
-              delay: reduceMotion ? 0 : 0.04,
-              duration: reduceMotion ? 0 : 0.5,
-              ease: easing,
-            }}
-          >
-            <div className="min-w-0">
-              <MetricStrip
-                columns={showSalaryBatch ? 5 : 4}
-                aria-label="Overview"
-                className="gap-2"
-              >
-                <MetricItem
-                  label="Active"
-                  value={
-                    <span className="text-text-1">
-                      <AnimatedNumber value={props.stats.active} />
-                    </span>
-                  }
-                  supporting={`of ${props.stats.total} projects`}
-                />
-                <MetricItem
-                  label="Due this week"
-                  value={<AnimatedNumber value={dueThisWeek.length} />}
-                  supporting="to deliver"
-                />
-                <MetricItem
-                  label="In review"
-                  value={
-                    <span
-                      className={cn(waitingReviews.length && "text-warn-text")}
-                    >
-                      <AnimatedNumber value={waitingReviews.length} />
-                    </span>
-                  }
-                  supporting="Reviews and revisions"
-                />
-                <MetricItem
-                  label="Paid"
-                  value={
-                    <AnimatedNumber
-                      value={props.stats.collected}
-                      format={(value) =>
-                        formatMoney(value, props.settings.currencyCode)
-                      }
-                    />
-                  }
-                  supporting={
-                    <>
-                      {`${formatMoney(
-                        props.stats.outstanding,
-                        props.settings.currencyCode
-                      )} unpaid`}
-                      {paidTrend.some(Boolean) ? (
-                        <div
-                          role="img"
-                          aria-label="Paid value per week, last 8 weeks"
-                          className="chart-glow mt-2 h-8"
-                        >
-                          <Sparkline
-                            data={paidTrend}
-                            color="lime"
-                            bloom="high"
-                            bloomOnHover
-                          />
-                        </div>
-                      ) : null}
-                    </>
-                  }
-                />
-                {showSalaryBatch ? (
-                  <MetricItem
-                    label="Salary batch"
-                    value={
-                      <span
-                        data-testid="salary-batch-progress"
-                        className="flex items-baseline gap-1"
-                      >
-                        <AnimatedNumber value={salaryProgress} />
-                        <span className="text-xs font-normal text-muted-foreground">
-                          / {salarySize} edits
-                        </span>
-                      </span>
-                    }
-                    action={
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        className="px-2"
-                        disabled={!pendingSalaryBatch}
-                        aria-label={
-                          pendingSalaryBatch
-                            ? `Mark payment batch ${pendingSalaryBatch.number} paid`
-                            : "Mark paid"
-                        }
-                        onClick={() => {
-                          if (pendingSalaryBatch)
-                            props.onMarkSalaryPayment(pendingSalaryBatch.id);
-                        }}
-                      >
-                        Mark paid
-                      </Button>
-                    }
-                    supporting={
-                      <div className="flex items-center gap-3">
-                        <span className="shrink-0">{salaryPercent}%</span>
-                        <SegmentedMeter
-                          value={salaryPercent}
-                          tone="accent"
-                          className="flex-1"
-                        />
-                      </div>
-                    }
-                  />
-                ) : null}
-              </MetricStrip>
-            </div>
-          </motion.div>
-
-          <motion.div
-            className="order-2"
-            initial={entry.initial}
-            animate={entry.animate}
-            transition={{
-              delay: reduceMotion ? 0 : 0.08,
-              duration: reduceMotion ? 0 : 0.55,
-              ease: easing,
-            }}
-          >
-            <ContentSection
-              title="Needs attention"
-              actions={
-                overdue.length ? (
-                  <span className="text-xs text-fail-text">
-                    {overdue.length} overdue
-                  </span>
-                ) : null
-              }
-              bodyMode="flush"
-            >
-              {attentionContext.length ? (
-                <div className={sectionListClassName}>
-                  {attentionContext.map((project) => {
-                    const days = daysFromToday(project.dueDate);
-                    return (
-                      <Button
-                        key={project.id}
-                        type="button"
-                        variant="ghost"
-                        className={cn(
-                          sectionRowClassName,
-                          "h-auto w-full grid gap-3 whitespace-normal px-3 py-2 text-left hover:bg-hover focus-visible:focus-ring-inset sm:grid-cols-[minmax(180px,0.8fr)_minmax(220px,1.4fr)_auto] sm:items-center",
-                          selected?.id === project.id && "bg-selected"
-                        )}
-                        onClick={() => {
-                          setSelectedId(project.id);
-                          if (window.matchMedia("(max-width: 1279px)").matches)
-                            setMobileInspectorOpen(true);
-                        }}
-                      >
-                        <span className="min-w-0">
-                          <span className="block truncate text-xs font-medium text-text-1">
-                            {project.title}
-                          </span>
-                          <span className="mt-0.5 block truncate text-[10px] text-text-2">
-                            {project.client || project.workType}
-                          </span>
-                        </span>
-                        <span className="min-w-0">
-                          <span className="block truncate text-[11px] text-text-2">
-                            {projectNextAction(project)}
-                          </span>
-                          <span className="mt-1 flex items-center gap-2">
-                            <StatusBadge status={project.status} />
-                            <PriorityBadge project={project} />
-                          </span>
-                        </span>
-                        <span
-                          className={cn(
-                            "font-mono text-[10px] tabular-nums sm:text-right",
-                            days < 0 ? "text-fail-text" : "text-text-2"
-                          )}
-                        >
-                          {days < 0
-                            ? `${Math.abs(days)}d late`
-                            : days === 0
-                              ? "Due today"
-                              : formatDate(project.dueDate, {
-                                  month: "short",
-                                  day: "numeric",
-                                })}
-                        </span>
-                      </Button>
-                    );
-                  })}
-                </div>
-              ) : (
-                <EmptySection label="No deadlines, blockers, or reviews need attention." />
-              )}
-            </ContentSection>
-          </motion.div>
-
-          {props.riskRadar ? (
-            <div className="order-2">{props.riskRadar}</div>
-          ) : null}
-
-          <motion.div
-            className="order-3"
-            initial={entry.initial}
-            animate={entry.animate}
-            transition={{
-              delay: reduceMotion ? 0 : 0.12,
-              duration: reduceMotion ? 0 : 0.55,
-              ease: easing,
-            }}
-          >
-            <SplitPane
-              ratio="inspector-xl"
-              className="items-stretch"
-              primary={
-                <div className="h-full min-w-0">
-                  <ContentSection
-                    title="Projects"
-                    titleId="projects-heading"
-                    className="h-full"
-                    bodyMode="flush"
-                    actions={
-                      <div className="flex items-center gap-2">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="px-2 text-text-2 hover:text-text-1"
-                          onClick={() => setShowCompleted((value) => !value)}
-                          aria-pressed={showCompleted}
-                        >
-                          {showCompleted
-                            ? "Hide delivered"
-                            : `Show delivered (${props.visibleProjects.filter(delivered).length})`}
-                        </Button>
-                        <Button
-                          asChild
-                          variant="ghost"
-                          size="sm"
-                          className="px-2 text-text-2 hover:text-text-1"
-                        >
-                          <Link to="/projects">
-                            View all projects
-                            <ArrowRight
-                              className="size-3.5"
-                              strokeWidth={1.75}
-                            />
-                          </Link>
-                        </Button>
-                      </div>
-                    }
-                  >
-                    <DataTableFrame bounded={false}>
-                      {ledgerProjects.length ? (
-                        <>
-                          <div className="sm:hidden">
-                            <div className={sectionListClassName}>
-                              {table
-                                .getRowModel()
-                                .rows.slice(0, LEDGER_PREVIEW_ROWS)
-                                .map((row, rowIndex) => {
-                                  const project = row.original;
-                                  const progress = getProjectProgress(project);
-                                  return (
-                                    <MotionButton
-                                      key={row.id}
-                                      type="button"
-                                      variant="ghost"
-                                      data-testid="mobile-project-row"
-                                      className={cn(
-                                        sectionRowClassName,
-                                        "h-auto w-full grid grid-cols-[minmax(0,1fr)_auto] justify-start gap-3 whitespace-normal px-3 py-2 text-left font-normal hover:bg-hover dark:hover:bg-hover focus-visible:focus-ring-inset active:translate-y-0 active:scale-100",
-                                        selected?.id === project.id &&
-                                          "bg-selected"
-                                      )}
-                                      initial={
-                                        reduceMotion
-                                          ? false
-                                          : { opacity: 0, y: 8 }
-                                      }
-                                      animate={{ opacity: 1, y: 0 }}
-                                      transition={{
-                                        delay: reduceMotion
-                                          ? 0
-                                          : Math.min(rowIndex * 0.08, 0.4),
-                                        duration: reduceMotion ? 0 : 0.4,
-                                        ease: easing,
-                                      }}
-                                      onClick={() =>
-                                        props.onViewProject(project)
-                                      }
-                                    >
-                                      <div className="min-w-0">
-                                        <span className="flex items-center gap-2">
-                                          <span className="truncate text-[13px] font-medium tracking-[-0.01em]">
-                                            {project.title}
-                                          </span>
-                                          <StatusBadge
-                                            status={project.status}
-                                          />
-                                        </span>
-                                        <span className="mt-1 block truncate text-[11px] text-text-2">
-                                          {project.client || project.workType} ·{" "}
-                                          {formatDate(project.dueDate, {
-                                            month: "short",
-                                            day: "numeric",
-                                          })}
-                                        </span>
-                                        <Progress
-                                          value={progress}
-                                          aria-hidden="true"
-                                          className="mt-2.5 h-1 rounded-sm bg-tile [&_[data-slot=progress-indicator]]:rounded-sm [&_[data-slot=progress-indicator]]:bg-primary"
-                                        />
-                                      </div>
-                                      <span className="flex flex-col items-end justify-between">
-                                        <PriorityBadge project={project} />
-                                        <span className="font-mono text-[11px] font-medium tabular-nums text-text-2">
-                                          {progress}%
-                                        </span>
-                                      </span>
-                                    </MotionButton>
-                                  );
-                                })}
-                            </div>
-                          </div>
-                          <div className="hidden sm:block">
-                            <Table
-                              className="w-full min-w-[700px] border-collapse"
-                              aria-label="Projects"
-                            >
-                              <TableCaption className="sr-only">
-                                Recent projects with type, due date, status,
-                                progress, value, and actions.
-                              </TableCaption>
-                              <TableHeader>
-                                {table.getHeaderGroups().map((headerGroup) => (
-                                  <TableRow
-                                    key={headerGroup.id}
-                                    className="border-y border-line-row bg-well/60"
-                                  >
-                                    {headerGroup.headers.map((header) => (
-                                      <TableHead
-                                        key={header.id}
-                                        aria-sort={
-                                          header.column.getIsSorted() === "asc"
-                                            ? "ascending"
-                                            : header.column.getIsSorted() ===
-                                                "desc"
-                                              ? "descending"
-                                              : "none"
-                                        }
-                                        className={cn(
-                                          "h-8 px-3 text-left text-xs font-medium text-text-3",
-                                          header.column.id === "workType" &&
-                                            "hidden 2xl:table-cell"
-                                        )}
-                                      >
-                                        {header.isPlaceholder ? null : header.column.getCanSort() ? (
-                                          <Button
-                                            type="button"
-                                            variant="ghost"
-                                            size="sm"
-                                            className="group h-auto px-0 py-1 text-left hover:bg-transparent hover:text-text-1"
-                                            onClick={header.column.getToggleSortingHandler()}
-                                          >
-                                            {flexRender(
-                                              header.column.columnDef.header,
-                                              header.getContext()
-                                            )}
-                                            <SortIcon
-                                              direction={header.column.getIsSorted()}
-                                            />
-                                          </Button>
-                                        ) : (
-                                          flexRender(
-                                            header.column.columnDef.header,
-                                            header.getContext()
-                                          )
-                                        )}
-                                      </TableHead>
-                                    ))}
-                                  </TableRow>
-                                ))}
-                              </TableHeader>
-                              <motion.tbody
-                                key={`${props.query}-${props.statusFilter}-${props.kindFilter}-${props.clientFilter}-${props.dueFilter}-${props.billingFilter}-${props.sortKey}`}
-                                className="[&_tr]:border-0"
-                                initial={reduceMotion ? false : { opacity: 0 }}
-                                animate={{ opacity: 1 }}
-                                transition={{
-                                  duration: reduceMotion ? 0 : 0.25,
-                                }}
-                              >
-                                {table
-                                  .getRowModel()
-                                  .rows.slice(0, LEDGER_PREVIEW_ROWS)
-                                  .map((row, rowIndex) => (
-                                    <motion.tr
-                                      key={row.id}
-                                      role="button"
-                                      tabIndex={0}
-                                      data-testid="project-row"
-                                      data-project-title={row.original.title}
-                                      data-project-id={row.original.id}
-                                      aria-selected={
-                                        selected?.id === row.original.id
-                                      }
-                                      aria-label={`Select ${row.original.title}. ${row.original.status}. Due ${formatDate(row.original.dueDate, { month: "short", day: "numeric" })}.`}
-                                      className={cn(
-                                        "h-[var(--workspace-row-height,58px)] cursor-pointer border-0 outline-none transition-colors hover:bg-hover focus-visible:focus-ring-inset",
-                                        selected?.id === row.original.id &&
-                                          "bg-selected"
-                                      )}
-                                      initial={
-                                        reduceMotion
-                                          ? false
-                                          : { opacity: 0, y: 8 }
-                                      }
-                                      animate={{ opacity: 1, y: 0 }}
-                                      transition={{
-                                        delay: reduceMotion
-                                          ? 0
-                                          : Math.min(rowIndex * 0.08, 0.4),
-                                        duration: reduceMotion ? 0 : 0.4,
-                                        ease: easing,
-                                      }}
-                                      onClick={() => {
-                                        setSelectedId(row.original.id);
-                                        if (
-                                          window.matchMedia(
-                                            "(max-width: 1279px)"
-                                          ).matches
-                                        ) {
-                                          setMobileInspectorOpen(true);
-                                        }
-                                      }}
-                                      onDoubleClick={() =>
-                                        props.onViewProject(row.original)
-                                      }
-                                      onKeyDown={(event) =>
-                                        handleRowKeyDown(
-                                          event,
-                                          row.original,
-                                          rowIndex
-                                        )
-                                      }
-                                    >
-                                      {row.getVisibleCells().map((cell) => (
-                                        <TableCell
-                                          key={cell.id}
-                                          className={cn(
-                                            "px-3 py-2 text-xs text-text-1",
-                                            cell.column.id === "workType" &&
-                                              "hidden 2xl:table-cell"
-                                          )}
-                                        >
-                                          {flexRender(
-                                            cell.column.columnDef.cell,
-                                            cell.getContext()
-                                          )}
-                                        </TableCell>
-                                      ))}
-                                    </motion.tr>
-                                  ))}
-                              </motion.tbody>
-                            </Table>
-                          </div>
-                        </>
-                      ) : (
-                        <MotionEmpty
-                          className="grid flex-none place-items-center gap-0 rounded-none border-0 px-6 py-6 text-center [text-wrap:wrap] md:px-6 md:py-6"
-                          initial={reduceMotion ? false : { opacity: 0, y: 8 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{
-                            duration: reduceMotion ? 0 : 0.4,
-                            ease: easing,
-                          }}
-                        >
-                          <div>
-                            <p className="text-sm font-medium tracking-[-0.01em]">
-                              No projects in this view
-                            </p>
-                            <p className="mt-1.5 max-w-xs text-xs leading-relaxed text-text-2">
-                              {activeFilterCount || props.query
-                                ? "No projects match the current filters."
-                                : props.visibleProjects.length > 0
-                                  ? "No unfinished projects. Show delivered to see completed work."
-                                  : "Create the first project in your workspace."}
-                            </p>
-                            <div className="mt-3 flex justify-center gap-2">
-                              {activeFilterCount || props.query ? (
-                                <Button
-                                  variant="outline"
-                                  className="active:scale-[0.98]"
-                                  size="sm"
-                                  onClick={clearFilters}
-                                >
-                                  Clear filters
-                                </Button>
-                              ) : null}
-                              <Button
-                                className="bg-primary text-primary-foreground hover:bg-primary/90"
-                                size="sm"
-                                onClick={props.onNewProject}
-                                disabled={!props.canCreateProjects}
-                              >
-                                Create project
-                              </Button>
-                            </div>
-                          </div>
-                        </MotionEmpty>
-                      )}
-                    </DataTableFrame>
-                  </ContentSection>
-                </div>
-              }
-              secondary={
-                // The inspector is positioned inside this box so the ledger,
-                // not the inspector, sets the row height.
-                <div className="relative h-full min-w-0">
-                  <ProjectInspector
-                    project={selected}
-                    settings={props.settings}
-                    onOpen={props.onViewProject}
-                    onEdit={props.onEditProject}
-                    canEdit={props.canEditProjects}
-                  />
-                </div>
+        <MetricItem
+          label="In review"
+          value={<AnimatedNumber value={waitingReviews.length} />}
+          supporting="Reviews and revisions"
+        />
+        <MetricItem
+          label="Paid"
+          value={
+            <AnimatedNumber
+              value={props.stats.collected}
+              format={(value) =>
+                formatMoney(value, props.settings.currencyCode)
               }
             />
-          </motion.div>
-
-          <motion.section
-            className="order-4"
-            initial={entry.initial}
-            animate={entry.animate}
-            transition={{
-              delay: reduceMotion ? 0 : 0.12,
-              duration: reduceMotion ? 0 : 0.55,
-              ease: easing,
-            }}
-            aria-label="Workspace follow-up"
-          >
-            <ContentSection
-              title="Activity"
-              titleId="activity-heading"
-              actions={
-                <Tabs
-                  value={activityMode}
-                  onValueChange={(value) =>
-                    changeActivityMode(value === "team" ? "team" : "recent")
-                  }
-                  className="block"
-                >
-                  <TabsList aria-label="Activity view">
-                    <TabsTrigger
-                      id="activity-recent-tab"
-                      aria-controls="activity-panel"
-                      value="recent"
-                    >
-                      Recent
-                    </TabsTrigger>
-                    <TabsTrigger
-                      id="activity-team-tab"
-                      aria-controls="activity-panel"
-                      value="team"
-                    >
-                      Team
-                    </TabsTrigger>
-                  </TabsList>
-                </Tabs>
-              }
-            >
-              <div
-                id="activity-panel"
-                role="tabpanel"
-                aria-labelledby={`activity-${activityMode}-tab`}
-                className="min-h-40"
+          }
+          supporting={
+            <span className="flex items-center gap-3">
+              <span className="shrink-0">
+                {formatMoney(
+                  props.stats.outstanding,
+                  props.settings.currencyCode
+                )}{" "}
+                unpaid
+              </span>
+              {paidTrend.some(Boolean) ? (
+                <Sparkline
+                  data={paidTrend}
+                  aria-label="Paid value per week, last 8 weeks"
+                  className="h-4 min-w-12 flex-1"
+                />
+              ) : null}
+            </span>
+          }
+        />
+        {showSalaryBatch ? (
+          <MetricItem
+            label="Salary batch"
+            value={
+              <span
+                data-testid="salary-batch-progress"
+                className="flex items-baseline gap-1"
               >
-                {props.teamLoading && activityMode === "team" ? (
-                  <ActivitySkeleton />
-                ) : activity.length ? (
-                  <motion.div
-                    key={activityMode}
-                    className={sectionListClassName}
-                    initial={reduceMotion ? false : { opacity: 0, y: 6 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{
-                      duration: reduceMotion ? 0 : 0.3,
-                      ease: easing,
-                    }}
-                  >
-                    {activity.slice(0, 4).map((item, index) => (
-                      <motion.div
-                        key={item.id}
-                        className={cn(
-                          sectionRowClassName,
-                          "flex items-start gap-3"
-                        )}
-                        initial={reduceMotion ? false : { opacity: 0, y: 6 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{
-                          delay: reduceMotion ? 0 : index * 0.08,
-                          ease: easing,
-                        }}
-                      >
-                        <span className="mt-2 size-1.5 shrink-0 rounded-full bg-text-2" />
-                        <span className="min-w-0 flex-1">
-                          <span className="line-clamp-2 block text-[11px] font-medium leading-4 text-text-1">
-                            {item.message}
-                          </span>
-                          <span className="mt-0.5 block text-xs text-text-2">
-                            {item.actor || props.teamName || "Workspace"} ·{" "}
-                            {relativeActivityTime(item.createdAt)}
-                          </span>
-                        </span>
-                      </motion.div>
-                    ))}
-                  </motion.div>
-                ) : (
-                  <EmptySection label="No activity yet." />
-                )}
-              </div>
-            </ContentSection>
-          </motion.section>
-        </PageContent>
+                <AnimatedNumber value={salaryProgress} />
+                <span className="type-label-sm text-text-3">
+                  / {salarySize} edits
+                </span>
+              </span>
+            }
+            action={
+              <Button
+                type="button"
+                variant="outline"
+                size="xs"
+                disabled={!pendingSalaryBatch}
+                aria-label={
+                  pendingSalaryBatch
+                    ? `Mark payment batch ${pendingSalaryBatch.number} paid`
+                    : "Mark paid"
+                }
+                onClick={() => {
+                  if (pendingSalaryBatch)
+                    props.onMarkSalaryPayment(pendingSalaryBatch.id);
+                }}
+              >
+                Mark paid
+              </Button>
+            }
+            supporting={
+              <span className="flex items-center gap-3">
+                <span className="shrink-0 data">{salaryPercent}%</span>
+                <SegmentedMeter
+                  value={salaryPercent}
+                  tone="accent"
+                  className="flex-1"
+                />
+              </span>
+            }
+          />
+        ) : null}
+      </MetricStrip>
 
-        <Sheet open={mobileInspectorOpen} onOpenChange={setMobileInspectorOpen}>
-          <SheetContent
-            side="right"
-            className="w-full overflow-y-auto p-0 sm:max-w-md xl:hidden"
+      <div className="grid min-w-0 animate-rise gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(300px,360px)]">
+        <div className="flex min-w-0 flex-col gap-4">
+          <ContentSection
+            title="Needs attention"
+            metadata={
+              attention.length ? (
+                <span className="type-label-sm text-text-3 data">
+                  {attention.length}
+                </span>
+              ) : null
+            }
+            bodyMode="flush"
           >
-            <SheetHeader className="sr-only">
-              <SheetTitle>Project details</SheetTitle>
-              <SheetDescription>
-                Review the selected project and open its full workspace.
-              </SheetDescription>
-            </SheetHeader>
+            {attention.length ? (
+              <ul className={sectionListClassName}>
+                {attention.map((project) => (
+                  <li key={project.id}>
+                    <button
+                      type="button"
+                      className={cn(
+                        sectionRowClassName,
+                        "grid w-full gap-x-4 gap-y-1 text-start outline-none focus-visible:focus-ring-inset sm:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)_auto] sm:items-center",
+                        selected?.id === project.id &&
+                          inspectorOpen &&
+                          "bg-selected"
+                      )}
+                      onClick={() => peek(project)}
+                    >
+                      <span className="min-w-0">
+                        <span className="block truncate type-label text-text-1">
+                          {project.title}
+                        </span>
+                        <span className="block truncate type-label-sm text-text-3">
+                          {project.client || project.workType}
+                        </span>
+                      </span>
+                      <span className="flex min-w-0 items-center gap-3">
+                        <StatusWord status={project.status} />
+                        <span className="truncate type-body-sm text-text-2">
+                          {projectNextAction(project)}
+                        </span>
+                      </span>
+                      <DueWord project={project} />
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <PageEmptyState
+                compact
+                title="Nothing needs attention"
+                description="No deadlines, blockers or reviews are waiting on you."
+              />
+            )}
+          </ContentSection>
+
+          <ContentSection
+            title="Projects"
+            titleId="projects-heading"
+            bodyMode="flush"
+            actions={
+              <>
+                <div className="relative w-full sm:w-44">
+                  <Search
+                    aria-hidden="true"
+                    className="pointer-events-none absolute start-2.5 top-1/2 size-3.5 -translate-y-1/2 text-text-3"
+                  />
+                  <Input
+                    value={props.query}
+                    onChange={(event) => props.setQuery(event.target.value)}
+                    placeholder="Search"
+                    aria-label="Search dashboard projects"
+                    className="h-(--control-sm) ps-8"
+                  />
+                </div>
+                <ProjectFilterMenu
+                  {...props}
+                  activeFilterCount={activeFilterCount}
+                  onClear={clearFilters}
+                />
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      aria-label="Display options"
+                    >
+                      <SlidersHorizontal />
+                      <span className="hidden sm:inline">Display</span>
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-52">
+                    <DropdownMenuLabel>Sort by</DropdownMenuLabel>
+                    <DropdownMenuRadioGroup
+                      value={props.sortKey}
+                      onValueChange={(value) =>
+                        props.setSortKey(value as SortKey)
+                      }
+                    >
+                      {sortOptions.map((option) => (
+                        <DropdownMenuRadioItem
+                          key={option.value}
+                          value={option.value}
+                        >
+                          {option.label}
+                        </DropdownMenuRadioItem>
+                      ))}
+                    </DropdownMenuRadioGroup>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuCheckboxItem
+                      checked={showCompleted}
+                      onCheckedChange={(checked) =>
+                        setShowCompleted(checked === true)
+                      }
+                    >
+                      Show delivered (
+                      {props.visibleProjects.filter(delivered).length})
+                    </DropdownMenuCheckboxItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+                <Button asChild variant="ghost" size="sm">
+                  <Link to="/projects">All projects</Link>
+                </Button>
+              </>
+            }
+          >
+            {ledgerRows.length ? (
+              <>
+                <ul className={cn(sectionListClassName, "sm:hidden")}>
+                  {ledgerRows.map((row) => {
+                    const project = row.original;
+                    return (
+                      <li key={row.id}>
+                        <button
+                          type="button"
+                          data-testid="mobile-project-row"
+                          className={cn(
+                            sectionRowClassName,
+                            "flex w-full items-center gap-3 text-start outline-none focus-visible:focus-ring-inset"
+                          )}
+                          onClick={() => peek(project)}
+                        >
+                          <span className="min-w-0 flex-1">
+                            <span className="block truncate type-label text-text-1">
+                              {project.title}
+                            </span>
+                            <span className="mt-0.5 flex items-center gap-2">
+                              <StatusWord status={project.status} />
+                              <DueWord project={project} />
+                            </span>
+                          </span>
+                          <span className="type-label-sm text-text-2 data">
+                            {getProjectProgress(project)}%
+                          </span>
+                        </button>
+                      </li>
+                    );
+                  })}
+                </ul>
+                <div className="hidden sm:block">
+                  <Table className="min-w-[680px]" aria-label="Projects">
+                    <TableCaption className="sr-only">
+                      Recent projects with type, due date, status, progress,
+                      value and actions.
+                    </TableCaption>
+                    <TableHeader>
+                      {table.getHeaderGroups().map((headerGroup) => (
+                        <TableRow key={headerGroup.id}>
+                          {headerGroup.headers.map((header) => (
+                            <TableHead
+                              key={header.id}
+                              aria-sort={
+                                header.column.getIsSorted() === "asc"
+                                  ? "ascending"
+                                  : header.column.getIsSorted() === "desc"
+                                    ? "descending"
+                                    : "none"
+                              }
+                              className={cn(
+                                header.column.id === "workType" &&
+                                  "hidden 2xl:table-cell",
+                                header.column.id === "actions" && "w-10"
+                              )}
+                            >
+                              {header.isPlaceholder ? null : header.column.getCanSort() ? (
+                                <button
+                                  type="button"
+                                  className="group inline-flex items-center gap-1 rounded-inner hover:text-text-1"
+                                  onClick={header.column.getToggleSortingHandler()}
+                                >
+                                  {flexRender(
+                                    header.column.columnDef.header,
+                                    header.getContext()
+                                  )}
+                                  <SortIcon
+                                    direction={header.column.getIsSorted()}
+                                  />
+                                </button>
+                              ) : (
+                                flexRender(
+                                  header.column.columnDef.header,
+                                  header.getContext()
+                                )
+                              )}
+                            </TableHead>
+                          ))}
+                        </TableRow>
+                      ))}
+                    </TableHeader>
+                    <TableBody>
+                      {ledgerRows.map((row, rowIndex) => (
+                        <TableRow
+                          key={row.id}
+                          tabIndex={0}
+                          data-testid="project-row"
+                          data-project-title={row.original.title}
+                          data-project-id={row.original.id}
+                          data-state={
+                            selected?.id === row.original.id && inspectorOpen
+                              ? "selected"
+                              : undefined
+                          }
+                          aria-label={`${row.original.title}. ${row.original.status}. Due ${formatDate(row.original.dueDate, { month: "short", day: "numeric" })}. Press Enter to open, Space to preview.`}
+                          className="cursor-pointer outline-none focus-visible:focus-ring-inset"
+                          onClick={() => peek(row.original)}
+                          onDoubleClick={() =>
+                            props.onViewProject(row.original)
+                          }
+                          onKeyDown={(event) =>
+                            handleRowKeyDown(event, row.original, rowIndex)
+                          }
+                        >
+                          {row.getVisibleCells().map((cell) => (
+                            <TableCell
+                              key={cell.id}
+                              className={cn(
+                                cell.column.id === "workType" &&
+                                  "hidden 2xl:table-cell",
+                                cell.column.id === "actions" && "px-1"
+                              )}
+                            >
+                              {flexRender(
+                                cell.column.columnDef.cell,
+                                cell.getContext()
+                              )}
+                            </TableCell>
+                          ))}
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              </>
+            ) : (
+              <PageEmptyState
+                compact
+                title="No projects in this view"
+                description={
+                  activeFilterCount || props.query
+                    ? "No projects match the current filters."
+                    : props.visibleProjects.length > 0
+                      ? "Every project is delivered. Turn on Show delivered under Display to see them."
+                      : "Create the first project in your workspace."
+                }
+                action={
+                  <>
+                    {activeFilterCount || props.query ? (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={clearFilters}
+                      >
+                        Clear filters
+                      </Button>
+                    ) : null}
+                    <Button
+                      size="sm"
+                      onClick={props.onNewProject}
+                      disabled={!props.canCreateProjects}
+                    >
+                      Create project
+                    </Button>
+                  </>
+                }
+              />
+            )}
+          </ContentSection>
+        </div>
+
+        <div className="flex min-w-0 flex-col gap-4">
+          <ContentSection
+            title="Activity"
+            titleId="activity-heading"
+            bodyMode="flush"
+            actions={
+              <Tabs
+                value={activityMode}
+                onValueChange={(value) =>
+                  setActivityMode(value === "team" ? "team" : "recent")
+                }
+              >
+                <TabsList
+                  aria-label="Activity view"
+                  className="h-(--control-sm)"
+                >
+                  <TabsTrigger
+                    id="activity-recent-tab"
+                    aria-controls="activity-panel"
+                    value="recent"
+                    className="type-label-sm"
+                  >
+                    Recent
+                  </TabsTrigger>
+                  <TabsTrigger
+                    id="activity-team-tab"
+                    aria-controls="activity-panel"
+                    value="team"
+                    className="type-label-sm"
+                  >
+                    Team
+                  </TabsTrigger>
+                </TabsList>
+              </Tabs>
+            }
+          >
+            <div
+              id="activity-panel"
+              role="tabpanel"
+              aria-labelledby={`activity-${activityMode}-tab`}
+            >
+              {props.teamLoading && activityMode === "team" ? (
+                <ActivitySkeleton />
+              ) : activity.length ? (
+                <ul
+                  key={activityMode}
+                  className={cn(sectionListClassName, "animate-rise")}
+                >
+                  {activity.slice(0, ACTIVITY_ROWS).map((item) => (
+                    <li key={item.id} className="rule-row px-4 py-2.5">
+                      <p className="line-clamp-2 type-label text-text-1">
+                        {item.message}
+                      </p>
+                      <p className="mt-0.5 flex gap-2 type-label-sm text-text-3">
+                        <span className="truncate">
+                          {item.actor || props.teamName || "Workspace"}
+                        </span>
+                        <span className="shrink-0">
+                          {relativeActivityTime(item.createdAt)}
+                        </span>
+                      </p>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <PageEmptyState
+                  compact
+                  title="No activity yet"
+                  description="Project changes and team updates show up here."
+                />
+              )}
+            </div>
+          </ContentSection>
+          {props.riskRadar}
+        </div>
+      </div>
+
+      <Sheet open={inspectorOpen} onOpenChange={setInspectorOpen}>
+        <SheetContent side="right" className="gap-0 overflow-y-auto">
+          <SheetHeader className="sr-only">
+            <SheetTitle>Project details</SheetTitle>
+            <SheetDescription>
+              Review the selected project and open its full workspace.
+            </SheetDescription>
+          </SheetHeader>
+          {selected ? (
             <ProjectInspector
               project={selected}
               settings={props.settings}
               onOpen={props.onViewProject}
               onEdit={props.onEditProject}
               canEdit={props.canEditProjects}
-              mobile
             />
-          </SheetContent>
-        </Sheet>
-      </motion.div>
+          ) : null}
+        </SheetContent>
+      </Sheet>
     </WorkspacePage>
   );
 }
 
-function EmptySection({ label }: { label: string }) {
-  const reduceMotion = useHydratedReducedMotion();
+/**
+ * Every ledger filter in one menu, as Linear's Filter button: each filter is
+ * a submenu showing its current choice, and Clear resets them all.
+ */
+function ProjectFilterMenu(
+  props: DashboardProps & { activeFilterCount: number; onClear: () => void }
+) {
+  const filters = [
+    {
+      label: "Status",
+      value: props.statusFilter,
+      options: statusOptions.map((value) => ({
+        value,
+        label: value === "All" ? "Any status" : value,
+      })),
+      onChange: (value: string) =>
+        props.setStatusFilter(value as ProjectStatus | "All"),
+    },
+    {
+      label: "Type",
+      value: props.kindFilter,
+      options: props.projectTagOptions.map((value) => ({
+        value,
+        label: value === "ALL" ? "Any type" : value,
+      })),
+      onChange: props.setKindFilter,
+    },
+    {
+      label: "Client",
+      value: props.clientFilter,
+      options: props.clientOptions.map((value) => ({
+        value,
+        label: value === "ALL" ? "Any client" : value,
+      })),
+      onChange: props.setClientFilter,
+    },
+    {
+      label: "Due",
+      value: props.dueFilter,
+      options: dueOptions,
+      onChange: (value: string) => props.setDueFilter(value as DueFilter),
+    },
+    {
+      label: "Payment",
+      value: props.billingFilter,
+      options: billingOptions,
+      onChange: (value: string) =>
+        props.setBillingFilter(value as "ALL" | "Paid" | "Unpaid"),
+    },
+  ];
+
   return (
-    <MotionEmpty
-      className="flex-none items-start justify-start gap-0 rounded-none border-0 p-0 px-4 pb-4 text-left text-xs leading-relaxed text-text-2 [text-wrap:wrap] md:px-4 md:pt-0 md:pb-4"
-      initial={reduceMotion ? false : { opacity: 0 }}
-      animate={{ opacity: 1 }}
-    >
-      {label}
-    </MotionEmpty>
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button
+          variant="ghost"
+          size="sm"
+          aria-label={
+            props.activeFilterCount
+              ? `Filter projects, ${props.activeFilterCount} active`
+              : "Filter projects"
+          }
+        >
+          <ListFilter />
+          <span className="hidden sm:inline">Filter</span>
+          {props.activeFilterCount ? (
+            <span className="rounded-inner bg-tile px-1 type-label-sm data">
+              {props.activeFilterCount}
+            </span>
+          ) : null}
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-56">
+        {filters.map((filter) => {
+          const current = filter.options.find(
+            (option) => option.value === filter.value
+          );
+          return (
+            <DropdownMenuSub key={filter.label}>
+              <DropdownMenuSubTrigger>
+                <span>{filter.label}</span>
+                <span className="ms-auto truncate ps-3 type-label-sm text-text-3">
+                  {current?.label}
+                </span>
+              </DropdownMenuSubTrigger>
+              <DropdownMenuSubContent className="max-h-80 w-52">
+                <DropdownMenuRadioGroup
+                  value={filter.value}
+                  onValueChange={filter.onChange}
+                >
+                  {filter.options.map((option) => (
+                    <DropdownMenuRadioItem
+                      key={option.value}
+                      value={option.value}
+                    >
+                      {option.label}
+                    </DropdownMenuRadioItem>
+                  ))}
+                </DropdownMenuRadioGroup>
+              </DropdownMenuSubContent>
+            </DropdownMenuSub>
+          );
+        })}
+        <DropdownMenuSeparator />
+        <DropdownMenuItem
+          disabled={!props.activeFilterCount && !props.query}
+          onSelect={props.onClear}
+        >
+          Clear filters
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }
 
@@ -1516,241 +1239,103 @@ function ActivitySkeleton() {
       aria-busy="true"
     >
       {[0, 1, 2].map((item) => (
-        <div
-          key={item}
-          className={cn(sectionRowClassName, "flex items-start gap-3")}
-        >
-          <span className="size-6 shrink-0 rounded-md bg-well" />
-          <div className="flex-1 space-y-2">
-            <div
-              className="h-2.5 rounded-sm bg-well"
-              style={{ width: `${78 - item * 9}%` }}
-            />
-            <div className="h-2 w-24 rounded-sm bg-well opacity-60" />
-          </div>
+        <div key={item} className="rule-row space-y-2 px-4 py-3">
+          <div
+            className="h-2.5 rounded-inner bg-(--surface-skeleton)"
+            style={{ width: `${78 - item * 9}%` }}
+          />
+          <div className="h-2 w-24 rounded-inner bg-(--surface-skeleton)" />
         </div>
       ))}
     </div>
   );
 }
 
+/**
+ * The selected Project in the side sheet: what it is, where it stands, and
+ * the one next step (Open project).
+ */
 function ProjectInspector({
   project,
   settings,
   onOpen,
   onEdit,
   canEdit,
-  mobile = false,
 }: {
-  project: WorkItem | null;
+  project: WorkItem;
   settings: SettingsState;
   onOpen: (project: WorkItem) => void;
   onEdit: (project: WorkItem) => void;
   canEdit: boolean;
-  mobile?: boolean;
 }) {
-  const reduceMotion = useHydratedReducedMotion();
-
-  if (!project) {
-    return (
-      <MotionCard
-        className={cn(
-          surface,
-          mobile
-            ? "grid min-h-[420px] place-items-center rounded-none border-0 shadow-none"
-            : "absolute inset-0 grid place-items-center"
-        )}
-        initial={reduceMotion ? false : { opacity: 0 }}
-        animate={{ opacity: 1 }}
-      >
-        <Empty className="flex-none gap-0 rounded-none border-0 p-8 text-center [text-wrap:wrap] md:p-8">
-          <EmptyHeader className="max-w-none gap-0">
-            <EmptyMedia
-              variant="default"
-              className="mx-auto grid size-10 place-items-center rounded-md bg-well"
-            >
-              <FolderKanban className="size-4 text-text-2" strokeWidth={1.75} />
-            </EmptyMedia>
-            <p className="mt-4 text-sm font-medium tracking-[-0.01em]">
-              Select a project
-            </p>
-            <p className="mt-1.5 text-xs leading-relaxed text-text-2">
-              Project context will stay visible here.
-            </p>
-          </EmptyHeader>
-        </Empty>
-      </MotionCard>
-    );
-  }
-
   const progress = getProjectProgress(project);
 
   return (
-    <AnimatePresence mode="popLayout" initial={false}>
-      <MotionCard
-        key={project.id}
-        className={cn(
-          "bg-well shadow-none",
-          mobile
-            ? "min-h-dvh overflow-y-auto rounded-none border-0"
-            : "absolute inset-0 overflow-y-auto rounded-xl"
-        )}
-        initial={reduceMotion ? false : { opacity: 0.65, scale: 0.99 }}
-        animate={{ opacity: 1, scale: 1 }}
-        exit={{ opacity: 0 }}
-        transition={{ duration: reduceMotion ? 0 : 0.16, ease: easing }}
-      >
-        <motion.div
-          className={cn("flex items-start gap-3", mobile ? "p-5" : "p-3.5")}
-        >
-          <span className="mt-1.5 size-1.5 shrink-0 rounded-full bg-primary" />
-          <div className="min-w-0 flex-1">
-            <h2 className="truncate text-[15px] font-medium tracking-[-0.02em] leading-snug">
-              {project.title}
-            </h2>
-            <div className="mt-2">
-              <StatusBadge status={project.status} />
-            </div>
-          </div>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon-sm"
-                aria-label="Project actions"
-              >
-                <MoreHorizontal strokeWidth={1.75} />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem onSelect={() => onOpen(project)}>
-                Open project
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                disabled={!canEdit && Boolean(project.teamId)}
-                onSelect={() => onEdit(project)}
-              >
-                Edit project
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </motion.div>
-
-        <div className={cn(mobile ? "space-y-4 p-5" : "space-y-3 p-3.5")}>
-          <div
-            className={cn(
-              "grid grid-cols-2 gap-x-4",
-              mobile ? "gap-y-4" : "gap-y-3"
-            )}
-          >
-            <InspectorField
-              icon={UsersRound}
-              label="Client"
-              value={project.client || "No client"}
-            />
-            <InspectorField
-              icon={FolderKanban}
-              label="Type"
-              value={project.workType}
-            />
-            <InspectorField
-              icon={CalendarClock}
-              label="Due date"
-              value={formatDate(project.dueDate, {
-                month: "short",
-                day: "numeric",
-              })}
-            />
-            <InspectorField
-              icon={AlertCircle}
-              label="Priority"
-              value={priorityFor(project)}
-            />
-          </div>
-
-          <div
-            className={cn("border-t border-line-row", mobile ? "pt-4" : "pt-3")}
-          >
-            <div className="flex items-center justify-between">
-              <p className="text-xs font-medium text-text-2">Progress</p>
-              <span className="font-mono text-[11px] tabular-nums text-text-2">
-                {progress}%
-              </span>
-            </div>
-            <SegmentedMeter value={progress} segments={24} className="mt-2" />
-            <p className="mt-2 text-[10px] leading-relaxed text-text-2">
-              {progress === 100
-                ? "Delivery complete"
-                : `${Math.max(1, Math.round((100 - progress) / 10))} production steps remaining`}
-            </p>
-          </div>
-
-          {project.notes ? (
-            <p className="border-t border-line-row pt-3 text-xs text-text-2">
-              {project.notes}
-            </p>
-          ) : null}
-
-          <div
-            className={cn(
-              "flex items-end justify-between gap-4 border-t border-line-row",
-              mobile ? "pt-4" : "pt-3"
-            )}
-          >
-            <div>
-              <p className="text-xs font-medium text-text-2">Value</p>
-              <p className="mt-1 text-lg font-semibold tracking-[-0.02em] tabular-nums">
-                {project.workType === settings.salaryWorkType
-                  ? "Paid per batch"
-                  : formatMoney(project.earnings, settings.currencyCode)}
-              </p>
-            </div>
-            <Button
-              size="sm"
-              className="bg-primary px-3 text-primary-foreground hover:bg-primary/90"
-              onClick={() => onOpen(project)}
-              aria-label={`Open project ${project.title}`}
-            >
-              Open <ArrowRight className="size-3.5" strokeWidth={1.75} />
-            </Button>
-          </div>
+    <div className="flex min-h-full flex-col">
+      <div className="flex items-start gap-3 p-5 pe-12">
+        <div className="min-w-0 flex-1">
+          <h2 className="type-heading-xs text-text-1">{project.title}</h2>
+          <p className="mt-1 flex flex-wrap items-center gap-3">
+            <StatusWord status={project.status} />
+            <DueWord project={project} />
+          </p>
         </div>
-      </MotionCard>
-    </AnimatePresence>
-  );
-}
+      </div>
 
-function InspectorField({
-  icon: Icon,
-  label,
-  value,
-}: {
-  icon: typeof UserRound;
-  label: string;
-  value: string;
-}) {
-  return (
-    <div className="flex items-start gap-3">
-      <Icon className="mt-0.5 size-3.5 text-text-2" strokeWidth={1.75} />
-      <div>
-        <p className="text-xs font-medium text-text-3">{label}</p>
-        <p className="mt-1 text-[13px] font-medium tracking-[-0.01em]">
-          {value}
+      <dl className="grid grid-cols-[auto_1fr] gap-x-6 gap-y-3 px-5 pb-5 type-label">
+        <dt className="text-text-3">Client</dt>
+        <dd className="text-text-1">{project.client || "No client"}</dd>
+        <dt className="text-text-3">Type</dt>
+        <dd className="text-text-1">{project.workType}</dd>
+        <dt className="text-text-3">Due date</dt>
+        <dd className="text-text-1 data">
+          {formatDate(project.dueDate, { month: "short", day: "numeric" })}
+        </dd>
+        <dt className="text-text-3">Priority</dt>
+        <dd className="text-text-1">{priorityFor(project)}</dd>
+        <dt className="text-text-3">Value</dt>
+        <dd className="text-text-1 data">
+          {project.workType === settings.salaryWorkType
+            ? "Paid per batch"
+            : formatMoney(project.earnings, settings.currencyCode)}
+        </dd>
+      </dl>
+
+      <div className="rule-top px-5 py-4">
+        <div className="flex items-center justify-between type-label">
+          <span className="text-text-2">Progress</span>
+          <span className="text-text-1 data">{progress}%</span>
+        </div>
+        <SegmentedMeter value={progress} segments={24} className="mt-2" />
+        <p className="mt-2 type-body-sm text-text-2">
+          {progress === 100 ? "Delivery complete." : projectNextAction(project)}
         </p>
+      </div>
+
+      {project.notes ? (
+        <p className="rule-top px-5 py-4 type-body-sm text-text-2">
+          {project.notes}
+        </p>
+      ) : null}
+
+      <div className="mt-auto flex justify-end gap-2 rule-top p-4">
+        <Button
+          variant="outline"
+          disabled={!canEdit && Boolean(project.teamId)}
+          onClick={() => onEdit(project)}
+        >
+          Edit
+        </Button>
+        <Button onClick={() => onOpen(project)}>Open project</Button>
       </div>
     </div>
   );
 }
 
 function SortIcon({ direction }: { direction: false | "asc" | "desc" }) {
-  if (direction === "asc")
-    return <ArrowUp className="size-3 text-text-1" strokeWidth={1.75} />;
-  if (direction === "desc")
-    return <ArrowDown className="size-3 text-text-1" strokeWidth={1.75} />;
+  if (direction === "asc") return <ArrowUp className="size-3 text-text-1" />;
+  if (direction === "desc") return <ArrowDown className="size-3 text-text-1" />;
   return (
-    <ArrowUpDown
-      className="size-3 opacity-0 transition-opacity group-hover:opacity-70 group-focus-visible:opacity-70"
-      strokeWidth={1.75}
-    />
+    <ArrowUpDown className="size-3 opacity-0 transition-opacity duration-(--dur-fast) group-hover:opacity-100 group-focus-visible:opacity-100" />
   );
 }

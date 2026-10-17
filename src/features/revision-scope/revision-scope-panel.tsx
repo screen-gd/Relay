@@ -114,7 +114,7 @@ function OutputRow({
   const parsed = parseWholeNumber(value);
   return (
     <li className="grid gap-2 py-2.5">
-      <div className="flex flex-wrap items-baseline justify-between gap-3 text-sm">
+      <div className="flex flex-wrap items-baseline justify-between gap-3 type-body">
         <a
           href={`${projectHref({ projectId, view: "outputs" })}#output-${output.outputId}`}
           className="min-w-0 truncate underline-offset-4 hover:underline"
@@ -127,7 +127,7 @@ function OutputRow({
           {output.extraRounds ? ` · ${output.extraRounds} extra` : ""}
         </span>
       </div>
-      <p className="text-xs">
+      <p className="type-label-sm">
         {output.adjustment
           ? `Counted ${output.computed}, corrected by editor`
           : output.closingVersions.length
@@ -233,7 +233,7 @@ function LimitEditor({
         }
       }}
     >
-      <label className="text-xs" htmlFor="project-included-rounds">
+      <label className="type-label-sm" htmlFor="project-included-rounds">
         Included rounds
       </label>
       <Input
@@ -293,7 +293,7 @@ export function RevisionScopePanel({ projectId }: { projectId: string }) {
     <ContentSection
       title="Revision rounds"
       metadata={
-        <span className="font-mono text-xs tabular-nums">
+        <span className="font-mono tabular-nums type-label-sm">
           {summary.roundsUsed}
           {summary.includedRounds === null
             ? ""
@@ -337,13 +337,15 @@ export function RevisionScopePanel({ projectId }: { projectId: string }) {
             ))}
           </ul>
         ) : (
-          <p className="text-sm">No outputs yet.</p>
+          <p className="type-body">No outputs yet.</p>
         )}
         {summary.truncated ? (
-          <p className="text-xs">Only the first 20 outputs are counted.</p>
+          <p className="type-label-sm">
+            Only the first 20 outputs are counted.
+          </p>
         ) : null}
         {error ? (
-          <p role="alert" className="text-sm">
+          <p role="alert" className="type-body">
             {error}
           </p>
         ) : null}

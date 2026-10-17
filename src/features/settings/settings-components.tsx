@@ -73,7 +73,7 @@ export function SegmentedSetting({
 }) {
   return (
     <div>
-      <p className="mb-2 text-xs font-medium text-muted-foreground">{label}</p>
+      <p className="mb-2 text-muted-foreground type-label-sm">{label}</p>
       <div
         role="group"
         aria-label={label}

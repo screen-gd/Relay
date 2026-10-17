@@ -28,11 +28,9 @@ export function ProfileMetric({
       >
         {icon}
       </span>
-      <dd className="text-2xl font-semibold leading-none tabular-nums">
-        {value}
-      </dd>
-      <dt className="mt-1.5 text-xs font-semibold">{label}</dt>
-      <dd className="mt-0.5 text-xs text-muted-foreground">{sublabel}</dd>
+      <dd className="tabular-nums type-heading-lg">{value}</dd>
+      <dt className="mt-1.5 type-label-sm">{label}</dt>
+      <dd className="mt-0.5 text-muted-foreground type-label-sm">{sublabel}</dd>
     </div>
   );
 }
@@ -77,7 +75,7 @@ export function ProfileDetail({
   text: string;
 }) {
   return (
-    <span className="flex min-w-0 items-center gap-2 text-[13px]">
+    <span className="flex min-w-0 items-center gap-2 type-body-sm">
       <span
         aria-hidden="true"
         className="grid w-5 shrink-0 place-items-center [&_svg]:size-[17px]"
@@ -98,8 +96,8 @@ export function ProfileEmptyState({
 }) {
   return (
     <div className="grid justify-items-center px-4 py-10 text-center">
-      <h3 className="text-base font-semibold">{title}</h3>
-      <p className="mt-2 max-w-[440px] text-[13px] leading-relaxed text-muted-foreground">
+      <h3 className="type-heading-xs">{title}</h3>
+      <p className="mt-2 max-w-[440px] text-muted-foreground type-body-sm">
         {body}
       </p>
     </div>

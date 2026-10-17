@@ -10,7 +10,7 @@ export { MetricItem, MetricStrip } from "./metric-strip";
 export { PageActions } from "./page-actions";
 export { PageContent } from "./page-content";
 export { PageEmptyState } from "./page-empty-state";
-export { PageHeader, PageHeaderContext } from "./page-header";
+export { PageHeader, PageHeaderContext, TopBarActions } from "./page-header";
 export { PageToolbar } from "./page-toolbar";
 export { SectionNav } from "./section-nav";
 export { SplitPane } from "./split-pane";

@@ -259,7 +259,7 @@ export function TeamDesignPage({
         {teamError ? (
           <div
             role="alert"
-            className="rounded-xl border border-destructive/50 bg-destructive/10 px-4 py-3 text-sm font-semibold text-destructive shadow-sm"
+            className="rounded-xl border border-destructive/50 bg-destructive/10 px-4 py-3 text-destructive shadow-sm type-label"
           >
             {teamError}
           </div>
@@ -283,10 +283,10 @@ export function TeamDesignPage({
             className="shadow-none"
           >
             <div className="max-w-3xl">
-              <h2 className="text-xl font-semibold leading-tight md:text-2xl">
+              <h2 className="md:text-2xl type-heading">
                 Team workspaces require an account
               </h2>
-              <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
+              <p className="mt-3 text-muted-foreground type-body">
                 Local mode is available for solo tracking, but invites, shared
                 projects, comments, notifications, activity, and chat need Clerk
                 sign-in so Convex can sync the right team workspace.
@@ -322,10 +322,8 @@ export function TeamDesignPage({
             className="border-destructive/50 bg-destructive/10 text-destructive"
             bodyClassName="p-6 shadow-sm md:p-8"
           >
-            <h2 className="text-xl font-semibold">
-              Team sync is not connected
-            </h2>
-            <p className="mt-2 text-sm leading-relaxed">
+            <h2 className="type-heading">Team sync is not connected</h2>
+            <p className="mt-2 type-body">
               Clerk sign-in is loaded, but Convex did not receive an
               authenticated token. Check `convex/auth.config.ts`, the Clerk JWT
               template audience, and the Clerk issuer environment variables
@@ -484,9 +482,7 @@ export function TeamDesignPage({
                       >
                         <div className="min-w-0">
                           <div className="flex flex-wrap items-center gap-2">
-                            <h3 className="text-sm font-semibold">
-                              {member.name}
-                            </h3>
+                            <h3 className="type-label">{member.name}</h3>
                             <OwnedBadge variant="outline">
                               {displayTeamRole(member.role)}
                             </OwnedBadge>
@@ -502,7 +498,7 @@ export function TeamDesignPage({
                               {member.status}
                             </OwnedBadge>
                           </div>
-                          <p className="mt-1 text-xs text-muted-foreground">
+                          <p className="mt-1 text-muted-foreground type-label-sm">
                             {member.email || "No email on profile"}
                           </p>
                         </div>
@@ -546,7 +542,7 @@ export function TeamDesignPage({
                                 ([permission, label]) => (
                                   <OwnedLabel
                                     key={permission}
-                                    className="flex items-center gap-2 text-xs font-normal text-muted-foreground"
+                                    className="flex items-center gap-2 text-muted-foreground type-label-sm"
                                   >
                                     <OwnedSwitch
                                       checked={Boolean(
@@ -630,7 +626,7 @@ export function TeamDesignPage({
 
                   {canManageTeam ? (
                     <div className="border-t border-line-row p-5">
-                      <h3 className="text-sm font-semibold">Invite member</h3>
+                      <h3 className="type-label">Invite member</h3>
                       <div className="mt-3 grid items-end gap-3 md:grid-cols-[minmax(0,1fr)_160px_120px]">
                         <FieldLayout
                           label="Email"
@@ -711,10 +707,8 @@ export function TeamDesignPage({
                   {selectedProject ? (
                     <div className="grid gap-4">
                       <div className="rounded-md border border-line-row bg-well p-3">
-                        <p className="text-sm font-semibold">
-                          {selectedProject.title}
-                        </p>
-                        <p className="mt-1 text-xs text-muted-foreground">
+                        <p className="type-label">{selectedProject.title}</p>
+                        <p className="mt-1 text-muted-foreground type-label-sm">
                           {selectedProject.client || "No client"} ·{" "}
                           {selectedProject.status} · Due{" "}
                           {formatDate(
@@ -728,7 +722,7 @@ export function TeamDesignPage({
                         aria-live="polite"
                       >
                         {projectComments === undefined ? (
-                          <p className="text-sm text-muted-foreground">
+                          <p className="text-muted-foreground type-body">
                             Loading comments...
                           </p>
                         ) : projectComments.length ? (
@@ -737,14 +731,14 @@ export function TeamDesignPage({
                               key={comment._id}
                               className="rounded-md border border-line-row bg-well p-3"
                             >
-                              <p className="text-sm font-semibold">
+                              <p className="type-label">
                                 {comment.authorName}{" "}
-                                <time className="text-xs font-normal text-muted-foreground">
+                                <time className="text-muted-foreground type-label-sm">
                                   {formatActivityTime(comment.createdAt)}
                                 </time>
                               </p>
                               {comment.timecode ? (
-                                <span className="mt-2 inline-flex items-center gap-1 rounded-md bg-primary/15 px-2 py-1 text-xs font-semibold text-primary">
+                                <span className="mt-2 inline-flex items-center gap-1 rounded-md bg-primary/15 px-2 py-1 text-primary type-label-sm">
                                   <Clock3
                                     aria-hidden="true"
                                     className="size-3.5"
@@ -752,7 +746,7 @@ export function TeamDesignPage({
                                   {comment.timecode}
                                 </span>
                               ) : null}
-                              <p className="mt-2 whitespace-pre-wrap text-sm">
+                              <p className="mt-2 whitespace-pre-wrap type-body">
                                 {comment.body}
                               </p>
                             </article>
@@ -870,16 +864,14 @@ export function TeamDesignPage({
                         }
                       >
                         <div className="min-w-0">
-                          <p className="text-sm font-medium">
-                            {notification.message}
-                          </p>
+                          <p className="type-label">{notification.message}</p>
                           {notification.projectId ? (
-                            <p className="mt-1 text-xs font-semibold text-primary">
+                            <p className="mt-1 text-primary type-label-sm">
                               Project:{" "}
                               {teamProjectLabel(notification.projectId)}
                             </p>
                           ) : null}
-                          <time className="mt-1 block text-xs text-muted-foreground">
+                          <time className="mt-1 block text-muted-foreground type-label-sm">
                             {formatActivityTime(notification.createdAt)}
                           </time>
                         </div>
@@ -940,12 +932,10 @@ export function TeamDesignPage({
                         key={activity._id}
                         className="rounded-md border-l-2 border-primary bg-well p-3"
                       >
-                        <p className="text-sm font-medium">
-                          {activity.message}
-                        </p>
+                        <p className="type-label">{activity.message}</p>
                         {activity.projectId ? (
                           <div className="mt-1 flex flex-wrap items-center gap-2">
-                            <p className="text-xs font-semibold text-primary">
+                            <p className="text-primary type-label-sm">
                               Project: {teamProjectLabel(activity.projectId)}
                             </p>
                             {teamProjectTitles[activity.projectId] ? (
@@ -963,7 +953,7 @@ export function TeamDesignPage({
                             ) : null}
                           </div>
                         ) : null}
-                        <time className="mt-1 block text-xs text-muted-foreground">
+                        <time className="mt-1 block text-muted-foreground type-label-sm">
                           {formatActivityTime(activity.createdAt)}
                         </time>
                       </article>

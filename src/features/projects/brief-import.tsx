@@ -192,7 +192,7 @@ export function BriefImport({
               setQuestionText(undefined);
             }}
           />
-          <p className="text-xs">
+          <p className="type-label-sm">
             PDF up to 10 MB, or 12,000 characters. Nothing is created until you
             confirm.
           </p>
@@ -217,7 +217,7 @@ export function BriefImport({
             ) : null}
           </div>
           {run ? (
-            <p role="status" className="text-xs">
+            <p role="status" className="type-label-sm">
               {running
                 ? "Drafting..."
                 : run.status === "failed"
@@ -227,7 +227,7 @@ export function BriefImport({
           ) : null}
           {draft ? (
             <div className="grid gap-3">
-              <p className="text-xs">
+              <p className="type-label-sm">
                 AI-drafted ·{" "}
                 <a
                   href={pdfUrl ?? "#brief-source"}
@@ -364,7 +364,7 @@ export function BriefImport({
             </div>
           ) : null}
           {error ? (
-            <p role="alert" className="text-sm text-destructive">
+            <p role="alert" className="text-destructive type-body">
               {error}
             </p>
           ) : null}

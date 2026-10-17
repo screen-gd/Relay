@@ -32,7 +32,7 @@ export function WelcomeChoiceDialog({
       >
         <RelayBrand compact />
         <OwnedDialogHeader>
-          <OwnedDialogTitle className="text-2xl leading-tight sm:text-[28px]">
+          <OwnedDialogTitle className="sm:text-[28px] type-heading-lg">
             Choose how to use Relay
           </OwnedDialogTitle>
           <OwnedDialogDescription>
@@ -42,14 +42,12 @@ export function WelcomeChoiceDialog({
         </OwnedDialogHeader>
         <div className="grid gap-3 md:grid-cols-3">
           <section className="flex flex-col rounded-md bg-well p-4">
-            <p className="text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">
-              Local Mode
-            </p>
-            <h3 className="mt-2 text-lg font-semibold">Work on this device</h3>
-            <p className="mt-2 flex-1 text-sm leading-relaxed text-muted-foreground">
+            <p className="text-muted-foreground type-label-sm">Local Mode</p>
+            <h3 className="mt-2 type-heading-sm">Work on this device</h3>
+            <p className="mt-2 flex-1 text-muted-foreground type-body">
               Fast solo workspace with no account.
             </p>
-            <p className="mt-4 text-xs leading-relaxed text-warn-text">
+            <p className="mt-4 text-warn-text type-label-sm">
               Stored in this browser. Clearing site data can remove your work.
             </p>
             <OwnedButton
@@ -62,11 +60,9 @@ export function WelcomeChoiceDialog({
           </section>
 
           <section className="flex flex-col rounded-md bg-well p-4">
-            <p className="text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">
-              Account
-            </p>
-            <h3 className="mt-2 text-lg font-semibold">Sync your workspace</h3>
-            <p className="mt-2 flex-1 text-sm leading-relaxed text-muted-foreground">
+            <p className="text-muted-foreground type-label-sm">Account</p>
+            <h3 className="mt-2 type-heading-sm">Sync your workspace</h3>
+            <p className="mt-2 flex-1 text-muted-foreground type-body">
               Create an account for supported cloud and Team features.
             </p>
             <OwnedButton
@@ -80,13 +76,11 @@ export function WelcomeChoiceDialog({
           </section>
 
           <section className="flex flex-col rounded-md bg-well p-4">
-            <p className="text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+            <p className="text-muted-foreground type-label-sm">
               Sample Workspace
             </p>
-            <h3 className="mt-2 text-lg font-semibold">
-              Explore a real workflow
-            </h3>
-            <p className="mt-2 flex-1 text-sm leading-relaxed text-muted-foreground">
+            <h3 className="mt-2 type-heading-sm">Explore a real workflow</h3>
+            <p className="mt-2 flex-1 text-muted-foreground type-body">
               Open realistic read-only projects, reviews, activity, and delivery
               data.
             </p>
@@ -95,13 +89,13 @@ export function WelcomeChoiceDialog({
             </OwnedButton>
           </section>
         </div>
-        <div className="flex flex-wrap items-center justify-between gap-3 pt-1 text-sm text-muted-foreground">
+        <div className="flex flex-wrap items-center justify-between gap-3 pt-1 text-muted-foreground type-body">
           <p>Already have an account?</p>
           <OwnedButton type="button" variant="ghost" onClick={onSignIn}>
             Sign in
           </OwnedButton>
         </div>
-        <p className="text-xs leading-relaxed text-muted-foreground">
+        <p className="text-muted-foreground type-label-sm">
           Account sync covers supported workspace records. Integrations store
           links and settings only. Read the{" "}
           <Link to="/privacy" className="underline underline-offset-2">
@@ -113,7 +107,7 @@ export function WelcomeChoiceDialog({
           </Link>
           .
         </p>
-        <p className="text-xs leading-relaxed text-muted-foreground">
+        <p className="text-muted-foreground type-label-sm">
           <TrustLinks />
         </p>
       </OwnedDialogContent>

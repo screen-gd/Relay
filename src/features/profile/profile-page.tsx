@@ -151,14 +151,11 @@ export function OrganizationProfilePage({
             >
               <div className="flex items-center gap-2">
                 <Users className="size-5 text-primary" aria-hidden="true" />
-                <h2
-                  id="organization-team-heading"
-                  className="text-xl font-semibold tracking-tight"
-                >
+                <h2 id="organization-team-heading" className="type-heading">
                   Team access
                 </h2>
               </div>
-              <p className="mt-1.5 text-[13px] text-muted-foreground">
+              <p className="mt-1.5 text-muted-foreground type-body-sm">
                 Members and permissions are stored locally for this team.
               </p>
               {settings.teamMembers.length ? (
@@ -173,15 +170,15 @@ export function OrganizationProfilePage({
                     >
                       <span
                         aria-hidden="true"
-                        className="grid size-9 place-items-center rounded-full bg-primary/10 text-sm font-semibold text-primary"
+                        className="grid size-9 place-items-center rounded-full bg-primary/10 text-primary type-label"
                       >
                         {initials(member.name)}
                       </span>
                       <span className="min-w-0">
-                        <span className="block truncate text-[13px] font-semibold">
+                        <span className="block truncate type-label">
                           {member.name}
                         </span>
-                        <span className="mt-0.5 block truncate text-xs text-muted-foreground">
+                        <span className="mt-0.5 block truncate text-muted-foreground type-label-sm">
                           {member.email || "No email saved"}
                         </span>
                       </span>
@@ -211,13 +208,10 @@ export function OrganizationProfilePage({
                   aria-hidden="true"
                 />
                 <div>
-                  <h2
-                    id="organization-work-heading"
-                    className="text-xl font-semibold tracking-tight"
-                  >
+                  <h2 id="organization-work-heading" className="type-heading">
                     Active organization work
                   </h2>
-                  <p className="mt-1 text-[13px] text-muted-foreground">
+                  <p className="mt-1 text-muted-foreground type-body-sm">
                     Current queue across the studio.
                   </p>
                 </div>
@@ -233,16 +227,16 @@ export function OrganizationProfilePage({
                       className="grid items-center gap-2 py-3 md:grid-cols-[minmax(0,1fr)_160px_130px] md:gap-4"
                     >
                       <span className="min-w-0">
-                        <span className="block truncate text-sm font-semibold">
+                        <span className="block truncate type-label">
                           {project.title}
                         </span>
-                        <span className="mt-1 block truncate text-xs text-muted-foreground">
+                        <span className="mt-1 block truncate text-muted-foreground type-label-sm">
                           {project.client || project.workType}
                         </span>
                       </span>
                       <time
                         dateTime={project.dueDate}
-                        className="text-[13px] text-muted-foreground"
+                        className="text-muted-foreground type-body-sm"
                       >
                         {formatDate(project.dueDate, settings.dateFormat)}
                       </time>
@@ -280,8 +274,8 @@ function OrganizationEmptyState({
         <span className="mx-auto grid size-10 place-items-center rounded-full bg-primary/10 text-primary [&_svg]:size-5">
           {icon}
         </span>
-        <h3 className="mt-3 text-sm font-semibold">{title}</h3>
-        <p className="mx-auto mt-1.5 max-w-md text-[13px] leading-relaxed text-muted-foreground">
+        <h3 className="mt-3 type-label">{title}</h3>
+        <p className="mx-auto mt-1.5 max-w-md text-muted-foreground type-body-sm">
           {body}
         </p>
       </div>
@@ -402,19 +396,16 @@ export function ProfileDesignPage({
           <div className="flex flex-col items-start gap-6 sm:flex-row sm:items-center">
             <PublicProfileAvatar settings={settings} size={128} fontSize={36} />
             <div>
-              <h1
-                id="public-profile-name"
-                className="text-[34px] font-bold leading-[1.1] tracking-[-0.03em]"
-              >
+              <h1 id="public-profile-name" className="type-display">
                 {profileDisplayName(settings)}
               </h1>
               {displayUsername(settings) ? (
-                <p className="mt-1.5 text-sm font-semibold text-primary">
+                <p className="mt-1.5 text-primary type-label">
                   {displayUsername(settings)}
                 </p>
               ) : null}
-              <p className="mt-2 text-[15px]">{settings.profileTitle}</p>
-              <p className="mt-4 max-w-[420px] text-sm leading-relaxed text-muted-foreground">
+              <p className="mt-2 type-heading-xs">{settings.profileTitle}</p>
+              <p className="mt-4 max-w-[420px] text-muted-foreground type-body">
                 {settings.profileBio}
               </p>
               <div className="mt-5 flex flex-wrap gap-x-4 gap-y-2 text-muted-foreground">
@@ -453,13 +444,10 @@ export function ProfileDesignPage({
           className="mt-5 grid items-start gap-6 rounded-2xl border border-border bg-card p-5 text-card-foreground shadow-none md:p-8 xl:grid-cols-[240px_minmax(0,1fr)] xl:gap-12"
         >
           <div className="xl:sticky xl:top-6">
-            <h2
-              id="recent-work-heading"
-              className="text-2xl font-semibold leading-tight tracking-[-0.025em]"
-            >
+            <h2 id="recent-work-heading" className="type-heading-lg">
               Recent work
             </h2>
-            <p className="mt-2 max-w-[230px] text-[13px] leading-relaxed text-muted-foreground">
+            <p className="mt-2 max-w-[230px] text-muted-foreground type-body-sm">
               Recent delivery history and near-term work from the tracker.
             </p>
           </div>
@@ -486,36 +474,36 @@ export function ProfileDesignPage({
                   />
                   <div>
                     <p
-                      className="text-xs font-semibold"
+                      className="type-label-sm"
                       style={{ color: projectTimelineColor(project.status) }}
                     >
                       {profileStatusLabel(project.status)}
                     </p>
                     <time
                       dateTime={project.dueDate}
-                      className="mt-1 block text-xs text-muted-foreground"
+                      className="mt-1 block text-muted-foreground type-label-sm"
                     >
                       {formatDate(project.dueDate, settings.dateFormat)}
                     </time>
                   </div>
                   <div className="min-w-0">
-                    <h3 className="text-base font-semibold">{project.title}</h3>
-                    <p className="mt-1 text-[13px] text-muted-foreground">
+                    <h3 className="type-heading-xs">{project.title}</h3>
+                    <p className="mt-1 text-muted-foreground type-body-sm">
                       {project.client || project.workType}
                     </p>
-                    <p className="mt-2 max-w-[620px] text-[13px] leading-relaxed text-muted-foreground">
+                    <p className="mt-2 max-w-[620px] text-muted-foreground type-body-sm">
                       {project.notes || "No notes saved for this project."}
                     </p>
                   </div>
                   <div className="md:text-right">
-                    <p className="text-[13px] font-semibold">
+                    <p className="type-label">
                       {Math.max(
                         1,
                         daysBetween(project.startDate, project.dueDate)
                       )}{" "}
                       days
                     </p>
-                    <p className="mt-1 text-xs text-muted-foreground">
+                    <p className="mt-1 text-muted-foreground type-label-sm">
                       turnaround
                     </p>
                   </div>
@@ -530,7 +518,7 @@ export function ProfileDesignPage({
           )}
         </section>
       </main>
-      <footer className="mt-6 text-center text-[13px] text-muted-foreground">
+      <footer className="mt-6 text-center text-muted-foreground type-body-sm">
         Shared from {settings.studioName} - Video Editing Tracker &nbsp; |
         &nbsp; Updated {formatDate(iso(todayDate()), settings.dateFormat)},{" "}
         {todayDate().getFullYear()}
@@ -613,7 +601,7 @@ export function ProfileEditPage({
                   Clear
                 </OwnedButton>
               </div>
-              <p className="mx-auto mt-4 max-w-[260px] text-center text-[13px] leading-relaxed text-muted-foreground">
+              <p className="mx-auto mt-4 max-w-[260px] text-center text-muted-foreground type-body-sm">
                 Upload an image or paste an image URL below. The latest saved
                 photo will appear anywhere your profile is shown.
               </p>
@@ -790,9 +778,7 @@ export function ProfileEditPage({
               </div>
 
               <fieldset>
-                <legend className="mb-2 text-sm font-medium">
-                  Week Start Day
-                </legend>
+                <legend className="mb-2 type-label">Week Start Day</legend>
                 <OwnedToggleGroup
                   type="single"
                   value={settings.weekStart}
