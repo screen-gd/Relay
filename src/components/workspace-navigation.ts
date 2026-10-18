@@ -229,8 +229,8 @@ export const settingsSections = [
   { id: "ai", label: "AI" },
   { id: "permissions", label: "Permissions" },
   { id: "notifications", label: "Notifications" },
-  { id: "appearance", label: "Appearance" },
-  { id: "regional", label: "Regional" },
+  { id: "appearance", label: "Appearance and region" },
+  { id: "regional", label: "Appearance and region" },
   { id: "data", label: "Data and export" },
 ] as const;
 
@@ -240,16 +240,63 @@ export function isSettingsSection(value: unknown): value is SettingsSectionId {
   return settingsSections.some((section) => section.id === value);
 }
 
-export const settingsAccountRoutes: readonly RouteItem[] = [
-  routes["profile-edit"],
-  routes.account,
-  routes.subscription,
-  routes.profile,
-];
+/** Regional settings share the Appearance page; old links land there. */
+export function settingsNavSection(
+  id: SettingsSectionId | undefined
+): SettingsSectionId {
+  if (!id) return "workspace";
+  return id === "regional" ? "appearance" : id;
+}
 
-export const settingsWorkspaceRoutes: readonly RouteItem[] = [
-  routes.integrations,
-  routes["organization-profile"],
+export type SettingsNavItem =
+  | { kind: "section"; id: SettingsSectionId; label: string }
+  | { kind: "route"; item: RouteItem };
+
+const section = (id: SettingsSectionId, label: string): SettingsNavItem => ({
+  kind: "section",
+  id,
+  label,
+});
+const route = (item: RouteItem): SettingsNavItem => ({ kind: "route", item });
+
+/**
+ * The settings sidebar, grouped by what the settings are about. Related
+ * pages share an entry: Appearance holds the regional settings, Profile
+ * links to the public profile, and the organization profile opens from the
+ * workspace menu.
+ */
+export const settingsNavGroups: readonly {
+  label: string;
+  items: readonly SettingsNavItem[];
+}[] = [
+  {
+    label: "Workspace",
+    items: [
+      section("workspace", "General"),
+      section("workflow", "Workflow"),
+      section("permissions", "Permissions"),
+      section("ai", "AI"),
+    ],
+  },
+  {
+    label: "Preferences",
+    items: [
+      section("appearance", "Appearance and region"),
+      section("notifications", "Notifications"),
+    ],
+  },
+  {
+    label: "Data",
+    items: [section("data", "Data and export"), route(routes.integrations)],
+  },
+  {
+    label: "Account",
+    items: [
+      route(routes["profile-edit"]),
+      route(routes.account),
+      route(routes.subscription),
+    ],
+  },
 ];
 
 const settingsPages: readonly ShellPage[] = [

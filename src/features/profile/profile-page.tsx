@@ -1,5 +1,6 @@
 "use client";
 
+import { Link } from "@tanstack/react-router";
 import { projectStatusTone } from "@/lib/project-status-style";
 import { useRef, useState } from "react";
 import { RelayBrand } from "@/app/relay-brand";
@@ -470,6 +471,11 @@ export function ProfileEditPage({
       <PageHeader
         title="Edit profile"
         description="Update the identity shown on your public profile."
+        actions={
+          <OwnedButton asChild variant="outline" size="sm">
+            <Link to="/profile">View public profile</Link>
+          </OwnedButton>
+        }
       />
 
       <PageContent className="space-y-5">

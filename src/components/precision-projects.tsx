@@ -230,18 +230,20 @@ function ProjectBoardCard({
     >
       {({ attributes, listeners, setActivatorNodeRef }) => (
         <>
-          <Button
+          {/* The whole card body is the drag handle: press and move to drag,
+              click to select, double-click to open. Space starts a
+              keyboard drag. */}
+          <div
             ref={setActivatorNodeRef}
-            type="button"
-            variant="ghost"
+            {...attributes}
+            {...listeners}
+            aria-label={`${project.title}. Drag to change stage, double-click to open.`}
             className={cn(
-              "h-auto min-w-0 flex-1 touch-none flex-col items-start justify-start gap-0 px-0 py-0 text-left whitespace-normal hover:bg-transparent hover:text-current",
-              !disabled && "cursor-grab active:cursor-grabbing"
+              "flex min-w-0 flex-1 touch-none flex-col items-start rounded-inner text-start outline-none select-none focus-visible:focus-ring",
+              disabled ? "cursor-pointer" : "cursor-grab active:cursor-grabbing"
             )}
             onClick={onSelect}
             onDoubleClick={onOpen}
-            {...listeners}
-            {...attributes}
           >
             <span className="block w-full truncate type-label">
               {project.title}
@@ -249,16 +251,16 @@ function ProjectBoardCard({
             <span className="mt-1 block w-full truncate text-text-2 type-label-sm">
               {project.client || "No client"}
             </span>
-            <span className="mt-3 block text-text-2 type-label-sm">
+            <span className="mt-3 block text-text-2 type-label-sm data">
               {formatDate(project.dueDate)}
             </span>
-          </Button>
+          </div>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button
                 variant="ghost"
                 size="icon-sm"
-                className="shrink-0 !bg-transparent text-text-2"
+                className="-me-1 -mt-1 shrink-0"
                 aria-label={`Change stage for ${project.title}`}
               >
                 <MoreHorizontal />
@@ -907,7 +909,10 @@ export function PrecisionProjects(props: PrecisionProjectsProps) {
               aria-busy={isUpdating}
               bodyLabel="Project library viewport"
               className="relative h-full min-h-0 rounded-frame shadow-[0_0_0_1px_var(--line-row)]"
-              bodyClassName="flex min-h-0 flex-1 flex-col max-lg:flex-none max-lg:overflow-visible"
+              bodyClassName={cn(
+                "flex min-h-0 flex-1 flex-col max-lg:flex-none max-lg:overflow-visible",
+                tableState.view === "board" && "overflow-hidden"
+              )}
             >
               {props.error ? (
                 <div role="alert" className="px-4 py-6">
@@ -950,7 +955,10 @@ export function PrecisionProjects(props: PrecisionProjectsProps) {
                                 Boolean(project.teamId)
                               }
                               stageChoices={getStageChoices(project)}
-                              onSelect={() => select(project)}
+                              onSelect={() => {
+                                select(project);
+                                setMobileInspectorOpen(true);
+                              }}
                               onOpen={() => props.onViewProject(project)}
                               onUpdateProjectStatus={
                                 props.onUpdateProjectStatus
@@ -1170,18 +1178,27 @@ export function PrecisionProjects(props: PrecisionProjectsProps) {
             </DataTableFrame>
           }
           secondary={
-            <ProjectInspector
-              project={selected}
-              settings={props.settings}
-              onOpen={props.onViewProject}
-              onEdit={props.onEditProject}
-              canEdit={props.canEditProjects}
-            />
+            // The board needs the full width; its selection opens the sheet.
+            tableState.view === "board" ? null : (
+              <ProjectInspector
+                project={selected}
+                settings={props.settings}
+                onOpen={props.onViewProject}
+                onEdit={props.onEditProject}
+                canEdit={props.canEditProjects}
+              />
+            )
           }
         />
       </PageContent>
       <Sheet open={mobileInspectorOpen} onOpenChange={setMobileInspectorOpen}>
-        <SheetContent side="right" className="gap-0 p-0 xl:hidden">
+        <SheetContent
+          side="right"
+          className={cn(
+            "gap-0 p-0",
+            tableState.view === "table" && "xl:hidden"
+          )}
+        >
           <SheetHeader className="sr-only">
             <SheetTitle>Project details</SheetTitle>
             <SheetDescription>

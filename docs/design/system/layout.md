@@ -8,11 +8,11 @@
 
 ## Page widths (`WorkspacePage family`)
 
-| Family                                                  | Width                  | Use                                       |
-| ------------------------------------------------------- | ---------------------- | ----------------------------------------- |
-| `data-index`, `master-detail`, `canvas`, `conversation` | full                   | lists, boards, calendars, chat            |
-| `library`                                               | `--container` (1120px) | templates, resources, files, integrations |
-| `administration`                                        | `max-w-4xl`            | settings, account, profiles               |
+| Family                                                  | Width                     | Use                                       |
+| ------------------------------------------------------- | ------------------------- | ----------------------------------------- |
+| `data-index`, `master-detail`, `canvas`, `conversation` | full                      | lists, boards, calendars, chat            |
+| `library`                                               | full                      | templates, resources, files, integrations |
+| `administration`                                        | left-aligned, `max-w-5xl` | settings, account, profiles               |
 
 `mode="fill"` pins the page to the viewport so lists scroll inside themselves; `document` lets the page scroll.
 

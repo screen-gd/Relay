@@ -40,6 +40,7 @@ import {
   Dollar02Icon as Dollar02IconGlyph,
   DollarCircleIcon as DollarCircleIconGlyph,
   Download04Icon as Download04IconGlyph,
+  FerrisWheelIcon as FerrisWheelIconGlyph,
   File02Icon as File02IconGlyph,
   Film02Icon as Film02IconGlyph,
   FilterHorizontalIcon as FilterHorizontalIconGlyph,
@@ -55,6 +56,7 @@ import {
   Image02Icon as Image02IconGlyph,
   InboxIcon as InboxIconGlyph,
   InformationCircleIcon as InformationCircleIconGlyph,
+  InstagramIcon as InstagramIconGlyph,
   LeftToRightListBulletIcon as LeftToRightListBulletIconGlyph,
   LibraryIcon as LibraryIconGlyph,
   Link01Icon as Link01IconGlyph,
@@ -65,9 +67,11 @@ import {
   Login03Icon as Login03IconGlyph,
   Logout03Icon as Logout03IconGlyph,
   Mail01Icon as Mail01IconGlyph,
+  Megaphone01Icon as Megaphone01IconGlyph,
   Menu01Icon as Menu01IconGlyph,
   Message01Icon as Message01IconGlyph,
   MessageAdd01Icon as MessageAdd01IconGlyph,
+  Mic01Icon as Mic01IconGlyph,
   MilestoneIcon as MilestoneIconGlyph,
   Moon02Icon as Moon02IconGlyph,
   MoreHorizontalIcon as MoreHorizontalIconGlyph,
@@ -80,11 +84,13 @@ import {
   Plug01Icon as Plug01IconGlyph,
   PlugSocketIcon as PlugSocketIconGlyph,
   Refresh01Icon as Refresh01IconGlyph,
+  RepeatIcon as RepeatIconGlyph,
   Search01Icon as Search01IconGlyph,
   SentIcon as SentIconGlyph,
   Settings01Icon as Settings01IconGlyph,
   Share08Icon as Share08IconGlyph,
   Shield02Icon as Shield02IconGlyph,
+  ShoppingBag01Icon as ShoppingBag01IconGlyph,
   SidebarLeft01Icon as SidebarLeft01IconGlyph,
   SlidersHorizontalIcon as SlidersHorizontalIconGlyph,
   SparklesIcon as SparklesIconGlyph,
@@ -99,7 +105,9 @@ import {
   UserIcon as UserIconGlyph,
   UserMultipleIcon as UserMultipleIconGlyph,
   Video01Icon as Video01IconGlyph,
+  WeddingIcon as WeddingIconGlyph,
   WorkflowSquare03Icon as WorkflowSquare03IconGlyph,
+  YoutubeIcon as YoutubeIconGlyph,
 } from "@hugeicons/core-free-icons";
 
 export type IconProps = Omit<SVGProps<SVGSVGElement>, "ref"> & {
@@ -175,6 +183,7 @@ export const Database = icon(Database01IconGlyph, "Database");
 export const Download = icon(Download04IconGlyph, "Download");
 export const Edit3 = icon(PencilEdit02IconGlyph, "Edit3");
 export const ExternalLink = icon(LinkSquare02IconGlyph, "ExternalLink");
+export const FerrisWheel = icon(FerrisWheelIconGlyph, "FerrisWheel");
 export const FileText = icon(File02IconGlyph, "FileText");
 export const FileVideo2 = icon(Video01IconGlyph, "FileVideo2");
 export const Film = icon(Film02IconGlyph, "Film");
@@ -191,6 +200,7 @@ export const Home = icon(Home01IconGlyph, "Home");
 export const Images = icon(Image02IconGlyph, "Images");
 export const Inbox = icon(InboxIconGlyph, "Inbox");
 export const Info = icon(InformationCircleIconGlyph, "Info");
+export const Instagram = icon(InstagramIconGlyph, "Instagram");
 export const LayoutDashboard = icon(
   DashboardSquare01IconGlyph,
   "LayoutDashboard"
@@ -205,6 +215,7 @@ export const LogIn = icon(Login03IconGlyph, "LogIn");
 export const LogOut = icon(Logout03IconGlyph, "LogOut");
 export const Mail = icon(Mail01IconGlyph, "Mail");
 export const MapPin = icon(Location01IconGlyph, "MapPin");
+export const Megaphone = icon(Megaphone01IconGlyph, "Megaphone");
 export const Menu = icon(Menu01IconGlyph, "Menu");
 export const MessageCircle = icon(BubbleChatIconGlyph, "MessageCircle");
 export const MessageSquare = icon(Message01IconGlyph, "MessageSquare");
@@ -213,6 +224,7 @@ export const MessageSquarePlus = icon(
   "MessageSquarePlus"
 );
 export const MessageSquareText = icon(Comment01IconGlyph, "MessageSquareText");
+export const Microphone = icon(Mic01IconGlyph, "Microphone");
 export const Milestone = icon(MilestoneIconGlyph, "Milestone");
 export const Monitor = icon(ComputerIconGlyph, "Monitor");
 export const Moon = icon(Moon02IconGlyph, "Moon");
@@ -224,6 +236,7 @@ export const Play = icon(PlayIconGlyph, "Play");
 export const Plug = icon(Plug01IconGlyph, "Plug");
 export const Plus = icon(Add01IconGlyph, "Plus");
 export const RefreshCw = icon(Refresh01IconGlyph, "RefreshCw");
+export const Repeat = icon(RepeatIconGlyph, "Repeat");
 export const RotateCcw = icon(Undo02IconGlyph, "RotateCcw");
 export const ScrollText = icon(Note01IconGlyph, "ScrollText");
 export const Search = icon(Search01IconGlyph, "Search");
@@ -232,6 +245,7 @@ export const Send = icon(SentIconGlyph, "Send");
 export const Settings = icon(Settings01IconGlyph, "Settings");
 export const Share2 = icon(Share08IconGlyph, "Share2");
 export const ShieldCheck = icon(Shield02IconGlyph, "ShieldCheck");
+export const ShoppingBag = icon(ShoppingBag01IconGlyph, "ShoppingBag");
 export const SlidersHorizontal = icon(
   SlidersHorizontalIconGlyph,
   "SlidersHorizontal"
@@ -245,6 +259,9 @@ export const UserPlus = icon(UserAdd01IconGlyph, "UserPlus");
 export const UserRound = icon(UserIconGlyph, "UserRound");
 export const Users = icon(UserMultipleIconGlyph, "Users");
 export const UsersRound = icon(UserGroupIconGlyph, "UsersRound");
+export const Video = icon(Video01IconGlyph, "Video");
+export const Wedding = icon(WeddingIconGlyph, "Wedding");
 export const Workflow = icon(WorkflowSquare03IconGlyph, "Workflow");
 export const X = icon(Cancel01IconGlyph, "X");
 export const XIcon = icon(Cancel01IconGlyph, "XIcon");
+export const Youtube = icon(YoutubeIconGlyph, "Youtube");

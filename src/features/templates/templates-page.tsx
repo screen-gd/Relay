@@ -12,7 +12,6 @@ import {
   type ProjectTemplate,
 } from "@/lib/project-templates";
 import {
-  ContentSection,
   PageContent,
   PageHeader,
   WorkspacePage,
@@ -39,7 +38,43 @@ import {
   SelectValue as OwnedSelectValue,
 } from "@/components/ui/select";
 import { Textarea as OwnedTextarea } from "@/components/ui/textarea";
-import { Copy, Pencil, Plus, Trash2 } from "@/components/icons";
+import {
+  Building2,
+  Copy,
+  FerrisWheel,
+  Film,
+  Instagram,
+  Megaphone,
+  Microphone,
+  Pencil,
+  Plus,
+  Repeat,
+  ShoppingBag,
+  Trash2,
+  Video,
+  Wedding,
+  Youtube,
+} from "@/components/icons";
+
+/**
+ * The mark shown on a template card: the platform or kind of work the
+ * template is for, read from its name and project type.
+ */
+function templateMark(template: { name: string; projectType: string }) {
+  const text = `${template.name} ${template.projectType}`.toLowerCase();
+  if (text.includes("youtube") || text.includes("long-form")) return Youtube;
+  if (text.includes("instagram") || text.includes("reel")) return Instagram;
+  if (text.includes("wedding")) return Wedding;
+  if (text.includes("podcast")) return Microphone;
+  if (text.includes("corporate") || text.includes("event")) return Building2;
+  if (text.includes("product") || text.includes("commercial"))
+    return ShoppingBag;
+  if (text.includes("theme park")) return FerrisWheel;
+  if (text.includes("campaign") || text.includes("social")) return Megaphone;
+  if (text.includes("retainer")) return Repeat;
+  if (text.includes("film")) return Film;
+  return Video;
+}
 
 type TemplateFormState = {
   id: string;
@@ -300,186 +335,204 @@ export function TemplatesDesignPage({
         {customTemplatesLocked ? (
           <CapabilityUpgradePrompt capability="customWorkflowTemplates" />
         ) : null}
-        <ContentSection
-          title="Template library"
-          metadata={
+        <section aria-label="Project templates" className="grid gap-3">
+          <div className="flex items-center gap-2">
+            <h2 className="text-text-1 type-label">Template library</h2>
             <span className="text-text-3 type-label-sm data">
               {templates.length}
             </span>
-          }
-          aria-label="Project templates"
-          bodyMode="flush"
-        >
-          {templates.map((template) => (
-            <article
-              key={template.id}
-              data-slot="template-card"
-              className="group grid gap-3 rule-row p-4 text-text-1 transition-colors duration-(--dur-fast) hover:bg-hover lg:grid-cols-[minmax(0,1fr)_auto] lg:items-start lg:gap-6"
-            >
-              <div>
-                <header className="flex items-start justify-between gap-4">
+          </div>
+          <div className="grid gap-3 md:grid-cols-2 2xl:grid-cols-3">
+            {templates.map((template) => {
+              const Mark = templateMark(template);
+              return (
+                <article
+                  key={template.id}
+                  data-slot="template-card"
+                  className="group flex min-w-0 flex-col gap-4 rounded-frame bg-well p-4 text-text-1 transition-colors duration-(--dur-fast) ease-(--ease-step) hover:bg-[color-mix(in_oklch,var(--surface-card),var(--ink)_4%)]"
+                >
                   <div className="min-w-0">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <h2 className="type-heading-xs">{template.name}</h2>
-                      <OwnedBadge variant="secondary">
-                        {template.archived
-                          ? "Archived"
-                          : template.custom
-                            ? "Custom"
-                            : "Built-in"}
-                      </OwnedBadge>
-                    </div>
-                    <p className="mt-1 max-w-2xl text-text-2 type-body-sm">
-                      {template.description}
-                    </p>
-                  </div>
-                </header>
-
-                <dl className="mt-3 flex flex-wrap gap-x-6 gap-y-2 type-label-sm">
-                  <div>
-                    <dt className="text-text-2 type-label-sm">Project type</dt>
-                    <dd className="mt-0.5 text-text-1">
-                      {template.projectType}
-                    </dd>
-                  </div>
-                  <div>
-                    <dt className="text-text-2 type-label-sm">Setup time</dt>
-                    <dd className="mt-0.5 text-text-1 data">
-                      {template.durationDays} days
-                    </dd>
-                  </div>
-                </dl>
-
-                <div className="mt-3">
-                  <div className="flex items-center gap-3">
-                    <h3 className="text-muted-foreground type-label-sm">
-                      Workflow preview
-                    </h3>
-                    <span className="font-mono text-text-2 type-label-sm">
-                      {template.workflowStages.length} stages
-                    </span>
-                  </div>
-                  <div
-                    className="mt-2 flex flex-wrap items-center gap-1.5"
-                    aria-label={`${template.name} workflow stages`}
-                    role="list"
-                  >
-                    {(template.workflowStages.length
-                      ? template.workflowStages
-                      : [
-                          {
-                            id: "empty",
-                            label: "Add stages after creating the project",
-                            purpose: "planned" as const,
-                          },
-                        ]
-                    )
-                      .slice(0, 4)
-                      .map((stage, index) => (
-                        <span
-                          key={`${template.id}-${stage.id}-${index}`}
-                          className="inline-flex items-center gap-1.5"
-                        >
-                          <span
-                            role="listitem"
-                            className="rounded-inner bg-tile px-1.5 py-0.5 text-text-1 type-label-sm"
-                          >
-                            {stage.label}
-                          </span>
-                          {index <
-                          Math.min(template.workflowStages.length, 4) - 1 ? (
-                            <span aria-hidden="true" className="text-text-2">
-                              →
-                            </span>
-                          ) : null}
-                        </span>
-                      ))}
-                    {template.workflowStages.length > 4 ? (
-                      <span className="text-text-2 type-label-sm">
-                        +{template.workflowStages.length - 4}
+                    <header className="flex items-start gap-3">
+                      <span
+                        aria-hidden="true"
+                        className="grid size-10 shrink-0 place-items-center rounded-soft bg-page text-text-1 shadow-[0_0_0_1px_var(--line-frame)] [&_svg]:size-5"
+                      >
+                        <Mark />
                       </span>
-                    ) : null}
-                  </div>
-                  <p className="mt-2 flex gap-3 text-text-3 type-label-sm">
-                    <span>{template.deliverables.length} deliverables</span>
-                    <span>
-                      {template.checklistItems.length} checklist items
-                    </span>
-                  </p>
-                </div>
-              </div>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-start justify-between gap-2">
+                          <h3 className="min-w-0 truncate type-heading-xs">
+                            {template.name}
+                          </h3>
+                          <OwnedBadge variant="secondary">
+                            {template.archived
+                              ? "Archived"
+                              : template.custom
+                                ? "Custom"
+                                : "Built-in"}
+                          </OwnedBadge>
+                        </div>
+                        <p className="mt-1 line-clamp-2 text-text-2 type-body-sm">
+                          {template.description}
+                        </p>
+                      </div>
+                    </header>
 
-              <footer className="flex flex-wrap items-center gap-2 lg:justify-end">
-                <OwnedButton
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => onUseTemplate(template)}
-                  disabled={
-                    template.archived ||
-                    (customTemplatesLocked && template.custom)
-                  }
-                >
-                  Use template
-                </OwnedButton>
-                <OwnedButton
-                  type="button"
-                  size="sm"
-                  variant="ghost"
-                  aria-label={`Copy ${template.name} template`}
-                  onClick={() => copyTemplate(template)}
-                  disabled={!canManageTemplates || customTemplatesLocked}
-                >
-                  <Copy aria-hidden="true" />
-                  Copy
-                </OwnedButton>
-                {template.custom && canManageTemplates ? (
-                  <div className="flex items-center gap-1">
-                    <OwnedButton
-                      type="button"
-                      size="sm"
-                      variant="ghost"
-                      aria-label={`Edit ${template.name} template`}
-                      onClick={() => openBuilder(template)}
-                      disabled={customTemplatesLocked}
-                    >
-                      <Pencil aria-hidden="true" />
-                      Edit
-                    </OwnedButton>
-                    <OwnedButton
-                      type="button"
-                      size="sm"
-                      variant="ghost"
-                      onClick={() => archiveTemplate(template)}
-                      disabled={customTemplatesLocked}
-                    >
-                      {template.archived ? "Restore" : "Archive"}
-                    </OwnedButton>
-                    <OwnedButton
-                      type="button"
-                      size="sm"
-                      variant="ghost"
-                      className="text-destructive hover:bg-destructive/10 hover:text-destructive"
-                      aria-label={`Delete ${template.name} template`}
-                      onClick={() => deleteTemplate(template.id)}
-                      disabled={customTemplatesLocked}
-                    >
-                      <Trash2 aria-hidden="true" />
-                      Delete
-                    </OwnedButton>
+                    <dl className="mt-3 flex flex-wrap gap-x-6 gap-y-2 type-label-sm">
+                      <div>
+                        <dt className="text-text-2 type-label-sm">
+                          Project type
+                        </dt>
+                        <dd className="mt-0.5 text-text-1">
+                          {template.projectType}
+                        </dd>
+                      </div>
+                      <div>
+                        <dt className="text-text-2 type-label-sm">
+                          Setup time
+                        </dt>
+                        <dd className="mt-0.5 text-text-1 data">
+                          {template.durationDays} days
+                        </dd>
+                      </div>
+                    </dl>
+
+                    <div className="mt-3">
+                      <div className="flex items-center gap-3">
+                        <h3 className="text-muted-foreground type-label-sm">
+                          Workflow preview
+                        </h3>
+                        <span className="font-mono text-text-2 type-label-sm">
+                          {template.workflowStages.length} stages
+                        </span>
+                      </div>
+                      <div
+                        className="mt-2 flex flex-wrap items-center gap-1.5"
+                        aria-label={`${template.name} workflow stages`}
+                        role="list"
+                      >
+                        {(template.workflowStages.length
+                          ? template.workflowStages
+                          : [
+                              {
+                                id: "empty",
+                                label: "Add stages after creating the project",
+                                purpose: "planned" as const,
+                              },
+                            ]
+                        )
+                          .slice(0, 4)
+                          .map((stage, index) => (
+                            <span
+                              key={`${template.id}-${stage.id}-${index}`}
+                              className="inline-flex items-center gap-1.5"
+                            >
+                              <span
+                                role="listitem"
+                                className="rounded-inner bg-tile px-1.5 py-0.5 text-text-1 type-label-sm"
+                              >
+                                {stage.label}
+                              </span>
+                              {index <
+                              Math.min(template.workflowStages.length, 4) -
+                                1 ? (
+                                <span
+                                  aria-hidden="true"
+                                  className="text-text-2"
+                                >
+                                  →
+                                </span>
+                              ) : null}
+                            </span>
+                          ))}
+                        {template.workflowStages.length > 4 ? (
+                          <span className="text-text-2 type-label-sm">
+                            +{template.workflowStages.length - 4}
+                          </span>
+                        ) : null}
+                      </div>
+                      <p className="mt-2 flex gap-3 text-text-3 type-label-sm">
+                        <span>{template.deliverables.length} deliverables</span>
+                        <span>
+                          {template.checklistItems.length} checklist items
+                        </span>
+                      </p>
+                    </div>
                   </div>
-                ) : null}
-              </footer>
-            </article>
-          ))}
-        </ContentSection>
+
+                  <footer className="mt-auto flex flex-wrap items-center gap-2 pt-1">
+                    <OwnedButton
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => onUseTemplate(template)}
+                      disabled={
+                        template.archived ||
+                        (customTemplatesLocked && template.custom)
+                      }
+                    >
+                      Use template
+                    </OwnedButton>
+                    <OwnedButton
+                      type="button"
+                      size="sm"
+                      variant="ghost"
+                      aria-label={`Copy ${template.name} template`}
+                      onClick={() => copyTemplate(template)}
+                      disabled={!canManageTemplates || customTemplatesLocked}
+                    >
+                      <Copy aria-hidden="true" />
+                      Copy
+                    </OwnedButton>
+                    {template.custom && canManageTemplates ? (
+                      <div className="flex items-center gap-1">
+                        <OwnedButton
+                          type="button"
+                          size="sm"
+                          variant="ghost"
+                          aria-label={`Edit ${template.name} template`}
+                          onClick={() => openBuilder(template)}
+                          disabled={customTemplatesLocked}
+                        >
+                          <Pencil aria-hidden="true" />
+                          Edit
+                        </OwnedButton>
+                        <OwnedButton
+                          type="button"
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => archiveTemplate(template)}
+                          disabled={customTemplatesLocked}
+                        >
+                          {template.archived ? "Restore" : "Archive"}
+                        </OwnedButton>
+                        <OwnedButton
+                          type="button"
+                          size="sm"
+                          variant="ghost"
+                          className="text-destructive hover:bg-destructive/10 hover:text-destructive"
+                          aria-label={`Delete ${template.name} template`}
+                          onClick={() => deleteTemplate(template.id)}
+                          disabled={customTemplatesLocked}
+                        >
+                          <Trash2 aria-hidden="true" />
+                          Delete
+                        </OwnedButton>
+                      </div>
+                    ) : null}
+                  </footer>
+                </article>
+              );
+            })}
+          </div>
+        </section>
       </PageContent>
 
       <OwnedDialog open={builderOpen} onOpenChange={setBuilderOpen}>
         <OwnedDialogContent className="max-h-[calc(100dvh-1rem)] overflow-y-auto sm:max-w-3xl">
           <OwnedDialogHeader>
             <OwnedDialogTitle>
-              {templateForm.id ? "Edit Custom Template" : "New Custom Template"}
+              {templateForm.id ? "Edit template" : "New template"}
             </OwnedDialogTitle>
             <OwnedDialogDescription>
               Save a reusable project setup. Enter one workflow stage,

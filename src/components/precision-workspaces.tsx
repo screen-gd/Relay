@@ -41,7 +41,31 @@ import {
 } from "@/components/ui/dialog";
 import { DatePicker } from "@/components/ui/date-picker";
 import { Input } from "@/components/ui/input";
-import { BarChart, ShareList } from "@/components/ui/bar-chart";
+import { AreaChart } from "@/components/dither-kit/area-chart";
+import { Area } from "@/components/dither-kit/area";
+import { BarChart } from "@/components/dither-kit/bar-chart";
+import { Bar } from "@/components/dither-kit/bar";
+import { Grid } from "@/components/dither-kit/grid";
+import { PieChart } from "@/components/dither-kit/pie-chart";
+import { Pie } from "@/components/dither-kit/pie";
+import { Tooltip as ChartTooltip } from "@/components/dither-kit/tooltip";
+import { XAxis } from "@/components/dither-kit/x-axis";
+import { YAxis } from "@/components/dither-kit/y-axis";
+import {
+  PALETTE,
+  rgb,
+  type DitherColor,
+} from "@/components/dither-kit/palette";
+import { useHydratedReducedMotion } from "@/lib/motion";
+
+/** Series colors for the dither charts, in order of use. */
+const ditherColors = [
+  "lime",
+  "blue",
+  "green",
+  "purple",
+  "pink",
+] satisfies DitherColor[];
 import {
   Select,
   SelectContent,
@@ -915,10 +939,13 @@ export function PrecisionFeedback({
               id="review-queue-panel"
               role="tabpanel"
               aria-labelledby={`review-${filter.toLowerCase()}-tab`}
-              className="min-h-0 overflow-y-auto overscroll-contain rounded-frame shadow-[0_0_0_1px_var(--line-row)] lg:h-full"
+              className="min-h-0 overflow-y-auto overscroll-contain rounded-frame bg-well p-1 lg:h-full"
             >
               {visibleQueue.length ? (
-                <ul key={filter} className="animate-rise">
+                <ul
+                  key={filter}
+                  className="animate-rise overflow-hidden rounded-soft bg-page shadow-[0_0_0_1px_var(--line-frame)]"
+                >
                   {visibleQueue.map((project) => (
                     <li key={project.id} className="rule-row">
                       <button
@@ -1262,6 +1289,22 @@ export function PrecisionReports({
       .sort((a, b) => b.value - a.value)
       .slice(0, 5);
   }, [report.deliveredProjects]);
+  const reduceMotion = useHydratedReducedMotion();
+  const mixConfig = Object.fromEntries(
+    mixData.map((item, index) => [
+      item.name,
+      { label: item.name, color: ditherColors[index % ditherColors.length] },
+    ])
+  );
+  /** Top six clients by delivered value, for the stacked paid/unpaid bars. */
+  const clientChartData = [...report.clients]
+    .sort((a, b) => b.collected + b.outstanding - (a.collected + a.outstanding))
+    .slice(0, 6)
+    .map((client) => ({
+      name: client.name,
+      paid: client.collected,
+      unpaid: client.outstanding,
+    }));
   const editorSummary = report.editors.length
     ? report.editors.map((editor) => ({
         userId: editor.id,
@@ -1474,14 +1517,30 @@ export function PrecisionReports({
                   aria-labelledby={`earnings-${trendRange}-tab`}
                 >
                   {trendData.length ? (
-                    <BarChart
-                      data={trendData.map((item) => ({
-                        label: item.label,
-                        value: item.earned,
-                      }))}
-                      format={money_}
+                    <div
+                      key={trendRange}
+                      role="img"
                       aria-label={`Earnings trend for ${trendData.length} months. ${trendData.map((item) => `${item.label}: ${money_(item.earned)}`).join(", ")}`}
-                    />
+                      className="h-[190px]"
+                    >
+                      <AreaChart
+                        data={trendData}
+                        config={{ earned: { label: "Earned", color: "lime" } }}
+                        animate={!reduceMotion}
+                        animationDuration={420}
+                        bloom="high"
+                        bloomOnHover
+                      >
+                        <Grid />
+                        <XAxis dataKey="label" />
+                        <YAxis />
+                        <ChartTooltip
+                          labelKey="label"
+                          valueFormatter={(value) => money_(value)}
+                        />
+                        <Area dataKey="earned" variant="gradient" />
+                      </AreaChart>
+                    </div>
                   ) : (
                     <p className="text-text-2 type-body-sm">
                       Mark a project delivered to start the earnings trend.
@@ -1502,13 +1561,55 @@ export function PrecisionReports({
 
               <ContentSection title="Work mix">
                 {mixData.length ? (
-                  <ShareList
-                    aria-label="Work mix by project type"
-                    data={mixData.map((item) => ({
-                      label: item.name,
-                      value: item.value,
-                    }))}
-                  />
+                  <div className="grid gap-4">
+                    <div
+                      role="img"
+                      aria-label={`Work mix: ${mixData.map((item) => `${item.name}, ${item.value} projects`).join("; ")}`}
+                      className="h-[170px]"
+                    >
+                      <PieChart
+                        className="mx-auto max-w-[240px]"
+                        data={mixData}
+                        config={mixConfig}
+                        dataKey="value"
+                        nameKey="name"
+                        innerRadius={0.65}
+                        animate={!reduceMotion}
+                        animationDuration={420}
+                        bloom="high"
+                        bloomOnHover
+                      >
+                        <Pie variant="gradient" />
+                        <ChartTooltip labelKey="name" />
+                      </PieChart>
+                    </div>
+                    <ul className="grid gap-1.5" aria-label="Work mix legend">
+                      {mixData.map((item, index) => (
+                        <li
+                          key={item.name}
+                          className="flex items-center gap-2 type-label-sm"
+                        >
+                          <span
+                            aria-hidden="true"
+                            className="size-2 shrink-0 rounded-inner"
+                            style={{
+                              background: rgb(
+                                PALETTE[
+                                  ditherColors[index % ditherColors.length]
+                                ].fill
+                              ),
+                            }}
+                          />
+                          <span className="truncate text-text-2">
+                            {item.name}
+                          </span>
+                          <span className="ms-auto text-text-1 data">
+                            {item.value}
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
                 ) : (
                   <p className="text-text-2 type-body-sm">
                     Deliver projects to see how your work splits across types.
@@ -1541,17 +1642,29 @@ export function PrecisionReports({
                 />
               </dl>
               {trendSeries.length ? (
-                <BarChart
-                  className="mt-5 h-32"
-                  data={trendSeries.slice(-6).map((item) => ({
-                    label: item.label,
-                    value: item.delivered,
-                  }))}
+                <div
+                  role="img"
                   aria-label={`Deliveries by month: ${trendSeries
                     .slice(-6)
                     .map((item) => `${item.label} ${item.delivered}`)
                     .join(", ")}`}
-                />
+                  className="mt-5 h-[160px]"
+                >
+                  <BarChart
+                    data={trendSeries.slice(-6)}
+                    config={{
+                      delivered: { label: "Delivered", color: "lime" },
+                    }}
+                    animate={!reduceMotion}
+                    animationDuration={420}
+                    bloom="high"
+                    bloomOnHover
+                  >
+                    <XAxis dataKey="label" />
+                    <ChartTooltip labelKey="label" />
+                    <Bar dataKey="delivered" variant="gradient" />
+                  </BarChart>
+                </div>
               ) : null}
             </ContentSection>
             {earningsQa}
@@ -1701,6 +1814,39 @@ export function PrecisionReports({
             description="Delivered value per client, paid and unpaid."
             bodyMode="flush"
           >
+            {canManageFinance && report.clients.length ? (
+              <div
+                role="img"
+                aria-label={`Paid and unpaid by client: ${clientChartData
+                  .map(
+                    (client) =>
+                      `${client.name} ${money_(client.paid)} paid, ${money_(client.unpaid)} unpaid`
+                  )
+                  .join("; ")}`}
+                className="h-[180px] px-4 pt-4"
+              >
+                <BarChart
+                  data={clientChartData}
+                  config={{
+                    paid: { label: "Paid", color: "lime" },
+                    unpaid: { label: "Unpaid", color: "grey" },
+                  }}
+                  stackType="stacked"
+                  animate={!reduceMotion}
+                  animationDuration={420}
+                  bloom="high"
+                  bloomOnHover
+                >
+                  <XAxis dataKey="name" />
+                  <ChartTooltip
+                    labelKey="name"
+                    valueFormatter={(value) => money_(value)}
+                  />
+                  <Bar dataKey="paid" variant="gradient" />
+                  <Bar dataKey="unpaid" variant="gradient" />
+                </BarChart>
+              </div>
+            ) : null}
             {report.clients.length ? (
               <Table className="min-w-[560px]">
                 <TableHeader>

@@ -131,7 +131,7 @@ describe("Workspace sidebar", () => {
     for (const href of [
       "/settings?section=workflow",
       "/integrations",
-      "/organization",
+      "/settings?section=data",
       "/profile/edit",
       "/account",
       "/subscription",

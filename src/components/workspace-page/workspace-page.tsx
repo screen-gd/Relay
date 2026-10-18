@@ -3,16 +3,17 @@ import type { ComponentPropsWithoutRef } from "react";
 import { cn } from "@/lib/utils";
 
 /**
- * How wide a page's content runs. Lists and boards use the whole viewport,
- * as Linear does; forms and settings sit in a readable column.
+ * How wide a page's content runs. Every page uses the whole viewport, as
+ * Linear does; form pages start at the left edge and stop at a readable
+ * width so long fields do not stretch across a wide screen.
  */
 const familyWidth = {
   "data-index": "max-w-none",
   "master-detail": "max-w-none",
   canvas: "max-w-none",
   conversation: "max-w-none",
-  library: "max-w-(--container)",
-  administration: "max-w-4xl",
+  library: "max-w-none",
+  administration: "ms-0 max-w-5xl",
 } as const;
 
 type WorkspacePageProps = ComponentPropsWithoutRef<"div"> & {

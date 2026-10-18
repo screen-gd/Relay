@@ -938,7 +938,7 @@ export function SettingsDesignPage({
             </div>
           </SettingsPanel>
         ) : null}
-        {activeSection === "regional" ? (
+        {activeSection === "appearance" || activeSection === "regional" ? (
           <SettingsPanel
             id="regional"
             title="Regional Preferences"

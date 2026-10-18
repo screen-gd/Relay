@@ -192,3 +192,18 @@ html.dark {
     inset 0 0 0 1px color-mix(in oklch, var(--primary) 88%, black),
     inset 0 1px 2px oklch(0 0 0 / 0.42);
 }
+
+/* D3: on the near-black chassis Quartz's 8% hairlines vanish, so row rules,
+   frames and field edges step up one notch in dark. Light keeps Quartz's. */
+.quartz[data-theme="dark"],
+.quartz[data-theme="dark"] [data-surface],
+:where([data-theme="dark"], .dark) .quartz:not([data-theme="light"]),
+:where([data-theme="dark"], .dark)
+  .quartz:not([data-theme="light"])
+  [data-surface] {
+  --line-frame-alpha: 0.16;
+  --line-row: oklch(var(--ink-c) / 0.11);
+  --border-hair: oklch(var(--ink-c) / 0.11);
+  --line-control: oklch(var(--ink-c) / 0.2);
+  --line-control-hover: oklch(var(--ink-c) / 0.36);
+}

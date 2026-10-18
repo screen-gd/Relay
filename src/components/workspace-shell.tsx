@@ -90,9 +90,10 @@ import {
   isSettingsPage,
   primaryRoutes,
   routes,
-  settingsAccountRoutes,
+  settingsNavGroups,
+  settingsNavSection,
   settingsSections,
-  settingsWorkspaceRoutes,
+  isSettingsSection,
   sidebarPageFor,
   sidebarSections,
   supportLinks,
@@ -602,11 +603,15 @@ function WorkspaceSidebar({
   );
 }
 
-/** The settings mode of the sidebar: workspace sections, then account pages. */
+/** The settings mode of the sidebar: settings grouped by what they are about. */
 function SettingsSidebar({ page }: { page: ShellPage }) {
   const search = useSearch({ strict: false }) as { section?: string };
   const activeSection =
-    page === "settings" ? (search.section ?? "workspace") : null;
+    page === "settings"
+      ? settingsNavSection(
+          isSettingsSection(search.section) ? search.section : undefined
+        )
+      : null;
 
   return (
     <>
@@ -623,44 +628,36 @@ function SettingsSidebar({ page }: { page: ShellPage }) {
         aria-label="Settings navigation"
         className="scrollbar-none flex min-h-0 w-full flex-1 flex-col overflow-y-auto px-2 pb-3"
       >
-        <NavGroup label="Workspace" open>
-          {settingsSections.map((section) => (
-            <li key={section.id}>
-              <Link
-                to="/settings"
-                search={{ section: section.id }}
-                aria-current={activeSection === section.id ? "page" : undefined}
-                className={navItemClassName(activeSection === section.id)}
-              >
-                <span className="min-w-0 truncate">{section.label}</span>
-              </Link>
-            </li>
-          ))}
-          {settingsWorkspaceRoutes.map((item) => (
-            <li key={item.page}>
-              <Link
-                to={item.href}
-                aria-current={page === item.page ? "page" : undefined}
-                className={navItemClassName(page === item.page)}
-              >
-                <span className="min-w-0 truncate">{item.label}</span>
-              </Link>
-            </li>
-          ))}
-        </NavGroup>
-        <NavGroup label="Account" open>
-          {settingsAccountRoutes.map((item) => (
-            <li key={item.page}>
-              <Link
-                to={item.href}
-                aria-current={page === item.page ? "page" : undefined}
-                className={navItemClassName(page === item.page)}
-              >
-                <span className="min-w-0 truncate">{item.label}</span>
-              </Link>
-            </li>
-          ))}
-        </NavGroup>
+        {settingsNavGroups.map((group) => (
+          <NavGroup key={group.label} label={group.label} open>
+            {group.items.map((entry) =>
+              entry.kind === "section" ? (
+                <li key={entry.id}>
+                  <Link
+                    to="/settings"
+                    search={{ section: entry.id }}
+                    aria-current={
+                      activeSection === entry.id ? "page" : undefined
+                    }
+                    className={navItemClassName(activeSection === entry.id)}
+                  >
+                    <span className="min-w-0 truncate">{entry.label}</span>
+                  </Link>
+                </li>
+              ) : (
+                <li key={entry.item.page}>
+                  <Link
+                    to={entry.item.href}
+                    aria-current={page === entry.item.page ? "page" : undefined}
+                    className={navItemClassName(page === entry.item.page)}
+                  >
+                    <span className="min-w-0 truncate">{entry.item.label}</span>
+                  </Link>
+                </li>
+              )
+            )}
+          </NavGroup>
+        ))}
       </nav>
     </>
   );

@@ -17,7 +17,7 @@ The toggle, or `[`, folds the sidebar to a 52px icon rail. Rail items name thems
 
 ## Settings mode
 
-On settings, integrations, account, plans and profile pages the sidebar swaps to settings navigation with Back to workspace. Workspace sections are URLs: `/settings?section=workflow`, `ai`, `permissions`, `notifications`, `appearance`, `regional`, `data`.
+On settings, integrations, account, plans and profile pages the sidebar swaps to settings navigation with Back to workspace, in four groups: **Workspace** (General, Workflow, Permissions, AI), **Preferences** (Appearance and region, Notifications), **Data** (Data and export, Integrations) and **Account** (Profile, Account, Plans and billing). Workspace sections are URLs such as `/settings?section=workflow`; `regional` opens the Appearance page. The public profile opens from Edit profile, and the organization profile from the workspace menu.
 
 ## Top bar
 
