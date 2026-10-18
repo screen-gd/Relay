@@ -22,10 +22,12 @@ import {
   DragOverlay,
   KeyboardSensor,
   PointerSensor,
+  rectIntersection,
   useSensor,
   useSensors,
   useDndContext,
   type Announcements,
+  type CollisionDetection,
   type DragEndEvent,
 } from "@dnd-kit/core";
 import {
@@ -171,6 +173,28 @@ function projectNextAction(project: WorkItem) {
  * Returns a callback ref so the listener attaches whenever the board mounts,
  * including after switching from the table view.
  */
+// The board scrolls sideways under a drag to reach the last columns, which
+// leaves dnd-kit's start-of-drag column rects stale. Measure the columns live
+// and drop into the one under the pointer; keyboard drags have no pointer and
+// keep the default rect test.
+const columnUnderPointer: CollisionDetection = (args) => {
+  const pointer = args.pointerCoordinates;
+  if (!pointer) return rectIntersection(args);
+  const column = args.droppableContainers.find((container) => {
+    const rect = container.node.current?.getBoundingClientRect();
+    return (
+      rect !== undefined &&
+      pointer.x >= rect.left &&
+      pointer.x <= rect.right &&
+      pointer.y >= rect.top &&
+      pointer.y <= rect.bottom
+    );
+  });
+  return column
+    ? [{ id: column.id, data: { droppableContainer: column, value: 0 } }]
+    : [];
+};
+
 function useBoardHorizontalWheel() {
   return useCallback((board: HTMLDivElement | null) => {
     if (!board) return;
@@ -929,6 +953,7 @@ export function PrecisionProjects(props: PrecisionProjectsProps) {
                 tableState.view === "board" ? (
                   <DndContext
                     sensors={sensors}
+                    collisionDetection={columnUnderPointer}
                     accessibility={{ announcements }}
                     onDragEnd={handleDragEnd}
                   >

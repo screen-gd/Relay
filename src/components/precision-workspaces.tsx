@@ -478,7 +478,7 @@ export function PrecisionClients({
             selected ? (
               <section
                 aria-label={`${selected.name} details`}
-                className="flex min-h-0 flex-col gap-4 overflow-y-auto overscroll-contain lg:h-full"
+                className="@container flex min-h-0 flex-col gap-4 overflow-y-auto overscroll-contain lg:h-full"
               >
                 <header className="flex flex-wrap items-start gap-3">
                   <div className="min-w-0 flex-1">
@@ -557,132 +557,143 @@ export function PrecisionClients({
                   />
                 </MetricStrip>
 
-                <ContentSection
-                  title="Projects"
-                  metadata={
-                    <span className="text-text-3 type-label-sm data">
-                      {selected.projects.length}
-                    </span>
-                  }
-                  bodyMode="flush"
-                >
-                  {selected.projects.length ? (
-                    <ul className={sectionListClassName}>
-                      {selected.projects
-                        .slice()
-                        .sort((a, b) => b.dueDate.localeCompare(a.dueDate))
-                        .map((project) => (
-                          <li key={project.id}>
-                            <button
-                              type="button"
-                              className={cn(
-                                sectionRowClassName,
-                                "grid w-full gap-x-4 gap-y-1 text-start outline-none focus-visible:focus-ring-inset sm:grid-cols-[minmax(0,1fr)_110px_auto] sm:items-center"
-                              )}
-                              aria-label={`Open ${project.title}`}
-                              onClick={() => onViewProject(project)}
-                            >
-                              <span className="min-w-0">
-                                <span className="block truncate text-text-1 type-label">
-                                  {project.title}
-                                </span>
-                                <span className="mt-0.5 block truncate text-text-3 type-label-sm">
-                                  {project.notes || project.workType}
-                                </span>
-                              </span>
-                              <span className="text-text-2 type-label-sm data">
-                                {formatDate(project.dueDate)}
-                              </span>
-                              <Badge
+                {/* Projects lead; contact and Hub access sit beside them as the
+                    client's properties once the pane is wide enough, and above
+                    them when it is not. */}
+                <div className="grid items-start gap-4 @2xl:grid-cols-[minmax(0,1fr)_280px]">
+                  <ContentSection
+                    title="Projects"
+                    metadata={
+                      <span className="text-text-3 type-label-sm data">
+                        {selected.projects.length}
+                      </span>
+                    }
+                    bodyMode="flush"
+                  >
+                    {selected.projects.length ? (
+                      <ul className={sectionListClassName}>
+                        {selected.projects
+                          .slice()
+                          .sort((a, b) => b.dueDate.localeCompare(a.dueDate))
+                          .map((project) => (
+                            <li key={project.id}>
+                              <button
+                                type="button"
                                 className={cn(
-                                  "w-fit",
-                                  projectStatusTone(project.status)
+                                  sectionRowClassName,
+                                  "grid w-full gap-x-4 gap-y-1 text-start outline-none focus-visible:focus-ring-inset sm:grid-cols-[minmax(0,1fr)_110px_auto] sm:items-center"
                                 )}
+                                aria-label={`Open ${project.title}`}
+                                onClick={() => onViewProject(project)}
                               >
-                                {project.status}
-                              </Badge>
-                            </button>
-                          </li>
-                        ))}
-                    </ul>
-                  ) : (
-                    <PageEmptyState
-                      compact
-                      title="No projects yet"
-                      description="Pick this client when you create a project."
-                    />
-                  )}
-                </ContentSection>
-
-                <div className="grid items-start gap-4 xl:grid-cols-2">
-                  <ContentSection title="Contact">
-                    {[
-                      selected.contactName,
-                      selected.email,
-                      selected.phone,
-                      selected.notes,
-                    ].some(Boolean) ? (
-                      <dl className="grid grid-cols-[80px_minmax(0,1fr)] gap-x-3 gap-y-2 type-label">
-                        {[
-                          ["Contact", selected.contactName],
-                          ["Email", selected.email],
-                          ["Phone", selected.phone],
-                          ["Notes", selected.notes],
-                        ]
-                          .filter((entry) => entry[1])
-                          .map(([label, value]) => (
-                            <Fragment key={label}>
-                              <dt className="text-text-3">{label}</dt>
-                              <dd className="min-w-0 text-text-1 [overflow-wrap:anywhere]">
-                                {value}
-                              </dd>
-                            </Fragment>
+                                <span className="min-w-0">
+                                  <span className="block truncate text-text-1 type-label">
+                                    {project.title}
+                                  </span>
+                                  <span className="mt-0.5 block truncate text-text-3 type-label-sm">
+                                    {project.notes || project.workType}
+                                  </span>
+                                </span>
+                                <span className="text-text-2 type-label-sm data">
+                                  {formatDate(project.dueDate)}
+                                </span>
+                                <Badge
+                                  className={cn(
+                                    "w-fit",
+                                    projectStatusTone(project.status)
+                                  )}
+                                >
+                                  {project.status}
+                                </Badge>
+                              </button>
+                            </li>
                           ))}
-                      </dl>
+                      </ul>
                     ) : (
-                      <p className="text-text-2 type-body-sm">
-                        No contact details. Add them with Edit.
-                      </p>
+                      <PageEmptyState
+                        compact
+                        title="No projects yet"
+                        description="Pick this client when you create a project."
+                      />
                     )}
                   </ContentSection>
-                  <ContentSection
-                    title="Client Hub access"
-                    description="Give a contact a sign-in to this client's Hub."
+
+                  <aside
+                    aria-label={`${selected.name} properties`}
+                    className="-order-1 grid gap-4 @2xl:order-none"
                   >
-                    <div className="grid gap-2">
-                      <Input
-                        value={hubContactName}
-                        onChange={(event) =>
-                          setHubContactName(event.target.value)
-                        }
-                        placeholder="Contact name"
-                        aria-label="Client Hub contact name"
-                      />
-                      <Input
-                        type="email"
-                        value={hubContactEmail}
-                        onChange={(event) =>
-                          setHubContactEmail(event.target.value)
-                        }
-                        placeholder="contact@example.com"
-                        aria-label="Client Hub contact email"
-                      />
-                      <div className="flex items-center justify-between gap-3">
-                        <p role="status" className="text-text-2 type-label-sm">
-                          {hubMessage}
+                    <ContentSection title="Contact">
+                      {[
+                        selected.contactName,
+                        selected.email,
+                        selected.phone,
+                        selected.notes,
+                      ].some(Boolean) ? (
+                        <dl className="grid grid-cols-[80px_minmax(0,1fr)] gap-x-3 gap-y-2 type-label">
+                          {[
+                            ["Contact", selected.contactName],
+                            ["Email", selected.email],
+                            ["Phone", selected.phone],
+                            ["Notes", selected.notes],
+                          ]
+                            .filter((entry) => entry[1])
+                            .map(([label, value]) => (
+                              <Fragment key={label}>
+                                <dt className="text-text-3">{label}</dt>
+                                <dd className="min-w-0 text-text-1 [overflow-wrap:anywhere]">
+                                  {value}
+                                </dd>
+                              </Fragment>
+                            ))}
+                        </dl>
+                      ) : (
+                        <p className="text-text-2 type-body-sm">
+                          No contact details. Add them with Edit.
                         </p>
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          disabled={!hubContactEmail.trim()}
-                          onClick={() => void grantHubAccess(selected.id)}
-                        >
-                          Add access
-                        </Button>
+                      )}
+                    </ContentSection>
+                    <ContentSection
+                      title="Client Hub access"
+                      description="Give a contact a sign-in to this client's Hub."
+                    >
+                      <div className="grid gap-2">
+                        <Input
+                          value={hubContactName}
+                          onChange={(event) =>
+                            setHubContactName(event.target.value)
+                          }
+                          placeholder="Contact name"
+                          aria-label="Client Hub contact name"
+                        />
+                        <Input
+                          type="email"
+                          value={hubContactEmail}
+                          onChange={(event) =>
+                            setHubContactEmail(event.target.value)
+                          }
+                          placeholder="contact@example.com"
+                          aria-label="Client Hub contact email"
+                        />
+                        <div className="flex items-center justify-between gap-3">
+                          <p
+                            role="status"
+                            className="text-text-2 type-label-sm"
+                          >
+                            {hubMessage}
+                          </p>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            disabled={!hubContactEmail.trim()}
+                            onClick={() => void grantHubAccess(selected.id)}
+                          >
+                            Add access
+                          </Button>
+                        </div>
                       </div>
-                    </div>
-                  </ContentSection>
+                    </ContentSection>
+                  </aside>
                 </div>
               </section>
             ) : (
