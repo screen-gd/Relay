@@ -46,20 +46,6 @@ function progress(project: WorkItem) {
   return 16;
 }
 
-function packageColor(project: WorkItem) {
-  const palette = [
-    "var(--media-package-1)",
-    "var(--media-package-2)",
-    "var(--media-package-3)",
-    "var(--media-package-4)",
-    "var(--media-package-5)",
-  ];
-  let hash = 0;
-  for (const char of project.id || project.title)
-    hash = (hash * 31 + char.charCodeAt(0)) >>> 0;
-  return palette[hash % palette.length];
-}
-
 export function PrecisionMedia({
   projects,
   onViewProject,
@@ -181,7 +167,7 @@ export function PrecisionMedia({
                 <MasterDetail
                   className="h-full min-h-0 overflow-hidden"
                   master={
-                    <aside className="min-h-0 overflow-auto border-b border-line-row pb-3 lg:border-b-0">
+                    <aside className="min-h-0 overflow-auto pb-3">
                       <p className="px-2 text-text-3 type-label-sm">
                         Collections
                       </p>
@@ -238,8 +224,8 @@ export function PrecisionMedia({
                     </aside>
                   }
                   detail={
-                    <main className="flex h-full min-h-0 min-w-0 flex-col overflow-hidden border-b border-line-row lg:border-b-0 lg:border-r">
-                      <PageToolbar className="border-b border-line-row p-3">
+                    <main className="flex h-full min-h-0 min-w-0 flex-col overflow-hidden rounded-frame shadow-[0_0_0_1px_var(--line-row)]">
+                      <PageToolbar className="p-3 shadow-[inset_0_-1px_0_var(--line-row)]">
                         <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
                           <div className="relative flex-1">
                             <Search className="pointer-events-none absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-text-2" />
@@ -252,7 +238,7 @@ export function PrecisionMedia({
                             />
                           </div>
                           <div
-                            className="inline-flex self-start rounded-md bg-well p-0.5"
+                            className="inline-flex self-start rounded-soft bg-well p-0.5"
                             role="group"
                             aria-label="Media view"
                           >
@@ -298,7 +284,7 @@ export function PrecisionMedia({
                         </div>
                       </PageToolbar>
 
-                      <div className="flex min-h-10 items-center gap-3 border-b border-line-row px-4 py-2">
+                      <div className="flex min-h-10 items-center gap-3 px-4 py-2 shadow-[inset_0_-1px_0_var(--line-row)]">
                         <AnimatePresence mode="popLayout" initial={false}>
                           <motion.h2
                             key={collection}
@@ -585,7 +571,7 @@ export function PrecisionMedia({
                   }
                   inspector={
                     <aside
-                      className="h-full min-h-0 min-w-0 overflow-auto bg-well p-4 lg:min-h-0"
+                      className="h-full min-h-0 min-w-0 overflow-auto rounded-frame bg-well p-4 lg:min-h-0"
                       aria-label="Selected package details"
                     >
                       <AnimatePresence mode="popLayout" initial={false}>
@@ -699,26 +685,25 @@ function MediaPreview({
   return (
     <span
       className={cn(
-        "relative block shrink-0 overflow-hidden rounded-md border border-line-row",
+        "relative block shrink-0 overflow-hidden rounded-soft bg-tile",
         className
       )}
-      style={{ background: packageColor(project) }}
       aria-hidden="true"
     >
       <FileVideo2
         className={cn(
-          "absolute text-black/25",
+          "absolute text-text-3",
           large ? "right-4 top-4 size-8" : "right-2 top-2 size-5"
         )}
       />
       <span
         className={cn(
-          "absolute overflow-hidden rounded-full bg-white/65",
+          "absolute overflow-hidden rounded-full bg-line-row",
           large ? "inset-x-4 bottom-4 h-1" : "inset-x-2 bottom-2 h-0.5"
         )}
       >
         <motion.span
-          className="block h-full origin-left rounded-full bg-primary"
+          className="block h-full origin-left rounded-full bg-ink"
           initial={reduceMotion ? false : { scaleX: 0 }}
           animate={{ scaleX: value / 100 }}
           transition={

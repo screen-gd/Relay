@@ -70,7 +70,7 @@ function ScopeForm({
   const disabled = !settings.canManage || busy;
   return (
     <form
-      className="grid gap-3 dark:bg-black dark:text-white [&_button]:bg-transparent [&_button:hover]:bg-transparent [&_button]:dark:text-white [&_input]:bg-transparent [&_input]:dark:bg-black"
+      className="grid gap-3 "
       onSubmit={async (event) => {
         event.preventDefault();
         if (invalid) return;

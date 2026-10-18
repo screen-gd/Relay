@@ -166,3 +166,29 @@ html.dark {
   --media-package-4: var(--hue-4-wash);
   --media-package-5: var(--hue-1-wash);
 }
+
+/* The primary key follows the primary color, so a picked accent repaints the
+   button body and its text together; without one it stays Quartz ink. */
+.quartz,
+.quartz [data-surface] {
+  --key-primary-body: linear-gradient(
+    180deg,
+    color-mix(in oklch, var(--primary) 84%, white),
+    color-mix(in oklch, var(--primary) 94%, black)
+  );
+  --key-primary-body-hover: linear-gradient(
+    180deg,
+    color-mix(in oklch, var(--primary) 76%, white),
+    color-mix(in oklch, var(--primary) 90%, white)
+  );
+  --key-primary-edge:
+    inset 0 2px 0 -1px oklch(1 0 0 / 0.2),
+    inset 0 -2px 0 -1px oklch(0 0 0 / 0.3),
+    inset 0 0 0 1px color-mix(in oklch, var(--primary) 88%, black),
+    0 1px 1px oklch(var(--text-on-field-c) / calc(var(--shadow-alpha) * 1.1)),
+    0 2px 5px -2px
+      oklch(var(--text-on-field-c) / calc(var(--shadow-alpha) * 1.5));
+  --key-primary-edge-press:
+    inset 0 0 0 1px color-mix(in oklch, var(--primary) 88%, black),
+    inset 0 1px 2px oklch(0 0 0 / 0.42);
+}

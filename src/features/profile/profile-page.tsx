@@ -427,7 +427,9 @@ export function ProfileDesignPage({
         </section>
       </main>
       <footer className="mt-6 flex flex-wrap justify-center gap-x-4 gap-y-1 text-text-3 type-label-sm">
-        <span>Shared from {settings.studioName}</span>
+        {settings.studioName ? (
+          <span>Shared from {settings.studioName}</span>
+        ) : null}
         <span>Updated {formatDate(iso(todayDate()), settings.dateFormat)}</span>
       </footer>
     </div>
@@ -516,6 +518,7 @@ export function ProfileEditPage({
               <ContentSection
                 title="Identity"
                 description="How you appear on your public profile."
+                bodyClassName="grid gap-4"
               >
                 <div className="grid gap-3 sm:grid-cols-2">
                   <FieldLayout label="Name">
@@ -663,7 +666,7 @@ export function ProfileEditPage({
                 </div>
               </ContentSection>
 
-              <ContentSection title="Time and dates">
+              <ContentSection title="Time and dates" bodyClassName="grid gap-4">
                 <div className="grid gap-3 sm:grid-cols-2">
                   <ProfileEditSelect
                     label="Time zone"

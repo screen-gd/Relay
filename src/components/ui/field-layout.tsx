@@ -75,7 +75,7 @@ function FieldLayout({
       data-disabled={isDisabled || undefined}
       data-invalid={hasError || undefined}
       className={cn(
-        "group grid min-w-0 max-w-full grid-cols-1 gap-1.5 [&>*]:min-w-0 [&>*]:max-w-full",
+        "group grid min-w-0 max-w-full grid-cols-1 content-start gap-1.5 [&>*]:min-w-0 [&>*]:max-w-full",
         className
       )}
       {...props}

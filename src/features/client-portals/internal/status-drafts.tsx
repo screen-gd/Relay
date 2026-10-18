@@ -132,8 +132,7 @@ function DraftEditor({
   );
 }
 
-const sectionClassName =
-  "py-3 dark:bg-black dark:text-white [&_button]:bg-transparent [&_button:hover]:bg-transparent [&_textarea]:dark:bg-black [&_button]:dark:text-white";
+const sectionClassName = "py-3 ";
 
 /** Reviews channel-specific updates; copying and portal publishing require a click. */
 export function StatusDrafts({
@@ -208,13 +207,10 @@ export function StatusDrafts({
             }}
             disabled={running}
           >
-            <SelectTrigger
-              className="w-36 dark:text-white"
-              aria-label="Update channel"
-            >
+            <SelectTrigger className="w-36" aria-label="Update channel">
               <SelectValue />
             </SelectTrigger>
-            <SelectContent className="dark:bg-black dark:text-white [&_[data-slot=select-item]:focus]:bg-transparent">
+            <SelectContent>
               <SelectItem value="portal">Portal note</SelectItem>
               <SelectItem value="email">Email</SelectItem>
               <SelectItem value="whatsapp">WhatsApp</SelectItem>

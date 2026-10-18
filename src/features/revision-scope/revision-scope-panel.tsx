@@ -57,12 +57,12 @@ export function RoundBasisSelect({
     >
       <SelectTrigger
         size="sm"
-        className="w-40 dark:text-white"
+        className="w-40"
         aria-label="Included rounds apply"
       >
         <SelectValue />
       </SelectTrigger>
-      <SelectContent className="dark:bg-black dark:text-white [&_[data-slot=select-item]:focus]:bg-transparent">
+      <SelectContent>
         {allowDefault ? (
           <SelectItem value="default">Workspace default</SelectItem>
         ) : null}
@@ -80,8 +80,7 @@ export function parseWholeNumber(text: string) {
   return /^\d+$/.test(trimmed) ? Number(trimmed) : Number.NaN;
 }
 
-const controlClassName =
-  "dark:bg-black dark:text-white [&_button]:bg-transparent [&_button:hover]:bg-transparent [&_button]:dark:text-white [&_input]:bg-transparent [&_input]:dark:bg-black [&_textarea]:dark:bg-black";
+const controlClassName = "  ";
 
 function OutputRow({
   projectId,

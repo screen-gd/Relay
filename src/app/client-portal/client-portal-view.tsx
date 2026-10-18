@@ -983,10 +983,7 @@ export function PublicOutputRow({
         </span>
       )}
       {currentVersion?.changelog ? (
-        <section
-          aria-label="What changed"
-          className="sm:col-span-2 dark:bg-black dark:text-white"
-        >
+        <section aria-label="What changed" className="sm:col-span-2">
           <h4 className="type-label">What changed</h4>
           <p className="mt-2 whitespace-pre-wrap type-body">
             {currentVersion.changelog}

@@ -39,7 +39,7 @@ export function TranscriptLine({
       return true;
     })
     .map((match) => (
-      <p key={match.segmentId} className="dark:text-white type-body">
+      <p key={match.segmentId} className="type-body">
         {match.aiDrafted ? "AI-drafted · " : ""}
         <a
           href={`#transcript-${match.segmentId}`}
@@ -159,10 +159,7 @@ function ConnectedTranscriptReview({
     <TranscriptContext.Provider
       value={{ data, reveal: () => setExpanded(true) }}
     >
-      <section
-        aria-label="Transcript"
-        className="grid gap-2 py-2 dark:bg-black dark:text-white [&_button]:bg-transparent [&_button:hover]:bg-transparent [&_input]:bg-transparent"
-      >
+      <section aria-label="Transcript" className="grid gap-2 py-2">
         {data?.transcript ? (
           <>
             <Collapsible open={expanded} onOpenChange={setExpanded}>

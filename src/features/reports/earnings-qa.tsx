@@ -153,7 +153,7 @@ export function EarningsQa({
 
   return (
     <ContentSection title="Ask about earnings">
-      <div className="[&_button]:bg-transparent [&_button:hover]:bg-transparent [&_button]:dark:text-white [&_input]:dark:bg-black">
+      <div className=" ">
         <form
           className="flex flex-col gap-2 sm:flex-row"
           onSubmit={(event) => {

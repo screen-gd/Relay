@@ -96,7 +96,7 @@ export function DeadlineRiskRadar({
       actions={
         ai && radar.findings.length ? (
           ai.enabled ? (
-            <div className="flex gap-2 [&_button]:bg-transparent [&_button:hover]:bg-transparent [&_button]:dark:text-white">
+            <div className="flex gap-2">
               <Button
                 size="sm"
                 variant="outline"

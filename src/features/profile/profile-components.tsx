@@ -19,18 +19,13 @@ export function ProfileMetric({
 }) {
   return (
     <div
-      className="min-h-[82px] px-4"
+      className="bg-page px-4 py-3"
       aria-label={`${label} ${sublabel}: ${value}`}
     >
-      <span
-        aria-hidden="true"
-        className="mb-2 grid w-6 place-items-center text-muted-foreground [&_svg]:size-[19px]"
-      >
-        {icon}
-      </span>
-      <dd className="tabular-nums type-heading-lg">{value}</dd>
-      <dt className="mt-1.5 type-label-sm">{label}</dt>
-      <dd className="mt-0.5 text-muted-foreground type-label-sm">{sublabel}</dd>
+      <dt className="text-text-2 type-label-sm">
+        {label} {sublabel}
+      </dt>
+      <dd className="mt-1 text-text-1 type-heading data">{value}</dd>
     </div>
   );
 }

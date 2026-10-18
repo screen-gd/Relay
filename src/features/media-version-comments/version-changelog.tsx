@@ -128,10 +128,7 @@ export function VersionChangelog({
   const selected = rows?.find((row) => row.runId === runId) ?? rows?.[0];
   const running = busy || run?.status === "queued" || run?.status === "running";
   return (
-    <section
-      aria-label="Version changelog"
-      className="mt-4 dark:bg-black dark:text-white [&_button]:bg-transparent [&_button:hover]:bg-transparent [&_button]:dark:text-white [&_textarea]:dark:bg-black"
-    >
+    <section aria-label="Version changelog" className="mt-4 ">
       <div className="flex flex-wrap items-center gap-2">
         <h4 className="type-label">What changed</h4>
         <Button

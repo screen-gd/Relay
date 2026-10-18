@@ -23,8 +23,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-const sectionClassName =
-  "grid gap-3 dark:bg-black dark:text-white [&_button]:bg-transparent [&_button:hover]:bg-transparent [&_input]:bg-transparent [&_textarea]:bg-transparent";
+const sectionClassName = "grid gap-3";
 
 export function BriefImport({
   teamId,

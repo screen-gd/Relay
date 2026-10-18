@@ -212,10 +212,7 @@ export function RevisionList({
   for (const item of items ?? [])
     groups.set(item.theme, [...(groups.get(item.theme) ?? []), item]);
   return (
-    <section
-      aria-label="Revision list"
-      className="mt-3 text-foreground dark:bg-black dark:text-white [&_button]:bg-transparent [&_button:hover]:bg-transparent [&_button]:dark:text-white [&_textarea]:dark:bg-black"
-    >
+    <section aria-label="Revision list" className="mt-3 text-foreground ">
       <div className="flex flex-wrap items-center gap-3">
         <h4 className="type-label">Revision list</h4>
         {canEdit ? (
