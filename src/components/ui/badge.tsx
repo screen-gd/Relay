@@ -4,20 +4,27 @@ import { Slot } from "radix-ui";
 
 import { cn } from "@/lib/utils";
 
+/**
+ * A static label shown as a tinted word, never a pill. `warn` and
+ * `destructive` are the only warm marks; use them for trouble alone.
+ */
 const badgeVariants = cva(
-  "inline-flex w-fit shrink-0 items-center justify-center gap-1 overflow-hidden rounded-[var(--radius-badge)] border border-transparent px-2 py-0.5 text-xs font-medium whitespace-nowrap transition-[color,box-shadow] focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 aria-invalid:border-destructive aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 [&>svg]:pointer-events-none [&>svg]:size-3",
+  [
+    "relative inline-flex min-h-(--tag) w-fit shrink-0 items-center justify-center gap-1 overflow-hidden rounded-inner px-1.5 py-0.5 type-label-sm whitespace-nowrap",
+    "transition-colors duration-(--dur-fast) ease-(--ease-step)",
+    "[&>svg]:pointer-events-none [&>svg]:size-3 [&>svg]:shrink-0",
+  ],
   {
     variants: {
       variant: {
-        default: "bg-primary text-primary-foreground [a&]:hover:bg-primary/90",
-        secondary:
-          "bg-secondary text-secondary-foreground [a&]:hover:bg-secondary/90",
-        destructive:
-          "bg-destructive text-white focus-visible:ring-destructive/20 dark:bg-destructive/60 dark:focus-visible:ring-destructive/40 [a&]:hover:bg-destructive/90",
+        default: "bg-tile text-text-1 [a&]:hover:bg-hover",
+        secondary: "bg-tile text-text-2 [a&]:hover:bg-hover",
         outline:
-          "border-border text-foreground [a&]:hover:bg-accent [a&]:hover:text-accent-foreground",
-        ghost: "[a&]:hover:bg-accent [a&]:hover:text-accent-foreground",
-        link: "text-primary underline-offset-4 [a&]:hover:underline",
+          "text-text-2 shadow-[inset_0_0_0_1px_var(--line-control)] [a&]:hover:text-text-1",
+        ghost: "text-text-2 [a&]:hover:bg-hover [a&]:hover:text-text-1",
+        warn: "bg-warn-wash text-warn-text",
+        destructive: "bg-fail-wash text-fail-text",
+        link: "h-auto px-0 text-text-1 underline-offset-4 [a&]:hover:underline",
       },
     },
     defaultVariants: {

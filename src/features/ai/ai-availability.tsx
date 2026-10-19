@@ -1,6 +1,6 @@
 "use client";
 
-import { LockKeyhole } from "lucide-react";
+import { LockKeyhole } from "@/components/icons";
 import { Link } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
 import { useOptionalAuth } from "@/lib/optional-auth";
@@ -20,16 +20,7 @@ export function useAiAccount() {
 
 /** Marks a surface as AI, so the feature is visible before it is unlocked. */
 export function AiBadge({ className }: { className?: string }) {
-  return (
-    <span
-      className={cn(
-        "text-[10px] font-semibold uppercase tracking-[0.08em] text-[var(--app-highlight)]",
-        className
-      )}
-    >
-      AI
-    </span>
-  );
+  return <span className={cn("text-text-1 type-label-sm", className)}>AI</span>;
 }
 
 /**
@@ -53,19 +44,18 @@ export function AiLockedNotice({
     <div
       data-slot="ai-locked-notice"
       className={cn(
-        "flex flex-wrap items-center gap-x-3 gap-y-1.5 text-xs text-[var(--app-muted)]",
+        "flex flex-wrap items-center gap-x-3 gap-y-1.5 text-text-2 type-label-sm",
         className
       )}
     >
       <LockKeyhole className="size-3.5 shrink-0" aria-hidden="true" />
-      <span className="font-medium text-[var(--app-ink)]">{feature}</span>
+      <span className="font-medium text-text-1">{feature}</span>
       {hint ? <span>{hint}</span> : null}
       {access === "signIn" ? (
         <Button
           type="button"
           size="sm"
           variant="outline"
-          className="h-7"
           onClick={() => signIn()}
         >
           Sign in to use AI
@@ -73,7 +63,8 @@ export function AiLockedNotice({
       ) : (
         <Link
           to="/settings"
-          className="font-semibold text-[var(--app-highlight)] hover:underline"
+          search={{ section: "ai" }}
+          className="text-text-1 underline underline-offset-4"
         >
           Turn on AI in Settings
         </Link>

@@ -1,6 +1,6 @@
 import { UserProfile } from "@clerk/tanstack-react-start";
 import { Link } from "@tanstack/react-router";
-import { LoaderCircle, Pencil } from "lucide-react";
+import { LoaderCircle, Pencil } from "@/components/icons";
 import {
   ContentSection,
   PageContent,
@@ -19,7 +19,7 @@ export function AccountSettingsPage() {
   return (
     <WorkspacePage
       family="administration"
-      className="[&_[data-slot=content-section]]:shadow-[var(--app-shadow-1)]"
+      className="[&_[data-slot=content-section]]:shadow-none"
     >
       <PageHeader
         title="Account Settings"
@@ -59,10 +59,10 @@ export function AccountSettingsPage() {
               role="status"
               className="grid min-h-[220px] place-items-center p-6"
             >
-              <div className="flex flex-col items-center gap-3 text-sm text-[var(--app-muted)]">
+              <div className="flex flex-col items-center gap-3 text-text-2 type-body">
                 <LoaderCircle
                   aria-hidden="true"
-                  className="size-7 animate-spin text-[var(--app-accent)]"
+                  className="size-7 animate-spin text-primary"
                 />
                 <span>Loading account controls...</span>
               </div>
@@ -74,11 +74,11 @@ export function AccountSettingsPage() {
             >
               <h2
                 id="account-required-title"
-                className="text-xl font-semibold text-foreground"
+                className="text-foreground type-heading"
               >
                 Account required
               </h2>
-              <p className="text-sm leading-6 text-muted-foreground">
+              <p className="text-muted-foreground type-body">
                 Local mode does not have an account record, email, password, or
                 connected login provider. Sign in or create an account to manage
                 private account settings.
@@ -97,7 +97,7 @@ export function AccountSettingsPage() {
                   </OwnedButton>
                 </div>
               ) : (
-                <p role="status" className="text-sm text-muted-foreground">
+                <p role="status" className="text-muted-foreground type-body">
                   Account sync is not configured for this deployment. Use local
                   mode, or add the Clerk and Convex public settings to enable
                   accounts.
@@ -114,9 +114,9 @@ export function AccountSettingsPage() {
                     elements: {
                       rootBox: "w-full",
                       cardBox:
-                        "w-full max-w-none rounded-md border border-[var(--app-border)] bg-[var(--app-soft-panel)] shadow-none",
+                        "w-full max-w-none rounded-soft bg-page shadow-none",
                       card: "shadow-none",
-                      navbar: "border-[var(--app-border)]",
+                      navbar: "border-line-row",
                       pageScrollBox: "py-1",
                     },
                   }}
@@ -130,22 +130,19 @@ export function AccountSettingsPage() {
           title="Public profile"
           description="Keep the profile you share with clients separate from private authentication settings."
         >
-          <div className="flex flex-col justify-between gap-4 rounded-lg border border-border bg-muted/20 p-4 sm:flex-row sm:items-center">
-            <div>
-              <p className="text-sm font-semibold">
-                Profile visibility and presentation
-              </p>
-              <p className="mt-1 max-w-2xl text-sm leading-6 text-muted-foreground">
-                Update your public name, handle, bio, location, and published
-                work from the profile editor.
-              </p>
-            </div>
+          <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
+            <p className="max-w-2xl text-text-2 type-body-sm">
+              Change your public name, handle, bio and location in the profile
+              editor.
+            </p>
             {isSignedIn ? (
-              <OwnedButton asChild variant="outline" className="shrink-0">
-                <Link to="/profile/edit">
-                  <Pencil aria-hidden="true" />
-                  Edit public profile
-                </Link>
+              <OwnedButton
+                asChild
+                variant="outline"
+                size="sm"
+                className="shrink-0"
+              >
+                <Link to="/profile/edit">Edit public profile</Link>
               </OwnedButton>
             ) : isAuthEnabled ? (
               <OwnedButton
@@ -157,7 +154,7 @@ export function AccountSettingsPage() {
                 Sign in to edit
               </OwnedButton>
             ) : (
-              <span className="text-sm text-muted-foreground">
+              <span className="text-muted-foreground type-body">
                 Account sign-in is not configured.
               </span>
             )}

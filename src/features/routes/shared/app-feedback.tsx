@@ -4,15 +4,8 @@ import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import { useHydratedReducedMotion } from "@/lib/motion";
 import { Button as OwnedButton } from "@/components/ui/button";
-import { X } from "lucide-react";
+import { X } from "@/components/icons";
 import type { ToastState } from "./route-types";
-import {
-  accent,
-  activeBg,
-  border,
-  successColor,
-  warningColor,
-} from "./route-theme";
 
 export function AppToast({
   toast,
@@ -22,20 +15,8 @@ export function AppToast({
   onClose: () => void;
 }) {
   const reduceMotion = useHydratedReducedMotion();
-  const palette =
-    toast?.tone === "warning"
-      ? {
-          bg: "var(--app-warning-bg, rgba(245,166,35,0.14))",
-          fg: warningColor,
-          border,
-        }
-      : toast?.tone === "info"
-        ? { bg: activeBg, fg: accent, border }
-        : {
-            bg: "var(--app-success-bg, rgba(35,181,142,0.14))",
-            fg: successColor,
-            border,
-          };
+  // Quartz toasts are the raised surface; only a warning is warm.
+  const warning = toast?.tone === "warning";
 
   return (
     <AnimatePresence>
@@ -55,14 +36,15 @@ export function AppToast({
         >
           <div
             role="status"
-            className="flex max-w-[360px] items-center gap-3 rounded-md border px-3 py-2.5 shadow-[var(--app-shadow-2)]"
-            style={{
-              backgroundColor: palette.bg,
-              borderColor: palette.border,
-              color: palette.fg,
-            }}
+            className="flex max-w-[360px] items-center gap-3 rounded-frame bg-raised py-2 ps-3 pe-1.5 text-text-1 shadow-overlay"
           >
-            <p className="min-w-0 flex-1 text-[13px] font-semibold">
+            <p
+              className={
+                warning
+                  ? "min-w-0 flex-1 text-warn-text type-label"
+                  : "min-w-0 flex-1 type-label"
+              }
+            >
               {toast.message}
             </p>
             <OwnedButton
@@ -71,8 +53,7 @@ export function AppToast({
               size="icon-sm"
               aria-label="Dismiss notification"
               onClick={onClose}
-              className="shrink-0 hover:bg-current/10"
-              style={{ color: palette.fg }}
+              className="shrink-0"
             >
               <X aria-hidden="true" className="size-4" />
             </OwnedButton>
@@ -121,7 +102,7 @@ export function AuthLoadingGate({
     return (
       <div
         role="status"
-        className="fixed inset-0 z-[1450] grid place-items-center bg-[var(--app-canvas)] text-sm text-[var(--app-muted)]"
+        className="fixed inset-0 z-[1450] grid place-items-center bg-page text-text-2 type-body"
       >
         Loading Relay…
       </div>
@@ -129,19 +110,16 @@ export function AuthLoadingGate({
   }
 
   return (
-    <div className="fixed inset-0 z-[1450] grid place-items-center bg-[var(--app-canvas)] p-6">
+    <div className="fixed inset-0 z-[1450] grid place-items-center bg-page p-6">
       <div
         role="alert"
         aria-labelledby="auth-gate-title"
         className="grid max-w-md gap-4"
       >
-        <h2
-          id="auth-gate-title"
-          className="text-lg font-semibold text-[var(--app-ink)]"
-        >
+        <h2 id="auth-gate-title" className="text-text-1 type-heading-sm">
           Sign-in is unavailable
         </h2>
-        <p className="text-sm leading-6 text-[var(--app-muted)]">
+        <p className="text-text-2 type-body">
           {clerkStatus === "error"
             ? "Relay could not start account sign-in."
             : "Account sign-in is taking too long."}{" "}
@@ -151,7 +129,6 @@ export function AuthLoadingGate({
           <OwnedButton
             ref={retryRef}
             type="button"
-            className="min-h-11"
             onClick={() => window.location.reload()}
           >
             Retry
@@ -159,7 +136,6 @@ export function AuthLoadingGate({
           <OwnedButton
             type="button"
             variant="outline"
-            className="min-h-11"
             onClick={onContinueLocally}
           >
             Use Local Mode

@@ -51,7 +51,7 @@ import {
   findExistingClientName,
   getTypeConfig,
 } from "@/features/routes/utils/work-type-utils";
-import { Check, ChevronsUpDown, Plus, Trash2 } from "lucide-react";
+import { Check, ChevronsUpDown, Plus, Trash2 } from "@/components/icons";
 import { useState, type RefObject } from "react";
 import type { WorkspaceMemberOption } from "./project-view";
 import { ProjectSelect } from "@/features/projects/project-select";
@@ -109,15 +109,15 @@ export function ProjectDialog({
       }}
     >
       <OwnedDialogContent
-        className="max-h-[min(94dvh,900px)] overflow-y-auto border-border bg-background text-foreground sm:max-w-2xl"
+        className="max-h-[min(94dvh,900px)] overflow-y-auto sm:max-w-2xl"
         onCloseAutoFocus={(event) => {
           event.preventDefault();
           returnFocusRef.current?.focus();
         }}
       >
         <OwnedDialogHeader>
-          <OwnedDialogTitle className="text-2xl">
-            {editing ? "Edit Project" : "New Project"}
+          <OwnedDialogTitle>
+            {editing ? "Edit project" : "New project"}
           </OwnedDialogTitle>
           <OwnedDialogDescription>
             Set the schedule, ownership, and production details for this
@@ -218,7 +218,7 @@ export function ProjectDialog({
             />
           ) : null}
           {formError ? (
-            <p role="alert" className="text-sm text-destructive">
+            <p role="alert" className="text-destructive type-body">
               {formError}
             </p>
           ) : null}
@@ -266,7 +266,7 @@ function ProjectClientCombobox({
             role="combobox"
             disabled={disabled}
             aria-expanded={open}
-            className="w-full justify-between font-normal"
+            className="w-full justify-between"
           >
             <span
               className={value ? "truncate" : "truncate text-muted-foreground"}
@@ -346,7 +346,7 @@ function ProjectAssigneeCombobox({
             variant="outline"
             role="combobox"
             aria-expanded={open}
-            className="h-auto min-h-9 w-full justify-between whitespace-normal font-normal"
+            className="h-auto w-full justify-between whitespace-normal"
           >
             <span
               className={
@@ -394,7 +394,7 @@ function ProjectAssigneeCombobox({
                       <span className="font-medium">
                         {option.name || option.email || "Team member"}
                       </span>
-                      <span className="text-xs text-muted-foreground">
+                      <span className="text-muted-foreground type-label-sm">
                         {option.role} · {option.email || "No email"}
                       </span>
                     </span>
@@ -430,7 +430,7 @@ function TemplateSetupEditor({
       <div className="flex items-start justify-between gap-3">
         <div>
           <h3 className="font-semibold">Template Setup</h3>
-          <p className="mt-1 text-xs text-muted-foreground">
+          <p className="mt-1 text-muted-foreground type-label-sm">
             These are suggestions, not locked rules. Edit or remove anything.
           </p>
         </div>
@@ -467,7 +467,7 @@ function TemplateSetupEditor({
         </FieldLayout>
         <div>
           <div className="mb-2 flex items-center justify-between gap-2">
-            <h4 className="text-sm font-semibold">Suggested deliverables</h4>
+            <h4 className="type-label">Suggested deliverables</h4>
             <OwnedButton
               type="button"
               size="sm"
@@ -607,10 +607,7 @@ export function DeleteProjectDialog({
         if (!open) onCancel();
       }}
     >
-      <OwnedAlertDialogContent
-        size="sm"
-        className="border-border bg-background text-foreground"
-      >
+      <OwnedAlertDialogContent size="sm">
         <OwnedAlertDialogHeader>
           <OwnedAlertDialogTitle>Delete project?</OwnedAlertDialogTitle>
           <OwnedAlertDialogDescription>

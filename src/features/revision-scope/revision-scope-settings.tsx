@@ -70,7 +70,7 @@ function ScopeForm({
   const disabled = !settings.canManage || busy;
   return (
     <form
-      className="grid gap-3 dark:bg-black dark:text-white [&_button]:bg-transparent [&_button:hover]:bg-transparent [&_button]:dark:text-white [&_input]:bg-transparent [&_input]:dark:bg-black"
+      className="grid gap-3 "
       onSubmit={async (event) => {
         event.preventDefault();
         if (invalid) return;
@@ -97,12 +97,12 @@ function ScopeForm({
       ).map(([label, value, setValue, inputMode]) => (
         <label
           key={label}
-          className="flex items-center justify-between gap-4 text-sm"
+          className="flex items-center justify-between gap-4 type-body"
         >
           {label}
           <Input
             inputMode={inputMode}
-            className="h-8 w-28"
+            className="w-28"
             value={value}
             disabled={disabled}
             placeholder="None"
@@ -110,7 +110,7 @@ function ScopeForm({
           />
         </label>
       ))}
-      <div className="flex items-center justify-between gap-4 text-sm">
+      <div className="flex items-center justify-between gap-4 type-body">
         Included rounds apply
         <RoundBasisSelect
           value={roundBasis}
@@ -120,16 +120,18 @@ function ScopeForm({
       </div>
       {templates.length ? (
         <fieldset className="grid gap-2">
-          <legend className="mb-1 text-xs">Included rounds by template</legend>
+          <legend className="mb-1 type-label-sm">
+            Included rounds by template
+          </legend>
           {templates.map((template) => (
             <label
               key={template.id}
-              className="flex items-center justify-between gap-4 text-sm"
+              className="flex items-center justify-between gap-4 type-body"
             >
               {template.name}
               <Input
                 inputMode="numeric"
-                className="h-8 w-28"
+                className="w-28"
                 value={templateRounds[template.id] ?? ""}
                 disabled={disabled}
                 placeholder="Default"
@@ -153,7 +155,9 @@ function ScopeForm({
         Save
       </Button>
       {!settings.canManage ? (
-        <p className="text-xs">Only the Workspace Owner can change these.</p>
+        <p className="type-label-sm">
+          Only the Workspace Owner can change these.
+        </p>
       ) : null}
     </form>
   );

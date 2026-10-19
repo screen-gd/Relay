@@ -1,35 +1,19 @@
 # Interactions and motion
 
-## Purpose
+Motion is fast and happens once, when something changes. Durations come from Quartz: `--dur-press` 60ms, `--dur-fast` 120ms, `--dur-base` 160ms, `--dur-slow` 180ms, all on `--ease-step`.
 
-Make frequent actions fast, clear, and recoverable.
+| Moment                                   | Motion                                                               |
+| ---------------------------------------- | -------------------------------------------------------------------- |
+| Hover on a row, nav item or ghost button | background and text color, 120ms                                     |
+| Button press                             | scale to 0.98, 60ms                                                  |
+| Menu, select list, popover               | fade and scale from the trigger (`animate-pop`), 160ms in, 120ms out |
+| Dialog                                   | the same pop, 180ms; backdrop fades                                  |
+| Sheet                                    | slides 16px from its edge with a fade, 180ms                         |
+| Sidebar fold                             | width eases between 244px and 52px, 180ms                            |
+| Sidebar group fold                       | height collapse, caret rotates                                       |
+| Tab or view switch                       | the new panel rises 4px and fades in (`animate-rise`)                |
+| Dashboard numbers                        | count up once, 400ms                                                 |
 
-## Anatomy
+## Never
 
-Primary action, visible secondary action, overflow menu, confirmation dialog, inline status, toast, undo where safe, and activity history for background work.
-
-## Behavior
-
-Use optimistic updates only when rollback is clear. Preserve input on failure. Separate destructive actions and confirm irreversible changes. Dragging needs button or keyboard alternatives.
-
-## States
-
-Show pending, saving, saved, retry, failure, and cancelled states. Keep focus after filtering, mutation, sheet close, and route changes.
-
-## Responsive rules
-
-Use touch-safe targets, sheets for complex controls, and stable toolbar order. Avoid hover-only actions.
-
-## Accessibility
-
-Use Radix for dialogs, menus, popovers, tabs, and tooltips. Tooltips supplement visible labels. Honor `prefers-reduced-motion`; do not let motion hide content.
-
-## Preserved features
-
-Keep Motion transitions, reduced-motion hooks, command shortcuts, toast notifications, CRUD dialogs, and existing drag/reorder behavior.
-
-## Acceptance checks
-
-- Every mutation reports pending and result.
-- Destructive actions offer cancel and recoverable errors.
-- Keyboard, touch, reduced-motion, and screen-reader paths pass.
+Pulse, ping, bounce, shimmer, glow or anything that loops. A running state is the small turning arc in a loading button or status. Reduced motion collapses every duration to zero.

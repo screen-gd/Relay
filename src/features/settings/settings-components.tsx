@@ -1,7 +1,5 @@
 "use client";
 
-import { motion } from "motion/react";
-import { useHydratedReducedMotion } from "@/lib/motion";
 import { ContentSection } from "@/components/workspace-page";
 import { Button as OwnedButton } from "@/components/ui/button";
 
@@ -16,27 +14,16 @@ export function SettingsPanel({
   subtitle: string;
   children: React.ReactNode;
 }) {
-  const reduceMotion = useHydratedReducedMotion();
   return (
-    <motion.div
-      className="min-w-0"
-      initial={reduceMotion ? false : { opacity: 0, y: 8 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{
-        duration: reduceMotion ? 0 : 0.24,
-        ease: [0.16, 1, 0.3, 1],
-      }}
+    <ContentSection
+      id={id}
+      title={title}
+      description={subtitle}
+      className="scroll-mt-16"
+      bodyClassName="grid min-w-0 grid-cols-1 gap-4"
     >
-      <ContentSection
-        id={id}
-        title={title}
-        description={subtitle}
-        className="scroll-mt-[76px] border-0 shadow-none"
-        bodyClassName="grid min-w-0 grid-cols-1 gap-3.5 p-4 sm:p-5"
-      >
-        {children}
-      </ContentSection>
-    </motion.div>
+      {children}
+    </ContentSection>
   );
 }
 
@@ -73,7 +60,7 @@ export function SegmentedSetting({
 }) {
   return (
     <div>
-      <p className="mb-2 text-xs font-medium text-muted-foreground">{label}</p>
+      <p className="mb-2 text-muted-foreground type-label-sm">{label}</p>
       <div
         role="group"
         aria-label={label}
@@ -90,7 +77,7 @@ export function SegmentedSetting({
             size="sm"
             aria-pressed={option === active}
             onClick={() => onChange(option)}
-            className={`rounded-none text-xs ${option === options[options.length - 1] ? "" : "border-r"} ${option === active ? "bg-primary/15 text-primary hover:bg-primary/20 hover:text-primary" : "bg-card text-card-foreground hover:bg-muted"}`}
+            className={`rounded-none text-xs ${option === options[options.length - 1] ? "" : "border-r"} ${option === active ? "bg-selected text-text-1 hover:text-text-1" : "text-text-2 hover:text-text-1"}`}
           >
             {option}
           </OwnedButton>

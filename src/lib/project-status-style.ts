@@ -1,26 +1,24 @@
+/**
+ * Project and payment status, styled the Quartz way: the status is a word,
+ * and only trouble is warm. A Project's stage is not trouble, so stages read
+ * in the text ramp: active work strongest, waiting and finished work quieter.
+ * Lateness is trouble and is marked where dates are shown, not here.
+ */
+const activeStatuses = ["In Progress", "Revision", "Review", "Client Review"];
+
 export function projectStatusColor(status: string) {
-  if (status === "Delivered") return "var(--status-success)";
-  if (["Review", "Revision", "Client Review"].includes(status))
-    return "var(--status-warning)";
-  if (status === "Cancelled") return "var(--status-danger)";
-  if (status === "In Progress") return "var(--status-info)";
-  return "var(--text-muted)";
+  if (activeStatuses.includes(status)) return "var(--text-1)";
+  if (status === "Cancelled") return "var(--text-3)";
+  return "var(--text-2)";
 }
 
+/** Badge classes for a Project status: a tinted word, never a pill or ring. */
 export function projectStatusTone(status: string) {
-  if (status === "Delivered")
-    return "border-[var(--status-success)] bg-[var(--status-success-bg)] text-[var(--status-success)]";
-  if (["Review", "Revision", "Client Review"].includes(status))
-    return "border-[var(--status-warning)] bg-[var(--status-warning-bg)] text-[var(--status-warning)]";
-  if (status === "Cancelled")
-    return "border-[var(--status-danger)] bg-[var(--status-danger-bg)] text-[var(--status-danger)]";
-  if (status === "In Progress")
-    return "border-[var(--status-info)] bg-[var(--status-info-bg)] text-[var(--status-info)]";
-  return "border-[var(--app-border)] bg-[var(--app-soft-panel)] text-[var(--app-muted)]";
+  if (activeStatuses.includes(status)) return "bg-tile text-text-1";
+  if (status === "Cancelled") return "bg-transparent text-text-3";
+  return "bg-tile text-text-2";
 }
 
 export function paymentStatusTone(paid: boolean) {
-  return paid
-    ? "border-[var(--status-success)] bg-[var(--status-success-bg)] text-[var(--status-success)]"
-    : "border-[var(--status-warning)] bg-[var(--status-warning-bg)] text-[var(--status-warning)]";
+  return paid ? "bg-tile text-text-2" : "bg-tile text-text-1";
 }

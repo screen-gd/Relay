@@ -26,13 +26,13 @@ export function WelcomeChoiceDialog({
       <OwnedDialogContent
         showCloseButton={false}
         data-testid="welcome-choice-dialog"
-        className="max-h-[calc(100dvh-2rem)] overflow-y-auto border-[var(--app-border)] bg-[var(--app-panel)] p-5 text-[var(--app-ink)] sm:max-w-[880px] sm:p-6"
+        className="max-h-[calc(100dvh-2rem)] overflow-y-auto border-line-row bg-well p-5 text-text-1 sm:max-w-[880px] sm:p-6"
         onEscapeKeyDown={(event) => event.preventDefault()}
         onPointerDownOutside={(event) => event.preventDefault()}
       >
         <RelayBrand compact />
         <OwnedDialogHeader>
-          <OwnedDialogTitle className="text-2xl leading-tight sm:text-[28px]">
+          <OwnedDialogTitle className="type-heading">
             Choose how to use Relay
           </OwnedDialogTitle>
           <OwnedDialogDescription>
@@ -41,15 +41,13 @@ export function WelcomeChoiceDialog({
           </OwnedDialogDescription>
         </OwnedDialogHeader>
         <div className="grid gap-3 md:grid-cols-3">
-          <section className="flex flex-col rounded-md bg-[var(--app-soft-panel)] p-4">
-            <p className="text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">
-              Local Mode
-            </p>
-            <h3 className="mt-2 text-lg font-semibold">Work on this device</h3>
-            <p className="mt-2 flex-1 text-sm leading-relaxed text-muted-foreground">
+          <section className="flex flex-col rounded-md bg-well p-4">
+            <p className="text-muted-foreground type-label-sm">Local Mode</p>
+            <h3 className="mt-2 type-heading-sm">Work on this device</h3>
+            <p className="mt-2 flex-1 text-muted-foreground type-body">
               Fast solo workspace with no account.
             </p>
-            <p className="mt-4 text-xs leading-relaxed text-[var(--app-warning)]">
+            <p className="mt-4 text-warn-text type-label-sm">
               Stored in this browser. Clearing site data can remove your work.
             </p>
             <OwnedButton
@@ -61,12 +59,10 @@ export function WelcomeChoiceDialog({
             </OwnedButton>
           </section>
 
-          <section className="flex flex-col rounded-md bg-[var(--app-soft-panel)] p-4">
-            <p className="text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">
-              Account
-            </p>
-            <h3 className="mt-2 text-lg font-semibold">Sync your workspace</h3>
-            <p className="mt-2 flex-1 text-sm leading-relaxed text-muted-foreground">
+          <section className="flex flex-col rounded-md bg-well p-4">
+            <p className="text-muted-foreground type-label-sm">Account</p>
+            <h3 className="mt-2 type-heading-sm">Sync your workspace</h3>
+            <p className="mt-2 flex-1 text-muted-foreground type-body">
               Create an account for supported cloud and Team features.
             </p>
             <OwnedButton
@@ -79,14 +75,12 @@ export function WelcomeChoiceDialog({
             </OwnedButton>
           </section>
 
-          <section className="flex flex-col rounded-md bg-[var(--app-soft-panel)] p-4">
-            <p className="text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+          <section className="flex flex-col rounded-md bg-well p-4">
+            <p className="text-muted-foreground type-label-sm">
               Sample Workspace
             </p>
-            <h3 className="mt-2 text-lg font-semibold">
-              Explore a real workflow
-            </h3>
-            <p className="mt-2 flex-1 text-sm leading-relaxed text-muted-foreground">
+            <h3 className="mt-2 type-heading-sm">Explore a real workflow</h3>
+            <p className="mt-2 flex-1 text-muted-foreground type-body">
               Open realistic read-only projects, reviews, activity, and delivery
               data.
             </p>
@@ -95,13 +89,13 @@ export function WelcomeChoiceDialog({
             </OwnedButton>
           </section>
         </div>
-        <div className="flex flex-wrap items-center justify-between gap-3 pt-1 text-sm text-muted-foreground">
+        <div className="flex flex-wrap items-center justify-between gap-3 pt-1 text-muted-foreground type-body">
           <p>Already have an account?</p>
           <OwnedButton type="button" variant="ghost" onClick={onSignIn}>
             Sign in
           </OwnedButton>
         </div>
-        <p className="text-xs leading-relaxed text-muted-foreground">
+        <p className="text-muted-foreground type-label-sm">
           Account sync covers supported workspace records. Integrations store
           links and settings only. Read the{" "}
           <Link to="/privacy" className="underline underline-offset-2">
@@ -113,7 +107,7 @@ export function WelcomeChoiceDialog({
           </Link>
           .
         </p>
-        <p className="text-xs leading-relaxed text-muted-foreground">
+        <p className="text-muted-foreground type-label-sm">
           <TrustLinks />
         </p>
       </OwnedDialogContent>

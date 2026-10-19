@@ -2,7 +2,7 @@ import { supportEmail } from "@/lib/support-contact";
 
 import { useState, type ReactNode } from "react";
 import { Link } from "@tanstack/react-router";
-import { Check } from "lucide-react";
+import { Check } from "@/components/icons";
 
 import { RelayBrand } from "@/app/relay-brand";
 import { Button } from "@/components/ui/button";
@@ -126,7 +126,7 @@ export function OnboardingStepperDialog({
       <DialogContent
         showCloseButton={false}
         data-testid="onboarding-dialog"
-        className="max-h-[calc(100dvh-2rem)] gap-0 overflow-y-auto border-[var(--app-border)] bg-[var(--app-panel)] p-6 text-[var(--app-ink)] sm:max-w-lg"
+        className="max-h-[calc(100dvh-2rem)] gap-0 overflow-y-auto border-line-row bg-well p-6 text-text-1 sm:max-w-lg"
         onEscapeKeyDown={(event) => event.preventDefault()}
         onPointerDownOutside={(event) => event.preventDefault()}
       >
@@ -155,10 +155,8 @@ export function OnboardingStepperDialog({
           {stepIds.map((id) => (
             <Step key={id}>
               <header>
-                <h2 className="text-xl font-semibold tracking-[-0.02em]">
-                  {titles[id].title}
-                </h2>
-                <p className="mt-1 text-sm text-[var(--app-muted)]">
+                <h2 className="type-heading">{titles[id].title}</h2>
+                <p className="mt-1 text-text-2 type-body">
                   {titles[id].description}
                 </p>
               </header>
@@ -186,7 +184,7 @@ export function OnboardingStepperDialog({
 
 function WelcomeStep() {
   return (
-    <p className="text-sm leading-relaxed text-[var(--app-ink)]">
+    <p className="text-text-1 type-body">
       If you find a bug, tell us on X at{" "}
       <a
         className="font-medium underline underline-offset-4"
@@ -234,24 +232,20 @@ function ModeStep({
           body="Sync your workspace and use Team features."
         />
       </ChoiceGroup>
-      <div className="flex flex-wrap items-center justify-between gap-2 text-sm">
+      <div className="flex flex-wrap items-center justify-between gap-2 type-body">
         <Button
           type="button"
           variant="link"
-          className="h-auto px-0 text-[var(--app-ink)]"
+          className="h-auto px-0 text-text-1"
           onClick={onSignIn}
         >
           Sign in
         </Button>
-        <Button
-          asChild
-          variant="link"
-          className="h-auto px-0 text-[var(--app-ink)]"
-        >
+        <Button asChild variant="link" className="h-auto px-0 text-text-1">
           <Link to="/sample-studio">Open sample workspace</Link>
         </Button>
       </div>
-      <p className="text-xs leading-relaxed text-[var(--app-muted)]">
+      <p className="text-text-2 type-label-sm">
         Read the{" "}
         <Link to="/privacy" className="underline underline-offset-2">
           Privacy Policy
@@ -262,7 +256,7 @@ function ModeStep({
         </Link>
         .
       </p>
-      <p className="text-xs leading-relaxed text-[var(--app-muted)]">
+      <p className="text-text-2 type-label-sm">
         <TrustLinks />
       </p>
     </>
@@ -337,7 +331,7 @@ function AnalyticsStep({
 }) {
   return (
     <>
-      <p className="text-sm leading-relaxed text-[var(--app-ink)]">
+      <p className="text-text-1 type-body">
         Relay never sends client names, project names, comments, files, links,
         portal tokens, or money.
       </p>
@@ -395,10 +389,8 @@ function Choice({
       aria-checked={selected}
       onClick={onSelect}
       className={cn(
-        "h-auto w-full justify-start items-start gap-3 rounded-md border px-4 py-3 text-left font-normal whitespace-normal hover:bg-transparent hover:text-current dark:hover:bg-transparent focus-visible:ring-2 focus-visible:ring-ring active:translate-y-0 active:scale-100",
-        selected
-          ? "border-[var(--app-ink)]"
-          : "border-[var(--app-border)] hover:border-[var(--app-muted)]"
+        "h-auto w-full justify-start items-start gap-3 px-4 py-3 text-left whitespace-normal hover:bg-transparent hover:text-current",
+        selected ? "border-ink" : "hover:border-text-2"
       )}
     >
       <span
@@ -406,19 +398,17 @@ function Choice({
         className={cn(
           "mt-0.5 grid size-4 shrink-0 place-items-center rounded-full border",
           selected
-            ? "border-[var(--app-accent)] bg-[var(--app-accent)] text-[var(--app-accent-foreground)]"
-            : "border-[var(--app-border)]"
+            ? "border-primary bg-primary text-primary-foreground"
+            : "border-line-row"
         )}
       >
         {selected ? <Check className="size-3" strokeWidth={3} /> : null}
       </span>
       <span className="min-w-0">
-        <span className="block text-sm font-medium">{title}</span>
-        <span className="mt-0.5 block text-xs text-[var(--app-muted)]">
-          {body}
-        </span>
+        <span className="block type-label">{title}</span>
+        <span className="mt-0.5 block text-text-2 type-label-sm">{body}</span>
         {note ? (
-          <span className="mt-1.5 block text-xs text-[var(--app-warning)]">
+          <span className="mt-1.5 block text-warn-text type-label-sm">
             {note}
           </span>
         ) : null}

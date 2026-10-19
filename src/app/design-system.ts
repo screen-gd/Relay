@@ -1,5 +1,10 @@
+/**
+ * Relay brand values used outside CSS. The theme tokens in `globals.css` are
+ * the source for UI color; `lime` is the brand accent (dark theme value).
+ */
 export const relay = {
   color: {
+    lime: "#C6FF00",
     teal: "#18181B",
     cyan: "#27272A",
     deepTeal: "#3F3F46",
@@ -10,6 +15,6 @@ export const relay = {
     warning: "#FBBF24",
   },
   font: {
-    heading: 'var(--font-geist-sans), "Geist Variable", sans-serif',
+    heading: "var(--font-sans)",
   },
 } as const;

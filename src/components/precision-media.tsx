@@ -9,7 +9,7 @@ import {
   Grid2X2,
   List,
   Search,
-} from "lucide-react";
+} from "@/components/icons";
 import {
   AnimatePresence,
   LayoutGroup,
@@ -44,20 +44,6 @@ function progress(project: WorkItem) {
   if (project.status === "In Progress") return 52;
   if (project.status === "Cancelled") return 0;
   return 16;
-}
-
-function packageColor(project: WorkItem) {
-  const palette = [
-    "var(--media-package-1)",
-    "var(--media-package-2)",
-    "var(--media-package-3)",
-    "var(--media-package-4)",
-    "var(--media-package-5)",
-  ];
-  let hash = 0;
-  for (const char of project.id || project.title)
-    hash = (hash * 31 + char.charCodeAt(0)) >>> 0;
-  return palette[hash % palette.length];
 }
 
 export function PrecisionMedia({
@@ -179,10 +165,10 @@ export function PrecisionMedia({
                 bodyClassName="min-h-0 overflow-auto lg:overflow-hidden"
               >
                 <MasterDetail
-                  className="h-full min-h-0 overflow-hidden rounded-[6px] border border-[var(--app-border)] bg-[var(--app-panel)]"
+                  className="h-full min-h-0 overflow-hidden"
                   master={
-                    <aside className="min-h-0 overflow-auto border-b border-[var(--app-border)] bg-[var(--app-soft-panel)] p-3 lg:border-b-0 lg:border-r">
-                      <p className="px-2 text-[10px] font-semibold uppercase tracking-[0.08em] text-[var(--app-subtle)]">
+                    <aside className="min-h-0 overflow-auto pb-3">
+                      <p className="px-2 text-text-3 type-label-sm">
                         Collections
                       </p>
                       <nav
@@ -197,10 +183,10 @@ export function PrecisionMedia({
                               key={item.id}
                               type="button"
                               className={cn(
-                                "relative flex h-9 w-full items-center gap-2 overflow-hidden rounded-md px-2 text-xs font-medium outline-none transition-colors focus-visible:ring-2 focus-visible:ring-[var(--app-accent)] focus-visible:ring-offset-1 focus-visible:ring-offset-[var(--app-soft-panel)]",
+                                "relative flex h-9 w-full items-center gap-2 overflow-hidden rounded-md px-2 outline-none transition-colors type-label-sm",
                                 active
-                                  ? "text-[var(--app-highlight)]"
-                                  : "text-[var(--app-muted)] hover:bg-[var(--app-hover)] hover:text-[var(--app-ink)]"
+                                  ? "text-text-1"
+                                  : "text-text-2 hover:text-text-1"
                               )}
                               onClick={() => setCollection(item.id)}
                               aria-pressed={active}
@@ -212,7 +198,7 @@ export function PrecisionMedia({
                               {active ? (
                                 <motion.span
                                   layoutId="active-media-collection"
-                                  className="absolute inset-0 rounded-md bg-[var(--app-active)]"
+                                  className="absolute inset-0 rounded-md bg-selected"
                                   transition={transition}
                                 />
                               ) : null}
@@ -222,7 +208,7 @@ export function PrecisionMedia({
                               </span>
                               <motion.span
                                 key={item.count}
-                                className="relative z-10 ml-auto min-w-4 text-right text-[10px] tabular-nums"
+                                className="relative z-10 ml-auto min-w-4 text-right tabular-nums type-label-sm"
                                 initial={
                                   reduceMotion ? false : { opacity: 0.4, y: -2 }
                                 }
@@ -238,21 +224,21 @@ export function PrecisionMedia({
                     </aside>
                   }
                   detail={
-                    <main className="flex h-full min-h-0 min-w-0 flex-col overflow-hidden border-b border-[var(--app-border)] lg:border-b-0 lg:border-r">
-                      <PageToolbar className="border-b border-[var(--app-border)] p-3">
+                    <main className="flex h-full min-h-0 min-w-0 flex-col overflow-hidden rounded-frame shadow-[0_0_0_1px_var(--line-row)]">
+                      <PageToolbar className="p-3 shadow-[inset_0_-1px_0_var(--line-row)]">
                         <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
                           <div className="relative flex-1">
-                            <Search className="pointer-events-none absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-[var(--app-muted)]" />
+                            <Search className="pointer-events-none absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-text-2" />
                             <Input
                               value={query}
                               onChange={(event) => setQuery(event.target.value)}
                               placeholder="Search packages..."
                               aria-label="Search media packages"
-                              className="h-9 bg-[var(--app-control)] pl-8 text-xs transition-colors"
+                              className="pl-8"
                             />
                           </div>
                           <div
-                            className="inline-flex self-start rounded-md border border-[var(--app-border)] bg-[var(--app-panel)] p-0.5"
+                            className="inline-flex self-start rounded-soft bg-well p-0.5"
                             role="group"
                             aria-label="Media view"
                           >
@@ -276,8 +262,8 @@ export function PrecisionMedia({
                                   variant="ghost"
                                   size="icon-sm"
                                   className={cn(
-                                    "relative overflow-hidden text-[var(--app-muted)] transition-colors active:scale-[0.96]",
-                                    active && "text-[var(--app-highlight)]"
+                                    "relative overflow-hidden text-text-2 active:scale-[0.96]",
+                                    active && "text-text-1"
                                   )}
                                   onClick={() => setMode(view.id)}
                                   aria-label={view.label}
@@ -286,7 +272,7 @@ export function PrecisionMedia({
                                   {active ? (
                                     <motion.span
                                       layoutId="active-media-view"
-                                      className="absolute inset-0 rounded-[4px] bg-[var(--app-active)]"
+                                      className="absolute inset-0 rounded-[4px] bg-selected"
                                       transition={transition}
                                     />
                                   ) : null}
@@ -298,11 +284,11 @@ export function PrecisionMedia({
                         </div>
                       </PageToolbar>
 
-                      <div className="flex min-h-10 items-center gap-3 border-b border-[var(--app-border)] px-4 py-2">
+                      <div className="flex min-h-10 items-center gap-3 px-4 py-2 shadow-[inset_0_-1px_0_var(--line-row)]">
                         <AnimatePresence mode="popLayout" initial={false}>
                           <motion.h2
                             key={collection}
-                            className="text-xs font-semibold"
+                            className="type-label-sm"
                             initial={
                               reduceMotion ? false : { opacity: 0, x: -4 }
                             }
@@ -320,7 +306,7 @@ export function PrecisionMedia({
                         </AnimatePresence>
                         <motion.span
                           key={`${collection}-${filtered.length}`}
-                          className="ml-auto text-[10px] tabular-nums text-[var(--app-muted)]"
+                          className="ml-auto tabular-nums text-text-2 type-label-sm"
                           aria-live="polite"
                           initial={reduceMotion ? false : { opacity: 0 }}
                           animate={{ opacity: 1 }}
@@ -361,8 +347,8 @@ export function PrecisionMedia({
                                           key={project.id}
                                           type="button"
                                           className={cn(
-                                            "relative grid w-full gap-3 overflow-hidden border-b border-[var(--app-border)] px-4 py-3 text-left outline-none transition-colors hover:bg-[var(--app-hover)] focus-visible:z-20 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--app-accent)] sm:grid-cols-[68px_minmax(0,1fr)_130px_105px] sm:items-center",
-                                            active && "text-[var(--app-ink)]"
+                                            "relative grid w-full gap-3 overflow-hidden border-b border-line-row px-4 py-3 text-left outline-none transition-colors hover:bg-hover focus-visible:z-20 focus-visible:focus-ring-inset sm:grid-cols-[68px_minmax(0,1fr)_130px_105px] sm:items-center",
+                                            active && "text-text-1"
                                           )}
                                           onClick={() =>
                                             setSelectedId(project.id)
@@ -393,7 +379,7 @@ export function PrecisionMedia({
                                           {active ? (
                                             <motion.span
                                               layoutId="selected-media-package"
-                                              className="absolute inset-0 bg-[var(--app-active)]"
+                                              className="absolute inset-0 bg-selected"
                                               transition={transition}
                                             />
                                           ) : null}
@@ -404,25 +390,25 @@ export function PrecisionMedia({
                                             reduceMotion={Boolean(reduceMotion)}
                                           />
                                           <span className="relative z-10 min-w-0">
-                                            <span className="block truncate text-xs font-semibold">
+                                            <span className="block truncate type-label-sm">
                                               {project.title}
                                             </span>
-                                            <span className="mt-1 block truncate text-[10px] text-[var(--app-muted)]">
+                                            <span className="mt-1 block truncate text-text-2 type-label-sm">
                                               {project.notes ||
                                                 project.client ||
                                                 "No package note"}
                                             </span>
                                           </span>
                                           <span className="relative z-10">
-                                            <span className="mb-1 flex justify-between text-[10px]">
+                                            <span className="mb-1 flex justify-between type-label-sm">
                                               <span>Package progress</span>
                                               <span className="tabular-nums">
                                                 {value}%
                                               </span>
                                             </span>
-                                            <span className="block h-1 overflow-hidden rounded-full bg-[var(--app-progress-track)]">
+                                            <span className="block h-1 overflow-hidden rounded-full bg-tile">
                                               <motion.span
-                                                className="block h-full origin-left bg-[var(--app-accent)]"
+                                                className="block h-full origin-left bg-primary"
                                                 initial={
                                                   reduceMotion
                                                     ? false
@@ -438,7 +424,7 @@ export function PrecisionMedia({
                                           <Badge
                                             variant="outline"
                                             className={cn(
-                                              "relative z-10 h-5 w-fit rounded px-1.5 text-[10px]",
+                                              "relative z-10 w-fit",
                                               projectStatusTone(project.status)
                                             )}
                                           >
@@ -462,7 +448,7 @@ export function PrecisionMedia({
                                           key={project.id}
                                           type="button"
                                           className={cn(
-                                            "studio-motion-edge-sweep relative overflow-hidden rounded-[6px] border border-[var(--app-border)] bg-[var(--app-panel)] text-left outline-none transition-colors hover:border-[var(--app-strong-border)] hover:bg-[var(--app-hover)] focus-visible:ring-2 focus-visible:ring-[var(--app-accent)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--app-panel)]",
+                                            "studio-motion-edge-sweep relative overflow-hidden rounded-[6px] bg-well text-left outline-none transition-colors hover:border-strong hover:bg-hover",
                                             active && "border-transparent"
                                           )}
                                           onClick={() =>
@@ -503,7 +489,7 @@ export function PrecisionMedia({
                                           {active ? (
                                             <motion.span
                                               layoutId="selected-media-package"
-                                              className="pointer-events-none absolute inset-0 z-20 rounded-[6px] ring-2 ring-inset ring-[var(--app-accent)]"
+                                              className="pointer-events-none absolute inset-0 z-20 rounded-[6px] ring-2 ring-inset ring-primary"
                                               transition={transition}
                                             />
                                           ) : null}
@@ -515,14 +501,14 @@ export function PrecisionMedia({
                                           />
                                           <span className="block p-3">
                                             <span className="flex items-center gap-2">
-                                              <span className="min-w-0 flex-1 truncate text-xs font-semibold">
+                                              <span className="min-w-0 flex-1 truncate type-label-sm">
                                                 {project.title}
                                               </span>
-                                              <span className="text-[10px] tabular-nums text-[var(--app-muted)]">
+                                              <span className="tabular-nums text-text-2 type-label-sm">
                                                 {value}%
                                               </span>
                                             </span>
-                                            <span className="mt-1 block truncate text-[10px] text-[var(--app-muted)]">
+                                            <span className="mt-1 block truncate text-text-2 type-label-sm">
                                               {project.client ||
                                                 project.workType}
                                             </span>
@@ -553,17 +539,17 @@ export function PrecisionMedia({
                             >
                               <div>
                                 <motion.div
-                                  className="mx-auto grid size-11 place-items-center rounded-[6px] border border-[var(--app-border)] bg-[var(--app-soft-panel)]"
+                                  className="mx-auto grid size-11 place-items-center rounded-[6px] bg-well"
                                   initial={reduceMotion ? false : { y: 4 }}
                                   animate={{ y: 0 }}
                                   transition={transition}
                                 >
-                                  <FolderArchive className="size-5 text-[var(--app-muted)]" />
+                                  <FolderArchive className="size-5 text-text-2" />
                                 </motion.div>
-                                <p className="mt-3 text-sm font-semibold">
+                                <p className="mt-3 type-label">
                                   {emptyCopy.title}
                                 </p>
-                                <p className="mt-1 text-xs text-[var(--app-muted)]">
+                                <p className="mt-1 text-text-2 type-label-sm">
                                   {emptyCopy.description}
                                 </p>
                                 {query ? (
@@ -585,7 +571,7 @@ export function PrecisionMedia({
                   }
                   inspector={
                     <aside
-                      className="h-full min-h-0 min-w-0 overflow-auto bg-[var(--app-soft-panel)] p-4 lg:min-h-0"
+                      className="h-full min-h-0 min-w-0 overflow-auto rounded-frame bg-well p-4 lg:min-h-0"
                       aria-label="Selected package details"
                     >
                       <AnimatePresence mode="popLayout" initial={false}>
@@ -609,26 +595,26 @@ export function PrecisionMedia({
                               large
                             />
                             <div className="mt-4 flex items-start justify-between gap-3">
-                              <h2 className="min-w-0 truncate text-sm font-semibold">
+                              <h2 className="min-w-0 truncate type-label">
                                 {selected.title}
                               </h2>
-                              <span className="shrink-0 text-xs font-semibold tabular-nums text-[var(--app-muted)]">
+                              <span className="shrink-0 tabular-nums text-text-2 type-label-sm">
                                 {progress(selected)}%
                               </span>
                             </div>
-                            <p className="mt-1 text-[11px] text-[var(--app-muted)]">
+                            <p className="mt-1 text-text-2 type-label-sm">
                               {selected.client || selected.workType}
                             </p>
                             <Badge
                               variant="outline"
                               className={cn(
-                                "mt-3 h-5 rounded px-1.5 text-[10px]",
+                                "mt-3",
                                 projectStatusTone(selected.status)
                               )}
                             >
                               {selected.status}
                             </Badge>
-                            <div className="mt-4 space-y-3 border-t border-[var(--app-border)] pt-4">
+                            <div className="mt-4 space-y-3 border-t border-line-row pt-4">
                               <Detail
                                 label="Package type"
                                 value={selected.workType}
@@ -643,7 +629,7 @@ export function PrecisionMedia({
                               />
                             </div>
                             <Button
-                              className="mt-5 w-full transition-transform active:scale-[0.985]"
+                              className="mt-5 w-full active:scale-[0.985]"
                               onClick={() => onViewProject(selected)}
                             >
                               Open project <ArrowRight />
@@ -659,11 +645,11 @@ export function PrecisionMedia({
                             transition={contentTransition}
                           >
                             <div>
-                              <FolderOpen className="mx-auto size-6 text-[var(--app-muted)]" />
-                              <p className="mt-2 text-sm font-semibold">
+                              <FolderOpen className="mx-auto size-6 text-text-2" />
+                              <p className="mt-2 type-label">
                                 Select a package
                               </p>
-                              <p className="mt-1 text-xs text-[var(--app-muted)]">
+                              <p className="mt-1 text-text-2 type-label-sm">
                                 Select a package to preview it and open the
                                 project.
                               </p>
@@ -699,26 +685,25 @@ function MediaPreview({
   return (
     <span
       className={cn(
-        "relative block shrink-0 overflow-hidden rounded-md border border-[var(--app-border)]",
+        "relative block shrink-0 overflow-hidden rounded-soft bg-tile",
         className
       )}
-      style={{ background: packageColor(project) }}
       aria-hidden="true"
     >
       <FileVideo2
         className={cn(
-          "absolute text-black/25",
+          "absolute text-text-3",
           large ? "right-4 top-4 size-8" : "right-2 top-2 size-5"
         )}
       />
       <span
         className={cn(
-          "absolute overflow-hidden rounded-full bg-white/65",
+          "absolute overflow-hidden rounded-full bg-line-row",
           large ? "inset-x-4 bottom-4 h-1" : "inset-x-2 bottom-2 h-0.5"
         )}
       >
         <motion.span
-          className="block h-full origin-left rounded-full bg-[var(--app-accent)]"
+          className="block h-full origin-left rounded-full bg-ink"
           initial={reduceMotion ? false : { scaleX: 0 }}
           animate={{ scaleX: value / 100 }}
           transition={
@@ -735,10 +720,8 @@ function MediaPreview({
 function Detail({ label, value }: { label: string; value: string }) {
   return (
     <div>
-      <p className="text-[9px] font-semibold uppercase text-[var(--app-subtle)]">
-        {label}
-      </p>
-      <p className="mt-1 text-xs leading-5 text-[var(--app-muted)]">{value}</p>
+      <p className="text-text-3 type-label-sm">{label}</p>
+      <p className="mt-1 text-text-2 type-label-sm">{value}</p>
     </div>
   );
 }

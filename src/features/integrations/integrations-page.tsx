@@ -23,6 +23,7 @@ import {
   PageEmptyState,
   PageHeader,
   PageToolbar,
+  SectionNav,
   WorkspacePage,
 } from "@/components/workspace-page";
 import {
@@ -56,7 +57,6 @@ import {
 } from "@/components/ui/select";
 import { Textarea as OwnedTextarea } from "@/components/ui/textarea";
 import {
-  Cloud,
   ExternalLink,
   Link2,
   Pencil,
@@ -64,12 +64,11 @@ import {
   Plus,
   Trash2,
   Unplug,
-} from "lucide-react";
+} from "@/components/icons";
 import type { ToastState } from "@/features/routes/shared/route-types";
 import { EmptyPanel } from "@/features/routes/shared/empty-panel";
 import {
   emptyIntegrationConfig,
-  integrationColors,
   integrationDescriptions,
   integrationIcons,
   integrationNames,
@@ -193,228 +192,240 @@ export function IntegrationsDesignPage({
     setDisconnectTarget(null);
   }
 
+  const [integrationView, setIntegrationView] = useState<
+    "services" | "workspace" | "projects"
+  >("services");
   return (
     <WorkspacePage family="library">
       <PageHeader
         title="Integrations"
         description="Save links to the tools and services you use, for the workspace or a single project."
       />
-      <PageContent className="space-y-5">
+      <PageContent className="space-y-4">
+        <SectionNav
+          aria-label="Integration views"
+          items={[
+            { id: "services", label: "Services" },
+            { id: "workspace", label: "Workspace links" },
+            { id: "projects", label: "Project links" },
+          ]}
+          value={integrationView}
+          onValueChange={setIntegrationView}
+          className="-mx-4 px-3 sm:-mx-6 sm:px-5"
+        />
         <PageToolbar
           data-family-toolbar="integrations"
           primary={
             <div className="relative min-w-0 flex-1 sm:max-w-md">
               <Plug
                 aria-hidden="true"
-                className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-[var(--app-muted)]"
+                className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-text-2"
               />
               <OwnedInput
                 aria-label="Search integrations"
                 value={integrationSearch}
                 onChange={(event) => setIntegrationSearch(event.target.value)}
-                placeholder="Search services and project links..."
-                className="h-10 bg-[var(--app-control)] pl-9 shadow-none"
+                placeholder="Search services and project links"
+                className="pl-9"
               />
             </div>
           }
           secondary={
-            <OwnedSelect
-              value={integrationFilter}
-              onValueChange={setIntegrationFilter}
-            >
-              <OwnedSelectTrigger
-                aria-label="Filter integrations"
-                className="h-10 w-full sm:w-40"
+            integrationView === "services" ? (
+              <OwnedSelect
+                value={integrationFilter}
+                onValueChange={setIntegrationFilter}
               >
-                <OwnedSelectValue />
-              </OwnedSelectTrigger>
-              <OwnedSelectContent position="popper">
-                <OwnedSelectItem value="all">All services</OwnedSelectItem>
-                <OwnedSelectItem value="connected">Connected</OwnedSelectItem>
-                <OwnedSelectItem value="available">
-                  Not connected
-                </OwnedSelectItem>
-              </OwnedSelectContent>
-            </OwnedSelect>
+                <OwnedSelectTrigger
+                  aria-label="Filter integrations"
+                  className="w-full sm:w-40"
+                >
+                  <OwnedSelectValue />
+                </OwnedSelectTrigger>
+                <OwnedSelectContent position="popper">
+                  <OwnedSelectItem value="all">All services</OwnedSelectItem>
+                  <OwnedSelectItem value="connected">Connected</OwnedSelectItem>
+                  <OwnedSelectItem value="available">
+                    Not connected
+                  </OwnedSelectItem>
+                </OwnedSelectContent>
+              </OwnedSelect>
+            ) : undefined
           }
         />
-        <ContentSection
-          title="Connected Services"
-          description="Note the accounts your studio uses. Relay only stores these details and doesn't connect to them."
-          actions={
-            <OwnedBadge variant={connectedCount ? "default" : "secondary"}>
-              <Plug aria-hidden="true" />
-              {connectedCount} connected
-            </OwnedBadge>
-          }
-        >
-          <ul className="mt-4 divide-y divide-border overflow-hidden rounded-xl border border-border shadow-[var(--app-shadow-1)]">
-            {visibleIntegrationNames.map((name) => {
-              const config =
-                settings.integrationConfigs[name] ?? emptyIntegrationConfig;
-              const connected = Boolean(config.connected);
-              const account = config.account;
-              return (
-                <li
-                  key={name}
-                  className="flex flex-col justify-between gap-3 bg-[var(--app-soft-panel)] p-4 transition-colors hover:bg-[var(--app-hover)] focus-within:bg-[var(--app-hover)] sm:flex-row sm:items-center"
-                >
-                  <div className="flex min-w-0 items-center gap-3">
-                    <span
-                      aria-hidden="true"
-                      className="grid size-9 shrink-0 place-items-center rounded-md text-sm font-semibold text-white"
-                      style={{ backgroundColor: integrationColors[name] }}
+        {integrationView === "services" ? (
+          <>
+            <ContentSection
+              title="Services"
+              description="Note the accounts your studio uses. Relay only stores these details; it does not connect to them."
+              metadata={
+                <span className="text-text-3 type-label-sm data">
+                  {connectedCount} connected
+                </span>
+              }
+              bodyMode="flush"
+            >
+              <ul>
+                {visibleIntegrationNames.map((name) => {
+                  const config =
+                    settings.integrationConfigs[name] ?? emptyIntegrationConfig;
+                  const connected = Boolean(config.connected);
+                  const account = config.account;
+                  return (
+                    <li
+                      key={name}
+                      className="flex flex-col justify-between gap-3 rule-row px-4 py-3 transition-colors duration-(--dur-fast) hover:bg-hover sm:flex-row sm:items-center"
                     >
-                      {integrationIcons[name]}
-                    </span>
-                    <div className="min-w-0">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <h3 className="text-sm font-semibold">{name}</h3>
-                        <OwnedBadge variant={connected ? "default" : "outline"}>
-                          {connected ? "Connected" : "Not connected"}
-                        </OwnedBadge>
+                      <div className="flex min-w-0 items-center gap-3">
+                        <span
+                          aria-hidden="true"
+                          className="grid size-8 shrink-0 place-items-center rounded-soft bg-tile text-text-1 type-label"
+                        >
+                          {integrationIcons[name]}
+                        </span>
+                        <div className="min-w-0">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <h3 className="type-label">{name}</h3>
+                            {connected ? (
+                              <OwnedBadge variant="secondary">
+                                Connected
+                              </OwnedBadge>
+                            ) : null}
+                          </div>
+                          <p className="mt-1 truncate text-muted-foreground type-label-sm">
+                            {connected
+                              ? account || "Connected locally"
+                              : integrationDescriptions[name]}
+                          </p>
+                        </div>
                       </div>
-                      <p className="mt-1 truncate text-xs text-muted-foreground">
-                        {connected
-                          ? account || "Connected locally"
-                          : integrationDescriptions[name]}
+                      <div className="flex flex-wrap gap-2">
+                        {connected ? (
+                          <OwnedButton
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            aria-label={`Disconnect ${name}`}
+                            onClick={() => setDisconnectTarget(name)}
+                          >
+                            <Unplug aria-hidden="true" />
+                            Disconnect
+                          </OwnedButton>
+                        ) : null}
+                        <OwnedButton
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          aria-label={`${connected ? "Manage" : "Connect"} ${name}`}
+                          onClick={() => openIntegration(name)}
+                        >
+                          {connected ? "Manage" : "Connect"}
+                        </OwnedButton>
+                      </div>
+                    </li>
+                  );
+                })}
+              </ul>
+              {!visibleIntegrationNames.length ? (
+                <PageEmptyState
+                  title="No matching services"
+                  description="Try a different search or connection filter."
+                />
+              ) : null}
+            </ContentSection>
+            <ContentSection
+              title="Cloudflare R2 storage"
+              description="Coming later: storage for large files. Uploads use the standard storage for now."
+              actions={<OwnedBadge variant="secondary">Upcoming</OwnedBadge>}
+            />
+          </>
+        ) : null}
+
+        {integrationView === "workspace" ? (
+          <IntegrationLinkManager
+            title="Workspace links"
+            subtitle="Service links the whole workspace uses, such as shared folders and channels."
+            links={settings.integrationLinks}
+            emptyTitle="No global integration links"
+            emptyBody="Add links to shared folders, calendars, channels, and review spaces your studio uses often."
+            onChange={(integrationLinks) => {
+              setSettings({ ...settings, integrationLinks });
+              notify("Global integration links updated.", "success");
+            }}
+          />
+        ) : null}
+
+        {integrationView === "projects" ? (
+          <ContentSection
+            title="Project links"
+            description="Links saved on a project stay with that project."
+            metadata={
+              <span className="text-text-3 type-label-sm data">
+                {visibleProjectLinks.length} projects
+              </span>
+            }
+            bodyMode="flush"
+          >
+            {visibleProjectLinks.length ? (
+              <ul>
+                {visibleProjectLinks.map((project) => (
+                  <li
+                    key={project.id}
+                    className="flex flex-col justify-between gap-3 rule-row px-4 py-3 transition-colors duration-(--dur-fast) hover:bg-hover md:flex-row md:items-center"
+                  >
+                    <div className="min-w-0">
+                      <h3 className="truncate type-label">{project.title}</h3>
+                      <p className="mt-1 text-muted-foreground type-label-sm">
+                        {configuredIntegrationCount(project.integrationLinks)}{" "}
+                        saved{" "}
+                        {configuredIntegrationCount(
+                          project.integrationLinks
+                        ) === 1
+                          ? "link"
+                          : "links"}
                       </p>
+                      <div className="mt-2 flex flex-wrap gap-1.5">
+                        {integrationServices.map((service) =>
+                          hasIntegrationLink(
+                            project.integrationLinks?.[service.id]
+                          ) ? (
+                            <OwnedBadge key={service.id} variant="secondary">
+                              {service.shortName}
+                            </OwnedBadge>
+                          ) : null
+                        )}
+                      </div>
                     </div>
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                    {connected ? (
-                      <OwnedButton
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        aria-label={`Disconnect ${name}`}
-                        className="text-destructive hover:text-destructive"
-                        onClick={() => setDisconnectTarget(name)}
-                      >
-                        <Unplug aria-hidden="true" />
-                        Disconnect
-                      </OwnedButton>
-                    ) : null}
                     <OwnedButton
                       type="button"
                       variant="outline"
                       size="sm"
-                      aria-label={`${connected ? "Manage" : "Connect"} ${name}`}
-                      onClick={() => openIntegration(name)}
+                      aria-label={`Manage integration links for ${project.title}`}
+                      onClick={() => onEditProject(project)}
                     >
-                      <Plug aria-hidden="true" />
-                      {connected ? "Manage" : "Connect"}
+                      Edit links
                     </OwnedButton>
-                  </div>
-                </li>
-              );
-            })}
-          </ul>
-          {!visibleIntegrationNames.length ? (
-            <PageEmptyState
-              title="No matching services"
-              description="Try a different search or connection filter."
-            />
-          ) : null}
-        </ContentSection>
-
-        <IntegrationLinkManager
-          title="Global Integrations"
-          subtitle="Workspace-level service links used across your editing workflow."
-          links={settings.integrationLinks}
-          emptyTitle="No global integration links"
-          emptyBody="Add links to shared folders, calendars, channels, and review spaces your studio uses often."
-          onChange={(integrationLinks) => {
-            setSettings({ ...settings, integrationLinks });
-            notify("Global integration links updated.", "success");
-          }}
-        />
-
-        <ContentSection
-          title="Cloudflare R2 Storage"
-          description="Coming later: storage for large files. Uploads currently use Relay's standard storage."
-          metadata={
-            <Cloud
-              aria-hidden="true"
-              className="size-4 text-muted-foreground"
-            />
-          }
-          actions={<OwnedBadge variant="secondary">Upcoming</OwnedBadge>}
-          bodyMode="flush"
-        />
-
-        <ContentSection
-          title="Project Integrations"
-          description="Project-specific links stay attached to each project record."
-          actions={
-            <OwnedBadge
-              variant={visibleProjectLinks.length ? "default" : "secondary"}
-            >
-              <Link2 aria-hidden="true" />
-              {visibleProjectLinks.length} projects linked
-            </OwnedBadge>
-          }
-        >
-          {visibleProjectLinks.length ? (
-            <ul className="mt-4 divide-y divide-border overflow-hidden rounded-xl border border-border shadow-[var(--app-shadow-1)]">
-              {visibleProjectLinks.map((project) => (
-                <li
-                  key={project.id}
-                  className="flex flex-col justify-between gap-3 bg-[var(--app-soft-panel)] p-4 transition-colors hover:bg-[var(--app-hover)] focus-within:bg-[var(--app-hover)] md:flex-row md:items-center"
-                >
-                  <div className="min-w-0">
-                    <h3 className="truncate text-sm font-semibold">
-                      {project.title}
-                    </h3>
-                    <p className="mt-1 text-xs text-muted-foreground">
-                      {configuredIntegrationCount(project.integrationLinks)}{" "}
-                      saved{" "}
-                      {configuredIntegrationCount(project.integrationLinks) ===
-                      1
-                        ? "link"
-                        : "links"}
-                    </p>
-                    <div className="mt-2 flex flex-wrap gap-1.5">
-                      {integrationServices.map((service) =>
-                        hasIntegrationLink(
-                          project.integrationLinks?.[service.id]
-                        ) ? (
-                          <OwnedBadge key={service.id} variant="secondary">
-                            {service.shortName}
-                          </OwnedBadge>
-                        ) : null
-                      )}
-                    </div>
-                  </div>
-                  <OwnedButton
-                    type="button"
-                    variant="outline"
-                    aria-label={`Manage integration links for ${project.title}`}
-                    onClick={() => onEditProject(project)}
-                  >
-                    <Pencil aria-hidden="true" />
-                    Manage Project Links
-                  </OwnedButton>
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <div className="mt-4 rounded-lg border border-dashed border-border">
-              <EmptyPanel
-                title={
-                  projectLinks.length
-                    ? "No matching project links"
-                    : "No project integration links"
-                }
-                body={
-                  projectLinks.length
-                    ? "Try a different search term."
-                    : "Open a project and add service links for folders, review pages, channels, or calendar events."
-                }
-              />
-            </div>
-          )}
-        </ContentSection>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <div>
+                <EmptyPanel
+                  title={
+                    projectLinks.length
+                      ? "No matching project links"
+                      : "No project integration links"
+                  }
+                  body={
+                    projectLinks.length
+                      ? "Try a different search term."
+                      : "Open a project and add service links for folders, review pages, channels, or calendar events."
+                  }
+                />
+              </div>
+            )}
+          </ContentSection>
+        ) : null}
       </PageContent>
 
       <OwnedDialog
@@ -643,35 +654,35 @@ export function IntegrationLinkManager({
       }
     >
       {!configuredCount ? (
-        <div className="mt-4 rounded-lg border border-dashed border-border">
+        <div className="mt-3">
           <EmptyPanel title={emptyTitle} body={emptyBody} />
         </div>
       ) : null}
-      <ul className="mt-4 divide-y divide-border overflow-hidden rounded-lg border border-border">
+      <ul className="mt-3 divide-y divide-border">
         {integrationServices.map((service) => {
           const link = links?.[service.id];
           const linked = hasIntegrationLink(link);
           return (
             <li
               key={service.id}
-              className="flex flex-col justify-between gap-3 bg-card p-4 sm:flex-row sm:items-center"
+              className="flex flex-col justify-between gap-3 py-3 sm:flex-row sm:items-center"
             >
               <div className="flex min-w-0 items-center gap-3">
                 <span
                   aria-hidden="true"
-                  className="grid size-9 shrink-0 place-items-center rounded-md text-sm font-semibold text-white"
+                  className="grid size-9 shrink-0 place-items-center rounded-md text-white type-label"
                   style={{ backgroundColor: service.color }}
                 >
                   {service.icon}
                 </span>
                 <div className="min-w-0">
                   <div className="flex flex-wrap items-center gap-2">
-                    <h3 className="text-sm font-semibold">{service.name}</h3>
+                    <h3 className="type-label">{service.name}</h3>
                     <OwnedBadge variant={linked ? "default" : "outline"}>
                       {integrationStatusLabel(link)}
                     </OwnedBadge>
                   </div>
-                  <p className="mt-1 max-w-xl truncate text-xs text-muted-foreground">
+                  <p className="mt-1 max-w-xl truncate text-muted-foreground type-label-sm">
                     {integrationDisplayText(link, service.description)}
                   </p>
                 </div>

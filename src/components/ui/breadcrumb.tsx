@@ -1,5 +1,5 @@
 import * as React from "react";
-import { ChevronRight, MoreHorizontal } from "lucide-react";
+import { ChevronRight, MoreHorizontal } from "@/components/icons";
 import { Slot } from "radix-ui";
 
 import { cn } from "@/lib/utils";
@@ -13,7 +13,7 @@ function BreadcrumbList({ className, ...props }: React.ComponentProps<"ol">) {
     <ol
       data-slot="breadcrumb-list"
       className={cn(
-        "flex flex-wrap items-center gap-1.5 text-sm break-words text-muted-foreground sm:gap-2.5",
+        "flex flex-wrap items-center gap-1.5 type-label break-words text-text-2",
         className
       )}
       {...props}
@@ -41,7 +41,10 @@ function BreadcrumbLink({
   return (
     <Comp
       data-slot="breadcrumb-link"
-      className={cn("transition-colors hover:text-foreground", className)}
+      className={cn(
+        "rounded-inner transition-colors duration-(--dur-fast) hover:text-text-1",
+        className
+      )}
       {...props}
     />
   );
@@ -54,7 +57,7 @@ function BreadcrumbPage({ className, ...props }: React.ComponentProps<"span">) {
       role="link"
       aria-disabled="true"
       aria-current="page"
-      className={cn("font-normal text-foreground", className)}
+      className={cn("text-text-1", className)}
       {...props}
     />
   );
@@ -70,7 +73,7 @@ function BreadcrumbSeparator({
       data-slot="breadcrumb-separator"
       role="presentation"
       aria-hidden="true"
-      className={cn("[&>svg]:size-3.5", className)}
+      className={cn("text-text-3 [&>svg]:size-3.5", className)}
       {...props}
     >
       {children ?? <ChevronRight />}

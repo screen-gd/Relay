@@ -1,6 +1,6 @@
 "use client";
 
-import { LockKeyhole, Sparkles } from "lucide-react";
+import { LockKeyhole, Sparkles } from "@/components/icons";
 import { useLocation, useNavigate } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
 import {
@@ -32,7 +32,7 @@ export function AiToolsMenu() {
           size="icon"
           title="AI tools"
           aria-label="AI tools"
-          className="text-[var(--app-ink)] transition-colors data-[state=open]:bg-[var(--app-active)]"
+          className="text-text-1 data-[state=open]:bg-selected"
         >
           <Sparkles aria-hidden="true" className="size-[18px]" />
         </Button>
@@ -50,14 +50,18 @@ export function AiToolsMenu() {
           >
             <span className="grid min-w-0 gap-0.5">
               <span className="truncate">{tool.label}</span>
-              <span className="text-xs text-muted-foreground">{tool.home}</span>
+              <span className="text-muted-foreground type-label-sm">
+                {tool.home}
+              </span>
             </span>
           </DropdownMenuItem>
         ))}
         <DropdownMenuSeparator />
         {hasAccount ? (
           <DropdownMenuItem
-            onSelect={() => void navigate({ href: "/settings" })}
+            onSelect={() =>
+              void navigate({ to: "/settings", search: { section: "ai" } })
+            }
           >
             <LockKeyhole aria-hidden="true" className="size-4" />
             Manage AI in Settings
@@ -65,7 +69,7 @@ export function AiToolsMenu() {
         ) : (
           <DropdownMenuItem
             onSelect={() => signIn()}
-            className="font-semibold text-[var(--app-highlight)]"
+            className="font-semibold text-text-1"
           >
             Sign in to use AI
           </DropdownMenuItem>

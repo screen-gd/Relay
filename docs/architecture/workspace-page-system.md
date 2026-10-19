@@ -415,7 +415,7 @@ Implementation rules:
 
 - Compose existing owned shadcn/ui primitives.
 - Use Radix behavior through shadcn for interactive primitives.
-- Use Lucide for icons.
+- Import icons from `@/components/icons` (Hugeicons).
 - Use Motion only for meaningful entry or state transitions; geometry does not depend on Motion.
 - Keep Recharts inside report/chart feature components.
 - Keep TanStack Table inside complex table feature components.

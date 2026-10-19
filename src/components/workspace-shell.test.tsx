@@ -11,18 +11,28 @@ vi.mock("@/lib/data-context", () => ({
 vi.mock("@/lib/optional-auth", () => ({
   useOptionalAuth: () => ({ isSignedIn: false }),
 }));
-vi.mock("@/components/ui/sheet", async (importOriginal) => ({
-  ...(await importOriginal<typeof import("@/components/ui/sheet")>()),
-  SheetContent: ({ children }: { children: ReactNode }) => (
-    <div data-test="mobile-sheet">{children}</div>
-  ),
-}));
 vi.mock("@/components/ui/dialog", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/components/ui/dialog")>()),
   DialogContent: ({ children }: { children: ReactNode }) => (
     <div data-test="command-dialog">{children}</div>
   ),
 }));
+// Menus render their contents inline so the links inside can be read.
+vi.mock("@/components/ui/dropdown-menu", async (importOriginal) => {
+  const Pass = ({ children }: { children?: ReactNode }) => <>{children}</>;
+  return {
+    ...(await importOriginal<typeof import("@/components/ui/dropdown-menu")>()),
+    DropdownMenuContent: Pass,
+    DropdownMenuItem: Pass,
+    DropdownMenuLabel: Pass,
+    DropdownMenuSeparator: () => null,
+    DropdownMenuSub: Pass,
+    DropdownMenuSubTrigger: Pass,
+    DropdownMenuSubContent: Pass,
+    DropdownMenuRadioGroup: Pass,
+    DropdownMenuRadioItem: Pass,
+  };
+});
 
 // Renders the shell inside a memory router opened at `pathname`, so links
 // resolve and mark themselves active the same way they do in the app.
@@ -30,10 +40,10 @@ function shell(pathname: string) {
   return renderWithRouter(
     <TooltipProvider>
       <WorkspaceShell
-        page={workspacePageForPath(pathname)}
+        page={workspacePageForPath(pathname.split("?")[0] ?? pathname)}
         settings={sampleStudioSettings}
         onNewProject={() => undefined}
-        canCreateProject={false}
+        canCreateProject
         pageTitle={pathname === "/sample-studio" ? "Sample studio" : undefined}
       >
         <p>Route content</p>
@@ -51,162 +61,109 @@ function navigation(html: string, label: string) {
   );
 }
 
+function hrefs(html: string) {
+  return [...html.matchAll(/href="([^"]*)"/g)].map(([, href]) => href);
+}
+
 function currentLinks(html: string) {
   return [...html.matchAll(/<a[^>]*aria-current="page"[^>]*>/g)].map(
     ([link]) => link.match(/href="([^"]*)"/)?.[1]
   );
 }
 
-describe("Workspace hub navigation", () => {
-  it("shows seven named primary hubs for a solo workspace and preserves support links", async () => {
+const productRoutes = [
+  "/",
+  "/projects",
+  "/feedback",
+  "/clients",
+  "/files",
+  "/media",
+  "/templates",
+  "/resources",
+  "/reports",
+  "/team",
+  "/team-chat",
+];
+
+describe("Workspace sidebar", () => {
+  it("lists every product page once, with daily pages first", async () => {
     const html = await shell("/");
-    const rail = navigation(html, "Primary navigation");
-    expect([...rail.matchAll(/<a /g)]).toHaveLength(7);
-    for (const label of [
-      "Dashboard",
-      "Projects",
-      "Clients",
-      "Reviews",
-      "Payments",
-      "Team",
-      "Settings",
-    ]) {
-      expect(rail).toContain(`aria-label="${label}"`);
+    const sidebar = navigation(html, "Primary navigation");
+    // Page items carry their name as a label; AI and recent links do not.
+    const pageLinks = [
+      ...sidebar.matchAll(/<a[^>]*aria-label="[^"]*"[^>]*>/g),
+    ].map(([tag]) => tag.match(/href="([^"]*)"/)?.[1]);
+    expect(pageLinks).toEqual(productRoutes);
+    expect(sidebar).not.toContain('href="/settings"');
+  });
+
+  it.each([
+    ["/", "/"],
+    ["/clients", "/clients"],
+    ["/feedback", "/feedback"],
+    ["/reports", "/reports"],
+    ["/team-chat", "/team-chat"],
+    ["/projects/example", "/projects"],
+    ["/calendar", "/projects"],
+    ["/timeline", "/projects"],
+  ])("marks %s under %s", async (pathname, active) => {
+    const html = await shell(pathname);
+    expect(currentLinks(navigation(html, "Primary navigation"))).toEqual([
+      active,
+    ]);
+  });
+
+  it("offers the project views in the top bar on the list, calendar and timeline", async () => {
+    for (const pathname of ["/projects", "/calendar", "/timeline"]) {
+      const views = navigation(await shell(pathname), "Projects views");
+      expect(hrefs(views)).toEqual(["/projects", "/calendar", "/timeline"]);
+      expect(currentLinks(views)).toEqual([pathname]);
     }
-    expect(rail).toContain('href="/team"');
+    // A single project is a record, not a view of the list.
+    expect(await shell("/projects/example")).not.toContain(
+      'aria-label="Projects views"'
+    );
+  });
+
+  it("swaps to settings navigation on settings pages, with a way back", async () => {
+    const html = await shell("/integrations");
+    const settings = navigation(html, "Settings navigation");
     for (const href of [
-      "/files",
-      "/media",
-      "/templates",
-      "/resources",
+      "/settings?section=workflow",
       "/integrations",
-      "/calendar",
-      "/timeline",
+      "/settings?section=data",
+      "/profile/edit",
+      "/account",
+      "/subscription",
     ])
-      expect(rail).not.toContain(`href="${href}"`);
-    const support = navigation(html, "Support and legal");
-    for (const href of ["/contact", "/privacy", "/terms", "/accessibility"])
-      expect(support).toContain(`href="${href}"`);
+      expect(settings).toContain(`href="${href}"`);
+    expect(currentLinks(settings)).toEqual(["/integrations"]);
+    expect(html).toContain("Back to workspace");
+    expect(html).not.toContain('aria-label="Primary navigation"');
+  });
+
+  it("marks the open settings section", async () => {
+    const html = await shell("/settings?section=appearance");
+    expect(currentLinks(navigation(html, "Settings navigation"))).toEqual([
+      "/settings?section=appearance",
+    ]);
+    expect(html).toContain("Current location: Settings / Appearance");
+  });
+
+  it("keeps support and legal links in the help menu", async () => {
+    const support = navigation(await shell("/"), "Support and legal");
     for (const href of [
+      "/contact",
+      "/privacy",
+      "/terms",
+      "/accessibility",
       "https://web.relay-app.cc.cd/about",
       "https://web.relay-app.cc.cd/privacy-and-data",
     ])
       expect(support).toContain(`href="${href}"`);
-    const mobile = navigation(html, "Mobile navigation");
-    for (const href of [
-      "/",
-      "/projects",
-      "/clients",
-      "/feedback",
-      "/reports",
-      "/team",
-      "/settings",
-    ])
-      expect(mobile).toContain(`href="${href}"`);
-    expect(mobile).not.toContain('href="/calendar"');
-    expect(mobile).not.toContain('href="/files"');
   });
 
-  it.each([
-    [
-      "/projects/example",
-      "Projects",
-      "/projects",
-      ["/projects", "/calendar", "/timeline", "/files", "/media"],
-    ],
-    [
-      "/calendar",
-      "Projects",
-      "/projects",
-      ["/projects", "/calendar", "/timeline", "/files", "/media"],
-    ],
-    [
-      "/files",
-      "Projects",
-      "/projects",
-      ["/projects", "/calendar", "/timeline", "/files", "/media"],
-    ],
-    [
-      "/media",
-      "Projects",
-      "/projects",
-      ["/projects", "/calendar", "/timeline", "/files", "/media"],
-    ],
-    [
-      "/integrations",
-      "Settings",
-      "/settings",
-      ["/settings", "/integrations", "/templates", "/resources"],
-    ],
-    [
-      "/templates",
-      "Settings",
-      "/settings",
-      ["/settings", "/integrations", "/templates", "/resources"],
-    ],
-    [
-      "/resources",
-      "Settings",
-      "/settings",
-      ["/settings", "/integrations", "/templates", "/resources"],
-    ],
-    ["/team-chat", "Team", "/team", ["/team", "/team-chat"]],
-  ])(
-    "keeps %s reachable under its active hub",
-    async (pathname, hub, hubHref, destinations) => {
-      const html = await shell(pathname);
-      expect(currentLinks(navigation(html, "Primary navigation"))).toEqual([
-        hubHref,
-      ]);
-      const context = navigation(html, `${hub} navigation`);
-      for (const href of destinations)
-        expect(context).toContain(`href="${href}"`);
-      expect(currentLinks(context)).toEqual([
-        pathname.startsWith("/projects/") ? "/projects" : pathname,
-      ]);
-      const command = html.slice(html.indexOf('data-test="command-dialog"'));
-      for (const href of destinations)
-        expect(command).toContain(`href="${href}"`);
-    }
-  );
-
-  it.each(["/", "/clients", "/feedback", "/reports"])(
-    "marks %s as the active top-level hub",
-    async (pathname) => {
-      const html = await shell(pathname);
-      expect(currentLinks(navigation(html, "Primary navigation"))).toEqual([
-        pathname,
-      ]);
-    }
-  );
-
-  it("keeps all product routes and existing G chords in command search", async () => {
-    const html = await shell("/");
-    const command = html.slice(html.indexOf('data-test="command-dialog"'));
-    for (const href of [
-      "/",
-      "/projects",
-      "/calendar",
-      "/timeline",
-      "/clients",
-      "/feedback",
-      "/files",
-      "/media",
-      "/templates",
-      "/resources",
-      "/reports",
-      "/integrations",
-      "/team",
-      "/team-chat",
-      "/settings",
-    ]) {
-      expect(command).toContain(`href="${href}"`);
-    }
-    for (const chord of ["G D", "G C", "G P", "G R", "G S"])
-      expect(command).toContain(chord);
-  });
-
-  it("names the sample studio consistently without altering its active dashboard hub", async () => {
+  it("names the sample studio without moving its dashboard item", async () => {
     const html = await shell("/sample-studio");
     expect(html).toContain("Current location: Sample studio");
     expect(currentLinks(navigation(html, "Primary navigation"))).toEqual(["/"]);
@@ -215,14 +172,33 @@ describe("Workspace hub navigation", () => {
     );
   });
 
-  it("marks the hubs that hold AI tools", async () => {
+  it("offers the sidebar toggle with its shortcut", async () => {
     const html = await shell("/");
-    const rail = navigation(html, "Primary navigation");
-    expect([...rail.matchAll(/data-slot="ai-nav-badge"/g)]).toHaveLength(3);
-    expect(html).toContain('aria-label="AI tools"');
+    expect(html).toContain('aria-label="Close sidebar"');
+    expect(html).toContain('aria-label="Search"');
+    expect(html).toContain('aria-label="New project"');
+  });
+});
+
+describe("Command menu", () => {
+  it("reaches every product and settings page, with the G chords", async () => {
+    const html = await shell("/");
+    const command = html.slice(html.indexOf('data-test="command-dialog"'));
+    for (const href of [
+      ...productRoutes,
+      "/calendar",
+      "/timeline",
+      "/settings",
+      "/integrations",
+      "/account",
+      "/subscription",
+    ])
+      expect(command).toContain(`href="${href}"`);
+    for (const chord of ["G D", "G C", "G P", "G R", "G S"])
+      expect(command).toContain(chord);
   });
 
-  it("lists every AI action in the command menu, saying what unlocks it", async () => {
+  it("lists every AI action, saying what unlocks it", async () => {
     const html = await shell("/projects/relay-launch");
     const command = html.slice(html.indexOf('data-test="command-dialog"'));
     for (const label of [
@@ -236,7 +212,6 @@ describe("Workspace hub navigation", () => {
       "Flag deadline risk",
     ])
       expect(command).toContain(label);
-    expect(command).toContain("AI tools");
     // Signed out, every AI action names the step that unlocks it.
     expect(command.match(/Sign in to use AI/g)).toHaveLength(8);
   });

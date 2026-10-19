@@ -4,3 +4,4 @@ Upstream package.json declares the MIT license.
 
 Relay changes: formatting; fixed sparkle texture and no repeated marker redraws
 in cartesian-canvas.tsx. Report charts use bloom="off".
+bar-chart, bar-canvas and bar come from the bar-chart registry item unchanged. palette.ts adds the Relay 'lime' seed.

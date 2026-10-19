@@ -12,7 +12,6 @@ import {
   type ProjectTemplate,
 } from "@/lib/project-templates";
 import {
-  ContentSection,
   PageContent,
   PageHeader,
   WorkspacePage,
@@ -39,7 +38,43 @@ import {
   SelectValue as OwnedSelectValue,
 } from "@/components/ui/select";
 import { Textarea as OwnedTextarea } from "@/components/ui/textarea";
-import { Copy, FileText, Pencil, Plus, Trash2 } from "lucide-react";
+import {
+  Building2,
+  Copy,
+  FerrisWheel,
+  Film,
+  Instagram,
+  Megaphone,
+  Microphone,
+  Pencil,
+  Plus,
+  Repeat,
+  ShoppingBag,
+  Trash2,
+  Video,
+  Wedding,
+  Youtube,
+} from "@/components/icons";
+
+/**
+ * The mark shown on a template card: the platform or kind of work the
+ * template is for, read from its name and project type.
+ */
+function templateMark(template: { name: string; projectType: string }) {
+  const text = `${template.name} ${template.projectType}`.toLowerCase();
+  if (text.includes("youtube") || text.includes("long-form")) return Youtube;
+  if (text.includes("instagram") || text.includes("reel")) return Instagram;
+  if (text.includes("wedding")) return Wedding;
+  if (text.includes("podcast")) return Microphone;
+  if (text.includes("corporate") || text.includes("event")) return Building2;
+  if (text.includes("product") || text.includes("commercial"))
+    return ShoppingBag;
+  if (text.includes("theme park")) return FerrisWheel;
+  if (text.includes("campaign") || text.includes("social")) return Megaphone;
+  if (text.includes("retainer")) return Repeat;
+  if (text.includes("film")) return Film;
+  return Video;
+}
 
 type TemplateFormState = {
   id: string;
@@ -271,19 +306,19 @@ export function TemplatesDesignPage({
         title="Templates"
         description="Start with a practical editing workflow, or save your own recurring setup for the next project."
         actions={
-          <div className="flex flex-wrap justify-end gap-2">
+          <div className="flex items-center gap-2">
             <OwnedButton
               type="button"
               variant="outline"
+              size="sm"
               onClick={() => openBuilder()}
               disabled={!canManageTemplates || customTemplatesLocked}
             >
               <Plus aria-hidden="true" />
-              Custom Template
+              New template
             </OwnedButton>
-            <OwnedButton type="button" variant="outline" onClick={onUseBlank}>
-              <Plus aria-hidden="true" />
-              Blank Project
+            <OwnedButton type="button" size="sm" onClick={onUseBlank}>
+              Blank project
             </OwnedButton>
           </div>
         }
@@ -292,7 +327,7 @@ export function TemplatesDesignPage({
         {templateError && !builderOpen ? (
           <p
             role="alert"
-            className="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive"
+            className="rounded-frame px-3 py-2 text-fail-text shadow-[0_0_0_1px_var(--fail-line)] type-body-sm"
           >
             {templateError}
           </p>
@@ -300,200 +335,204 @@ export function TemplatesDesignPage({
         {customTemplatesLocked ? (
           <CapabilityUpgradePrompt capability="customWorkflowTemplates" />
         ) : null}
-        <ContentSection
-          title="Template library"
-          metadata={
-            <OwnedBadge variant="secondary">
-              {templates.length} templates
-            </OwnedBadge>
-          }
-          aria-label="Project templates"
-          bodyClassName="grid gap-4 md:grid-cols-2 xl:grid-cols-3"
-        >
-          {templates.map((template) => (
-            <article
-              key={template.id}
-              data-slot="template-card"
-              className="group flex min-h-[250px] flex-col justify-between rounded-xl border border-[var(--app-border)] bg-[var(--app-soft-panel)] p-4 text-foreground shadow-[var(--app-shadow-1)] transition-[background-color,border-color,transform,box-shadow] duration-200 hover:-translate-y-0.5 hover:border-[var(--app-strong-border)] hover:bg-[var(--app-hover)] hover:shadow-[var(--app-shadow-2)] focus-within:border-[var(--app-accent)]"
-            >
-              <div>
-                <header className="flex items-start justify-between gap-4">
+        <section aria-label="Project templates" className="grid gap-3">
+          <div className="flex items-center gap-2">
+            <h2 className="text-text-1 type-label">Template library</h2>
+            <span className="text-text-3 type-label-sm data">
+              {templates.length}
+            </span>
+          </div>
+          <div className="grid gap-3 md:grid-cols-2 2xl:grid-cols-3">
+            {templates.map((template) => {
+              const Mark = templateMark(template);
+              return (
+                <article
+                  key={template.id}
+                  data-slot="template-card"
+                  className="group flex min-w-0 flex-col gap-4 rounded-frame bg-well p-4 text-text-1 transition-colors duration-(--dur-fast) ease-(--ease-step) hover:bg-[color-mix(in_oklch,var(--surface-card),var(--ink)_4%)]"
+                >
                   <div className="min-w-0">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <h2 className="text-base font-semibold">
-                        {template.name}
-                      </h2>
-                      <OwnedBadge
-                        variant="secondary"
-                        className="rounded-md text-[10px] uppercase tracking-wide"
+                    <header className="flex items-start gap-3">
+                      <span
+                        aria-hidden="true"
+                        className="grid size-10 shrink-0 place-items-center rounded-soft bg-page text-text-1 shadow-[0_0_0_1px_var(--line-frame)] [&_svg]:size-5"
                       >
-                        {template.archived
-                          ? "Archived"
-                          : template.custom
-                            ? "Custom"
-                            : "Built-in"}
-                      </OwnedBadge>
-                    </div>
-                    <p className="mt-1 max-w-lg text-sm leading-relaxed text-muted-foreground">
-                      {template.description}
-                    </p>
-                  </div>
-                  <span className="grid size-9 shrink-0 place-items-center rounded-md border border-[var(--app-border)] bg-[var(--app-panel)] text-[var(--app-accent)]">
-                    <FileText aria-hidden="true" className="size-4" />
-                  </span>
-                </header>
-
-                <dl className="mt-4 grid grid-cols-2 gap-3 border-y border-[var(--app-border)] py-3 text-xs">
-                  <div>
-                    <dt className="text-[10px] uppercase tracking-[0.12em] text-[var(--app-muted)]">
-                      Project type
-                    </dt>
-                    <dd className="mt-1 font-semibold text-[var(--app-highlight)]">
-                      {template.projectType}
-                    </dd>
-                  </div>
-                  <div>
-                    <dt className="text-[10px] uppercase tracking-[0.12em] text-[var(--app-muted)]">
-                      Setup time
-                    </dt>
-                    <dd className="mt-1 text-foreground">
-                      {template.durationDays} days
-                    </dd>
-                  </div>
-                </dl>
-
-                <div className="mt-4">
-                  <div className="flex items-center justify-between gap-2">
-                    <h3 className="text-xs font-semibold text-muted-foreground">
-                      Workflow preview
-                    </h3>
-                    <span className="font-mono text-[10px] text-[var(--app-muted)]">
-                      {template.workflowStages.length} stages
-                    </span>
-                  </div>
-                  <div
-                    className="mt-2 flex flex-wrap items-center gap-1.5"
-                    aria-label={`${template.name} workflow stages`}
-                    role="list"
-                  >
-                    {(template.workflowStages.length
-                      ? template.workflowStages
-                      : [
-                          {
-                            id: "empty",
-                            label: "Add stages after creating the project",
-                            purpose: "planned" as const,
-                          },
-                        ]
-                    )
-                      .slice(0, 4)
-                      .map((stage, index) => (
-                        <span
-                          key={`${template.id}-${stage.id}-${index}`}
-                          className="inline-flex items-center gap-1.5"
-                        >
-                          <span
-                            role="listitem"
-                            className="rounded-md border border-[var(--app-border)] bg-[var(--app-panel)] px-2 py-1 text-[11px] text-foreground"
-                          >
-                            {stage.label}
-                          </span>
-                          {index <
-                          Math.min(template.workflowStages.length, 4) - 1 ? (
-                            <span
-                              aria-hidden="true"
-                              className="text-[var(--app-muted)]"
-                            >
-                              →
-                            </span>
-                          ) : null}
-                        </span>
-                      ))}
-                    {template.workflowStages.length > 4 ? (
-                      <span className="text-[11px] text-[var(--app-muted)]">
-                        +{template.workflowStages.length - 4}
+                        <Mark />
                       </span>
-                    ) : null}
-                  </div>
-                  <p className="mt-3 text-xs text-muted-foreground">
-                    {template.deliverables.length} deliverables ·{" "}
-                    {template.checklistItems.length} checklist items
-                  </p>
-                </div>
-              </div>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-start justify-between gap-2">
+                          <h3 className="min-w-0 truncate type-heading-xs">
+                            {template.name}
+                          </h3>
+                          <OwnedBadge variant="secondary">
+                            {template.archived
+                              ? "Archived"
+                              : template.custom
+                                ? "Custom"
+                                : "Built-in"}
+                          </OwnedBadge>
+                        </div>
+                        <p className="mt-1 line-clamp-2 text-text-2 type-body-sm">
+                          {template.description}
+                        </p>
+                      </div>
+                    </header>
 
-              <footer className="mt-5 flex flex-wrap items-center justify-between gap-2">
-                <OwnedButton
-                  type="button"
-                  variant="link"
-                  className="h-auto p-0"
-                  onClick={() => onUseTemplate(template)}
-                  disabled={
-                    template.archived ||
-                    (customTemplatesLocked && template.custom)
-                  }
-                >
-                  Use template
-                  <Plus aria-hidden="true" />
-                </OwnedButton>
-                <OwnedButton
-                  type="button"
-                  size="sm"
-                  variant="ghost"
-                  aria-label={`Copy ${template.name} template`}
-                  onClick={() => copyTemplate(template)}
-                  disabled={!canManageTemplates || customTemplatesLocked}
-                >
-                  <Copy aria-hidden="true" />
-                  Copy
-                </OwnedButton>
-                {template.custom && canManageTemplates ? (
-                  <div className="flex items-center gap-1">
-                    <OwnedButton
-                      type="button"
-                      size="sm"
-                      variant="ghost"
-                      aria-label={`Edit ${template.name} template`}
-                      onClick={() => openBuilder(template)}
-                      disabled={customTemplatesLocked}
-                    >
-                      <Pencil aria-hidden="true" />
-                      Edit
-                    </OwnedButton>
-                    <OwnedButton
-                      type="button"
-                      size="sm"
-                      variant="ghost"
-                      onClick={() => archiveTemplate(template)}
-                      disabled={customTemplatesLocked}
-                    >
-                      {template.archived ? "Restore" : "Archive"}
-                    </OwnedButton>
-                    <OwnedButton
-                      type="button"
-                      size="sm"
-                      variant="ghost"
-                      className="text-destructive hover:bg-destructive/10 hover:text-destructive"
-                      aria-label={`Delete ${template.name} template`}
-                      onClick={() => deleteTemplate(template.id)}
-                      disabled={customTemplatesLocked}
-                    >
-                      <Trash2 aria-hidden="true" />
-                      Delete
-                    </OwnedButton>
+                    <dl className="mt-3 flex flex-wrap gap-x-6 gap-y-2 type-label-sm">
+                      <div>
+                        <dt className="text-text-2 type-label-sm">
+                          Project type
+                        </dt>
+                        <dd className="mt-0.5 text-text-1">
+                          {template.projectType}
+                        </dd>
+                      </div>
+                      <div>
+                        <dt className="text-text-2 type-label-sm">
+                          Setup time
+                        </dt>
+                        <dd className="mt-0.5 text-text-1 data">
+                          {template.durationDays} days
+                        </dd>
+                      </div>
+                    </dl>
+
+                    <div className="mt-3">
+                      <div className="flex items-center gap-3">
+                        <h3 className="text-muted-foreground type-label-sm">
+                          Workflow preview
+                        </h3>
+                        <span className="font-mono text-text-2 type-label-sm">
+                          {template.workflowStages.length} stages
+                        </span>
+                      </div>
+                      <div
+                        className="mt-2 flex flex-wrap items-center gap-1.5"
+                        aria-label={`${template.name} workflow stages`}
+                        role="list"
+                      >
+                        {(template.workflowStages.length
+                          ? template.workflowStages
+                          : [
+                              {
+                                id: "empty",
+                                label: "Add stages after creating the project",
+                                purpose: "planned" as const,
+                              },
+                            ]
+                        )
+                          .slice(0, 4)
+                          .map((stage, index) => (
+                            <span
+                              key={`${template.id}-${stage.id}-${index}`}
+                              className="inline-flex items-center gap-1.5"
+                            >
+                              <span
+                                role="listitem"
+                                className="rounded-inner bg-tile px-1.5 py-0.5 text-text-1 type-label-sm"
+                              >
+                                {stage.label}
+                              </span>
+                              {index <
+                              Math.min(template.workflowStages.length, 4) -
+                                1 ? (
+                                <span
+                                  aria-hidden="true"
+                                  className="text-text-2"
+                                >
+                                  →
+                                </span>
+                              ) : null}
+                            </span>
+                          ))}
+                        {template.workflowStages.length > 4 ? (
+                          <span className="text-text-2 type-label-sm">
+                            +{template.workflowStages.length - 4}
+                          </span>
+                        ) : null}
+                      </div>
+                      <p className="mt-2 flex gap-3 text-text-3 type-label-sm">
+                        <span>{template.deliverables.length} deliverables</span>
+                        <span>
+                          {template.checklistItems.length} checklist items
+                        </span>
+                      </p>
+                    </div>
                   </div>
-                ) : null}
-              </footer>
-            </article>
-          ))}
-        </ContentSection>
+
+                  <footer className="mt-auto flex flex-wrap items-center gap-2 pt-1">
+                    <OwnedButton
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => onUseTemplate(template)}
+                      disabled={
+                        template.archived ||
+                        (customTemplatesLocked && template.custom)
+                      }
+                    >
+                      Use template
+                    </OwnedButton>
+                    <OwnedButton
+                      type="button"
+                      size="sm"
+                      variant="ghost"
+                      aria-label={`Copy ${template.name} template`}
+                      onClick={() => copyTemplate(template)}
+                      disabled={!canManageTemplates || customTemplatesLocked}
+                    >
+                      <Copy aria-hidden="true" />
+                      Copy
+                    </OwnedButton>
+                    {template.custom && canManageTemplates ? (
+                      <div className="flex items-center gap-1">
+                        <OwnedButton
+                          type="button"
+                          size="sm"
+                          variant="ghost"
+                          aria-label={`Edit ${template.name} template`}
+                          onClick={() => openBuilder(template)}
+                          disabled={customTemplatesLocked}
+                        >
+                          <Pencil aria-hidden="true" />
+                          Edit
+                        </OwnedButton>
+                        <OwnedButton
+                          type="button"
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => archiveTemplate(template)}
+                          disabled={customTemplatesLocked}
+                        >
+                          {template.archived ? "Restore" : "Archive"}
+                        </OwnedButton>
+                        <OwnedButton
+                          type="button"
+                          size="sm"
+                          variant="ghost"
+                          className="text-destructive hover:bg-destructive/10 hover:text-destructive"
+                          aria-label={`Delete ${template.name} template`}
+                          onClick={() => deleteTemplate(template.id)}
+                          disabled={customTemplatesLocked}
+                        >
+                          <Trash2 aria-hidden="true" />
+                          Delete
+                        </OwnedButton>
+                      </div>
+                    ) : null}
+                  </footer>
+                </article>
+              );
+            })}
+          </div>
+        </section>
       </PageContent>
 
       <OwnedDialog open={builderOpen} onOpenChange={setBuilderOpen}>
         <OwnedDialogContent className="max-h-[calc(100dvh-1rem)] overflow-y-auto sm:max-w-3xl">
           <OwnedDialogHeader>
             <OwnedDialogTitle>
-              {templateForm.id ? "Edit Custom Template" : "New Custom Template"}
+              {templateForm.id ? "Edit template" : "New template"}
             </OwnedDialogTitle>
             <OwnedDialogDescription>
               Save a reusable project setup. Enter one workflow stage,
@@ -620,7 +659,7 @@ export function TemplatesDesignPage({
             </div>
 
             {templateError ? (
-              <p role="alert" className="text-sm text-destructive">
+              <p role="alert" className="text-destructive type-body">
                 {templateError}
               </p>
             ) : null}

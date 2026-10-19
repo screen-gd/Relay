@@ -1,9 +1,10 @@
 "use client";
 
 import * as React from "react";
-import { CalendarDays, ChevronLeft, ChevronRight } from "lucide-react";
+import { CalendarDays, ChevronLeft, ChevronRight } from "@/components/icons";
 
 import { cn } from "@/lib/utils";
+import { fieldControlClassName } from "./field-control";
 import { Button } from "@/components/ui/button";
 import {
   Popover,
@@ -111,19 +112,23 @@ function DatePicker({
       }}
     >
       <PopoverTrigger asChild>
-        <Button
+        <button
           type="button"
-          variant="outline"
+          data-slot="date-picker-trigger"
+          data-control=""
           className={cn(
-            "w-full justify-start font-normal",
-            !isIsoDate(value) && "text-muted-foreground",
+            fieldControlClassName,
+            "flex h-(--control) items-center gap-2 px-2.5 text-start [&_svg]:size-4 [&_svg]:shrink-0 [&_svg]:text-text-3",
+            !isIsoDate(value) && "text-text-3",
             className
           )}
           {...triggerProps}
         >
           <CalendarDays aria-hidden="true" />
-          {isIsoDate(value) ? formatDate(value, dateFormat) : placeholder}
-        </Button>
+          <span className="min-w-0 truncate">
+            {isIsoDate(value) ? formatDate(value, dateFormat) : placeholder}
+          </span>
+        </button>
       </PopoverTrigger>
       <PopoverContent
         align="start"
@@ -139,7 +144,7 @@ function DatePicker({
           >
             <ChevronLeft />
           </Button>
-          <strong className="text-sm font-semibold">{monthLabel}</strong>
+          <strong className="type-label text-text-1">{monthLabel}</strong>
           <Button
             type="button"
             size="icon-sm"
@@ -158,7 +163,7 @@ function DatePicker({
           {orderedWeekdays(weekStart).map((day) => (
             <span
               key={day}
-              className="py-1 text-center text-[11px] font-medium text-muted-foreground"
+              className="py-1 text-center type-label-sm text-text-3"
             >
               {day.slice(0, 2)}
             </span>
@@ -178,11 +183,11 @@ function DatePicker({
                 aria-current={key === today ? "date" : undefined}
                 onClick={() => choose(key)}
                 className={cn(
-                  "w-full font-normal",
-                  !inMonth && !selected && "text-muted-foreground",
+                  "w-full data",
+                  !inMonth && !selected && "text-text-3",
                   key === today &&
                     !selected &&
-                    "font-semibold underline underline-offset-4"
+                    "text-text-1 underline underline-offset-4"
                 )}
               >
                 {date.getDate()}

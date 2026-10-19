@@ -1,14 +1,13 @@
-import { relay } from "@/app/design-system";
 import type { SettingsState } from "@/lib/types";
 
-export const headingFont = relay.font.heading;
+export const headingFont = "var(--font-sans)";
 // An empty preference leaves the theme's CSS accent in control.
 export const defaultAccent = "";
-export const accent = `var(--app-accent, ${relay.color.teal})`;
-export const border = "var(--app-border)";
-export const activeBg = "var(--app-active, rgba(45,140,151,0.18))";
-export const successColor = `var(--app-success, ${relay.color.success})`;
-export const warningColor = `var(--app-warning, ${relay.color.warning})`;
+export const accent = "var(--primary)";
+export const border = "var(--line-row)";
+export const activeBg = "var(--surface-selected)";
+export const successColor = "var(--text-1)";
+export const warningColor = "var(--warn-text)";
 
 export function applyRootThemeVariables(
   settings: Pick<SettingsState, "theme" | "accentColor">

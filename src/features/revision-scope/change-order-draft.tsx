@@ -54,7 +54,7 @@ function DraftEditor({ draft }: { draft: Doc<"changeOrderDrafts"> }) {
   });
   return (
     <div className="grid gap-2">
-      <p className="text-xs">AI-drafted · Review before sending</p>
+      <p className="type-label-sm">AI-drafted · Review before sending</p>
       <Input
         aria-label="Change order subject"
         value={subject}
@@ -96,7 +96,7 @@ function DraftEditor({ draft }: { draft: Doc<"changeOrderDrafts"> }) {
           Copy text
         </Button>
       </div>
-      <p className="flex flex-wrap gap-3 text-xs">
+      <p className="flex flex-wrap gap-3 type-label-sm">
         {draft.sourceOutputIds.map((id, index) => (
           <a
             key={id}
@@ -117,7 +117,7 @@ function DraftEditor({ draft }: { draft: Doc<"changeOrderDrafts"> }) {
         ))}
       </p>
       {status ? (
-        <p role="status" className="text-sm">
+        <p role="status" className="type-body">
           {status}
         </p>
       ) : null}
@@ -191,8 +191,8 @@ export function ChangeOrderDraft({
 
   return (
     <section aria-label="Change order" className="grid gap-3 pt-2">
-      <h4 className="text-sm font-semibold">Change order</h4>
-      <dl className="grid gap-1 text-xs">
+      <h4 className="type-label">Change order</h4>
+      <dl className="grid gap-1 type-label-sm">
         <div className="flex justify-between gap-3">
           <dt>Extra rounds</dt>
           <dd className="font-mono tabular-nums">
@@ -215,11 +215,11 @@ export function ChangeOrderDraft({
           </div>
         ) : null}
       </dl>
-      <label className="flex items-center gap-2 text-xs">
+      <label className="flex items-center gap-2 type-label-sm">
         Extra work hours
         <Input
           inputMode="decimal"
-          className="h-8 w-20"
+          className="w-20"
           placeholder="0"
           value={hoursText}
           disabled={running}
@@ -228,9 +228,9 @@ export function ChangeOrderDraft({
       </label>
       {options?.length ? (
         <fieldset className="grid gap-2">
-          <legend className="mb-1 text-xs">Include as extra scope</legend>
+          <legend className="mb-1 type-label-sm">Include as extra scope</legend>
           {options.map((item) => (
-            <label key={item._id} className="flex items-start gap-2 text-sm">
+            <label key={item._id} className="flex items-start gap-2 type-body">
               <Checkbox
                 className="mt-0.5"
                 checked={selected.includes(item._id)}
@@ -245,7 +245,7 @@ export function ChangeOrderDraft({
               />
               <span>
                 {item.text}
-                <span className="block text-xs">
+                <span className="block type-label-sm">
                   {item.outputTitle}
                   {item.possibleNewScope ? " · Possible new scope" : ""}
                 </span>
@@ -282,7 +282,7 @@ export function ChangeOrderDraft({
         />
       )}
       {latest && latest.status !== "succeeded" ? (
-        <p role="status" className="text-xs">
+        <p role="status" className="type-label-sm">
           {latest.status === "queued"
             ? "Queued"
             : latest.status === "running"
@@ -291,7 +291,7 @@ export function ChangeOrderDraft({
         </p>
       ) : null}
       {error ? (
-        <p role="alert" className="text-sm">
+        <p role="alert" className="type-body">
           {error}
         </p>
       ) : null}

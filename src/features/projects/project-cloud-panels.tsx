@@ -52,7 +52,13 @@ import { normalizeOptionalTimecode } from "@/lib/timecode";
 import type { WorkItem } from "@/lib/types";
 import { api } from "../../../convex/_generated/api";
 import { useQuery } from "convex/react";
-import { Clock3, Download, ExternalLink, History, Upload } from "lucide-react";
+import {
+  Clock3,
+  Download,
+  ExternalLink,
+  History,
+  Upload,
+} from "@/components/icons";
 import { useEffect, useRef, useState } from "react";
 import {
   useProjectActivityAdapter,
@@ -96,7 +102,7 @@ export function ProjectActivityFeed({
     <ContentSection titleId="project-activity-title" title="Project Activity">
       <div>
         {isConvexAuthLoading ? (
-          <p className="text-sm text-muted-foreground">
+          <p className="text-muted-foreground type-body">
             Connecting activity history...
           </p>
         ) : !isConvexAuthenticated ? (
@@ -164,17 +170,17 @@ function ActivityFeedItem({
   return (
     <div className="grid grid-cols-[16px_minmax(0,1fr)] gap-x-3">
       <div className="relative flex justify-center">
-        <span className="z-10 mt-[7px] size-2 rounded-sm bg-[var(--app-ink)]" />
+        <span className="z-10 mt-[7px] size-2 rounded-sm bg-ink" />
       </div>
       <div className={last ? "" : "pb-5"}>
-        <p className="text-sm leading-6">{message}</p>
+        <p className="type-body">{message}</p>
         {detail ? (
-          <p className="mt-1 whitespace-pre-wrap text-xs leading-relaxed text-muted-foreground">
+          <p className="mt-1 whitespace-pre-wrap text-muted-foreground type-label-sm">
             {detail}
           </p>
         ) : null}
         <p
-          className="mt-1 text-[11px] text-muted-foreground"
+          className="mt-1 text-muted-foreground type-label-sm"
           suppressHydrationWarning
         >
           {actor} {createdAt ? `· ${formatShortDateTime(createdAt)}` : ""}
@@ -492,7 +498,7 @@ export function ProjectFileManager({
         titleId="project-files-title"
         title="Project Files"
         metadata={
-          <OwnedBadge variant="secondary" className="rounded-sm">
+          <OwnedBadge variant="secondary">
             {files.length} {files.length === 1 ? "file" : "files"}
           </OwnedBadge>
         }
@@ -515,7 +521,7 @@ export function ProjectFileManager({
         }
       >
         {canEdit && isConvexAuthenticated && !canUploadFiles ? (
-          <div className="mb-4 rounded-lg bg-[var(--surface-inset)] p-4">
+          <div className="mb-4 rounded-lg bg-well p-4">
             <CapabilityUpgradePrompt capability="fileUploads" inline />
           </div>
         ) : null}
@@ -549,11 +555,11 @@ export function ProjectFileManager({
             aria-labelledby={`project-files-${view}-tab`}
           >
             {isConvexAuthLoading ? (
-              <p role="status" className="mt-4 text-sm text-muted-foreground">
+              <p role="status" className="mt-4 text-muted-foreground type-body">
                 Connecting project files...
               </p>
             ) : !isConvexAuthenticated ? (
-              <p className="mt-4 text-sm text-muted-foreground">
+              <p className="mt-4 text-muted-foreground type-body">
                 Sign in to upload and synchronize project files. Existing
                 integration links remain available above.
               </p>
@@ -579,7 +585,7 @@ export function ProjectFileManager({
                       </OwnedToggleGroupItem>
                     ))}
                   </OwnedToggleGroup>
-                  <OwnedLabel className="flex items-center gap-2 text-[13px] font-normal text-muted-foreground">
+                  <OwnedLabel className="flex items-center gap-2 text-muted-foreground type-body-sm">
                     <OwnedSwitch
                       checked={showArchived}
                       onCheckedChange={setShowArchived}
@@ -597,7 +603,7 @@ export function ProjectFileManager({
                           value={file._id}
                           data-testid="project-file-card"
                           data-file-title={file.title}
-                          className="-mx-3 rounded-lg border-b-0 px-3 transition-colors hover:bg-[var(--app-hover)] data-[state=open]:bg-[var(--app-hover)]"
+                          className="-mx-3 rounded-lg border-b-0 px-3 transition-colors hover:bg-hover data-[state=open]:bg-hover"
                         >
                           <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
                             <OwnedAccordionTrigger className="min-w-0 flex-1 py-3 hover:no-underline">
@@ -606,17 +612,11 @@ export function ProjectFileManager({
                                   <span className="truncate font-semibold">
                                     {file.title}
                                   </span>
-                                  <OwnedBadge
-                                    variant="secondary"
-                                    className="rounded-sm"
-                                  >
+                                  <OwnedBadge variant="secondary">
                                     {file.category}
                                   </OwnedBadge>
                                   {file.archived ? (
-                                    <OwnedBadge
-                                      variant="outline"
-                                      className="rounded-sm"
-                                    >
+                                    <OwnedBadge variant="outline">
                                       Archived
                                     </OwnedBadge>
                                   ) : null}
@@ -627,7 +627,6 @@ export function ProjectFileManager({
                                           ? "outline"
                                           : "default"
                                       }
-                                      className="rounded-sm"
                                     >
                                       {file.status === "draft"
                                         ? "Share when sent"
@@ -635,7 +634,7 @@ export function ProjectFileManager({
                                     </OwnedBadge>
                                   ) : null}
                                 </div>
-                                <p className="mt-1 truncate text-xs font-normal text-muted-foreground">
+                                <p className="mt-1 truncate text-muted-foreground type-label-sm">
                                   {latest
                                     ? `${latest.fileName} · v${latest.versionNumber} · ${formatFileSize(latest.size)} · ${latest.uploadedByName}`
                                     : "No versions"}
@@ -679,10 +678,7 @@ export function ProjectFileManager({
                                   </OwnedSelectContent>
                                 </OwnedSelect>
                               ) : (
-                                <OwnedBadge
-                                  variant="outline"
-                                  className="rounded-sm"
-                                >
+                                <OwnedBadge variant="outline">
                                   {approvalStatusLabel(file.status)}
                                 </OwnedBadge>
                               )}
@@ -702,7 +698,7 @@ export function ProjectFileManager({
                           </div>
                           <OwnedAccordionContent className="pb-3">
                             {file.description ? (
-                              <p className="mb-3 text-sm leading-relaxed text-muted-foreground">
+                              <p className="mb-3 text-muted-foreground type-body">
                                 {file.description}
                               </p>
                             ) : null}
@@ -710,15 +706,15 @@ export function ProjectFileManager({
                               {file.versions.map((version) => (
                                 <div
                                   key={version._id}
-                                  className="flex flex-col justify-between gap-2 rounded-lg bg-[var(--surface-inset)] px-4 py-3 sm:flex-row"
+                                  className="flex flex-col justify-between gap-2 rounded-lg bg-well px-4 py-3 sm:flex-row"
                                 >
                                   <div className="min-w-0">
-                                    <p className="text-sm font-medium">
+                                    <p className="type-label">
                                       Version {version.versionNumber} ·{" "}
                                       {version.fileName}
                                     </p>
                                     <p
-                                      className="mt-1 text-xs text-muted-foreground"
+                                      className="mt-1 text-muted-foreground type-label-sm"
                                       suppressHydrationWarning
                                     >
                                       {providerLabel(version.provider)} ·{" "}
@@ -734,7 +730,7 @@ export function ProjectFileManager({
                                         : "Approval state not recorded"}
                                     </p>
                                     {version.notes ? (
-                                      <p className="mt-1 text-xs text-muted-foreground">
+                                      <p className="mt-1 text-muted-foreground type-label-sm">
                                         {version.notes}
                                       </p>
                                     ) : null}
@@ -767,7 +763,7 @@ export function ProjectFileManager({
                                 </OwnedButton>
                                 {file.category === "Deliverable" ? (
                                   <>
-                                    <OwnedLabel className="flex items-center gap-2 text-xs font-normal text-muted-foreground">
+                                    <OwnedLabel className="flex items-center gap-2 text-muted-foreground type-label-sm">
                                       <OwnedSwitch
                                         checked={file.clientVisible}
                                         onCheckedChange={(checked) =>
@@ -785,7 +781,7 @@ export function ProjectFileManager({
                                         ? "Share when sent"
                                         : "Client visible"}
                                     </OwnedLabel>
-                                    <OwnedLabel className="flex items-center gap-2 text-xs font-normal text-muted-foreground">
+                                    <OwnedLabel className="flex items-center gap-2 text-muted-foreground type-label-sm">
                                       <OwnedSwitch
                                         checked={file.downloadable}
                                         onCheckedChange={(checked) =>
@@ -836,7 +832,7 @@ export function ProjectFileManager({
                     })}
                   </OwnedAccordion>
                 ) : (
-                  <p className="py-2 text-sm text-muted-foreground">
+                  <p className="py-2 text-muted-foreground type-body">
                     No{" "}
                     {categoryFilter === "All"
                       ? "project files"
@@ -855,19 +851,19 @@ export function ProjectFileManager({
                     return (
                       <div
                         key={version._id}
-                        className="-mx-3 flex gap-3 rounded-lg px-3 py-3 hover:bg-[var(--app-hover)]"
+                        className="-mx-3 flex gap-3 rounded-lg px-3 py-3 hover:bg-hover"
                       >
                         <History
                           className="mt-0.5 size-4 shrink-0 text-muted-foreground"
                           aria-hidden="true"
                         />
                         <div className="min-w-0 flex-1">
-                          <p className="text-sm font-medium">
+                          <p className="type-label">
                             {file?.title ?? version.fileName} · Version{" "}
                             {version.versionNumber}
                           </p>
                           <p
-                            className="mt-1 text-xs text-muted-foreground"
+                            className="mt-1 text-muted-foreground type-label-sm"
                             suppressHydrationWarning
                           >
                             {version.fileName} · {formatFileSize(version.size)}{" "}
@@ -897,7 +893,7 @@ export function ProjectFileManager({
                     );
                   })
                 ) : (
-                  <p className="py-2 text-sm text-muted-foreground">
+                  <p className="py-2 text-muted-foreground type-body">
                     Upload history will appear after the first file or linked
                     version is added.
                   </p>
@@ -907,7 +903,7 @@ export function ProjectFileManager({
           </OwnedTabsContent>
         </OwnedTabs>
         {error && !dialogOpen ? (
-          <p role="alert" className="mt-3 text-sm text-destructive">
+          <p role="alert" className="mt-3 text-destructive type-body">
             {error}
           </p>
         ) : null}
@@ -919,7 +915,7 @@ export function ProjectFileManager({
           if (!open) cancelUpload();
         }}
       >
-        <OwnedDialogContent className="max-h-[min(92dvh,760px)] overflow-y-auto border-border bg-background text-foreground sm:max-w-xl">
+        <OwnedDialogContent className="max-h-[min(92dvh,760px)] overflow-y-auto sm:max-w-xl">
           <OwnedDialogHeader>
             <OwnedDialogTitle>
               {targetFileId ? "Add File Version" : "Add Project File"}
@@ -991,7 +987,7 @@ export function ProjectFileManager({
             </FieldLayout>
             {!targetFileId && category === "Deliverable" ? (
               <div className="flex flex-col gap-3 sm:flex-row sm:gap-6">
-                <OwnedLabel className="flex items-center gap-2 text-sm font-normal text-muted-foreground">
+                <OwnedLabel className="flex items-center gap-2 text-muted-foreground type-body">
                   <OwnedSwitch
                     checked={clientVisible}
                     onCheckedChange={setClientVisible}
@@ -1005,7 +1001,7 @@ export function ProjectFileManager({
                     ? "Share when sent"
                     : "Show in Client Portal"}
                 </OwnedLabel>
-                <OwnedLabel className="flex items-center gap-2 text-sm font-normal text-muted-foreground">
+                <OwnedLabel className="flex items-center gap-2 text-muted-foreground type-body">
                   <OwnedSwitch
                     checked={downloadable}
                     onCheckedChange={setDownloadable}
@@ -1016,7 +1012,7 @@ export function ProjectFileManager({
               </div>
             ) : null}
             {error ? (
-              <p role="alert" className="text-sm text-destructive">
+              <p role="alert" className="text-destructive type-body">
                 {error}
               </p>
             ) : null}
@@ -1125,56 +1121,47 @@ export function ProjectDetailCollaborationPanel({
       actions={
         assignedMembers.length ? (
           assignedMembers.map((member) => (
-            <OwnedBadge
-              key={member.userId}
-              variant="secondary"
-              className="rounded-sm"
-            >
+            <OwnedBadge key={member.userId} variant="secondary">
               {member.name || member.email}
             </OwnedBadge>
           ))
         ) : (
-          <OwnedBadge variant="outline" className="rounded-sm">
-            Unassigned
-          </OwnedBadge>
+          <OwnedBadge variant="outline">Unassigned</OwnedBadge>
         )
       }
     >
       <div className="mb-4 grid max-h-72 gap-2 overflow-y-auto">
         {isConvexAuthLoading ? (
-          <p className="text-sm text-muted-foreground">
+          <p className="text-muted-foreground type-body">
             Connecting Team comments...
           </p>
         ) : !isConvexAuthenticated ? (
-          <p role="alert" className="text-sm text-destructive">
+          <p role="alert" className="text-destructive type-body">
             Team comments require Convex auth. Check Team sync before posting
             comments.
           </p>
         ) : projectComments === undefined ? (
-          <p className="text-sm text-muted-foreground">Loading comments...</p>
+          <p className="text-muted-foreground type-body">Loading comments...</p>
         ) : projectComments.length ? (
           projectComments.map((comment) => (
-            <article
-              key={comment._id}
-              className="rounded-lg bg-[var(--surface-inset)] p-3"
-            >
-              <p className="text-sm font-semibold">
+            <article key={comment._id} className="rounded-lg bg-well p-3">
+              <p className="type-label">
                 {comment.authorName}{" "}
                 <span
-                  className="text-xs font-normal text-muted-foreground"
+                  className="text-muted-foreground type-label-sm"
                   suppressHydrationWarning
                 >
                   {formatShortDateTime(comment.createdAt)}
                 </span>
               </p>
               <ProjectTimecodeBadge value={comment.timecode} />
-              <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed">
+              <p className="mt-2 whitespace-pre-wrap type-body">
                 {comment.body}
               </p>
             </article>
           ))
         ) : (
-          <p className="text-sm text-muted-foreground">
+          <p className="text-muted-foreground type-body">
             No comments yet. Add a note for the team or mention someone with
             @name.
           </p>
@@ -1218,7 +1205,7 @@ export function ProjectDetailCollaborationPanel({
           </OwnedButton>
         </div>
       ) : (
-        <p className="text-sm text-muted-foreground">
+        <p className="text-muted-foreground type-body">
           Your team role can view comments but cannot add new ones.
         </p>
       )}

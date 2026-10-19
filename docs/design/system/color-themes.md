@@ -1,37 +1,26 @@
 # Color and themes
 
-## Purpose
+Quartz builds every surface and text color from four oklch channels per theme: ink, paper, grey and canvas. Light uses Quartz's values. Dark is Relay's near-black chassis in `src/styles/relay-theme.css`:
 
-Use one semantic palette across light, dark, accent, status, and selection states.
+| Channel | Dark value        | Renders about | Used for                                       |
+| ------- | ----------------- | ------------- | ---------------------------------------------- |
+| canvas  | `13.5% 0.003 265` | `#080809`     | sidebar, behind the viewport                   |
+| paper   | `17% 0.004 265`   | `#0f0f11`     | the viewport, inputs, panel bodies             |
+| grey    | `21.5% 0.005 265` | `#18191c`     | panels (fields), wells, tiles                  |
+| ink     | `97.5% 0.002 265` | near white    | primary text, primary button, checked controls |
 
-## Anatomy
+## Roles
 
-Define canvas, surface, foreground, muted, border, input, primary, secondary, accent, destructive, success, warning, info, focus, and selection tokens. Keep Relay's dark-first base: graphite canvas/surfaces, teal action, cyan highlight, green success, amber warning, red error.
+- Surfaces: `bg-canvas`, `bg-page`, `bg-well`, `bg-raised`, `bg-hover`, `bg-selected`, `bg-tile`, `bg-overlay`.
+- Text: `text-text-1`, `text-text-2`, `text-text-3`, `text-text-disabled`, `text-text-inverse`.
+- Lines: `--line-row` (row rules), `--line-frame` (panel and overlay frames), `--line-control` (field edges).
+- Trouble only: `text-warn-text`, `bg-warn-wash`, `text-fail-text`, `bg-fail-wash`, `--fail-line`.
+- `primary` is ink unless the person picks an accent in Appearance; the picked color is written to `--app-accent` on `<html>`.
 
-## Behavior
+## Legacy names
 
-Feature code consumes CSS variables. Dark mode overrides the same names. Use color to reinforce status, with text, icon, label, or shape as a second cue.
+The pre-Quartz `--app-*`, `--surface-panel` and `--status-*` names are aliases to Quartz roles so nothing renders unstyled. New code uses the Quartz names; `pnpm check:design` keeps the count of legacy references at zero.
 
-`globals.css` is the source of truth for theme values. Runtime theme code sets the light or dark class and may override only `--app-accent` and its contrast-safe foreground. Provider brand colors (`--brand-*`), workflow stage colors (`--workflow-stage-*`), and decorative media palettes (`--decorative-thumb-*`, `--media-package-*`) are named tokens because they carry brand or grouping meaning rather than interface state.
+## Themes
 
-## States
-
-Check default, hover, active, selected, disabled, error, success, warning, focus, chart, placeholder, and read-only tokens in both themes.
-
-## Responsive rules
-
-Theme changes do not alter layout. Theme and accent boot before hydration to avoid a flash.
-
-## Accessibility
-
-Meet 4.5:1 text contrast and 3:1 non-text contrast, including borders, charts, focus, and disabled-adjacent content. Never rely on color alone.
-
-## Preserved features
-
-Keep theme, accent, and stored preference boot behavior and existing brand assets.
-
-## Acceptance checks
-
-- Token audit finds no raw feature colors.
-- Light, dark, and accent captures pass contrast checks.
-- Status remains clear in grayscale and with assistive text.
+Light, Dark and System, chosen in the workspace menu or Appearance. The boot script applies the choice before first paint by toggling `.dark` and `data-theme` on `<html>`; the `.quartz` scope on `<body>` follows it.

@@ -1,40 +1,18 @@
 "use client";
 
 import {
-  ArrowRight,
-  BriefcaseBusiness,
-  CheckCircle2,
-  CircleDollarSign,
   Copy,
-  Clock3,
   Download,
-  FolderKanban,
-  MessageSquareText,
+  MoreHorizontal,
   Plus,
   Search,
-  UsersRound,
   X,
-} from "lucide-react";
-import { AnimatePresence, motion } from "motion/react";
+} from "@/components/icons";
 import { Link } from "@tanstack/react-router";
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { Fragment, useEffect, useMemo, useState, type ReactNode } from "react";
 import { useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
-import { AreaChart } from "@/components/dither-kit/area-chart";
-import { Area } from "@/components/dither-kit/area";
-import { Grid } from "@/components/dither-kit/grid";
-import { PieChart } from "@/components/dither-kit/pie-chart";
-import { Pie } from "@/components/dither-kit/pie";
-import { Tooltip as ChartTooltip } from "@/components/dither-kit/tooltip";
-import { XAxis } from "@/components/dither-kit/x-axis";
-import { YAxis } from "@/components/dither-kit/y-axis";
-import {
-  PALETTE,
-  rgb,
-  type DitherColor,
-} from "@/components/dither-kit/palette";
 import type { Client, SalaryBatch, SettingsState, WorkItem } from "@/lib/types";
-import { useHydratedReducedMotion } from "@/lib/motion";
 import {
   paymentStatusTone,
   projectStatusTone,
@@ -42,7 +20,6 @@ import {
 import {
   buildPayoutReport,
   payoutReportToCsv,
-  PAYOUT_PERIODS,
   type PayoutPeriod,
 } from "@/lib/payout-reporting";
 import {
@@ -54,7 +31,6 @@ import { Badge } from "@/components/ui/badge";
 import { CapabilityUpgradePrompt } from "@/components/subscription-plans";
 import { projectLink } from "@/features/projects/project-view";
 import { Button } from "@/components/ui/button";
-import { Empty } from "@/components/ui/empty";
 import {
   Dialog,
   DialogContent,
@@ -65,6 +41,31 @@ import {
 } from "@/components/ui/dialog";
 import { DatePicker } from "@/components/ui/date-picker";
 import { Input } from "@/components/ui/input";
+import { AreaChart } from "@/components/dither-kit/area-chart";
+import { Area } from "@/components/dither-kit/area";
+import { BarChart } from "@/components/dither-kit/bar-chart";
+import { Bar } from "@/components/dither-kit/bar";
+import { Grid } from "@/components/dither-kit/grid";
+import { PieChart } from "@/components/dither-kit/pie-chart";
+import { Pie } from "@/components/dither-kit/pie";
+import { Tooltip as ChartTooltip } from "@/components/dither-kit/tooltip";
+import { XAxis } from "@/components/dither-kit/x-axis";
+import { YAxis } from "@/components/dither-kit/y-axis";
+import {
+  PALETTE,
+  rgb,
+  type DitherColor,
+} from "@/components/dither-kit/palette";
+import { useHydratedReducedMotion } from "@/lib/motion";
+
+/** Series colors for the dither charts, in order of use. */
+const ditherColors = [
+  "lime",
+  "blue",
+  "green",
+  "purple",
+  "pink",
+] satisfies DitherColor[];
 import {
   Select,
   SelectContent,
@@ -82,13 +83,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
-import {
   ContentSection,
-  FillViewport,
   MasterDetail,
   MetricItem,
   MetricStrip,
@@ -96,12 +91,18 @@ import {
   PageContent,
   PageEmptyState,
   PageHeader,
-  SplitPane,
+  PageToolbar,
+  SectionNav,
+  sectionListClassName,
+  sectionRowClassName,
   WorkspacePage,
 } from "@/components/workspace-page";
-
-const MotionButton = motion.create(Button);
-const MotionEmpty = motion.create(Empty);
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 function delivered(project: WorkItem) {
   return project.status === "Delivered";
@@ -172,7 +173,6 @@ type ClientRecord = Client & {
   outstanding: number;
 };
 
-const revealTransition = { duration: 0.22, ease: [0.22, 1, 0.36, 1] } as const;
 const payoutPeriods = ["month", "quarter", "year", "custom", "all"] as const;
 
 export function PrecisionClients({
@@ -204,7 +204,6 @@ export function PrecisionClients({
   const [hubMessage, setHubMessage] = useState("");
   const addHubContact = useMutation(api.clientHub.addContact);
   const [editingClient, setEditingClient] = useState<Client | null>(null);
-  const reduceMotion = useHydratedReducedMotion();
 
   const clients = useMemo(() => {
     const savedRecords = settings.clients.length
@@ -369,8 +368,8 @@ export function PrecisionClients({
         actions={
           <PageActions
             primary={
-              <Button className="h-9" onClick={() => setAddOpen(true)}>
-                <Plus /> New Client
+              <Button size="sm" onClick={() => setAddOpen(true)}>
+                <Plus /> New client
               </Button>
             }
             more={[
@@ -385,356 +384,337 @@ export function PrecisionClients({
       />
 
       <PageContent mode="fill">
-        {clients.length ? (
-          <MetricStrip columns={3}>
-            <MetricItem
-              label="Clients"
-              value={clients.length}
-              icon={<UsersRound className="size-4" />}
-              className="rounded-xl"
-            />
-            <MetricItem
-              label="Active projects"
-              value={projects.filter(active).length}
-              icon={<FolderKanban className="size-4" />}
-              className="rounded-xl"
-            />
-            <MetricItem
-              label="Delivered"
-              value={projects.filter(delivered).length}
-              icon={<CheckCircle2 className="size-4" />}
-              className="rounded-xl"
-            />
-          </MetricStrip>
-        ) : null}
-
-        <FillViewport
-          bodyLabel="Client workspace"
-          bodyClassName="overflow-visible lg:overflow-hidden"
-        >
-          <MasterDetail
-            className={cn(
-              "min-h-full gap-3 lg:h-full lg:min-h-0 lg:overflow-hidden",
-              !clients.length &&
-                !query.trim() &&
-                "lg:grid-cols-1 [&>div:first-child]:hidden"
-            )}
-            master={
-              <aside className="flex min-h-0 flex-col overflow-hidden rounded-xl border border-[var(--app-border)] bg-[var(--app-panel)] lg:h-full">
-                <div className="border-b border-[var(--app-border)] bg-[var(--app-soft-panel)] p-3">
-                  <div className="relative">
-                    <Search className="pointer-events-none absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-[var(--app-muted)]" />
-                    <Input
-                      value={query}
-                      onChange={(event) => setQuery(event.target.value)}
-                      placeholder="Search clients..."
-                      aria-label="Search clients"
-                      className="h-9 bg-[var(--app-panel)] pl-8 pr-8 text-xs"
-                    />
-                    {query ? (
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="icon-xs"
-                            aria-label="Clear client search"
-                            className="absolute right-1.5 top-1/2 -translate-y-1/2 text-[var(--app-muted)] hover:text-[var(--app-text)]"
-                            onClick={() => setQuery("")}
-                          >
-                            <X className="size-3.5" />
-                          </Button>
-                        </TooltipTrigger>
-                        <TooltipContent>Clear search</TooltipContent>
-                      </Tooltip>
-                    ) : null}
-                  </div>
-                </div>
-                <div
-                  className="min-h-0 flex-1 divide-y divide-[var(--app-border)] overflow-y-auto overscroll-contain"
-                  tabIndex={0}
-                  aria-label="Scrollable client directory"
-                >
-                  {clients.map((client, index) => (
-                    <MotionButton
-                      key={client.name}
+        <MasterDetail
+          className={cn(
+            "min-h-0 flex-1 gap-4 lg:overflow-hidden",
+            !clients.length &&
+              !query.trim() &&
+              "lg:grid-cols-1 [&>div:first-child]:hidden"
+          )}
+          master={
+            <aside className="flex min-h-0 flex-col overflow-hidden rounded-frame bg-well p-1 lg:h-full">
+              <div className="flex items-center gap-2 px-2 pt-1 pb-2">
+                <div className="relative min-w-0 flex-1">
+                  <Search
+                    aria-hidden="true"
+                    className="pointer-events-none absolute start-2.5 top-1/2 size-3.5 -translate-y-1/2 text-text-3"
+                  />
+                  <Input
+                    value={query}
+                    onChange={(event) => setQuery(event.target.value)}
+                    placeholder="Search clients"
+                    aria-label="Search clients"
+                    className="ps-8 pe-8"
+                  />
+                  {query ? (
+                    <Button
                       type="button"
                       variant="ghost"
+                      size="icon-xs"
+                      aria-label="Clear client search"
+                      className="absolute end-1.5 top-1/2 -translate-y-1/2"
+                      onClick={() => setQuery("")}
+                    >
+                      <X />
+                    </Button>
+                  ) : null}
+                </div>
+                <span className="shrink-0 text-text-3 type-label-sm data">
+                  {clients.length}
+                </span>
+              </div>
+              <ul
+                className="min-h-0 flex-1 overflow-y-auto overscroll-contain rounded-soft bg-page shadow-[0_0_0_1px_var(--line-frame)]"
+                aria-label="Client directory"
+              >
+                {clients.map((client) => (
+                  <li key={client.name} className="rule-row">
+                    <button
+                      type="button"
                       aria-pressed={selected?.name === client.name}
-                      initial={reduceMotion ? false : { opacity: 0, x: -5 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={
-                        reduceMotion
-                          ? { duration: 0 }
-                          : {
-                              ...revealTransition,
-                              delay: Math.min(index * 0.025, 0.18),
-                            }
-                      }
                       className={cn(
-                        "relative h-auto w-full justify-start gap-3 px-3 py-3 text-left font-normal whitespace-normal hover:bg-[var(--app-hover)] dark:hover:bg-[var(--app-hover)] focus-visible:z-10 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--app-highlight)] active:translate-y-0 active:scale-100",
-                        selected?.name === client.name &&
-                          "bg-[var(--app-active)]"
+                        "flex w-full items-center gap-3 px-3 py-2.5 text-start outline-none transition-colors duration-(--dur-fast) hover:bg-hover focus-visible:focus-ring-inset",
+                        selected?.name === client.name && "bg-selected"
                       )}
                       aria-label={`${client.name}, ${client.projects.length} projects, ${client.active} active`}
                       onClick={() => setSelectedName(client.name)}
                     >
-                      {selected?.name === client.name ? (
-                        <span className="absolute inset-y-2 left-0 w-0.5 rounded-full bg-[var(--app-highlight)]" />
-                      ) : null}
-                      <span className="grid size-9 shrink-0 place-items-center rounded-md bg-[var(--app-panel)] text-xs font-semibold text-[var(--app-highlight)] ring-1 ring-[var(--app-border)]">
+                      <span className="grid size-7 shrink-0 place-items-center rounded-full bg-tile text-text-1 type-label-sm">
                         {clientInitials(client.name)}
                       </span>
                       <span className="min-w-0 flex-1">
-                        <span className="block truncate text-xs font-semibold">
+                        <span className="block truncate text-text-1 type-label">
                           {client.name}
                         </span>
-                        <span className="mt-0.5 block text-[10px] text-[var(--app-muted)]">
-                          {client.projects.length} projects · {client.active}{" "}
-                          active
+                        <span className="mt-0.5 flex gap-2 text-text-3 type-label-sm">
+                          <span>{client.projects.length} projects</span>
+                          <span>{client.active} active</span>
                         </span>
                       </span>
-                      <ArrowRight className="size-3.5 text-[var(--app-muted)]" />
-                    </MotionButton>
-                  ))}
-                  {!clients.length ? (
-                    <Empty className="flex-none gap-0 rounded-none border-0 p-6 text-center text-xs text-[var(--app-muted)] [text-wrap:wrap] md:p-6">
-                      {query.trim()
-                        ? `No clients match "${query.trim()}". Clear the search to see them all.`
-                        : showArchived
-                          ? "No clients yet. Create your first client to group projects and payment history."
-                          : "No clients yet. Create your first client, or show archived clients from More."}
-                    </Empty>
-                  ) : null}
-                </div>
-              </aside>
-            }
-            detail={
-              <div className="h-full">
-                {selected ? (
-                  <main className="flex min-h-0 min-w-0 flex-col overflow-hidden rounded-xl border border-[var(--app-border)] bg-[var(--app-panel)] lg:h-full">
-                    <div className="flex flex-col gap-4 border-b border-[var(--app-border)] p-5 sm:flex-row sm:items-start">
-                      <span className="grid size-12 shrink-0 place-items-center rounded-lg bg-[var(--app-active)] text-sm font-semibold text-[var(--app-highlight)] ring-1 ring-[var(--app-border)]">
-                        {clientInitials(selected.name)}
-                      </span>
-                      <div className="min-w-0 flex-1">
-                        <h2 className="truncate text-lg font-semibold">
-                          {selected.name}
-                        </h2>
-                        <p className="mt-1 text-xs text-[var(--app-muted)]">
-                          {selected.company ||
-                            `${selected.active} active projects · ${selected.delivered} delivered`}
-                        </p>
-                      </div>
+                    </button>
+                  </li>
+                ))}
+                {!clients.length ? (
+                  <li>
+                    <PageEmptyState
+                      compact
+                      title={
+                        query.trim() ? "No clients match" : "No clients yet"
+                      }
+                      description={
+                        query.trim()
+                          ? `Nothing matches "${query.trim()}". Clear the search to see every client.`
+                          : showArchived
+                            ? "Create a client to group projects and payments."
+                            : "Create a client, or show archived clients from the More menu."
+                      }
+                    />
+                  </li>
+                ) : null}
+              </ul>
+            </aside>
+          }
+          detail={
+            selected ? (
+              <section
+                aria-label={`${selected.name} details`}
+                className="@container flex min-h-0 flex-col gap-4 overflow-y-auto overscroll-contain lg:h-full"
+              >
+                <header className="flex flex-wrap items-start gap-3">
+                  <div className="min-w-0 flex-1">
+                    <h2 className="truncate text-text-1 type-heading-sm">
+                      {selected.name}
+                    </h2>
+                    <p className="mt-1 flex flex-wrap gap-3 text-text-2 type-label-sm">
+                      {selected.company ? (
+                        <span>{selected.company}</span>
+                      ) : null}
+                      <span>{selected.active} active</span>
+                      <span>{selected.delivered} delivered</span>
+                      {selected.archived ? (
+                        <span className="text-text-3">Archived</span>
+                      ) : null}
+                    </p>
+                  </div>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => setEditingClient(selected)}
+                  >
+                    Edit
+                  </Button>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
                       <Button
-                        variant="outline"
-                        className="h-8 self-start rounded-lg text-xs"
-                        onClick={() => setEditingClient(selected)}
+                        variant="ghost"
+                        size="icon-sm"
+                        aria-label={`More actions for ${selected.name}`}
                       >
-                        Edit
+                        <MoreHorizontal />
                       </Button>
-                      <Button
-                        variant="outline"
-                        className="h-8 self-start rounded-lg text-xs"
-                        onClick={() =>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem
+                        onSelect={() => void copyClientName(selected.name)}
+                      >
+                        <Copy />
+                        {copiedName === selected.name
+                          ? "Name copied"
+                          : "Copy name"}
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onSelect={() =>
                           onUpdateClient({
                             ...selected,
                             archived: !selected.archived,
                           })
                         }
                       >
-                        {selected.archived ? "Restore" : "Archive"}
-                      </Button>
-                      <Button
-                        variant="outline"
-                        className="h-8 self-start rounded-lg border-[var(--app-border)] bg-[var(--app-panel)] text-xs"
-                        onClick={() => void copyClientName(selected.name)}
-                        aria-label={
-                          copiedName === selected.name
-                            ? `${selected.name} copied`
-                            : `Copy ${selected.name} to clipboard`
-                        }
-                      >
-                        {copiedName === selected.name ? (
-                          <CheckCircle2 />
-                        ) : (
-                          <Copy />
-                        )}
-                        {copiedName === selected.name ? "Copied" : "Copy name"}
-                      </Button>
-                    </div>
-                    <div className="grid grid-cols-2 gap-2 border-b border-[var(--app-border)] p-4 sm:grid-cols-4">
-                      <ClientMetric
-                        label="Projects"
-                        value={String(selected.projects.length)}
-                      />
-                      <ClientMetric
-                        label="Earned"
-                        value={money(selected.earned, settings.currencyCode)}
-                      />
-                      <ClientMetric
-                        label="Paid"
-                        value={money(selected.collected, settings.currencyCode)}
-                      />
-                      <ClientMetric
-                        label="Unpaid"
-                        value={money(
-                          selected.outstanding,
-                          settings.currencyCode
-                        )}
-                      />
-                    </div>
-                    {[
-                      selected.contactName,
-                      selected.email,
-                      selected.phone,
-                      selected.notes,
-                    ].some(Boolean) ? (
-                      <dl className="grid gap-3 border-b border-[var(--app-border)] p-5 text-xs sm:grid-cols-2">
-                        {[
-                          ["Contact", selected.contactName],
-                          ["Email", selected.email],
-                          ["Phone", selected.phone],
-                          ["Notes", selected.notes],
-                        ]
-                          .filter((entry) => entry[1])
-                          .map(([label, value]) => (
-                            <div key={label}>
-                              <dt className="text-[10px] uppercase tracking-[0.08em] text-[var(--app-muted)]">
-                                {label}
-                              </dt>
-                              <dd className="mt-1 text-[var(--app-ink)]">
-                                {value}
-                              </dd>
-                            </div>
-                          ))}
-                      </dl>
-                    ) : null}
-                    <div className="grid gap-3 border-b border-[var(--app-border)] bg-[var(--app-soft-panel)]/45 p-4 sm:grid-cols-[1fr_1fr_auto]">
-                      <Input
-                        value={hubContactName}
-                        onChange={(event) =>
-                          setHubContactName(event.target.value)
-                        }
-                        placeholder="Contact name"
-                        aria-label="Client Hub contact name"
-                      />
-                      <Input
-                        type="email"
-                        value={hubContactEmail}
-                        onChange={(event) =>
-                          setHubContactEmail(event.target.value)
-                        }
-                        placeholder="contact@example.com"
-                        aria-label="Client Hub contact email"
-                      />
-                      <Button
-                        type="button"
-                        variant="outline"
-                        onClick={() => void grantHubAccess(selected.id)}
-                      >
-                        Add Hub access
-                      </Button>
-                      {hubMessage ? (
-                        <p className="text-xs sm:col-span-3">{hubMessage}</p>
-                      ) : null}
-                    </div>
-                    <section
-                      className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-5"
-                      tabIndex={0}
-                      aria-label="Scrollable client project history"
-                    >
-                      <div className="mb-3 flex items-center justify-between">
-                        <div>
-                          <h3 className="text-sm font-semibold">
-                            Project history
-                          </h3>
-                          <p className="mt-0.5 text-[11px] text-[var(--app-muted)]">
-                            Current and completed work for this client.
-                          </p>
-                        </div>
-                      </div>
-                      {selected.projects.length ? (
-                        <div className="divide-y divide-[var(--app-border)] overflow-hidden rounded-xl border border-[var(--app-border)]">
-                          {selected.projects
-                            .slice()
-                            .sort((a, b) => b.dueDate.localeCompare(a.dueDate))
-                            .map((project) => (
-                              <Button
-                                key={project.id}
+                        {selected.archived
+                          ? "Restore client"
+                          : "Archive client"}
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </header>
+
+                <MetricStrip columns={4} aria-label={`${selected.name} totals`}>
+                  <MetricItem
+                    label="Projects"
+                    value={String(selected.projects.length)}
+                  />
+                  <MetricItem
+                    label="Earned"
+                    value={money(selected.earned, settings.currencyCode)}
+                  />
+                  <MetricItem
+                    label="Paid"
+                    value={money(selected.collected, settings.currencyCode)}
+                  />
+                  <MetricItem
+                    label="Unpaid"
+                    value={money(selected.outstanding, settings.currencyCode)}
+                  />
+                </MetricStrip>
+
+                {/* Projects lead; contact and Hub access sit beside them as the
+                    client's properties once the pane is wide enough, and above
+                    them when it is not. */}
+                <div className="grid items-start gap-4 @2xl:grid-cols-[minmax(0,1fr)_280px]">
+                  <ContentSection
+                    title="Projects"
+                    metadata={
+                      <span className="text-text-3 type-label-sm data">
+                        {selected.projects.length}
+                      </span>
+                    }
+                    bodyMode="flush"
+                  >
+                    {selected.projects.length ? (
+                      <ul className={sectionListClassName}>
+                        {selected.projects
+                          .slice()
+                          .sort((a, b) => b.dueDate.localeCompare(a.dueDate))
+                          .map((project) => (
+                            <li key={project.id}>
+                              <button
                                 type="button"
-                                variant="ghost"
-                                className="h-auto w-full grid justify-start gap-2 px-3 py-3 text-left font-normal whitespace-normal hover:bg-[var(--app-hover)] dark:hover:bg-[var(--app-hover)] focus-visible:z-10 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--app-highlight)] active:translate-y-0 active:scale-100 sm:grid-cols-[minmax(0,1fr)_120px_100px_auto] sm:items-center"
+                                className={cn(
+                                  sectionRowClassName,
+                                  "grid w-full gap-x-4 gap-y-1 text-start outline-none focus-visible:focus-ring-inset sm:grid-cols-[minmax(0,1fr)_110px_auto] sm:items-center"
+                                )}
                                 aria-label={`Open ${project.title}`}
                                 onClick={() => onViewProject(project)}
                               >
                                 <span className="min-w-0">
-                                  <span className="block truncate text-xs font-semibold">
+                                  <span className="block truncate text-text-1 type-label">
                                     {project.title}
                                   </span>
-                                  <span className="mt-0.5 block truncate text-[10px] text-[var(--app-muted)]">
+                                  <span className="mt-0.5 block truncate text-text-3 type-label-sm">
                                     {project.notes || project.workType}
                                   </span>
                                 </span>
-                                <span className="text-[11px] text-[var(--app-muted)]">
+                                <span className="text-text-2 type-label-sm data">
                                   {formatDate(project.dueDate)}
                                 </span>
                                 <Badge
-                                  variant="outline"
                                   className={cn(
-                                    "h-5 w-fit rounded px-1.5 text-[10px]",
+                                    "w-fit",
                                     projectStatusTone(project.status)
                                   )}
                                 >
                                   {project.status}
                                 </Badge>
-                                <ArrowRight className="size-3.5 text-[var(--app-muted)]" />
-                              </Button>
+                              </button>
+                            </li>
+                          ))}
+                      </ul>
+                    ) : (
+                      <PageEmptyState
+                        compact
+                        title="No projects yet"
+                        description="Pick this client when you create a project."
+                      />
+                    )}
+                  </ContentSection>
+
+                  <aside
+                    aria-label={`${selected.name} properties`}
+                    className="-order-1 grid gap-4 @2xl:order-none"
+                  >
+                    <ContentSection title="Contact">
+                      {[
+                        selected.contactName,
+                        selected.email,
+                        selected.phone,
+                        selected.notes,
+                      ].some(Boolean) ? (
+                        <dl className="grid grid-cols-[80px_minmax(0,1fr)] gap-x-3 gap-y-2 type-label">
+                          {[
+                            ["Contact", selected.contactName],
+                            ["Email", selected.email],
+                            ["Phone", selected.phone],
+                            ["Notes", selected.notes],
+                          ]
+                            .filter((entry) => entry[1])
+                            .map(([label, value]) => (
+                              <Fragment key={label}>
+                                <dt className="text-text-3">{label}</dt>
+                                <dd className="min-w-0 text-text-1 [overflow-wrap:anywhere]">
+                                  {value}
+                                </dd>
+                              </Fragment>
                             ))}
-                        </div>
+                        </dl>
                       ) : (
-                        <Empty className="min-h-56 flex-none gap-0 rounded-xl border border-dashed border-[var(--app-border)] p-0 text-center [text-wrap:wrap] md:p-0">
-                          <div>
-                            <BriefcaseBusiness className="mx-auto size-6 text-[var(--app-muted)]" />
-                            <p className="mt-2 text-sm font-semibold">
-                              No projects yet
-                            </p>
-                            <p className="mt-1 text-xs text-[var(--app-muted)]">
-                              Assign this client when creating a project.
-                            </p>
-                          </div>
-                        </Empty>
+                        <p className="text-text-2 type-body-sm">
+                          No contact details. Add them with Edit.
+                        </p>
                       )}
-                    </section>
-                  </main>
-                ) : (
-                  <main className="grid h-full min-h-[420px] place-items-center rounded-xl border border-[var(--app-border)] bg-[var(--app-panel)] p-6 text-center">
-                    <PageEmptyState
-                      icon={<UsersRound className="size-5" />}
-                      title="Add your first client"
-                      description="Create your first client to group projects, deliverables, and payment history."
-                      action={
-                        <Button
-                          className="h-8"
-                          size="sm"
-                          onClick={() => setAddOpen(true)}
-                        >
-                          <Plus /> New Client
-                        </Button>
-                      }
-                    />
-                  </main>
-                )}
-              </div>
-            }
-          />
-        </FillViewport>
+                    </ContentSection>
+                    <ContentSection
+                      title="Client Hub access"
+                      description="Give a contact a sign-in to this client's Hub."
+                    >
+                      <div className="grid gap-2">
+                        <Input
+                          value={hubContactName}
+                          onChange={(event) =>
+                            setHubContactName(event.target.value)
+                          }
+                          placeholder="Contact name"
+                          aria-label="Client Hub contact name"
+                        />
+                        <Input
+                          type="email"
+                          value={hubContactEmail}
+                          onChange={(event) =>
+                            setHubContactEmail(event.target.value)
+                          }
+                          placeholder="contact@example.com"
+                          aria-label="Client Hub contact email"
+                        />
+                        <div className="flex items-center justify-between gap-3">
+                          <p
+                            role="status"
+                            className="text-text-2 type-label-sm"
+                          >
+                            {hubMessage}
+                          </p>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            disabled={!hubContactEmail.trim()}
+                            onClick={() => void grantHubAccess(selected.id)}
+                          >
+                            Add access
+                          </Button>
+                        </div>
+                      </div>
+                    </ContentSection>
+                  </aside>
+                </div>
+              </section>
+            ) : (
+              <PageEmptyState
+                title="Add your first client"
+                description="Clients group projects, deliveries and payments in one place."
+                action={
+                  <Button size="sm" onClick={() => setAddOpen(true)}>
+                    <Plus /> New client
+                  </Button>
+                }
+              />
+            )
+          }
+        />
       </PageContent>
 
       <Dialog open={addOpen} onOpenChange={setAddOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>New Client</DialogTitle>
+            <DialogTitle>New client</DialogTitle>
             <DialogDescription>
               Create a client record now and assign it to projects later.
             </DialogDescription>
@@ -784,7 +764,7 @@ export function PrecisionClients({
               Cancel
             </Button>
             <Button onClick={addClient} disabled={!newClient.trim()}>
-              New Client
+              Create client
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -798,7 +778,7 @@ export function PrecisionClients({
       >
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Edit Client</DialogTitle>
+            <DialogTitle>Edit client</DialogTitle>
             <DialogDescription>
               Update the durable client record without changing its project
               links.
@@ -855,7 +835,7 @@ export function PrecisionClients({
                 setEditingClient(null);
               }}
             >
-              Save Client
+              Save client
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -873,7 +853,6 @@ export function PrecisionFeedback({
 }) {
   const [filter, setFilter] = useState<"All" | "Review" | "Revision">("All");
   const [selectedId, setSelectedId] = useState("");
-  const reduceMotion = useHydratedReducedMotion();
   const queue = useMemo(
     () =>
       projects
@@ -910,270 +889,183 @@ export function PrecisionFeedback({
   }, [selectedId, visibleQueue]);
 
   return (
-    <WorkspacePage family="master-detail">
+    <WorkspacePage family="master-detail" mode="fill">
       <PageHeader
         title="Client reviews"
-        description="Review notes, revisions, and approvals for each project."
+        description="Review notes, revisions and approvals for each project."
       />
-      <PageContent>
-        <MetricStrip columns={3}>
-          <MetricItem
-            label="Waiting for review"
-            value={queue.length}
-            icon={<MessageSquareText className="size-4" />}
-          />
-          <MetricItem
-            label="Revisions"
-            value={revisionCount}
-            icon={<Clock3 className="size-4" />}
-          />
-          <MetricItem
-            label="Delivered"
-            value={deliveredCount}
-            icon={<CheckCircle2 className="size-4" />}
-          />
-        </MetricStrip>
+      <PageContent mode="fill" className="gap-3">
+        <PageToolbar
+          primary={
+            <Tabs
+              value={filter}
+              onValueChange={(value) =>
+                setFilter(
+                  value === "Review" || value === "Revision" ? value : "All"
+                )
+              }
+            >
+              <TabsList aria-label="Filter review queue">
+                {(["All", "Review", "Revision"] as const).map((option) => {
+                  const count =
+                    option === "All"
+                      ? queue.length
+                      : queue.filter((project) =>
+                          option === "Revision"
+                            ? project.status === "Revision"
+                            : project.status !== "Revision"
+                        ).length;
+                  return (
+                    <TabsTrigger
+                      key={option}
+                      id={`review-${option.toLowerCase()}-tab`}
+                      aria-controls="review-queue-panel"
+                      value={option}
+                    >
+                      {option === "Revision" ? "Revisions" : option}
+                      <span className="text-text-3 type-label-sm data">
+                        {count}
+                      </span>
+                    </TabsTrigger>
+                  );
+                })}
+              </TabsList>
+            </Tabs>
+          }
+          secondary={
+            <span className="flex gap-3 text-text-3 type-label-sm">
+              <span>{revisionCount} in revision</span>
+              <span>{deliveredCount} delivered</span>
+            </span>
+          }
+        />
+        <span className="sr-only" aria-live="polite">
+          {visibleQueue.length} {filter.toLowerCase()} queue items shown
+        </span>
         <MasterDetail
           variant="detail-rail"
+          className="min-h-0 flex-1 gap-4 lg:grid-cols-[minmax(0,1fr)_360px] lg:overflow-hidden"
           master={
-            <ContentSection
-              title="Review Queue"
-              description="Active work requiring client or editor attention."
-              bodyMode="flush"
-              actions={
-                <Tabs
-                  value={filter}
-                  onValueChange={(value) =>
-                    setFilter(
-                      value === "Review" || value === "Revision" ? value : "All"
-                    )
-                  }
-                  className="block"
-                >
-                  <TabsList
-                    aria-label="Filter review queue"
-                    className="h-8 rounded-md border border-[var(--app-border)] bg-[var(--app-soft-panel)] p-0.5"
-                  >
-                    {(["All", "Review", "Revision"] as const).map((option) => {
-                      const count =
-                        option === "All"
-                          ? queue.length
-                          : queue.filter((project) =>
-                              option === "Revision"
-                                ? project.status === "Revision"
-                                : project.status !== "Revision"
-                            ).length;
-                      return (
-                        <TabsTrigger
-                          key={option}
-                          id={`review-${option.toLowerCase()}-tab`}
-                          aria-controls="review-queue-panel"
-                          value={option}
-                          className="h-7 px-2.5 text-[10px]"
-                        >
-                          {option}{" "}
-                          <span className="tabular-nums opacity-70">
-                            {count}
-                          </span>
-                        </TabsTrigger>
-                      );
-                    })}
-                  </TabsList>
-                </Tabs>
-              }
+            <div
+              id="review-queue-panel"
+              role="tabpanel"
+              aria-labelledby={`review-${filter.toLowerCase()}-tab`}
+              className="min-h-0 overflow-y-auto overscroll-contain rounded-frame bg-well p-1 lg:h-full"
             >
-              <span className="sr-only" aria-live="polite">
-                {visibleQueue.length} {filter.toLowerCase()} queue items shown
-              </span>
-              <div
-                id="review-queue-panel"
-                role="tabpanel"
-                aria-labelledby={`review-${filter.toLowerCase()}-tab`}
-                className="border-t border-[var(--app-border)]"
-              >
-                <AnimatePresence mode="popLayout" initial={false}>
-                  {visibleQueue.length ? (
-                    <motion.div
-                      key={filter}
-                      initial={reduceMotion ? false : { opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      exit={reduceMotion ? { opacity: 1 } : { opacity: 0 }}
-                      transition={
-                        reduceMotion ? { duration: 0 } : { duration: 0.16 }
-                      }
-                      className="divide-y divide-[var(--app-border)]"
-                    >
-                      {visibleQueue.map((project, index) => (
-                        <MotionButton
-                          key={project.id}
-                          type="button"
-                          variant="ghost"
-                          initial={reduceMotion ? false : { opacity: 0, y: 5 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={
-                            reduceMotion
-                              ? { duration: 0 }
-                              : {
-                                  ...revealTransition,
-                                  delay: Math.min(index * 0.03, 0.18),
-                                }
-                          }
-                          aria-pressed={selected?.id === project.id}
+              {visibleQueue.length ? (
+                <ul
+                  key={filter}
+                  className="animate-rise overflow-hidden rounded-soft bg-page shadow-[0_0_0_1px_var(--line-frame)]"
+                >
+                  {visibleQueue.map((project) => (
+                    <li key={project.id} className="rule-row">
+                      <button
+                        type="button"
+                        aria-pressed={selected?.id === project.id}
+                        className={cn(
+                          "grid w-full gap-x-4 gap-y-1 px-4 py-3 text-start outline-none transition-colors duration-(--dur-fast) hover:bg-hover focus-visible:focus-ring-inset sm:grid-cols-[minmax(0,1fr)_110px_auto] sm:items-center",
+                          selected?.id === project.id && "bg-selected"
+                        )}
+                        onClick={() => setSelectedId(project.id)}
+                        onDoubleClick={() => onViewProject(project)}
+                        onKeyDown={(event) => {
+                          if (
+                            event.key === "Enter" &&
+                            (event.metaKey || event.ctrlKey)
+                          )
+                            onViewProject(project);
+                        }}
+                      >
+                        <span className="min-w-0">
+                          <span className="block truncate text-text-1 type-label">
+                            {project.title}
+                          </span>
+                          <span className="mt-0.5 block truncate text-text-3 type-label-sm">
+                            {project.notes ||
+                              project.client ||
+                              project.workType}
+                          </span>
+                        </span>
+                        <span className="text-text-2 type-label-sm data">
+                          Due {formatDate(project.dueDate)}
+                        </span>
+                        <Badge
                           className={cn(
-                            "h-auto w-full grid justify-start gap-3 px-4 py-4 text-left font-normal whitespace-normal hover:bg-[var(--app-hover)] dark:hover:bg-[var(--app-hover)] focus-visible:z-10 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--app-highlight)] active:translate-y-0 active:scale-100 sm:grid-cols-[minmax(0,1fr)_150px_120px_auto] sm:items-center",
-                            selected?.id === project.id &&
-                              "bg-[var(--app-active)]"
+                            "w-fit",
+                            projectStatusTone(project.status)
                           )}
-                          onClick={() => setSelectedId(project.id)}
-                          onDoubleClick={() => onViewProject(project)}
-                          onKeyDown={(event) => {
-                            if (
-                              event.key === "Enter" &&
-                              (event.metaKey || event.ctrlKey)
-                            )
-                              onViewProject(project);
-                          }}
                         >
-                          <span className="min-w-0">
-                            <span className="block truncate text-[13px] font-semibold">
-                              {project.title}
-                            </span>
-                            <span className="mt-1 block truncate text-[11px] text-[var(--app-muted)]">
-                              {project.client || project.workType} ·{" "}
-                              {project.notes || "No review note"}
-                            </span>
-                          </span>
-                          <span className="text-[11px] text-[var(--app-muted)]">
-                            Due {formatDate(project.dueDate)}
-                          </span>
-                          <Badge
-                            variant="outline"
-                            className={cn(
-                              "h-5 w-fit rounded px-1.5 text-[10px]",
-                              projectStatusTone(project.status)
-                            )}
-                          >
-                            {project.status}
-                          </Badge>
-                          <span className="inline-flex h-7 items-center gap-1 justify-self-start rounded-md px-2 text-xs font-medium text-[var(--app-highlight)] sm:justify-self-end">
-                            Open <ArrowRight className="size-3.5" />
-                          </span>
-                        </MotionButton>
-                      ))}
-                    </motion.div>
-                  ) : (
-                    <MotionEmpty
-                      key={`empty-${filter}`}
-                      initial={reduceMotion ? false : { opacity: 0, y: 5 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={reduceMotion ? { opacity: 1 } : { opacity: 0 }}
-                      transition={
-                        reduceMotion ? { duration: 0 } : revealTransition
-                      }
-                      className="grid min-h-72 flex-none place-items-center gap-0 rounded-none border-0 px-5 py-6 text-center [text-wrap:wrap] md:px-5 md:py-6"
-                    >
-                      <div>
-                        <CheckCircle2 className="mx-auto size-7 text-[var(--app-success)]" />
-                        <p className="mt-2 text-sm font-semibold">
-                          {filter === "All"
-                            ? "Review queue is clear"
-                            : `No ${filter.toLowerCase()} items`}
-                        </p>
-                        <p className="mt-1 text-xs text-[var(--app-muted)]">
-                          {filter === "All"
-                            ? "Nothing is waiting on feedback. Request review on a project to start a new thread."
-                            : filter === "Revision"
-                              ? "Mark a project for revision to see it here."
-                              : "Request client review on a project to fill this queue."}
-                        </p>
-                      </div>
-                    </MotionEmpty>
-                  )}
-                </AnimatePresence>
-              </div>
-            </ContentSection>
+                          {project.status}
+                        </Badge>
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <PageEmptyState
+                  title={
+                    filter === "All"
+                      ? "Nothing is waiting on review"
+                      : `No ${filter === "Revision" ? "revisions" : "reviews"}`
+                  }
+                  description={
+                    filter === "All"
+                      ? "Send a project to client review from its Client review tab to start a thread."
+                      : filter === "Revision"
+                        ? "Projects marked for revision show up here."
+                        : "Projects sent to client review show up here."
+                  }
+                />
+              )}
+            </div>
           }
           detail={
-            <ContentSection
+            <section
               data-slot="review-detail"
-              title={selected?.title ?? "Review context"}
-              description={
-                selected
-                  ? `${selected.client || selected.workType} · due ${formatDate(selected.dueDate)}`
-                  : "Select a queue item to inspect its review context."
-              }
+              aria-label="Review details"
+              className="flex min-h-0 flex-col overflow-y-auto rounded-frame bg-well lg:h-full"
             >
               {selected ? (
-                <AnimatePresence mode="popLayout" initial={false}>
-                  <motion.div
-                    key={selected.id}
-                    initial={reduceMotion ? false : { opacity: 0, x: 6 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={reduceMotion ? undefined : { opacity: 0, x: -6 }}
-                    transition={
-                      reduceMotion ? { duration: 0 } : revealTransition
-                    }
-                    className="space-y-5"
-                  >
-                    <Badge
-                      variant="outline"
-                      className={cn(
-                        "h-5 rounded px-1.5 text-[10px]",
-                        projectStatusTone(selected.status)
-                      )}
-                    >
-                      {selected.status}
-                    </Badge>
-                    <dl className="grid grid-cols-2 gap-4">
-                      <ClientMetric
-                        label="Client"
-                        value={selected.client || "No client"}
-                      />
-                      <ClientMetric
-                        label="Work type"
-                        value={selected.workType}
-                      />
-                    </dl>
-                    <div className="border-t border-[var(--app-border)] pt-4">
-                      <p className="text-[10px] font-semibold uppercase tracking-[0.1em] text-[var(--app-muted)]">
-                        Latest review note
-                      </p>
-                      <p className="mt-2 text-xs leading-5 text-[var(--app-ink)]">
-                        {selected.notes ||
-                          "No review note has been recorded yet."}
-                      </p>
-                    </div>
-                    <div className="border-t border-[var(--app-border)] pt-4">
-                      <p className="text-[10px] font-semibold uppercase tracking-[0.1em] text-[var(--app-muted)]">
-                        Review history
-                      </p>
-                      <div className="mt-3 space-y-3">
-                        <div className="flex gap-3 text-xs">
-                          <span className="mt-1 size-2 shrink-0 rounded-full bg-[var(--app-highlight)]" />
-                          <div>
-                            <p className="font-medium">
-                              {selected.status === "Revision"
-                                ? "Revision requested"
-                                : "Review requested"}
-                            </p>
-                            <p className="mt-0.5 text-[11px] text-[var(--app-muted)]">
-                              Current production stage
-                            </p>
-                          </div>
-                        </div>
-                        <div className="flex gap-3 text-xs">
-                          <span className="mt-1 size-2 shrink-0 rounded-full bg-[var(--app-border)]" />
-                          <div>
-                            <p className="font-medium">
-                              Project prepared for feedback
-                            </p>
-                            <p className="mt-0.5 text-[11px] text-[var(--app-muted)]">
-                              Open the project for files and comments
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
+                <div
+                  key={selected.id}
+                  className="flex flex-1 animate-rise flex-col"
+                >
+                  <div className="p-4">
+                    <h2 className="text-text-1 type-heading-xs">
+                      {selected.title}
+                    </h2>
+                    <p className="mt-1 flex flex-wrap items-center gap-3">
+                      <Badge className={projectStatusTone(selected.status)}>
+                        {selected.status}
+                      </Badge>
+                      <span className="text-text-2 type-label-sm data">
+                        Due {formatDate(selected.dueDate)}
+                      </span>
+                    </p>
+                  </div>
+                  <dl className="grid grid-cols-[88px_minmax(0,1fr)] gap-x-3 gap-y-2 px-4 pb-4 type-label">
+                    <dt className="text-text-3">Client</dt>
+                    <dd className="text-text-1">
+                      {selected.client || "No client"}
+                    </dd>
+                    <dt className="text-text-3">Work type</dt>
+                    <dd className="text-text-1">{selected.workType}</dd>
+                    <dt className="text-text-3">Stage</dt>
+                    <dd className="text-text-1">
+                      {selected.status === "Revision"
+                        ? "Revision requested"
+                        : "Review requested"}
+                    </dd>
+                  </dl>
+                  <div className="rule-top px-4 py-3">
+                    <p className="text-text-3 type-label-sm">
+                      Latest review note
+                    </p>
+                    <p className="mt-1 text-text-1 type-body-sm">
+                      {selected.notes || "None recorded yet."}
+                    </p>
+                  </div>
+                  <div className="mt-auto p-4">
                     <Button asChild className="w-full">
                       <Link
                         {...projectLink({
@@ -1181,26 +1073,21 @@ export function PrecisionFeedback({
                           view: "review",
                         })}
                       >
-                        Open review workspace <ArrowRight className="size-4" />
+                        Open client review
                       </Link>
                     </Button>
-                  </motion.div>
-                </AnimatePresence>
-              ) : (
-                <div className="grid min-h-56 place-items-center text-center">
-                  <div>
-                    <MessageSquareText className="mx-auto size-7 text-[var(--app-muted)]" />
-                    <p className="mt-2 text-sm font-semibold">
-                      Select a review item
-                    </p>
-                    <p className="mt-1 text-xs text-[var(--app-muted)]">
-                      Open a queue item to read its notes and jump into the
-                      project.
+                    <p className="mt-2 text-text-3 type-label-sm">
+                      Files, versions and comments live on the project.
                     </p>
                   </div>
                 </div>
+              ) : (
+                <PageEmptyState
+                  title="Select a review"
+                  description="Pick a project on the left to read its notes."
+                />
               )}
-            </ContentSection>
+            </section>
           }
         />
       </PageContent>
@@ -1237,9 +1124,11 @@ export function PrecisionReports({
   earningsQa?: ReactNode;
 }) {
   const [trendRange, setTrendRange] = useState<3 | 6 | "all">(6);
+  const [reportView, setReportView] = useState<
+    "overview" | "payments" | "clients" | "team"
+  >("overview");
   const [period, setPeriod] = useState<PayoutPeriod>("all");
   const [customRange, setCustomRange] = useState({ start: "", end: "" });
-  const reduceMotion = useHydratedReducedMotion();
   const reportProjects = useMemo(
     () =>
       canManageFinance
@@ -1411,19 +1300,22 @@ export function PrecisionReports({
       .sort((a, b) => b.value - a.value)
       .slice(0, 5);
   }, [report.deliveredProjects]);
-  const colors = [
-    "blue",
-    "purple",
-    "green",
-    "orange",
-    "pink",
-  ] satisfies DitherColor[];
+  const reduceMotion = useHydratedReducedMotion();
   const mixConfig = Object.fromEntries(
     mixData.map((item, index) => [
       item.name,
-      { label: item.name, color: colors[index % colors.length] },
+      { label: item.name, color: ditherColors[index % ditherColors.length] },
     ])
   );
+  /** Top six clients by delivered value, for the stacked paid/unpaid bars. */
+  const clientChartData = [...report.clients]
+    .sort((a, b) => b.collected + b.outstanding - (a.collected + a.outstanding))
+    .slice(0, 6)
+    .map((client) => ({
+      name: client.name,
+      paid: client.collected,
+      unpaid: client.outstanding,
+    }));
   const editorSummary = report.editors.length
     ? report.editors.map((editor) => ({
         userId: editor.id,
@@ -1465,13 +1357,25 @@ export function PrecisionReports({
     );
   }
 
+  const reportViews = [
+    { id: "overview" as const, label: "Overview" },
+    { id: "payments" as const, label: "Payments" },
+    ...(advancedReports
+      ? [
+          { id: "clients" as const, label: "Clients" },
+          { id: "team" as const, label: "Team" },
+        ]
+      : []),
+  ];
+  const money_ = (value: number) => money(value, settings.currencyCode);
+
   return (
-    <WorkspacePage family="data-index">
+    <WorkspacePage family="data-index" className="gap-4">
       <PageHeader
-        title="Reports"
-        description="Earnings, deliveries, work mix, and payment batch payments."
+        title="Payments"
+        description="Earnings, deliveries, work mix and payment batches."
         actions={
-          <div className="flex flex-wrap items-center justify-end gap-2">
+          <>
             <Select
               value={period}
               onValueChange={(value) => {
@@ -1482,12 +1386,13 @@ export function PrecisionReports({
               }}
             >
               <SelectTrigger
-                className="h-8 w-[138px] text-xs"
+                size="sm"
+                className="w-[132px]"
                 aria-label="Payout period"
               >
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent align="end">
                 <SelectItem value="month">This month</SelectItem>
                 <SelectItem value="quarter">This quarter</SelectItem>
                 <SelectItem value="year">This year</SelectItem>
@@ -1497,618 +1402,623 @@ export function PrecisionReports({
             </Select>
             {advancedReports ? (
               <PageActions
-                primary={
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="h-8"
-                    onClick={exportReport}
-                    disabled={!canManageFinance}
-                  >
-                    <Download /> Export CSV
-                  </Button>
-                }
+                more={[
+                  {
+                    label: "Export payout CSV",
+                    onSelect: exportReport,
+                    disabled: !canManageFinance,
+                  },
+                  {
+                    label: "Export invoice drafts",
+                    onSelect: exportInvoiceDrafts,
+                    disabled: !invoiceDrafts.length,
+                  },
+                ]}
               />
             ) : null}
-          </div>
+          </>
         }
       />
-      <PageContent>
-        {period === "custom" ? (
-          <div
-            className="flex flex-wrap gap-2"
-            aria-label="Custom report dates"
-          >
-            <DatePicker
-              aria-label="Report start date"
-              placeholder="Start date"
-              className="w-auto"
-              value={customRange.start}
-              onChange={(start) =>
-                setCustomRange((range) => ({ ...range, start }))
-              }
-              weekStart={settings.weekStart}
-              dateFormat={settings.dateFormat}
-            />
-            <DatePicker
-              aria-label="Report end date"
-              placeholder="End date"
-              className="w-auto"
-              value={customRange.end}
-              onChange={(end) => setCustomRange((range) => ({ ...range, end }))}
-              weekStart={settings.weekStart}
-              dateFormat={settings.dateFormat}
-            />
-          </div>
-        ) : null}
-        <MetricStrip columns={4}>
-          <MetricItem
-            label="Earned"
-            value={
-              canManageFinance
-                ? money(report.earned, settings.currencyCode)
-                : "Restricted"
-            }
-            supporting={
-              priorReport && canManageFinance
-                ? `${money(report.earned - priorReport.earned, settings.currencyCode)} vs prior period`
-                : "Delivered project and batch value"
-            }
-            icon={<CircleDollarSign className="size-4" />}
-          />
-          <MetricItem
-            label="Paid"
-            value={
-              canManageFinance
-                ? money(report.collected, settings.currencyCode)
-                : "Restricted"
-            }
-            supporting="Delivered and paid"
-            icon={<CircleDollarSign className="size-4" />}
-          />
-          <MetricItem
-            label="Unpaid"
-            value={
-              canManageFinance
-                ? money(report.outstanding, settings.currencyCode)
-                : "Restricted"
-            }
-            supporting="Delivered, not paid yet"
-            icon={<Clock3 className="size-4" />}
-          />
-          <MetricItem
-            label="Delivered edits"
-            value={String(report.deliveredProjects.length)}
-            supporting={`${salaryEdits} salary edits`}
-            icon={<CheckCircle2 className="size-4" />}
-          />
-        </MetricStrip>
 
-        <SplitPane
-          primary={
-            <motion.section
-              initial={reduceMotion ? false : { opacity: 0, y: 7 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={
-                reduceMotion
-                  ? { duration: 0 }
-                  : { ...revealTransition, delay: 0.08 }
-              }
-              className="flex h-full min-w-0 flex-col rounded-[6px] border border-[var(--app-border)] bg-[var(--app-panel)] p-4"
-            >
-              <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                <div>
-                  <h2 className="text-sm font-semibold">
-                    Delivery and earnings trend
-                  </h2>
-                  <p className="mt-0.5 text-[10px] text-[var(--app-muted)]">
-                    Delivered value and payment batches grouped by month.
-                  </p>
-                </div>
-                <Tabs
-                  value={String(trendRange)}
-                  onValueChange={(value) =>
-                    setTrendRange(
-                      value === "3" ? 3 : value === "all" ? "all" : 6
-                    )
-                  }
-                  className="block"
-                >
-                  <TabsList
-                    aria-label="Earnings trend range"
-                    className="h-8 rounded-md border border-[var(--app-border)] bg-[var(--app-soft-panel)] p-0.5"
+      <SectionNav
+        aria-label="Payment report views"
+        items={reportViews}
+        value={reportView}
+        onValueChange={setReportView}
+        className="-mx-4 px-3 sm:-mx-6 sm:px-5"
+      />
+
+      {period === "custom" ? (
+        <div className="flex flex-wrap gap-2" aria-label="Custom report dates">
+          <DatePicker
+            aria-label="Report start date"
+            placeholder="Start date"
+            className="w-auto"
+            value={customRange.start}
+            onChange={(start) =>
+              setCustomRange((range) => ({ ...range, start }))
+            }
+            weekStart={settings.weekStart}
+            dateFormat={settings.dateFormat}
+          />
+          <DatePicker
+            aria-label="Report end date"
+            placeholder="End date"
+            className="w-auto"
+            value={customRange.end}
+            onChange={(end) => setCustomRange((range) => ({ ...range, end }))}
+            weekStart={settings.weekStart}
+            dateFormat={settings.dateFormat}
+          />
+        </div>
+      ) : null}
+
+      <div key={reportView} className="grid min-w-0 animate-rise gap-4">
+        {reportView === "overview" ? (
+          <>
+            <MetricStrip columns={4} aria-label="Payment totals">
+              <MetricItem
+                label="Earned"
+                value={canManageFinance ? money_(report.earned) : "Restricted"}
+                supporting={
+                  priorReport && canManageFinance
+                    ? `${money_(report.earned - priorReport.earned)} vs prior period`
+                    : "Delivered projects and batches"
+                }
+              />
+              <MetricItem
+                label="Paid"
+                value={
+                  canManageFinance ? money_(report.collected) : "Restricted"
+                }
+                supporting="Delivered and paid"
+              />
+              <MetricItem
+                label="Unpaid"
+                value={
+                  canManageFinance ? money_(report.outstanding) : "Restricted"
+                }
+                supporting="Delivered, not paid yet"
+              />
+              <MetricItem
+                label="Delivered edits"
+                value={String(report.deliveredProjects.length)}
+                supporting={`${salaryEdits} salary edits`}
+              />
+            </MetricStrip>
+
+            <div className="grid min-w-0 gap-4 lg:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)]">
+              <ContentSection
+                title="Earnings by month"
+                actions={
+                  <Tabs
+                    value={String(trendRange)}
+                    onValueChange={(value) =>
+                      setTrendRange(
+                        value === "3" ? 3 : value === "all" ? "all" : 6
+                      )
+                    }
                   >
-                    {[
-                      { value: "3", label: "3M" },
-                      { value: "6", label: "6M" },
-                      { value: "all", label: "All" },
-                    ].map((option) => (
-                      <TabsTrigger
-                        key={option.value}
-                        id={`earnings-${option.value}-tab`}
-                        aria-controls="earnings-trend-panel"
-                        value={option.value}
-                        className="h-7 px-2.5 text-[10px]"
-                      >
-                        {option.label}
-                      </TabsTrigger>
-                    ))}
-                  </TabsList>
-                </Tabs>
-              </div>
-              <div
-                id="earnings-trend-panel"
-                role="tabpanel"
-                aria-labelledby={`earnings-${trendRange}-tab`}
-              >
-                <motion.div
-                  key={trendRange}
-                  role="img"
-                  aria-label={`Earnings trend for ${trendData.length} months. ${trendData.map((item) => `${item.label}: ${money(item.earned, settings.currencyCode)}`).join(", ")}`}
-                  initial={reduceMotion ? false : { opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={
-                    reduceMotion ? { duration: 0 } : { duration: 0.2 }
-                  }
-                  className="mt-4 h-[220px] shrink-0 sm:h-[260px]"
-                >
-                  {trendData.length ? (
-                    <AreaChart
-                      data={trendData}
-                      config={{ earned: { label: "Earned", color: "blue" } }}
-                      animate={!reduceMotion}
-                      animationDuration={420}
-                      bloom="off"
+                    <TabsList
+                      aria-label="Earnings trend range"
+                      className="h-(--control-sm)"
                     >
-                      <Grid />
-                      <XAxis dataKey="label" />
-                      <YAxis />
-                      <ChartTooltip
-                        labelKey="label"
-                        valueFormatter={(value) =>
-                          money(value, settings.currencyCode)
-                        }
-                      />
-                      <Area dataKey="earned" variant="gradient" />
-                    </AreaChart>
-                  ) : (
-                    <div className="grid h-full place-items-center text-xs text-[var(--app-muted)]">
-                      Mark a project as delivered to start the earnings trend.
-                    </div>
-                  )}
-                </motion.div>
-              </div>
-              <p
-                className="mt-auto min-h-9 pt-3 text-xs leading-5 text-[var(--app-muted)]"
-                aria-label="Earnings trend summary"
-              >
-                {trendData.length
-                  ? `${trendData.reduce((sum, item) => sum + item.delivered, 0)} delivered edits generated ${money(
-                      trendData.reduce((sum, item) => sum + item.earned, 0),
-                      settings.currencyCode
-                    )} across ${trendData.length} month${trendData.length === 1 ? "" : "s"}.`
-                  : "No deliveries in this period yet."}
-              </p>
-            </motion.section>
-          }
-          secondary={
-            <motion.section
-              initial={reduceMotion ? false : { opacity: 0, y: 7 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={
-                reduceMotion
-                  ? { duration: 0 }
-                  : { ...revealTransition, delay: 0.12 }
-              }
-              className="flex h-full min-w-0 flex-col rounded-[6px] border border-[var(--app-border)] bg-[var(--app-panel)] p-4"
-            >
-              <div>
-                <h2 className="text-sm font-semibold">Work mix</h2>
-                <p className="mt-0.5 text-[10px] text-[var(--app-muted)]">
-                  Distribution across project types.
-                </p>
-              </div>
-              <div
-                className="mt-4 h-[220px] shrink-0 sm:h-[260px]"
-                role="img"
-                aria-label={
-                  mixData.length
-                    ? `Work mix: ${mixData.map((item) => `${item.name}, ${item.value} projects`).join("; ")}`
-                    : "No work mix data available"
+                      {[
+                        { value: "3", label: "3M" },
+                        { value: "6", label: "6M" },
+                        { value: "all", label: "All" },
+                      ].map((option) => (
+                        <TabsTrigger
+                          key={option.value}
+                          id={`earnings-${option.value}-tab`}
+                          aria-controls="earnings-trend-panel"
+                          value={option.value}
+                          className="type-label-sm"
+                        >
+                          {option.label}
+                        </TabsTrigger>
+                      ))}
+                    </TabsList>
+                  </Tabs>
                 }
               >
+                <div
+                  id="earnings-trend-panel"
+                  role="tabpanel"
+                  aria-labelledby={`earnings-${trendRange}-tab`}
+                >
+                  {trendData.length ? (
+                    <div
+                      key={trendRange}
+                      role="img"
+                      aria-label={`Earnings trend for ${trendData.length} months. ${trendData.map((item) => `${item.label}: ${money_(item.earned)}`).join(", ")}`}
+                      className="h-[190px]"
+                    >
+                      <AreaChart
+                        data={trendData}
+                        config={{ earned: { label: "Earned", color: "lime" } }}
+                        animate={!reduceMotion}
+                        animationDuration={420}
+                        bloom="high"
+                        bloomOnHover
+                      >
+                        <Grid />
+                        <XAxis dataKey="label" />
+                        <YAxis />
+                        <ChartTooltip
+                          labelKey="label"
+                          valueFormatter={(value) => money_(value)}
+                        />
+                        <Area dataKey="earned" variant="gradient" />
+                      </AreaChart>
+                    </div>
+                  ) : (
+                    <p className="text-text-2 type-body-sm">
+                      Mark a project delivered to start the earnings trend.
+                    </p>
+                  )}
+                  <p
+                    className="mt-3 text-text-2 type-body-sm"
+                    aria-label="Earnings trend summary"
+                  >
+                    {trendData.length
+                      ? `${trendData.reduce((sum, item) => sum + item.delivered, 0)} delivered edits earned ${money_(
+                          trendData.reduce((sum, item) => sum + item.earned, 0)
+                        )} across ${trendData.length} month${trendData.length === 1 ? "" : "s"}.`
+                      : "No deliveries in this period yet."}
+                  </p>
+                </div>
+              </ContentSection>
+
+              <ContentSection title="Work mix">
                 {mixData.length ? (
-                  <PieChart
-                    className="mx-auto max-w-[280px]"
-                    data={mixData}
-                    config={mixConfig}
-                    dataKey="value"
-                    nameKey="name"
-                    innerRadius={0.65}
+                  <div className="grid gap-4">
+                    <div
+                      role="img"
+                      aria-label={`Work mix: ${mixData.map((item) => `${item.name}, ${item.value} projects`).join("; ")}`}
+                      className="h-[170px]"
+                    >
+                      <PieChart
+                        className="mx-auto max-w-[240px]"
+                        data={mixData}
+                        config={mixConfig}
+                        dataKey="value"
+                        nameKey="name"
+                        innerRadius={0.65}
+                        animate={!reduceMotion}
+                        animationDuration={420}
+                        bloom="high"
+                        bloomOnHover
+                      >
+                        <Pie variant="gradient" />
+                        <ChartTooltip labelKey="name" />
+                      </PieChart>
+                    </div>
+                    <ul className="grid gap-1.5" aria-label="Work mix legend">
+                      {mixData.map((item, index) => (
+                        <li
+                          key={item.name}
+                          className="flex items-center gap-2 type-label-sm"
+                        >
+                          <span
+                            aria-hidden="true"
+                            className="size-2 shrink-0 rounded-inner"
+                            style={{
+                              background: rgb(
+                                PALETTE[
+                                  ditherColors[index % ditherColors.length]
+                                ].fill
+                              ),
+                            }}
+                          />
+                          <span className="truncate text-text-2">
+                            {item.name}
+                          </span>
+                          <span className="ms-auto text-text-1 data">
+                            {item.value}
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                ) : (
+                  <p className="text-text-2 type-body-sm">
+                    Deliver projects to see how your work splits across types.
+                  </p>
+                )}
+              </ContentSection>
+            </div>
+
+            <ContentSection title="This period">
+              <dl className="grid grid-cols-2 gap-x-6 gap-y-4 sm:grid-cols-4">
+                <PeriodMetric
+                  label="Completed projects"
+                  value={String(report.deliveredProjects.length)}
+                />
+                <PeriodMetric
+                  label="Outputs delivered"
+                  value={String(outputCount)}
+                />
+                <PeriodMetric
+                  label="Average days to deliver"
+                  value={
+                    turnaroundProjects.length
+                      ? `${averageTurnaround} ${averageTurnaround === 1 ? "day" : "days"}`
+                      : "No data"
+                  }
+                />
+                <PeriodMetric
+                  label="Overdue projects"
+                  value={String(delayedStages)}
+                />
+              </dl>
+              {trendSeries.length ? (
+                <div
+                  role="img"
+                  aria-label={`Deliveries by month: ${trendSeries
+                    .slice(-6)
+                    .map((item) => `${item.label} ${item.delivered}`)
+                    .join(", ")}`}
+                  className="mt-5 h-[160px]"
+                >
+                  <BarChart
+                    data={trendSeries.slice(-6)}
+                    config={{
+                      delivered: { label: "Delivered", color: "lime" },
+                    }}
                     animate={!reduceMotion}
                     animationDuration={420}
-                    bloom="off"
+                    bloom="high"
+                    bloomOnHover
                   >
-                    <Pie variant="gradient" />
-                    <ChartTooltip labelKey="name" />
-                  </PieChart>
-                ) : (
-                  <div className="grid h-full place-items-center rounded-md border border-dashed border-[var(--app-border)] px-4 text-center text-xs text-[var(--app-muted)]">
-                    Deliver projects to see how your work splits across types.
-                  </div>
-                )}
-              </div>
-              <div className="mt-auto min-h-9 space-y-2 pt-3">
-                {mixData.map((item, index) => (
-                  <div
-                    key={item.name}
-                    className="flex items-center gap-2 text-xs leading-5"
-                  >
-                    <span
-                      className="size-2 shrink-0 rounded-full"
-                      style={{
-                        background: rgb(
-                          PALETTE[colors[index % colors.length]].fill
-                        ),
-                      }}
-                    />
-                    <span className="truncate">{item.name}</span>
-                    <span className="ml-auto font-semibold">{item.value}</span>
-                  </div>
-                ))}
-              </div>
-            </motion.section>
-          }
-        />
+                    <XAxis dataKey="label" />
+                    <ChartTooltip labelKey="label" />
+                    <Bar dataKey="delivered" variant="gradient" />
+                  </BarChart>
+                </div>
+              ) : null}
+            </ContentSection>
+            {earningsQa}
+          </>
+        ) : null}
 
-        <ContentSection
-          title="This period"
-          description="Delivered work, finished outputs, delivery time, and overdue projects."
-        >
-          <dl className="grid grid-cols-2 gap-x-6 gap-y-4 sm:grid-cols-4">
-            <PeriodMetric
-              label="Completed projects"
-              value={String(report.deliveredProjects.length)}
-            />
-            <PeriodMetric
-              label="Outputs delivered"
-              value={String(outputCount)}
-            />
-            <PeriodMetric
-              label="Avg. days to deliver"
-              value={
-                turnaroundProjects.length
-                  ? `${averageTurnaround} ${averageTurnaround === 1 ? "day" : "days"}`
-                  : "No data"
+        {reportView === "payments" ? (
+          <>
+            {salaryPlans}
+            <ContentSection
+              title="Payment batches"
+              description="Completed batches and whether they are paid."
+              metadata={
+                <span className="text-text-3 type-label-sm data">
+                  {report.batches.length}
+                </span>
               }
-            />
-            <PeriodMetric
-              label="Overdue projects"
-              value={String(delayedStages)}
-            />
-          </dl>
-        </ContentSection>
+              bodyMode="flush"
+              footer={
+                batchesLocked ? (
+                  <CapabilityUpgradePrompt capability="salaryPlans" inline />
+                ) : undefined
+              }
+            >
+              <Table className="min-w-[640px]">
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="ps-4">Batch</TableHead>
+                    <TableHead>Completed</TableHead>
+                    <TableHead>Edits</TableHead>
+                    <TableHead>Amount</TableHead>
+                    <TableHead>Payment</TableHead>
+                    <TableHead className="pe-4 text-end">
+                      <span className="sr-only">Action</span>
+                    </TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {report.batches.map((batch) => (
+                    <TableRow key={batch.id}>
+                      <TableCell className="ps-4">
+                        Batch {batch.number}
+                      </TableCell>
+                      <TableCell className="text-text-2 data">
+                        {batch.date ? formatDate(batch.date) : "Pending"}
+                      </TableCell>
+                      <TableCell className="data">
+                        {settings.salaryBatchSize}
+                      </TableCell>
+                      <TableCell className="data">
+                        {money_(batch.amount)}
+                      </TableCell>
+                      <TableCell>
+                        <Badge className={paymentStatusTone(batch.paid)}>
+                          {batch.paid ? "Paid" : "Unpaid"}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="pe-4 text-end">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          aria-label={`${batch.paid ? "Mark unpaid" : "Mark paid"} for batch ${batch.number}`}
+                          disabled={!canManageFinance || batchesLocked}
+                          onClick={() =>
+                            onUpdateBatchPayment(batch.id, !batch.paid)
+                          }
+                        >
+                          {batch.paid ? "Mark unpaid" : "Mark paid"}
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+              {!report.batches.length ? (
+                <PageEmptyState
+                  compact
+                  title="No batches yet"
+                  description="Finish the next salary batch to record its payment here."
+                />
+              ) : null}
+            </ContentSection>
 
-        {advancedReports ? (
+            {advancedReports ? (
+              <ContentSection
+                title="Invoice drafts"
+                description="Drafts for delivered client projects. Relay does not collect payments."
+                bodyMode="flush"
+                actions={
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={exportInvoiceDrafts}
+                    disabled={!invoiceDrafts.length}
+                  >
+                    <Download /> Export
+                  </Button>
+                }
+              >
+                <Table className="min-w-[640px]">
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="ps-4">Draft</TableHead>
+                      <TableHead>Client</TableHead>
+                      <TableHead>Projects</TableHead>
+                      <TableHead>Due</TableHead>
+                      <TableHead className="pe-4 text-end">Total</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {invoiceDrafts.map((draft) => (
+                      <TableRow key={draft.id}>
+                        <TableCell className="ps-4 data">
+                          {draft.invoiceNumber}
+                        </TableCell>
+                        <TableCell className="text-text-2">
+                          {draft.client}
+                        </TableCell>
+                        <TableCell className="data">
+                          {draft.lineItems.length}
+                        </TableCell>
+                        <TableCell className="text-text-2 data">
+                          {formatDate(draft.dueDate)}
+                        </TableCell>
+                        <TableCell className="pe-4 text-end data">
+                          {money_(draft.total)}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+                {!invoiceDrafts.length ? (
+                  <PageEmptyState
+                    compact
+                    title="No invoice drafts"
+                    description="Deliver a freelance project for a named client to draft its invoice."
+                  />
+                ) : null}
+              </ContentSection>
+            ) : null}
+          </>
+        ) : null}
+
+        {reportView === "clients" && advancedReports ? (
           <ContentSection
             title="Client totals"
             description="Delivered value per client, paid and unpaid."
             bodyMode="flush"
           >
-            <div className="divide-y divide-[var(--app-border)] border-t border-[var(--app-border)]">
-              {report.clients.length ? (
-                <div
-                  className={cn(
-                    clientTotalsGrid,
-                    "h-8 items-center bg-[var(--app-soft-panel)] text-[11px] font-medium text-[var(--app-muted)]"
-                  )}
-                >
-                  <span>Client</span>
-                  <span className="text-right">Projects</span>
-                  <span className="text-right">Paid</span>
-                  <span className="text-right">Unpaid</span>
-                </div>
-              ) : null}
-              {report.clients.map((client) => (
-                <div
-                  key={client.id}
-                  className={cn(clientTotalsGrid, "py-3 text-xs")}
-                >
-                  <span className="truncate font-semibold">{client.name}</span>
-                  <span className="text-right tabular-nums">
-                    {client.deliveredProjects}
-                  </span>
-                  <span className="text-right font-mono tabular-nums">
-                    {canManageFinance
-                      ? money(client.collected, settings.currencyCode)
-                      : "Restricted"}
-                  </span>
-                  <span className="text-right font-mono tabular-nums">
-                    {canManageFinance
-                      ? money(client.outstanding, settings.currencyCode)
-                      : "Restricted"}
-                  </span>
-                </div>
-              ))}
-              {!report.clients.length ? (
-                <div className="grid min-h-24 place-items-center text-xs text-[var(--app-muted)]">
-                  Deliver a client project in this period to see its totals.
-                </div>
-              ) : null}
-            </div>
-          </ContentSection>
-        ) : null}
-
-        {earningsQa}
-        {salaryPlans}
-        <ContentSection
-          title="Payment batches"
-          description="Completed batches and whether they are paid."
-          metadata={
-            <span className="text-[11px] text-muted-foreground">
-              {report.batches.length} batches
-            </span>
-          }
-          bodyMode="flush"
-          footer={
-            batchesLocked ? (
-              <CapabilityUpgradePrompt capability="salaryPlans" inline />
-            ) : undefined
-          }
-        >
-          <div className="overflow-x-auto border-t border-[var(--app-border)]">
-            <Table className="w-full min-w-[720px] border-collapse">
-              <TableHeader>
-                <TableRow className="bg-[var(--app-soft-panel)] text-left text-[10px] font-semibold uppercase text-[var(--app-subtle)]">
-                  <TableHead className="h-8 px-4">Batch</TableHead>
-                  <TableHead className="px-4">Completed</TableHead>
-                  <TableHead className="px-4">Edits</TableHead>
-                  <TableHead className="px-4">Amount</TableHead>
-                  <TableHead className="px-4">Payment</TableHead>
-                  <TableHead className="px-4 text-right">Action</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody className="divide-y divide-[var(--app-border)]">
-                {report.batches.map((batch) => (
-                  <TableRow
-                    key={batch.id}
-                    className="h-12 text-xs transition-colors hover:bg-[var(--app-hover)]"
-                  >
-                    <TableCell className="px-4 font-semibold">
-                      Batch #{batch.number}
-                    </TableCell>
-                    <TableCell className="px-4 text-[var(--app-muted)]">
-                      {batch.date ? formatDate(batch.date) : "Pending"}
-                    </TableCell>
-                    <TableCell className="px-4">
-                      {settings.salaryBatchSize}
-                    </TableCell>
-                    <TableCell className="px-4 font-medium">
-                      {money(batch.amount, settings.currencyCode)}
-                    </TableCell>
-                    <TableCell className="px-4">
-                      <Badge
-                        variant="outline"
-                        className={cn(
-                          "h-5 rounded px-1.5 text-[10px]",
-                          paymentStatusTone(batch.paid)
-                        )}
-                      >
-                        {batch.paid ? "Paid" : "Unpaid"}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="px-4 text-right">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-7 text-xs"
-                        aria-label={`${batch.paid ? "Mark unpaid" : "Mark paid"} for batch ${batch.number}`}
-                        disabled={!canManageFinance || batchesLocked}
-                        onClick={() =>
-                          onUpdateBatchPayment(batch.id, !batch.paid)
-                        }
-                      >
-                        {batch.paid ? "Mark unpaid" : "Mark paid"}
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))}
-                {!report.batches.length ? (
-                  <TableRow>
-                    <TableCell
-                      colSpan={6}
-                      className="h-32 text-center text-xs text-[var(--app-muted)]"
-                    >
-                      Finish the next salary batch to record its payment here.
-                    </TableCell>
-                  </TableRow>
-                ) : null}
-              </TableBody>
-            </Table>
-          </div>
-        </ContentSection>
-
-        {advancedReports ? (
-          <ContentSection
-            title="Invoice drafts"
-            description="CSV invoice drafts for delivered client projects. Relay doesn't collect payments."
-            bodyMode="flush"
-            actions={
-              <Button
-                variant="outline"
-                size="sm"
-                className="h-8"
-                onClick={exportInvoiceDrafts}
-                disabled={!invoiceDrafts.length}
+            {canManageFinance && report.clients.length ? (
+              <div
+                role="img"
+                aria-label={`Paid and unpaid by client: ${clientChartData
+                  .map(
+                    (client) =>
+                      `${client.name} ${money_(client.paid)} paid, ${money_(client.unpaid)} unpaid`
+                  )
+                  .join("; ")}`}
+                className="h-[180px] px-4 pt-4"
               >
-                <Download /> Export invoices
-              </Button>
-            }
-          >
-            <div className="overflow-x-auto border-t border-[var(--app-border)]">
-              <Table className="w-full min-w-[760px] border-collapse">
+                <BarChart
+                  data={clientChartData}
+                  config={{
+                    paid: { label: "Paid", color: "lime" },
+                    unpaid: { label: "Unpaid", color: "grey" },
+                  }}
+                  stackType="stacked"
+                  animate={!reduceMotion}
+                  animationDuration={420}
+                  bloom="high"
+                  bloomOnHover
+                >
+                  <XAxis dataKey="name" />
+                  <ChartTooltip
+                    labelKey="name"
+                    valueFormatter={(value) => money_(value)}
+                  />
+                  <Bar dataKey="paid" variant="gradient" />
+                  <Bar dataKey="unpaid" variant="gradient" />
+                </BarChart>
+              </div>
+            ) : null}
+            {report.clients.length ? (
+              <Table className="min-w-[560px]">
                 <TableHeader>
-                  <TableRow className="bg-[var(--app-soft-panel)] text-left text-[10px] font-semibold uppercase text-[var(--app-subtle)]">
-                    <TableHead className="h-8 px-4">Draft</TableHead>
-                    <TableHead className="px-4">Client</TableHead>
-                    <TableHead className="px-4">Projects</TableHead>
-                    <TableHead className="px-4">Due</TableHead>
-                    <TableHead className="px-4 text-right">Total</TableHead>
+                  <TableRow>
+                    <TableHead className="ps-4">Client</TableHead>
+                    <TableHead className="text-end">Projects</TableHead>
+                    <TableHead className="text-end">Paid</TableHead>
+                    <TableHead className="text-end">Unpaid</TableHead>
+                    <TableHead className="w-40 pe-4">
+                      <span className="sr-only">Paid share</span>
+                    </TableHead>
                   </TableRow>
                 </TableHeader>
-                <TableBody className="divide-y divide-[var(--app-border)]">
-                  {invoiceDrafts.map((draft) => (
-                    <TableRow
-                      key={draft.id}
-                      className="h-12 text-xs transition-colors hover:bg-[var(--app-hover)]"
-                    >
-                      <TableCell className="px-4 font-semibold">
-                        {draft.invoiceNumber}
-                      </TableCell>
-                      <TableCell className="px-4 text-[var(--app-muted)]">
-                        {draft.client}
-                      </TableCell>
-                      <TableCell className="px-4">
-                        {draft.lineItems.length}
-                      </TableCell>
-                      <TableCell className="px-4 text-[var(--app-muted)]">
-                        {formatDate(draft.dueDate)}
-                      </TableCell>
-                      <TableCell className="px-4 text-right font-semibold">
-                        {money(draft.total, settings.currencyCode)}
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                  {!invoiceDrafts.length ? (
-                    <TableRow>
-                      <TableCell
-                        colSpan={5}
-                        className="h-28 text-center text-xs text-[var(--app-muted)]"
-                      >
-                        Deliver a freelance project for a named client to draft
-                        its invoice.
-                      </TableCell>
-                    </TableRow>
-                  ) : null}
+                <TableBody>
+                  {report.clients.map((client) => {
+                    const total = client.collected + client.outstanding;
+                    const paidShare = total
+                      ? Math.round((client.collected / total) * 100)
+                      : 0;
+                    return (
+                      <TableRow key={client.id}>
+                        <TableCell className="ps-4">{client.name}</TableCell>
+                        <TableCell className="text-end data">
+                          {client.deliveredProjects}
+                        </TableCell>
+                        <TableCell className="text-end data">
+                          {canManageFinance
+                            ? money_(client.collected)
+                            : "Restricted"}
+                        </TableCell>
+                        <TableCell className="text-end data">
+                          {canManageFinance
+                            ? money_(client.outstanding)
+                            : "Restricted"}
+                        </TableCell>
+                        <TableCell className="pe-4">
+                          {canManageFinance && total ? (
+                            <span
+                              className="block h-1 overflow-hidden rounded-full bg-tile"
+                              title={`${paidShare}% paid`}
+                            >
+                              <span
+                                className="block h-full rounded-full bg-ink"
+                                style={{ width: `${paidShare}%` }}
+                              />
+                            </span>
+                          ) : null}
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
                 </TableBody>
               </Table>
-            </div>
+            ) : (
+              <PageEmptyState
+                compact
+                title="No client totals yet"
+                description="Deliver a client project in this period to see its totals."
+              />
+            )}
           </ContentSection>
         ) : null}
-        {advancedReports ? (
-          <SplitPane
-            ratio="balanced"
-            primary={
-              <ContentSection
-                title="Editor Summary"
-                description="Delivered work attributed to workspace editors."
-                metadata={
-                  <span className="text-[11px] text-muted-foreground">
-                    {editorSummary.length} editors
-                  </span>
-                }
-                bodyMode="flush"
-              >
-                <div className="divide-y divide-[var(--app-border)] border-t border-[var(--app-border)]">
-                  {editorSummary.map((editor) => (
-                    <div
-                      key={editor.userId}
-                      className="flex items-center gap-3 px-4 py-3"
-                    >
-                      <span className="grid size-8 place-items-center rounded-full bg-[var(--app-active)] text-[10px] font-semibold text-[var(--app-highlight)]">
-                        {editor.name
-                          .split(/\s+/)
-                          .slice(0, 2)
-                          .map((part) => part[0]?.toUpperCase())
-                          .join("")}
+
+        {reportView === "team" && advancedReports ? (
+          <div className="grid min-w-0 gap-4 lg:grid-cols-2">
+            <ContentSection
+              title="Editors"
+              description="Delivered work attributed to each editor."
+              metadata={
+                <span className="text-text-3 type-label-sm data">
+                  {editorSummary.length}
+                </span>
+              }
+              bodyMode="flush"
+            >
+              <ul className={sectionListClassName}>
+                {editorSummary.map((editor) => (
+                  <li
+                    key={editor.userId}
+                    className="flex items-center gap-3 rule-row px-4 py-2.5"
+                  >
+                    <span className="grid size-7 shrink-0 place-items-center rounded-full bg-tile text-text-1 type-label-sm">
+                      {editor.name
+                        .split(/\s+/)
+                        .slice(0, 2)
+                        .map((part) => part[0]?.toUpperCase())
+                        .join("")}
+                    </span>
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate text-text-1 type-label">
+                        {editor.name}
                       </span>
-                      <span className="min-w-0 flex-1">
-                        <span className="block truncate text-xs font-semibold">
-                          {editor.name}
-                        </span>
-                        <span className="mt-0.5 block text-[10px] text-[var(--app-muted)]">
-                          {editor.delivered} delivered edits
-                        </span>
+                      <span className="mt-0.5 block text-text-3 type-label-sm">
+                        {editor.delivered} delivered edits
                       </span>
-                      <span className="text-xs font-semibold">
-                        {money(editor.value, settings.currencyCode)}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </ContentSection>
-            }
-            secondary={
-              <ContentSection
-                title="Delivered Projects"
-                description="Most recently completed editing work."
-                metadata={
-                  <span className="text-[11px] text-muted-foreground">
-                    {report.deliveredProjects.length} projects
-                  </span>
-                }
-                bodyMode="flush"
-              >
-                <div className="divide-y divide-[var(--app-border)] border-t border-[var(--app-border)]">
-                  {report.deliveredProjects.slice(0, 6).map((project) => (
-                    <div
+                    </span>
+                    <span className="text-text-1 type-label data">
+                      {money_(editor.value)}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </ContentSection>
+            <ContentSection
+              title="Delivered projects"
+              description="The most recently completed work."
+              metadata={
+                <span className="text-text-3 type-label-sm data">
+                  {report.deliveredProjects.length}
+                </span>
+              }
+              bodyMode="flush"
+            >
+              {report.deliveredProjects.length ? (
+                <ul className={sectionListClassName}>
+                  {report.deliveredProjects.slice(0, 8).map((project) => (
+                    <li
                       key={project.id}
-                      className="grid grid-cols-[minmax(0,1fr)_100px_auto] items-center gap-3 px-4 py-3"
+                      className="grid grid-cols-[minmax(0,1fr)_90px_auto] items-center gap-3 rule-row px-4 py-2.5"
                     >
                       <span className="min-w-0">
-                        <span className="block truncate text-xs font-semibold">
+                        <span className="block truncate text-text-1 type-label">
                           {project.title}
                         </span>
-                        <span className="mt-0.5 block truncate text-[10px] text-[var(--app-muted)]">
-                          {project.editorName} · {project.workType}
+                        <span className="mt-0.5 flex gap-2 truncate text-text-3 type-label-sm">
+                          <span className="truncate">{project.editorName}</span>
+                          <span className="truncate">{project.workType}</span>
                         </span>
                       </span>
-                      <span className="text-[10px] text-[var(--app-muted)]">
+                      <span className="text-text-2 type-label-sm data">
                         {formatDate(project.date)}
                       </span>
-                      <span className="text-xs font-semibold">
+                      <span className="text-text-1 type-label data">
                         {project.isSalaryEdit
                           ? "Batch"
-                          : money(project.amount, settings.currencyCode)}
+                          : money_(project.amount)}
                       </span>
-                    </div>
+                    </li>
                   ))}
-                  {!report.deliveredProjects.length ? (
-                    <div className="grid min-h-28 place-items-center text-xs text-[var(--app-muted)]">
-                      Deliver a project to list it here.
-                    </div>
-                  ) : null}
-                </div>
-              </ContentSection>
-            }
-          />
+                </ul>
+              ) : (
+                <PageEmptyState
+                  compact
+                  title="Nothing delivered yet"
+                  description="Deliver a project to list it here."
+                />
+              )}
+            </ContentSection>
+          </div>
         ) : null}
-      </PageContent>
+      </div>
     </WorkspacePage>
   );
 }
 
-/** Columns shared by the Client totals header and rows. */
-const clientTotalsGrid =
-  "grid grid-cols-[minmax(0,1fr)_5rem_8rem_8rem] gap-4 px-4";
-
-function ClientMetric({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="rounded-lg border border-[var(--app-border)] bg-[var(--app-soft-panel)] px-3 py-2.5">
-      <p className="text-[9px] font-semibold uppercase text-[var(--app-subtle)]">
-        {label}
-      </p>
-      <p className="mt-1 text-sm font-semibold">{value}</p>
-    </div>
-  );
-}
-
-/** Unframed label/value pair for the Reports period summary `<dl>`. */
+/** Unframed label/value pair for the period summary `<dl>`. */
 function PeriodMetric({ label, value }: { label: string; value: string }) {
   return (
     <div className="min-w-0">
-      <dt className="text-xs text-[var(--app-muted)]">{label}</dt>
-      <dd className="mt-1 text-lg font-semibold tabular-nums">{value}</dd>
+      <dt className="text-text-2 type-label-sm">{label}</dt>
+      <dd className="mt-1 text-text-1 type-heading-sm data">{value}</dd>
     </div>
   );
 }

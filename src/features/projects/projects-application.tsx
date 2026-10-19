@@ -1,4 +1,4 @@
-import { FolderKanban } from "lucide-react";
+import { FolderKanban } from "@/components/icons";
 import { Link, useNavigate } from "@tanstack/react-router";
 
 import { PrecisionProjects } from "@/components/precision-projects";
@@ -158,7 +158,7 @@ function ProjectLimitNotice() {
   if (openProjectLimit === null || openProjectCount < openProjectLimit - 2)
     return null;
   return (
-    <p className="mb-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-[13px] text-foreground">
+    <p className="mb-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-foreground type-body-sm">
       <span>
         {openProjectCount} of {openProjectLimit} Projects in progress on Free.
       </span>

@@ -109,7 +109,7 @@ function WorkspaceFrame({ children }: { children: ReactNode }) {
       {/* The covered workspace stays out of the Tab order until auth resolves. */}
       <div className="contents" inert={!isAuthLoaded}>
         {standalone ? (
-          <div className="motion-enter min-h-dvh bg-[var(--app-canvas)] text-[var(--app-ink)] transition-colors">
+          <div className="motion-enter min-h-dvh bg-page text-text-1 transition-colors">
             {children}
           </div>
         ) : (
@@ -125,6 +125,9 @@ function WorkspaceFrame({ children }: { children: ReactNode }) {
             }
             searchRecords={searchRecords}
             notificationSlot={<NotificationBell />}
+            onThemeChange={(theme) =>
+              setSettings((current) => ({ ...current, theme }))
+            }
           >
             <div className="flex min-h-0 flex-1 flex-col">
               {sample ? (
@@ -140,10 +143,7 @@ function WorkspaceFrame({ children }: { children: ReactNode }) {
                   }}
                 />
               ) : null}
-              <div
-                ref={contentRef}
-                className="min-h-0 flex-1 bg-[var(--app-canvas)] text-[var(--app-ink)] transition-colors lg:overflow-y-auto"
-              >
+              <div ref={contentRef} className="flex min-h-0 flex-1 flex-col">
                 {children}
               </div>
             </div>

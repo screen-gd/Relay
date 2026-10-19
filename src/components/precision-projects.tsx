@@ -3,20 +3,14 @@
 import { getProjectProgress } from "@/features/projects/project-domain";
 
 import {
-  ArrowRight,
-  Check,
-  ChevronDown,
   Archive,
   Edit3,
-  Film,
-  FolderKanban,
-  FolderOpen,
   MoreHorizontal,
   Plus,
   Search,
   SlidersHorizontal,
   Trash2,
-} from "lucide-react";
+} from "@/components/icons";
 import {
   createColumnHelper,
   flexRender,
@@ -28,25 +22,24 @@ import {
   DragOverlay,
   KeyboardSensor,
   PointerSensor,
+  rectIntersection,
   useSensor,
   useSensors,
   useDndContext,
   type Announcements,
+  type CollisionDetection,
   type DragEndEvent,
 } from "@dnd-kit/core";
-import { AnimatePresence, motion, MotionConfig } from "motion/react";
 import {
   useCallback,
   useEffect,
   useMemo,
-  useRef,
   useState,
   type ReactNode,
 } from "react";
 import { createPortal } from "react-dom";
 import type { SettingsState, WorkItem, WorkflowStage } from "@/lib/types";
 import type { StoredTeamRole } from "@/lib/domain-values";
-import { useHydratedReducedMotion } from "@/lib/motion";
 import { projectStatusTone } from "@/lib/project-status-style";
 import {
   DEFAULT_PROJECT_TABLE_STATE,
@@ -57,21 +50,23 @@ import type { ProjectStageMenuChoice } from "@/features/projects/project-domain"
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
 import {
   KanbanBoard,
   KanbanCard,
   KanbanHeader,
 } from "@/components/kibo-ui/kanban";
-import { Empty, EmptyHeader, EmptyMedia } from "@/components/ui/empty";
-import { Progress } from "@/components/ui/progress";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { SegmentedMeter } from "@/components/ui/segmented-meter";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { FilterMenu } from "@/components/filter-menu";
 import { Input } from "@/components/ui/input";
 import {
   Sheet,
@@ -94,6 +89,7 @@ import {
   DataTableFrame,
   PageActions,
   PageContent,
+  PageEmptyState,
   PageHeader,
   PageToolbar,
   SplitPane,
@@ -102,86 +98,14 @@ import {
 
 type WorkspaceScope = "personal" | "team";
 
-const MotionCard = motion.create(Card);
-const MotionEmpty = motion.create(Empty);
-
-type ProjectMenuOption<T extends string> = {
-  value: T;
-  label: string;
-};
-
-function ProjectDropdown<T extends string>({
-  value,
-  options,
-  onChange,
-  ariaLabel,
-  className,
-  contentClassName,
-}: {
-  value: T;
-  options: readonly ProjectMenuOption<T>[];
-  onChange: (value: T) => void;
-  ariaLabel: string;
-  className?: string;
-  contentClassName?: string;
-}) {
-  const selectedOption = options.find((option) => option.value === value);
-
-  return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button
-          variant="outline"
-          aria-label={ariaLabel}
-          className={cn(
-            "h-9 min-w-0 shrink-0 justify-between gap-3 overflow-hidden rounded-lg border-[var(--app-border)] !bg-[var(--app-panel)] text-xs font-normal",
-            className
-          )}
-        >
-          <span className="truncate">
-            {selectedOption?.label ?? "Choose an option"}
-          </span>
-          <ChevronDown className="size-3.5 shrink-0 text-[var(--app-muted)]" />
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent
-        align="start"
-        className={cn("min-w-[10rem]", contentClassName)}
-      >
-        {options.map((option) => (
-          <DropdownMenuItem
-            key={option.value}
-            onSelect={() => onChange(option.value)}
-            className="justify-between gap-4"
-          >
-            <span>{option.label}</span>
-            <Check
-              className={cn(
-                "size-4",
-                option.value === value ? "opacity-100" : "opacity-0"
-              )}
-            />
-          </DropdownMenuItem>
-        ))}
-      </DropdownMenuContent>
-    </DropdownMenu>
-  );
-}
-
-function FilterField({
-  label,
-  children,
-}: {
-  label: string;
-  children: ReactNode;
-}) {
-  return (
-    <div className="grid gap-1.5">
-      <span className="text-xs font-medium text-muted-foreground">{label}</span>
-      {children}
-    </div>
-  );
-}
+const sortChoices = [
+  { value: "due:asc", label: "Due first" },
+  { value: "delivered:desc", label: "Recently delivered" },
+  { value: "name:asc", label: "Name" },
+  { value: "stage:asc", label: "Stage" },
+  { value: "payment:asc", label: "Payment" },
+  { value: "salary:desc", label: "Salary first" },
+] as const;
 
 type PrecisionProjectsProps = {
   settings: SettingsState;
@@ -232,20 +156,6 @@ function money(value: number, currency: string) {
   }).format(Number.isFinite(value) ? value : 0);
 }
 
-function projectColor(project: WorkItem) {
-  const palette = [
-    "var(--media-package-1)",
-    "var(--media-package-2)",
-    "var(--media-package-3)",
-    "var(--media-package-4)",
-    "var(--media-package-5)",
-  ];
-  let hash = 0;
-  for (const char of project.id || project.title)
-    hash = (hash * 31 + char.charCodeAt(0)) >>> 0;
-  return palette[hash % palette.length];
-}
-
 function projectNextAction(project: WorkItem) {
   if (project.status === "Delivered")
     return "Archive final exports and confirm the payment record.";
@@ -259,41 +169,32 @@ function projectNextAction(project: WorkItem) {
 }
 
 /**
- * Decorative project swatch shown beside the project title in the table,
- * board and inspector. Projects carry no media runtime, so it shows none and
- * stays hidden from assistive tech; the adjacent title names the project.
- */
-function ProjectThumbnail({
-  project,
-  className,
-}: {
-  project: WorkItem;
-  className?: string;
-}) {
-  return (
-    <span
-      aria-hidden="true"
-      data-slot="project-thumbnail"
-      className={cn(
-        "relative isolate flex h-[50px] w-[88px] shrink-0 overflow-hidden rounded-lg border border-white/10",
-        className
-      )}
-      style={{ background: projectColor(project) }}
-    >
-      <span className="absolute -right-3 top-1/2 h-[130%] w-[52%] -translate-y-1/2 rotate-12 bg-[var(--app-accent)] opacity-45" />
-      <span className="absolute inset-x-2 top-2 flex items-center justify-between text-[var(--app-thumb-icon)]">
-        <Film className="size-3.5" />
-        <span className="size-1.5 rounded-full bg-current opacity-60" />
-      </span>
-    </span>
-  );
-}
-
-/**
  * Converts mouse-wheel input over board chrome into horizontal board scroll.
  * Returns a callback ref so the listener attaches whenever the board mounts,
  * including after switching from the table view.
  */
+// The board scrolls sideways under a drag to reach the last columns, which
+// leaves dnd-kit's start-of-drag column rects stale. Measure the columns live
+// and drop into the one under the pointer; keyboard drags have no pointer and
+// keep the default rect test.
+const columnUnderPointer: CollisionDetection = (args) => {
+  const pointer = args.pointerCoordinates;
+  if (!pointer) return rectIntersection(args);
+  const column = args.droppableContainers.find((container) => {
+    const rect = container.node.current?.getBoundingClientRect();
+    return (
+      rect !== undefined &&
+      pointer.x >= rect.left &&
+      pointer.x <= rect.right &&
+      pointer.y >= rect.top &&
+      pointer.y <= rect.bottom
+    );
+  });
+  return column
+    ? [{ id: column.id, data: { droppableContainer: column, value: 0 } }]
+    : [];
+};
+
 function useBoardHorizontalWheel() {
   return useCallback((board: HTMLDivElement | null) => {
     if (!board) return;
@@ -349,42 +250,41 @@ function ProjectBoardCard({
     <KanbanCard
       id={project.id}
       disabled={disabled}
-      className={cn(
-        "border-0 border-b border-[var(--panel-edge)] rounded-none",
-        selected && "bg-[var(--app-active)]"
-      )}
+      className={cn(selected && "shadow-[0_0_0_1px_var(--ink)]")}
     >
       {({ attributes, listeners, setActivatorNodeRef }) => (
         <>
-          <Button
+          {/* The whole card body is the drag handle: press and move to drag,
+              click to select, double-click to open. Space starts a
+              keyboard drag. */}
+          <div
             ref={setActivatorNodeRef}
-            type="button"
-            variant="ghost"
+            {...attributes}
+            {...listeners}
+            aria-label={`${project.title}. Drag to change stage, double-click to open.`}
             className={cn(
-              "h-auto min-w-0 flex-1 touch-none flex-col items-start justify-start gap-0 rounded-none px-0 py-0 text-left font-normal whitespace-normal hover:bg-transparent hover:text-current dark:hover:bg-transparent focus-visible:ring-2 focus-visible:ring-[var(--app-accent)] active:translate-y-0 active:scale-100",
-              !disabled && "cursor-grab active:cursor-grabbing"
+              "flex min-w-0 flex-1 touch-none flex-col items-start rounded-inner text-start outline-none select-none focus-visible:focus-ring",
+              disabled ? "cursor-pointer" : "cursor-grab active:cursor-grabbing"
             )}
             onClick={onSelect}
             onDoubleClick={onOpen}
-            {...listeners}
-            {...attributes}
           >
-            <span className="block w-full truncate text-[13px] font-semibold">
+            <span className="block w-full truncate type-label">
               {project.title}
             </span>
-            <span className="mt-1 block w-full truncate text-xs text-[var(--app-muted)]">
+            <span className="mt-1 block w-full truncate text-text-2 type-label-sm">
               {project.client || "No client"}
             </span>
-            <span className="mt-3 block text-xs text-[var(--app-muted)]">
+            <span className="mt-3 block text-text-2 type-label-sm data">
               {formatDate(project.dueDate)}
             </span>
-          </Button>
+          </div>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button
                 variant="ghost"
                 size="icon-sm"
-                className="shrink-0 !bg-transparent text-[var(--app-muted)]"
+                className="-me-1 -mt-1 shrink-0"
                 aria-label={`Change stage for ${project.title}`}
               >
                 <MoreHorizontal />
@@ -420,17 +320,15 @@ function ProjectBoardDragOverlay({ projects }: { projects: WorkItem[] }) {
     : createPortal(
         <DragOverlay dropAnimation={null}>
           {project ? (
-            <Card className="min-w-0 gap-1 p-3 text-left cursor-grabbing">
-              <span className="truncate text-[13px] font-semibold">
-                {project.title}
-              </span>
-              <span className="truncate text-xs text-[var(--app-muted)]">
+            <div className="flex min-w-0 cursor-grabbing flex-col gap-1 rounded-soft bg-raised p-3 text-start shadow-overlay">
+              <span className="truncate type-label">{project.title}</span>
+              <span className="truncate text-text-2 type-label-sm">
                 {project.client || "No client"}
               </span>
-              <span className="mt-2 text-xs text-[var(--app-muted)]">
+              <span className="mt-2 text-text-2 type-label-sm">
                 {formatDate(project.dueDate)}
               </span>
-            </Card>
+            </div>
           ) : null}
         </DragOverlay>,
         document.body
@@ -456,10 +354,10 @@ function ProjectBoardColumn({
     >
       <KanbanHeader
         data-board-wheel
-        className="flex shrink-0 items-center justify-between px-3 py-3 text-sm font-medium text-[var(--app-ink)]"
+        className="flex shrink-0 items-center justify-between px-3 py-3 text-text-1 type-label"
       >
         <span>{stage.label}</span>
-        <span className="text-[11px] font-normal tabular-nums text-[var(--app-muted)]">
+        <span className="tabular-nums text-text-2 type-label-sm">
           {projects}
         </span>
       </KanbanHeader>
@@ -472,7 +370,7 @@ function ProjectBoardColumn({
         data-board-wheel={projects === 0 ? true : undefined}
       >
         {projects === 0 ? (
-          <span className="mt-3 block text-xs text-[var(--app-muted)]">
+          <span className="mt-3 block text-text-2 type-label-sm">
             Drop here
           </span>
         ) : (
@@ -487,8 +385,6 @@ export function PrecisionProjects(props: PrecisionProjectsProps) {
   const [scope, setScope] = useState<WorkspaceScope>("personal");
   const [selectedId, setSelectedId] = useState("");
   const [mobileInspectorOpen, setMobileInspectorOpen] = useState(false);
-  const [filtersOpen, setFiltersOpen] = useState(false);
-  const reduceMotion = useHydratedReducedMotion();
   const hasTeam = Boolean(props.teamName);
   const boardRef = useBoardHorizontalWheel();
   const sensors = useSensors(
@@ -497,7 +393,6 @@ export function PrecisionProjects(props: PrecisionProjectsProps) {
   );
   const {
     state: tableState,
-    deferredState: deferredTableState,
     setState: setTableState,
     isUpdating,
     source,
@@ -522,12 +417,6 @@ export function PrecisionProjects(props: PrecisionProjectsProps) {
     activeTeamMemberCount: props.teamMembers.length,
     canUpdateProjectStatus: props.canUpdateProjectStatus,
   });
-  const springTransition = reduceMotion
-    ? { duration: 0 }
-    : { type: "spring" as const, stiffness: 430, damping: 38, mass: 0.75 };
-  const contentTransition = reduceMotion
-    ? { duration: 0 }
-    : { duration: 0.2, ease: [0.22, 1, 0.36, 1] as const };
 
   useEffect(() => {
     if (!hasTeam && scope === "team") setScope("personal");
@@ -592,16 +481,13 @@ export function PrecisionProjects(props: PrecisionProjectsProps) {
       columnHelper.accessor("title", {
         header: "Name",
         cell: ({ row }) => (
-          <div className="flex min-w-0 items-center gap-3">
-            <ProjectThumbnail project={row.original} />
-            <div className="min-w-0">
-              <p className="truncate text-[13px] font-semibold">
-                {row.original.title}
-              </p>
-              <p className="mt-0.5 max-w-[300px] truncate text-[11px] text-[var(--app-muted)]">
-                {row.original.notes || "No notes"}
-              </p>
-            </div>
+          <div className="min-w-0">
+            <p className="truncate text-text-1 type-label">
+              {row.original.title}
+            </p>
+            <p className="mt-0.5 max-w-[300px] truncate text-text-3 type-label-sm">
+              {row.original.notes || "No notes"}
+            </p>
           </div>
         ),
       }),
@@ -609,7 +495,7 @@ export function PrecisionProjects(props: PrecisionProjectsProps) {
         id: "client",
         header: "Client",
         cell: ({ row }) => (
-          <span className="block truncate text-xs">
+          <span className="block truncate type-label-sm">
             {props.settings.clients.find(
               (client) => client.id === row.original.clientId
             )?.name ??
@@ -623,10 +509,7 @@ export function PrecisionProjects(props: PrecisionProjectsProps) {
         cell: (info) => (
           <Badge
             variant="outline"
-            className={cn(
-              "h-5 rounded px-1.5 text-[10px] font-semibold",
-              projectStatusTone(info.getValue())
-            )}
+            className={cn("", projectStatusTone(info.getValue()))}
           >
             {info.getValue()}
           </Badge>
@@ -635,7 +518,7 @@ export function PrecisionProjects(props: PrecisionProjectsProps) {
       columnHelper.accessor("dueDate", {
         header: "Due",
         cell: (info) => (
-          <span className="whitespace-nowrap text-xs">
+          <span className="whitespace-nowrap type-label-sm">
             {formatDate(info.getValue())}
           </span>
         ),
@@ -644,7 +527,7 @@ export function PrecisionProjects(props: PrecisionProjectsProps) {
         id: "payment",
         header: "Payment",
         cell: ({ row }) => (
-          <span className="text-xs capitalize">
+          <span className="capitalize type-label-sm">
             {getPaymentState(row.original).replace("-", " ")}
           </span>
         ),
@@ -653,7 +536,7 @@ export function PrecisionProjects(props: PrecisionProjectsProps) {
         id: "salary",
         header: "Salary",
         cell: ({ row }) => (
-          <span className="whitespace-nowrap text-xs">
+          <span className="whitespace-nowrap type-label-sm">
             {isSalaryProject(row.original)
               ? "Salary"
               : money(row.original.earnings, props.settings.currencyCode)}
@@ -674,7 +557,7 @@ export function PrecisionProjects(props: PrecisionProjectsProps) {
                   )
                   .filter((name): name is string => Boolean(name));
                 return (
-                  <span className="block truncate text-xs">
+                  <span className="block truncate type-label-sm">
                     {names.join(", ") || "Unassigned"}
                   </span>
                 );
@@ -691,7 +574,7 @@ export function PrecisionProjects(props: PrecisionProjectsProps) {
               <Button
                 variant="ghost"
                 size="icon-sm"
-                className="!bg-[var(--app-panel)] transition-transform active:scale-95"
+                className="active:scale-95"
                 aria-label={`Actions for ${row.original.title}`}
                 onClick={(event) => event.stopPropagation()}
               >
@@ -751,88 +634,243 @@ export function PrecisionProjects(props: PrecisionProjectsProps) {
     getCoreRowModel: getCoreRowModel(),
   });
 
+  function select(project: WorkItem) {
+    setSelectedId(project.id);
+  }
+
   return (
-    <MotionConfig reducedMotion="user" transition={springTransition}>
-      <WorkspacePage
-        family="data-index"
-        mode="fill"
-        className="min-w-0 overflow-visible lg:min-h-full lg:overflow-visible"
-      >
-        <motion.div
-          initial={reduceMotion ? false : { opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={contentTransition}
-          className="contents"
-        >
-          <PageHeader
-            title="Projects"
-            actions={
-              <PageActions
-                primary={
-                  <Button
-                    className="h-9"
-                    onClick={() => props.onNewProject(scope)}
-                    disabled={
-                      scope === "personal"
-                        ? !props.canCreateProjects
-                        : !hasTeam || !props.canCreateTeamProjects
-                    }
-                  >
-                    <Plus /> Create project
-                  </Button>
+    <WorkspacePage family="data-index" mode="fill">
+      <PageHeader
+        title="Projects"
+        actions={
+          <PageActions
+            primary={
+              <Button
+                size="sm"
+                onClick={() => props.onNewProject(scope)}
+                disabled={
+                  scope === "personal"
+                    ? !props.canCreateProjects
+                    : !hasTeam || !props.canCreateTeamProjects
                 }
-                more={[
+              >
+                <Plus /> New project
+              </Button>
+            }
+            more={[
+              {
+                label: "Project groups",
+                onSelect: () => props.onManageProjectGroups(scope),
+              },
+              ...(props.onOpenHistory
+                ? [
+                    {
+                      label: "Completed projects",
+                      onSelect: props.onOpenHistory,
+                    },
+                  ]
+                : []),
+            ]}
+          />
+        }
+      />
+
+      <PageContent mode="fill" className="gap-3">
+        {props.notice}
+        <PageToolbar
+          primary={
+            <>
+              {hasTeam ? (
+                <Tabs
+                  value={scope}
+                  onValueChange={(value) =>
+                    setScope(value === "team" ? "team" : "personal")
+                  }
+                >
+                  <TabsList aria-label="Project scope">
+                    <TabsTrigger
+                      id="project-personal-tab"
+                      aria-controls="project-library-panel"
+                      value="personal"
+                    >
+                      Mine
+                      <span className="text-text-3 type-label-sm data">
+                        {props.personalProjects.length}
+                      </span>
+                    </TabsTrigger>
+                    <TabsTrigger
+                      id="project-team-tab"
+                      aria-controls="project-library-panel"
+                      value="team"
+                    >
+                      Team
+                      <span className="text-text-3 type-label-sm data">
+                        {props.teamProjects.length}
+                      </span>
+                    </TabsTrigger>
+                  </TabsList>
+                </Tabs>
+              ) : null}
+              <div className="relative min-w-0 flex-1 sm:max-w-80">
+                <Search
+                  aria-hidden="true"
+                  className="pointer-events-none absolute start-2.5 top-1/2 size-3.5 -translate-y-1/2 text-text-3"
+                />
+                <Input
+                  value={tableState.query}
+                  onChange={(event) =>
+                    setTableState((state) => ({
+                      ...state,
+                      query: event.target.value,
+                    }))
+                  }
+                  placeholder="Search projects, clients or notes"
+                  aria-label="Search projects"
+                  className="ps-8"
+                />
+              </div>
+              <FilterMenu
+                subject="projects"
+                activeCount={activeFilterCount}
+                onClear={() =>
+                  setTableState((state) => ({
+                    ...DEFAULT_PROJECT_TABLE_STATE,
+                    view: state.view,
+                  }))
+                }
+                filters={[
                   {
-                    label: "Project Groups",
-                    onSelect: () => props.onManageProjectGroups(scope),
+                    label: "Stage",
+                    value: tableState.stage,
+                    options: [
+                      { value: "all", label: "Any stage" },
+                      { value: "Planned", label: "Planned" },
+                      { value: "In Progress", label: "In Progress" },
+                      { value: "Review", label: "Review" },
+                      { value: "Client Review", label: "Client Review" },
+                      { value: "Revision", label: "Revision" },
+                      { value: "Delivered", label: "Delivered" },
+                      { value: "Cancelled", label: "Cancelled" },
+                    ],
+                    onChange: (value) =>
+                      setTableState((state) => ({
+                        ...state,
+                        stage: parseProjectTableSearch(
+                          `stage=${encodeURIComponent(value)}`
+                        ).stage,
+                      })),
                   },
-                  ...(props.onOpenHistory
-                    ? [{ label: "History", onSelect: props.onOpenHistory }]
+                  {
+                    label: "Client",
+                    value: tableState.clientId || "all",
+                    options: [
+                      { value: "all", label: "Any client" },
+                      ...props.settings.clients
+                        .filter((client) => !client.archived)
+                        .map((client) => ({
+                          value: client.id,
+                          label: client.name,
+                        })),
+                    ],
+                    onChange: (value) =>
+                      setTableState((state) => ({
+                        ...state,
+                        clientId: value === "all" ? "" : value,
+                      })),
+                  },
+                  {
+                    label: "Payment",
+                    value: tableState.payment,
+                    options: [
+                      { value: "all", label: "Any payment" },
+                      { value: "paid", label: "Paid" },
+                      { value: "unpaid", label: "Unpaid" },
+                      { value: "not-billable", label: "Not billable" },
+                    ],
+                    onChange: (value) =>
+                      setTableState((state) => ({
+                        ...state,
+                        payment: parseProjectTableSearch(`payment=${value}`)
+                          .payment,
+                      })),
+                  },
+                  {
+                    label: "Work type",
+                    value: tableState.salary,
+                    options: [
+                      { value: "all", label: "All work" },
+                      { value: "salary", label: "Salary" },
+                      { value: "client", label: "Client work" },
+                    ],
+                    onChange: (value) =>
+                      setTableState((state) => ({
+                        ...state,
+                        salary: parseProjectTableSearch(`salary=${value}`)
+                          .salary,
+                      })),
+                  },
+                  {
+                    label: "Archive",
+                    value: tableState.archive,
+                    options: [
+                      { value: "active", label: "Unarchived" },
+                      { value: "archived", label: "Archived" },
+                      { value: "all", label: "All records" },
+                    ],
+                    onChange: (value) =>
+                      setTableState((state) => ({
+                        ...state,
+                        archive: parseProjectTableSearch(`archive=${value}`)
+                          .archive,
+                      })),
+                  },
+                  ...(showAssignees
+                    ? [
+                        {
+                          label: "Assignee",
+                          value: tableState.assigneeUserId || "all",
+                          options: [
+                            { value: "all", label: "Anyone" },
+                            ...props.settings.teamMembers.map((member) => ({
+                              value: member.id,
+                              label: member.name,
+                            })),
+                          ],
+                          onChange: (value: string) =>
+                            setTableState((state) => ({
+                              ...state,
+                              assigneeUserId: value === "all" ? "" : value,
+                            })),
+                        },
+                      ]
                     : []),
                 ]}
               />
-            }
-          />
-
-          <PageContent mode="fill">
-            {props.notice}
-            <PageToolbar
-              primary={
-                <>
-                  <div className="relative min-w-0 flex-1 sm:max-w-[560px]">
-                    <Search className="pointer-events-none absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-[var(--app-muted)]" />
-                    <Input
-                      value={tableState.query}
-                      onChange={(event) =>
-                        setTableState((state) => ({
-                          ...state,
-                          query: event.target.value,
-                        }))
-                      }
-                      placeholder="Search project, client, or note..."
-                      aria-label="Search projects"
-                      className="h-9 rounded-lg border-[var(--app-border)] !bg-[var(--app-panel)] pl-8 text-xs transition-shadow focus-visible:ring-2"
-                    />
-                  </div>
+            </>
+          }
+          secondary={
+            <>
+              <span
+                className="text-text-3 type-label-sm data"
+                aria-live="polite"
+              >
+                {projects.length}{" "}
+                {projects.length === 1 ? "project" : "projects"}
+              </span>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
                   <Button
-                    variant="outline"
-                    className="h-9 shrink-0 gap-2 rounded-lg !bg-[var(--app-panel)]"
-                    onClick={() => setFiltersOpen(true)}
-                    aria-label="Open project filters"
+                    variant="ghost"
+                    size="sm"
+                    aria-label="Display options"
                   >
-                    <SlidersHorizontal className="size-3.5" />
-                    Filters
-                    {activeFilterCount ? (
-                      <span className="grid size-4 place-items-center rounded-full bg-[var(--app-active)] text-[10px] tabular-nums">
-                        {activeFilterCount}
-                      </span>
-                    ) : null}
+                    <SlidersHorizontal />
+                    Display
                   </Button>
-                </>
-              }
-              secondary={
-                <>
-                  <Tabs
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-52">
+                  <DropdownMenuLabel>Layout</DropdownMenuLabel>
+                  <DropdownMenuRadioGroup
                     value={tableState.view}
                     onValueChange={(view) =>
                       setTableState((state) => ({
@@ -840,76 +878,24 @@ export function PrecisionProjects(props: PrecisionProjectsProps) {
                         view: view === "board" ? "board" : "table",
                       }))
                     }
-                    className="block"
                   >
-                    <TabsList
-                      aria-label="Project view"
-                      className="h-9 rounded-lg border border-[var(--app-border)] bg-[var(--app-panel)] p-0.5"
-                    >
-                      <TabsTrigger
-                        id="project-table-tab"
-                        aria-controls="project-library-panel"
-                        value="table"
-                        className="h-7 px-2 text-xs"
-                      >
-                        Table
-                      </TabsTrigger>
-                      <TabsTrigger
-                        id="project-board-tab"
-                        aria-controls="project-library-panel"
-                        value="board"
-                        className="h-7 px-2 text-xs"
-                      >
-                        Board
-                      </TabsTrigger>
-                    </TabsList>
-                  </Tabs>
-                  <Tabs
-                    value={scope}
-                    onValueChange={(value) =>
-                      setScope(
-                        value === "team" && hasTeam ? "team" : "personal"
-                      )
-                    }
-                    className="block"
-                  >
-                    <TabsList
-                      aria-label="Project scope"
-                      className="h-9 rounded-lg border border-[var(--app-border)] bg-[var(--app-panel)] p-0.5"
-                    >
-                      <TabsTrigger
-                        id="project-personal-tab"
-                        aria-controls="project-library-panel"
-                        value="personal"
-                        className="h-8 px-3 text-xs"
-                      >
-                        My Projects{" "}
-                        <span className="text-[10px]">
-                          {props.personalProjects.length}
-                        </span>
-                      </TabsTrigger>
-                      <TabsTrigger
-                        id="project-team-tab"
-                        aria-controls="project-library-panel"
-                        value="team"
-                        disabled={!hasTeam}
-                        className="h-8 px-3 text-xs"
-                      >
-                        Team Projects{" "}
-                        <span className="text-[10px]">
-                          {props.teamProjects.length}
-                        </span>
-                      </TabsTrigger>
-                    </TabsList>
-                  </Tabs>
-                  <ProjectDropdown
+                    <DropdownMenuRadioItem value="table">
+                      Table
+                    </DropdownMenuRadioItem>
+                    <DropdownMenuRadioItem value="board">
+                      Board
+                    </DropdownMenuRadioItem>
+                  </DropdownMenuRadioGroup>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuLabel>Sort by</DropdownMenuLabel>
+                  <DropdownMenuRadioGroup
                     value={
                       // "Due first" has one urgency order; old dir=desc links land on it.
                       tableState.sort === "due"
                         ? "due:asc"
                         : `${tableState.sort}:${tableState.direction}`
                     }
-                    onChange={(value) => {
+                    onValueChange={(value) => {
                       const [sort, direction] = value.split(":");
                       const parsed = parseProjectTableSearch(
                         `sort=${sort}&dir=${direction}`
@@ -920,759 +906,441 @@ export function PrecisionProjects(props: PrecisionProjectsProps) {
                         direction: parsed.direction,
                       }));
                     }}
-                    ariaLabel="Sort projects"
-                    className="w-[176px]"
-                    options={[
-                      { value: "due:asc", label: "Due first" },
-                      { value: "delivered:desc", label: "Recently delivered" },
-                      { value: "name:asc", label: "Name A-Z" },
-                      { value: "stage:asc", label: "Stage" },
-                      { value: "payment:asc", label: "Payment" },
-                      { value: "salary:desc", label: "Salary first" },
-                    ]}
-                  />
-                </>
-              }
-            />
-
-            <Sheet open={filtersOpen} onOpenChange={setFiltersOpen}>
-              <SheetContent
-                side="right"
-                className="w-[min(92vw,400px)] gap-0 border-[var(--app-border)] bg-[var(--app-panel)] p-0"
-              >
-                <SheetHeader className="border-b border-[var(--app-border)] px-5 py-4">
-                  <SheetTitle>Project filters</SheetTitle>
-                  <SheetDescription>
-                    Narrow the project list without crowding the workspace
-                    toolbar.
-                  </SheetDescription>
-                </SheetHeader>
-                <div className="grid gap-4 overflow-y-auto px-5 py-5">
-                  <FilterField label="Stage">
-                    <ProjectDropdown
-                      value={tableState.stage}
-                      onChange={(value) =>
-                        setTableState((state) => ({
-                          ...state,
-                          stage: parseProjectTableSearch(
-                            `stage=${encodeURIComponent(value)}`
-                          ).stage,
-                        }))
-                      }
-                      ariaLabel="Filter projects by status"
-                      className="w-full"
-                      options={[
-                        { value: "all", label: "All stages" },
-                        { value: "Planned", label: "Planned" },
-                        { value: "In Progress", label: "In Progress" },
-                        { value: "Review", label: "Review" },
-                        { value: "Client Review", label: "Client Review" },
-                        { value: "Revision", label: "Revision" },
-                        { value: "Delivered", label: "Delivered" },
-                        { value: "Cancelled", label: "Cancelled" },
-                      ]}
-                    />
-                  </FilterField>
-                  <FilterField label="Client">
-                    <ProjectDropdown
-                      value={tableState.clientId || "all"}
-                      onChange={(value) =>
-                        setTableState((state) => ({
-                          ...state,
-                          clientId: value === "all" ? "" : value,
-                        }))
-                      }
-                      ariaLabel="Filter projects by client"
-                      className="w-full"
-                      options={[
-                        { value: "all", label: "All clients" },
-                        ...props.settings.clients
-                          .filter((client) => !client.archived)
-                          .map((client) => ({
-                            value: client.id,
-                            label: client.name,
-                          })),
-                      ]}
-                    />
-                  </FilterField>
-                  <FilterField label="Payment">
-                    <ProjectDropdown
-                      value={tableState.payment}
-                      onChange={(value) =>
-                        setTableState((state) => ({
-                          ...state,
-                          payment: parseProjectTableSearch(`payment=${value}`)
-                            .payment,
-                        }))
-                      }
-                      ariaLabel="Filter projects by payment"
-                      className="w-full"
-                      options={[
-                        { value: "all", label: "All payments" },
-                        { value: "paid", label: "Paid" },
-                        { value: "unpaid", label: "Unpaid" },
-                        { value: "not-billable", label: "Not billable" },
-                      ]}
-                    />
-                  </FilterField>
-                  <FilterField label="Work type">
-                    <ProjectDropdown
-                      value={tableState.salary}
-                      onChange={(value) =>
-                        setTableState((state) => ({
-                          ...state,
-                          salary: parseProjectTableSearch(`salary=${value}`)
-                            .salary,
-                        }))
-                      }
-                      ariaLabel="Filter projects by salary type"
-                      className="w-full"
-                      options={[
-                        { value: "all", label: "All work" },
-                        { value: "salary", label: "Salary" },
-                        { value: "client", label: "Client work" },
-                      ]}
-                    />
-                  </FilterField>
-                  <FilterField label="Archive">
-                    <ProjectDropdown
-                      value={tableState.archive}
-                      onChange={(value) =>
-                        setTableState((state) => ({
-                          ...state,
-                          archive: parseProjectTableSearch(`archive=${value}`)
-                            .archive,
-                        }))
-                      }
-                      ariaLabel="Filter archived projects"
-                      className="w-full"
-                      options={[
-                        { value: "active", label: "Unarchived" },
-                        { value: "archived", label: "Archived" },
-                        { value: "all", label: "All records" },
-                      ]}
-                    />
-                  </FilterField>
-                  {showAssignees ? (
-                    <FilterField label="Assignee">
-                      <ProjectDropdown
-                        value={tableState.assigneeUserId || "all"}
-                        onChange={(value) =>
-                          setTableState((state) => ({
-                            ...state,
-                            assigneeUserId: value === "all" ? "" : value,
-                          }))
-                        }
-                        ariaLabel="Filter projects by assignee"
-                        className="w-full"
-                        options={[
-                          { value: "all", label: "All assignees" },
-                          ...props.settings.teamMembers.map((member) => ({
-                            value: member.id,
-                            label: member.name,
-                          })),
-                        ]}
-                      />
-                    </FilterField>
-                  ) : null}
-                </div>
-                <div className="mt-auto flex items-center justify-between border-t border-[var(--app-border)] px-5 py-4">
-                  <span className="text-xs text-[var(--app-muted)]">
-                    {activeFilterCount} active{" "}
-                    {activeFilterCount === 1 ? "filter" : "filters"}
-                  </span>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    disabled={!activeFilterCount}
-                    onClick={() =>
-                      setTableState((state) => ({
-                        ...DEFAULT_PROJECT_TABLE_STATE,
-                        view: state.view,
-                      }))
-                    }
                   >
-                    Clear filters
-                  </Button>
-                </div>
-              </SheetContent>
-            </Sheet>
-
-            <motion.div
-              initial={reduceMotion ? false : { opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{
-                ...contentTransition,
-                delay: reduceMotion ? 0 : 0.14,
-              }}
-              className="min-h-0 flex-1"
-            >
-              <SplitPane
-                ratio="inspector"
-                className="h-full min-h-0 gap-3"
-                primary={
-                  <DataTableFrame
-                    id="project-library-panel"
-                    role="tabpanel"
-                    aria-labelledby={`project-${tableState.view}-tab project-${scope}-tab`}
-                    aria-busy={isUpdating}
-                    bodyLabel="Project library viewport"
-                    className="relative h-full min-h-0 overflow-visible rounded-xl border border-[var(--app-border)] bg-[var(--app-panel)]"
-                    bodyClassName="flex min-h-0 flex-1 flex-col max-lg:flex-none max-lg:overflow-visible"
-                  >
-                    {isUpdating ? (
-                      <div className="absolute inset-x-0 top-0 z-20 h-0.5 bg-[var(--app-accent)]" />
-                    ) : null}
-                    {tableState.view === "table" ? (
-                      <header className="flex h-12 items-center justify-between border-b border-[var(--app-border)] px-4">
-                        <span
-                          className="flex items-center gap-2 text-[11px] text-[var(--app-muted)]"
-                          aria-live="polite"
-                        >
-                          <AnimatePresence mode="popLayout" initial={false}>
-                            <motion.span
-                              key={`${scope}-${deferredTableState.stage}-${projects.length}`}
-                              initial={
-                                reduceMotion ? false : { opacity: 0, y: 4 }
-                              }
-                              animate={{ opacity: 1, y: 0 }}
-                              exit={
-                                reduceMotion ? undefined : { opacity: 0, y: -4 }
-                              }
-                              transition={contentTransition}
-                            >
-                              {projects.length} records
-                            </motion.span>
-                          </AnimatePresence>
-                        </span>
-                      </header>
-                    ) : null}
-
-                    {props.error ? (
-                      <div
-                        role="alert"
-                        className="grid min-h-72 place-items-center px-5 text-center text-sm text-destructive"
+                    {sortChoices.map((option) => (
+                      <DropdownMenuRadioItem
+                        key={option.value}
+                        value={option.value}
                       >
-                        {props.error}
-                      </div>
-                    ) : props.loading ? (
-                      <div aria-label="Loading projects">
-                        <ProjectTableSkeleton reduceMotion />
-                      </div>
-                    ) : projects.length ? (
-                      tableState.view === "board" ? (
-                        <DndContext
-                          sensors={sensors}
-                          accessibility={{ announcements }}
-                          onDragEnd={handleDragEnd}
+                        {option.label}
+                      </DropdownMenuRadioItem>
+                    ))}
+                  </DropdownMenuRadioGroup>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </>
+          }
+        />
+
+        <SplitPane
+          ratio="inspector-xl"
+          className="min-h-0 flex-1 gap-4"
+          primary={
+            <DataTableFrame
+              id="project-library-panel"
+              role={hasTeam ? "tabpanel" : undefined}
+              aria-labelledby={hasTeam ? `project-${scope}-tab` : undefined}
+              aria-busy={isUpdating}
+              bodyLabel="Project library viewport"
+              className="relative h-full min-h-0 rounded-frame shadow-[0_0_0_1px_var(--line-row)]"
+              bodyClassName={cn(
+                "flex min-h-0 flex-1 flex-col max-lg:flex-none max-lg:overflow-visible",
+                tableState.view === "board" && "overflow-hidden"
+              )}
+            >
+              {props.error ? (
+                <div role="alert" className="px-4 py-6">
+                  <p className="text-fail-text type-label">
+                    Projects could not load
+                  </p>
+                  <p className="mt-1 text-text-2 type-body-sm">{props.error}</p>
+                </div>
+              ) : props.loading ? (
+                <div aria-label="Loading projects">
+                  <ProjectTableSkeleton />
+                </div>
+              ) : projects.length ? (
+                tableState.view === "board" ? (
+                  <DndContext
+                    sensors={sensors}
+                    collisionDetection={columnUnderPointer}
+                    accessibility={{ announcements }}
+                    onDragEnd={handleDragEnd}
+                  >
+                    <div
+                      ref={boardRef}
+                      data-board-wheel
+                      className="grid min-h-0 flex-1 auto-cols-[minmax(240px,1fr)] grid-flow-col items-stretch gap-2 overflow-x-auto overflow-y-hidden p-2"
+                      aria-label="Project board"
+                    >
+                      {board.map(({ key, stage, projects: stageProjects }) => (
+                        <ProjectBoardColumn
+                          key={key}
+                          columnKey={key}
+                          stage={stage}
+                          projects={stageProjects.length}
                         >
-                          <div
-                            ref={boardRef}
-                            data-board-wheel
-                            className="grid min-h-0 flex-1 auto-cols-[minmax(232px,1fr)] grid-flow-col items-stretch gap-3 overflow-x-auto overflow-y-hidden bg-[var(--app-panel)] px-3 pb-3 pt-3"
-                            aria-label="Project board"
-                          >
-                            {board.map(
-                              ({ key, stage, projects: stageProjects }) => {
-                                return (
-                                  <ProjectBoardColumn
-                                    key={key}
-                                    columnKey={key}
-                                    stage={stage}
-                                    projects={stageProjects.length}
-                                  >
-                                    {stageProjects.map((project) => (
-                                      <ProjectBoardCard
-                                        key={project.id}
-                                        project={project}
-                                        selected={selected?.id === project.id}
-                                        disabled={
-                                          !props.canUpdateProjectStatus &&
-                                          Boolean(project.teamId)
-                                        }
-                                        stageChoices={getStageChoices(project)}
-                                        onSelect={() =>
-                                          setSelectedId(project.id)
-                                        }
-                                        onOpen={() =>
-                                          props.onViewProject(project)
-                                        }
-                                        onUpdateProjectStatus={
-                                          props.onUpdateProjectStatus
-                                        }
-                                      />
-                                    ))}
-                                  </ProjectBoardColumn>
-                                );
+                          {stageProjects.map((project) => (
+                            <ProjectBoardCard
+                              key={project.id}
+                              project={project}
+                              selected={selected?.id === project.id}
+                              disabled={
+                                !props.canUpdateProjectStatus &&
+                                Boolean(project.teamId)
                               }
+                              stageChoices={getStageChoices(project)}
+                              onSelect={() => {
+                                select(project);
+                                setMobileInspectorOpen(true);
+                              }}
+                              onOpen={() => props.onViewProject(project)}
+                              onUpdateProjectStatus={
+                                props.onUpdateProjectStatus
+                              }
+                            />
+                          ))}
+                        </ProjectBoardColumn>
+                      ))}
+                    </div>
+                    <ProjectBoardDragOverlay projects={projects} />
+                  </DndContext>
+                ) : (
+                  <>
+                    <ul className="lg:hidden" aria-label="Project cards">
+                      {table.getRowModel().rows.map((row) => (
+                        <li key={row.id} className="rule-row">
+                          <button
+                            type="button"
+                            data-testid="mobile-project-row"
+                            data-project-title={row.original.title}
+                            aria-label={`Open ${row.original.title} project details`}
+                            className={cn(
+                              "flex w-full items-center gap-3 px-4 py-3 text-start outline-none transition-colors duration-(--dur-fast) hover:bg-hover focus-visible:focus-ring-inset",
+                              selected?.id === row.original.id && "bg-selected"
                             )}
-                          </div>
-                          <ProjectBoardDragOverlay projects={projects} />
-                        </DndContext>
-                      ) : (
-                        <>
-                          <div
-                            className="divide-y divide-[var(--app-border)] lg:hidden"
-                            aria-label="Project cards"
+                            onClick={() => {
+                              select(row.original);
+                              setMobileInspectorOpen(true);
+                            }}
                           >
-                            {table.getRowModel().rows.map((row) => (
-                              <Button
-                                key={row.id}
-                                type="button"
-                                variant="ghost"
-                                size="default"
-                                data-testid="mobile-project-row"
-                                data-project-title={row.original.title}
-                                aria-label={`Open ${row.original.title} project details`}
-                                className={cn(
-                                  "h-auto w-full grid grid-cols-[48px_minmax(0,1fr)_auto] justify-start items-center gap-3 px-3 py-3 text-left font-normal whitespace-normal hover:bg-[var(--app-hover)] dark:hover:bg-[var(--app-hover)] focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--app-accent)] active:translate-y-0 active:scale-100",
-                                  selected?.id === row.original.id &&
-                                    "bg-[var(--app-active)]"
-                                )}
-                                onClick={() => {
-                                  setSelectedId(row.original.id);
-                                  setMobileInspectorOpen(true);
-                                }}
-                              >
-                                <ProjectThumbnail
-                                  project={row.original}
-                                  className="h-12 w-16"
-                                />
-                                <span className="min-w-0">
-                                  <span className="block truncate text-sm font-semibold">
-                                    {row.original.title}
-                                  </span>
-                                  <span className="mt-1 block truncate text-xs text-[var(--app-muted)]">
-                                    {row.original.client ||
-                                      row.original.workType}
-                                  </span>
-                                </span>
-                                <Badge
-                                  variant="outline"
+                            <span className="min-w-0 flex-1">
+                              <span className="block truncate type-label">
+                                {row.original.title}
+                              </span>
+                              <span className="mt-0.5 block truncate text-text-3 type-label-sm">
+                                {row.original.client || row.original.workType}
+                              </span>
+                            </span>
+                            <Badge
+                              className={projectStatusTone(row.original.status)}
+                            >
+                              {row.original.status}
+                            </Badge>
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                    <div
+                      className={cn(
+                        "hidden min-h-0 flex-1 overflow-y-auto overscroll-contain transition-opacity duration-(--dur-base) lg:block",
+                        isUpdating && "opacity-(--stale-opacity)"
+                      )}
+                      tabIndex={0}
+                      aria-label="Scrollable project library"
+                    >
+                      <Table
+                        className="table-fixed"
+                        aria-label={`${scope === "team" ? "Team" : "Personal"} project library`}
+                      >
+                        <TableCaption className="sr-only">
+                          Projects with due date, status, payment and value.
+                          Select a row to inspect it.
+                        </TableCaption>
+                        <TableHeader className="sticky top-0 z-10 bg-page">
+                          {table.getHeaderGroups().map((group) => (
+                            <TableRow key={group.id}>
+                              {group.headers.map((header) => (
+                                <TableHead
+                                  key={header.id}
                                   className={cn(
-                                    "h-5 rounded px-1.5 text-[10px] font-semibold",
-                                    projectStatusTone(row.original.status)
+                                    header.column.id === "title" && "w-[30%]",
+                                    header.column.id === "client" && "w-[15%]",
+                                    header.column.id === "dueDate" && "w-[12%]",
+                                    header.column.id === "status" && "w-[13%]",
+                                    header.column.id === "payment" && "w-[11%]",
+                                    header.column.id === "salary" && "w-[11%]",
+                                    header.column.id === "assignees" &&
+                                      "w-[12%]",
+                                    header.column.id === "actions" && "w-12"
                                   )}
                                 >
-                                  {row.original.status}
-                                </Badge>
-                              </Button>
-                            ))}
-                          </div>
-                          <motion.div
-                            animate={{ opacity: isUpdating ? 0.62 : 1 }}
-                            transition={contentTransition}
-                            className="hidden min-h-0 flex-1 overflow-y-auto overscroll-contain lg:block"
-                            tabIndex={0}
-                            aria-label="Scrollable project library"
-                          >
-                            <Table
-                              className="w-full table-fixed border-collapse"
-                              aria-label={`${scope === "team" ? "Team" : "Personal"} project library`}
+                                  {header.isPlaceholder
+                                    ? null
+                                    : flexRender(
+                                        header.column.columnDef.header,
+                                        header.getContext()
+                                      )}
+                                </TableHead>
+                              ))}
+                            </TableRow>
+                          ))}
+                        </TableHeader>
+                        <TableBody>
+                          {table.getRowModel().rows.map((row) => (
+                            <TableRow
+                              key={row.id}
+                              tabIndex={0}
+                              data-testid="project-row"
+                              data-project-title={row.original.title}
+                              data-project-id={row.original.id}
+                              data-state={
+                                selected?.id === row.original.id
+                                  ? "selected"
+                                  : undefined
+                              }
+                              aria-label={`${row.original.title}. ${row.original.status}. Due ${formatDate(row.original.dueDate)}. Press Enter to open.`}
+                              className="cursor-pointer outline-none focus-visible:focus-ring-inset"
+                              onClick={() => select(row.original)}
+                              onDoubleClick={() =>
+                                props.onViewProject(row.original)
+                              }
+                              onKeyDown={(event) => {
+                                if (event.target !== event.currentTarget)
+                                  return;
+                                const rows = table.getRowModel().rows;
+                                const index = rows.findIndex(
+                                  (candidate) => candidate.id === row.id
+                                );
+                                const focusRow = (nextIndex: number) => {
+                                  const next = rows[nextIndex];
+                                  if (!next) return;
+                                  setSelectedId(next.original.id);
+                                  document
+                                    .querySelector<HTMLElement>(
+                                      `[data-testid="project-row"][data-project-id="${CSS.escape(next.original.id)}"]`
+                                    )
+                                    ?.focus();
+                                };
+                                if (event.key === "ArrowDown") {
+                                  event.preventDefault();
+                                  focusRow(
+                                    Math.min(rows.length - 1, index + 1)
+                                  );
+                                } else if (event.key === "ArrowUp") {
+                                  event.preventDefault();
+                                  focusRow(Math.max(0, index - 1));
+                                } else if (event.key === "Home") {
+                                  event.preventDefault();
+                                  focusRow(0);
+                                } else if (event.key === "End") {
+                                  event.preventDefault();
+                                  focusRow(rows.length - 1);
+                                } else if (event.key === "Enter") {
+                                  event.preventDefault();
+                                  props.onViewProject(row.original);
+                                } else if (event.key === " ") {
+                                  event.preventDefault();
+                                  select(row.original);
+                                }
+                              }}
                             >
-                              <TableCaption className="sr-only">
-                                Projects with due date, status, progress, and
-                                value. Select a row to inspect it.
-                              </TableCaption>
-                              <TableHeader>
-                                {table.getHeaderGroups().map((group) => (
-                                  <TableRow
-                                    key={group.id}
-                                    className="border-b border-[var(--app-border)] bg-[var(--app-soft-panel)]"
-                                  >
-                                    {group.headers.map((header) => (
-                                      <TableHead
-                                        key={header.id}
-                                        className={cn(
-                                          "h-8 px-3 text-left text-[10px] font-semibold uppercase text-[var(--app-subtle)]",
-                                          header.column.id === "title" &&
-                                            "w-[25%]",
-                                          header.column.id === "client" &&
-                                            "w-[13%]",
-                                          header.column.id === "dueDate" &&
-                                            "w-[12%]",
-                                          header.column.id === "status" &&
-                                            "w-[12%]",
-                                          header.column.id === "payment" &&
-                                            "w-[10%]",
-                                          header.column.id === "salary" &&
-                                            "w-[12%]",
-                                          header.column.id === "assignees" &&
-                                            "w-[12%]",
-                                          header.column.id === "actions" &&
-                                            "w-[4%]"
-                                        )}
-                                      >
-                                        {header.isPlaceholder
-                                          ? null
-                                          : flexRender(
-                                              header.column.columnDef.header,
-                                              header.getContext()
-                                            )}
-                                      </TableHead>
-                                    ))}
-                                  </TableRow>
-                                ))}
-                              </TableHeader>
-                              <TableBody className="divide-y divide-[var(--app-border)]">
-                                {table.getRowModel().rows.map((row) => (
-                                  <motion.tr
-                                    key={row.id}
-                                    role="button"
-                                    tabIndex={0}
-                                    data-testid="project-row"
-                                    data-project-title={row.original.title}
-                                    aria-selected={
-                                      selected?.id === row.original.id
-                                    }
-                                    aria-label={`Select ${row.original.title}. ${row.original.status}. Due ${formatDate(row.original.dueDate)}.`}
-                                    className={cn(
-                                      "h-[var(--workspace-row-height,70px)] cursor-pointer outline-none transition-colors hover:bg-[var(--app-hover)] focus-visible:bg-[var(--app-hover)] focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--app-accent)] active:bg-[var(--app-active)]",
-                                      selected?.id === row.original.id &&
-                                        "bg-[var(--app-active)]"
-                                    )}
-                                    animate={{ opacity: 1 }}
-                                    initial={
-                                      reduceMotion ? false : { opacity: 0 }
-                                    }
-                                    transition={contentTransition}
-                                    onClick={() => {
-                                      setSelectedId(row.original.id);
-                                    }}
-                                    onDoubleClick={() =>
-                                      props.onViewProject(row.original)
-                                    }
-                                    onKeyDown={(event) => {
-                                      if (event.target !== event.currentTarget)
-                                        return;
-                                      const rows = table.getRowModel().rows;
-                                      const index = rows.findIndex(
-                                        (candidate) => candidate.id === row.id
-                                      );
-                                      const focusRow = (nextIndex: number) => {
-                                        const next = rows[nextIndex];
-                                        if (!next) return;
-                                        setSelectedId(next.original.id);
-                                        document
-                                          .querySelector<HTMLElement>(
-                                            `[data-testid="project-row"][data-project-id="${CSS.escape(next.original.id)}"]`
-                                          )
-                                          ?.focus();
-                                      };
-                                      if (event.key === "ArrowDown") {
-                                        event.preventDefault();
-                                        focusRow(
-                                          Math.min(rows.length - 1, index + 1)
-                                        );
-                                      } else if (event.key === "ArrowUp") {
-                                        event.preventDefault();
-                                        focusRow(Math.max(0, index - 1));
-                                      } else if (event.key === "Home") {
-                                        event.preventDefault();
-                                        focusRow(0);
-                                      } else if (event.key === "End") {
-                                        event.preventDefault();
-                                        focusRow(rows.length - 1);
-                                      } else if (event.key === "Enter") {
-                                        event.preventDefault();
-                                        props.onViewProject(row.original);
-                                      } else if (event.key === " ") {
-                                        event.preventDefault();
-                                        setSelectedId(row.original.id);
-                                      }
-                                    }}
-                                    data-project-id={row.original.id}
-                                  >
-                                    {row.getVisibleCells().map((cell) => (
-                                      <TableCell
-                                        key={cell.id}
-                                        className="px-3 py-2 text-xs"
-                                      >
-                                        {flexRender(
-                                          cell.column.columnDef.cell,
-                                          cell.getContext()
-                                        )}
-                                      </TableCell>
-                                    ))}
-                                  </motion.tr>
-                                ))}
-                              </TableBody>
-                            </Table>
-                          </motion.div>
-                        </>
-                      )
-                    ) : isUpdating ? (
-                      <ProjectTableSkeleton reduceMotion={reduceMotion} />
-                    ) : (
-                      <MotionEmpty
-                        initial={reduceMotion ? false : { opacity: 0, y: 8 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="grid min-h-72 flex-none place-items-center gap-0 rounded-none border-0 px-5 py-6 text-center [text-wrap:wrap] md:px-5 md:py-6"
+                              {row.getVisibleCells().map((cell) => (
+                                <TableCell
+                                  key={cell.id}
+                                  className={cn(
+                                    "type-label-sm",
+                                    cell.column.id === "actions" && "px-1"
+                                  )}
+                                >
+                                  {flexRender(
+                                    cell.column.columnDef.cell,
+                                    cell.getContext()
+                                  )}
+                                </TableCell>
+                              ))}
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </div>
+                  </>
+                )
+              ) : isUpdating ? (
+                <ProjectTableSkeleton />
+              ) : (
+                <PageEmptyState
+                  title={
+                    hasFilters
+                      ? "No projects match these filters"
+                      : "No projects yet"
+                  }
+                  description={
+                    hasFilters
+                      ? "Clear the filters to bring projects back into view."
+                      : "Create a project to track its deadline, reviews and delivery."
+                  }
+                  action={
+                    hasFilters ? (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() =>
+                          setTableState((state) => ({
+                            ...DEFAULT_PROJECT_TABLE_STATE,
+                            view: state.view,
+                          }))
+                        }
                       >
-                        <div className="max-w-xs">
-                          <FolderKanban className="mx-auto size-7 text-[var(--app-muted)]" />
-                          <p className="mt-2 text-sm font-semibold">
-                            {hasFilters
-                              ? "No projects match these filters"
-                              : "No projects in this workspace"}
-                          </p>
-                          <p className="mt-1 text-xs leading-5 text-[var(--app-muted)]">
-                            {hasFilters
-                              ? "Clear the filters to bring projects back into view."
-                              : "Create your first project to track deadlines, reviews, and delivery."}
-                          </p>
-                          {hasFilters ? (
-                            <Button
-                              variant="outline"
-                              className="mt-3 h-8 !bg-[var(--app-panel)] active:scale-[0.98]"
-                              size="sm"
-                              onClick={() =>
-                                setTableState((state) => ({
-                                  ...DEFAULT_PROJECT_TABLE_STATE,
-                                  view: state.view,
-                                }))
-                              }
-                            >
-                              Clear filters
-                            </Button>
-                          ) : (
-                            <Button
-                              className="mt-3 h-8 active:scale-[0.98]"
-                              size="sm"
-                              onClick={() => props.onNewProject(scope)}
-                              disabled={
-                                scope === "personal"
-                                  ? !props.canCreateProjects
-                                  : !hasTeam || !props.canCreateTeamProjects
-                              }
-                            >
-                              <Plus /> Create project
-                            </Button>
-                          )}
-                        </div>
-                      </MotionEmpty>
-                    )}
-                  </DataTableFrame>
-                }
-                secondary={
-                  <ProjectInspector
-                    project={selected}
-                    settings={props.settings}
-                    onOpen={props.onViewProject}
-                    onEdit={props.onEditProject}
-                    canEdit={props.canEditProjects}
-                    reduceMotion={reduceMotion}
-                    className="hidden xl:block"
-                  />
-                }
-              />
-            </motion.div>
-          </PageContent>
-          <Sheet
-            open={mobileInspectorOpen}
-            onOpenChange={setMobileInspectorOpen}
-          >
-            <SheetContent
-              side="right"
-              className="w-[min(92vw,380px)] p-0 xl:hidden"
-            >
-              <SheetHeader className="sr-only">
-                <SheetTitle>Project details</SheetTitle>
-                <SheetDescription>
-                  Review the selected project and open or edit its workspace.
-                </SheetDescription>
-              </SheetHeader>
+                        Clear filters
+                      </Button>
+                    ) : (
+                      <Button
+                        size="sm"
+                        onClick={() => props.onNewProject(scope)}
+                        disabled={
+                          scope === "personal"
+                            ? !props.canCreateProjects
+                            : !hasTeam || !props.canCreateTeamProjects
+                        }
+                      >
+                        <Plus /> New project
+                      </Button>
+                    )
+                  }
+                />
+              )}
+            </DataTableFrame>
+          }
+          secondary={
+            // The board needs the full width; its selection opens the sheet.
+            tableState.view === "board" ? null : (
               <ProjectInspector
                 project={selected}
                 settings={props.settings}
                 onOpen={props.onViewProject}
                 onEdit={props.onEditProject}
                 canEdit={props.canEditProjects}
-                reduceMotion={reduceMotion}
-                className="h-full border-0"
               />
-            </SheetContent>
-          </Sheet>
-        </motion.div>
-      </WorkspacePage>
-    </MotionConfig>
+            )
+          }
+        />
+      </PageContent>
+      <Sheet open={mobileInspectorOpen} onOpenChange={setMobileInspectorOpen}>
+        <SheetContent
+          side="right"
+          className={cn(
+            "gap-0 p-0",
+            tableState.view === "table" && "xl:hidden"
+          )}
+        >
+          <SheetHeader className="sr-only">
+            <SheetTitle>Project details</SheetTitle>
+            <SheetDescription>
+              Review the selected project and open or edit its workspace.
+            </SheetDescription>
+          </SheetHeader>
+          <ProjectInspector
+            project={selected}
+            settings={props.settings}
+            onOpen={props.onViewProject}
+            onEdit={props.onEditProject}
+            canEdit={props.canEditProjects}
+          />
+        </SheetContent>
+      </Sheet>
+    </WorkspacePage>
   );
 }
 
+/** The selected Project beside the list: its facts and the next step. */
 function ProjectInspector({
   project,
   settings,
   onOpen,
   onEdit,
   canEdit,
-  reduceMotion,
-  className,
 }: {
   project: WorkItem | null;
   settings: SettingsState;
   onOpen: (project: WorkItem) => void;
   onEdit: (project: WorkItem) => void;
   canEdit: boolean;
-  reduceMotion: boolean | null;
-  className?: string;
 }) {
   if (!project) {
     return (
-      <MotionCard
-        className={cn(
-          "rounded-xl border border-[var(--app-border)] bg-[var(--app-panel)] p-6 text-center text-xs text-[var(--app-muted)] shadow-none",
-          className
-        )}
-      >
-        <Empty className="flex-none gap-0 rounded-none border-0 p-0 text-center text-xs text-[var(--app-muted)] [text-wrap:wrap] md:p-0">
-          <EmptyHeader className="max-w-none gap-0">
-            <EmptyMedia
-              variant="default"
-              className="mx-auto mb-2 size-6 opacity-70"
-            >
-              <FolderOpen />
-            </EmptyMedia>
-            Select a project to inspect its production details.
-          </EmptyHeader>
-        </Empty>
-      </MotionCard>
+      <PageEmptyState
+        compact
+        title="No project selected"
+        description="Select a project to see its details here."
+      />
     );
   }
   const value = getProjectProgress(project);
   return (
-    <MotionCard
-      role="region"
+    <section
       aria-label="Selected project details"
-      className={cn(
-        "h-full min-h-0 overflow-hidden rounded-xl border border-[var(--app-border)] bg-[var(--app-panel)] shadow-none",
-        className
-      )}
+      className="flex h-full min-h-0 flex-col overflow-y-auto rounded-frame bg-well"
     >
-      <ScrollArea className="h-full min-h-0 flex-1 rounded-[inherit] [&_[data-slot=scroll-area-viewport]]:overscroll-contain [&_[data-slot=scroll-area-scrollbar]]:hidden">
-        <div className="p-4">
-          <ProjectThumbnail
-            project={project}
-            className="mb-3 aspect-video h-auto w-full"
-          />
-          <div>
-            <div className="border-b border-[var(--app-border)] pb-4">
-              <div className="min-w-0 flex-1">
-                <h2 className="truncate text-sm font-semibold">
-                  {project.title}
-                </h2>
-                <p className="mt-0.5 truncate text-[11px] text-[var(--app-muted)]">
-                  {project.client || "No client"}
-                </p>
-                <Badge
-                  variant="outline"
-                  className={cn(
-                    "mt-2 h-5 rounded px-1.5 text-[10px] font-semibold",
-                    projectStatusTone(project.status)
-                  )}
-                >
-                  {project.status}
-                </Badge>
-              </div>
-            </div>
-            <div className="space-y-4 pt-4">
-              <dl className="grid grid-cols-2 gap-x-4 gap-y-5">
-                <Detail label="Client" value={project.client || "No client"} />
-                <Detail label="Work type" value={project.workType} />
-                <Detail label="Due date" value={formatDate(project.dueDate)} />
-                <Detail
-                  label="Value"
-                  value={
-                    project.workType === settings.salaryWorkType
-                      ? "Paid per batch"
-                      : money(project.earnings, settings.currencyCode)
-                  }
-                />
-              </dl>
-              <div className="pt-1">
-                <div className="flex justify-between text-xs font-semibold">
-                  <span>Progress</span>
-                  <span>{value}%</span>
-                </div>
-                <Progress
-                  value={value}
-                  aria-hidden="true"
-                  className="mt-2 h-1.5 rounded-full bg-[var(--app-progress-track)] [&_[data-slot=progress-indicator]]:rounded-full [&_[data-slot=progress-indicator]]:bg-[var(--app-accent)]"
-                />
-              </div>
-              <div>
-                <p className="text-xs text-[var(--app-muted)]">Project note</p>
-                <p className="mt-2 text-xs leading-5 text-[var(--app-muted)]">
-                  {project.notes || "No project notes yet."}
-                </p>
-              </div>
-              <div>
-                <p className="text-xs text-[var(--app-muted)]">Next action</p>
-                <p className="mt-2 text-xs leading-5 text-[var(--app-ink)]">
-                  {projectNextAction(project)}
-                </p>
-              </div>
-              <div className="grid grid-cols-2 gap-2 pt-1">
-                <Button
-                  variant="outline"
-                  className="h-9 !bg-[var(--app-panel)] transition-transform active:scale-[0.98]"
-                  disabled={!canEdit && Boolean(project.teamId)}
-                  onClick={() => onEdit(project)}
-                >
-                  <Edit3 /> Edit
-                </Button>
-                <Button
-                  className="h-9 transition-transform active:scale-[0.98]"
-                  onClick={() => onOpen(project)}
-                >
-                  Open <ArrowRight />
-                </Button>
-              </div>
-            </div>
-          </div>
+      <div className="p-4">
+        <h2 className="type-heading-xs text-text-1">{project.title}</h2>
+        <p className="mt-1 flex flex-wrap items-center gap-2">
+          <Badge className={projectStatusTone(project.status)}>
+            {project.status}
+          </Badge>
+          <span className="text-text-2 type-label-sm">
+            {project.client || "No client"}
+          </span>
+        </p>
+      </div>
+      <dl className="grid grid-cols-[auto_1fr] gap-x-6 gap-y-2.5 px-4 pb-4 type-label">
+        <dt className="text-text-3">Work type</dt>
+        <dd className="text-text-1">{project.workType}</dd>
+        <dt className="text-text-3">Due date</dt>
+        <dd className="text-text-1 data">{formatDate(project.dueDate)}</dd>
+        <dt className="text-text-3">Value</dt>
+        <dd className="text-text-1 data">
+          {project.workType === settings.salaryWorkType
+            ? "Paid per batch"
+            : money(project.earnings, settings.currencyCode)}
+        </dd>
+      </dl>
+      <div className="rule-top px-4 py-3">
+        <div className="flex justify-between type-label">
+          <span className="text-text-2">Progress</span>
+          <span className="text-text-1 data">{value}%</span>
         </div>
-      </ScrollArea>
-    </MotionCard>
-  );
-}
-
-function Detail({ label, value }: { label: string; value: string }) {
-  return (
-    <div>
-      <p className="text-xs text-[var(--app-muted)]">{label}</p>
-      <p className="mt-1 text-xs font-medium">{value}</p>
-    </div>
-  );
-}
-
-function ProjectTableSkeleton({
-  reduceMotion,
-}: {
-  reduceMotion: boolean | null;
-}) {
-  return (
-    <div
-      className="min-h-72 border-t border-[var(--app-border)]"
-      aria-label="Updating projects"
-    >
-      {Array.from({ length: 4 }, (_, index) => (
-        <motion.div
-          key={index}
-          className="grid h-[58px] grid-cols-[minmax(180px,1.6fr)_minmax(80px,0.7fr)_minmax(100px,0.9fr)_minmax(72px,0.7fr)_minmax(100px,1fr)] items-center gap-3 border-b border-[var(--app-border)] px-3"
-          initial={false}
-          animate={{ opacity: reduceMotion ? 0.65 : 0.72 }}
+        <SegmentedMeter value={value} segments={24} className="mt-2" />
+      </div>
+      <div className="rule-top px-4 py-3">
+        <p className="text-text-3 type-label-sm">Next step</p>
+        <p className="mt-1 text-text-1 type-body-sm">
+          {projectNextAction(project)}
+        </p>
+      </div>
+      <div className="rule-top px-4 py-3">
+        <p className="text-text-3 type-label-sm">Notes</p>
+        <p className="mt-1 text-text-2 type-body-sm">
+          {project.notes || "None"}
+        </p>
+      </div>
+      <div className="mt-auto grid grid-cols-2 gap-2 p-4">
+        <Button
+          variant="outline"
+          disabled={!canEdit && Boolean(project.teamId)}
+          onClick={() => onEdit(project)}
         >
-          <div className="flex items-center gap-3">
-            <span className="h-9 w-12 rounded-md bg-[var(--app-soft-panel)]" />
-            <span className="space-y-1.5">
-              <span className="block h-2.5 w-36 rounded bg-[var(--app-soft-panel)]" />
-              <span className="block h-2 w-24 rounded bg-[var(--app-soft-panel)]" />
-            </span>
-          </div>
-          <span className="h-2.5 w-16 rounded bg-[var(--app-soft-panel)]" />
-          <span className="h-2.5 w-20 rounded bg-[var(--app-soft-panel)]" />
-          <span className="h-5 w-16 rounded bg-[var(--app-soft-panel)]" />
-          <span className="h-1 w-full max-w-28 rounded bg-[var(--app-soft-panel)]" />
-        </motion.div>
+          Edit
+        </Button>
+        <Button onClick={() => onOpen(project)}>Open project</Button>
+      </div>
+    </section>
+  );
+}
+
+function ProjectTableSkeleton() {
+  return (
+    <div aria-label="Updating projects" aria-busy="true">
+      {Array.from({ length: 5 }, (_, index) => (
+        <div
+          key={index}
+          className="grid h-(--row) grid-cols-[minmax(180px,1.6fr)_minmax(80px,0.7fr)_minmax(100px,0.9fr)_minmax(72px,0.7fr)] items-center gap-4 rule-row px-3"
+        >
+          <span className="h-2.5 w-40 rounded-inner bg-(--surface-skeleton)" />
+          <span className="h-2.5 w-16 rounded-inner bg-(--surface-skeleton)" />
+          <span className="h-2.5 w-20 rounded-inner bg-(--surface-skeleton)" />
+          <span className="h-2.5 w-14 rounded-inner bg-(--surface-skeleton)" />
+        </div>
       ))}
     </div>
   );

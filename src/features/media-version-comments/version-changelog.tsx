@@ -29,7 +29,7 @@ function ChangelogEditor({ row }: { row: Doc<"versionChangelogs"> }) {
   }
   return (
     <div className="mt-3 grid gap-2">
-      <p className="text-xs">
+      <p className="type-label-sm">
         AI-drafted
         {row.approvedText ? " · Approved copy in portal" : " · Private draft"}
       </p>
@@ -58,7 +58,7 @@ function ChangelogEditor({ row }: { row: Doc<"versionChangelogs"> }) {
           Approve for portal
         </Button>
       </div>
-      <div className="flex flex-wrap gap-3 text-xs">
+      <div className="flex flex-wrap gap-3 type-label-sm">
         {row.sourceRevisionIds.map((id, index) => (
           <a key={id} className="underline" href={`#revision-${id}`}>
             Revision {index + 1}
@@ -66,7 +66,7 @@ function ChangelogEditor({ row }: { row: Doc<"versionChangelogs"> }) {
         ))}
       </div>
       {message ? (
-        <p role="status" className="text-sm">
+        <p role="status" className="type-body">
           {message}
         </p>
       ) : null}
@@ -128,12 +128,9 @@ export function VersionChangelog({
   const selected = rows?.find((row) => row.runId === runId) ?? rows?.[0];
   const running = busy || run?.status === "queued" || run?.status === "running";
   return (
-    <section
-      aria-label="Version changelog"
-      className="mt-4 dark:bg-black dark:text-white [&_button]:bg-transparent [&_button:hover]:bg-transparent [&_button]:dark:text-white [&_textarea]:dark:bg-black"
-    >
+    <section aria-label="Version changelog" className="mt-4 ">
       <div className="flex flex-wrap items-center gap-2">
-        <h4 className="text-sm font-semibold">What changed</h4>
+        <h4 className="type-label">What changed</h4>
         <Button
           variant="ghost"
           size="sm"
@@ -154,7 +151,7 @@ export function VersionChangelog({
         ) : null}
       </div>
       {run ? (
-        <p role="status" className="mt-2 text-xs">
+        <p role="status" className="mt-2 type-label-sm">
           {run.status === "queued"
             ? "Queued"
             : run.status === "running"
@@ -165,7 +162,7 @@ export function VersionChangelog({
         </p>
       ) : null}
       {error ? (
-        <p role="alert" className="mt-2 text-sm">
+        <p role="alert" className="mt-2 type-body">
           {error}
         </p>
       ) : null}

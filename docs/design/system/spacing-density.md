@@ -1,35 +1,8 @@
 # Spacing and density
 
-## Purpose
-
-Support focused, high-volume work without making controls hard to use.
-
-## Anatomy
-
-Use a 4px base and 8px rhythm with semantic aliases: page gutter, control, row, inline, section, and panel. Start with 36px standard/32px compact controls and 44px standard/36px compact rows.
-
-## Behavior
-
-Density changes space, not feature access, labels, or target usability. Keep flat bordered surfaces and reserve shadows for overlays.
-
-## States
-
-Selected and focused rows retain enough inset and contrast in both density modes. Loading preserves row height.
-
-## Responsive rules
-
-Use 24px page gutters on desktop and 16px on small screens. Let content define row height when labels wrap or touch input needs more room.
-
-## Accessibility
-
-Keep pointer targets at least 24x24 CSS pixels, with visible focus of 2px or more. Test touch and keyboard at each density.
-
-## Preserved features
-
-Keep the user density setting, current 4/8 rhythm, compact production tables, and existing scroll ownership.
-
-## Acceptance checks
-
-- Compact mode does not hide columns, actions, or focus rings.
-- Target-size and zoom checks pass.
-- Spacing uses tokens rather than route-local values.
+- Spacing steps of 4px (`--space-1`); Tailwind's `p-2`, `gap-4` and so on read that scale.
+- Controls: 24, 28, 32 (default) and 44px tall (`--control-xs`, `-sm`, default, `-lg`). Pointer-coarse screens widen hit areas with `touch-target`.
+- Rows: 32px dense (`--row-sm`), 40px default (`--row`). Lists use `px-4 py-2.5` rows split by `rule-row`.
+- Page padding: 16px on phones, 24px from 640px. Panels stack 16px apart; a panel's own padding is 4px of grey around a 16px body.
+- Sidebar items are 28px tall with 8px around them; sections sit 16px apart.
+- Radius: `rounded-inner` 4px for tags and cells, `rounded-soft` 6px for controls and rows, `rounded-frame` 10px for panels, menus and dialogs, `rounded-full` only for people, switches and progress tracks.

@@ -1,4 +1,4 @@
-import { MoreHorizontal } from "lucide-react";
+import { MoreHorizontal } from "@/components/icons";
 import type { ReactNode } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -26,7 +26,7 @@ type PageActionsProps = {
 
 /**
  * Header actions for a workspace page: one primary button, with every other
- * action behind "More" so the page reads as a single job.
+ * action behind the More menu, so the page reads as a single job.
  */
 export function PageActions({ primary, more, className }: PageActionsProps) {
   return (
@@ -39,11 +39,12 @@ export function PageActions({ primary, more, className }: PageActionsProps) {
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button
-              variant="outline"
-              className="h-9 shrink-0 gap-2 rounded-lg !bg-[var(--app-panel)]"
+              variant="ghost"
+              size="icon-sm"
+              aria-label="More actions"
+              className="shrink-0"
             >
-              <MoreHorizontal className="size-3.5" />
-              More
+              <MoreHorizontal />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">

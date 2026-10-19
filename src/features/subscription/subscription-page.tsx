@@ -9,7 +9,7 @@ import {
 import { SubscriptionPricingView } from "@/components/subscription-plans";
 import { Badge as OwnedBadge } from "@/components/ui/badge";
 import { Button as OwnedButton } from "@/components/ui/button";
-import { LoaderCircle } from "lucide-react";
+import { LoaderCircle } from "@/components/icons";
 import { useSubscriptionController } from "./subscription-controller";
 
 export function SubscriptionPage() {
@@ -33,7 +33,7 @@ export function SubscriptionPage() {
   return (
     <WorkspacePage
       family="administration"
-      className="[&_[data-slot=content-section]]:shadow-[var(--app-shadow-1)]"
+      className="[&_[data-slot=content-section]]:shadow-none"
     >
       <PageHeader
         title="Plans and billing"
@@ -60,7 +60,7 @@ export function SubscriptionPage() {
             >
               <LoaderCircle
                 aria-hidden="true"
-                className="size-7 animate-spin text-[var(--app-accent)]"
+                className="size-7 animate-spin text-primary"
               />
             </div>
           ) : isSignedIn ? (
@@ -77,10 +77,10 @@ export function SubscriptionPage() {
           ) : (
             <>
               <div className="grid max-w-[620px] gap-4 p-5 md:p-6">
-                <h2 className="text-xl font-semibold text-foreground">
+                <h2 className="text-foreground type-heading">
                   Account required
                 </h2>
-                <p className="text-sm leading-6 text-muted-foreground">
+                <p className="text-muted-foreground type-body">
                   Sign in or create an account to start a Free Workspace. No
                   payment is required.
                 </p>

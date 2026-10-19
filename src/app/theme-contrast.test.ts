@@ -1,50 +1,103 @@
 import { readFileSync } from "node:fs";
 import { expect, test } from "vitest";
 
-const css = readFileSync(new URL("./globals.css", import.meta.url), "utf8");
-const light = css.match(/:root \{([\s\S]*?)\n\}/)?.[1] ?? "";
-const dark = css.match(/\.dark \{([\s\S]*?)\n\}/)?.[1] ?? "";
+// Quartz builds every text and surface color from four oklch channels per
+// theme. Light comes from Quartz's tokens; dark from Relay's chassis override.
+const quartz = readFileSync(
+  new URL("../styles/quartz/tokens.css", import.meta.url),
+  "utf8"
+);
+const relay = readFileSync(
+  new URL("../styles/relay-theme.css", import.meta.url),
+  "utf8"
+);
 
-function token(block: string, name: string) {
-  const value = block.match(new RegExp(`${name}:\\s*([^;]+);`))?.[1];
-  if (!value) throw new Error(`Missing ${name}`);
-  return value;
+type Channels = [number, number, number];
+
+function channels(css: string, name: string): Channels {
+  const match = css.match(
+    new RegExp(`--${name}-c:\\s*([\\d.]+)%\\s+([\\d.]+)\\s+([\\d.]+)`)
+  );
+  if (!match) throw new Error(`Missing --${name}-c`);
+  return [Number(match[1]) / 100, Number(match[2]), Number(match[3])];
 }
 
-function luminance(hex: string) {
-  const channels = [1, 3, 5].map((start) => {
-    const value = parseInt(hex.slice(start, start + 2), 16) / 255;
-    return value <= 0.04045 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4;
+const darkBlock = relay.match(/data-theme="dark"\][\s\S]*?\{([\s\S]*?)\}/)?.[1];
+if (!darkBlock) throw new Error("Missing the Relay dark chassis block");
+
+const themes = {
+  light: {
+    ink: channels(quartz, "ink"),
+    paper: channels(quartz, "paper"),
+    grey: channels(quartz, "grey"),
+    canvas: channels(quartz, "canvas"),
+  },
+  dark: {
+    ink: channels(darkBlock, "ink"),
+    paper: channels(darkBlock, "paper"),
+    grey: channels(darkBlock, "grey"),
+    canvas: channels(darkBlock, "canvas"),
+  },
+};
+
+/** oklch to gamma-encoded sRGB, clamped to the gamut. */
+function srgb([L, C, h]: Channels) {
+  const a = C * Math.cos((h * Math.PI) / 180);
+  const b = C * Math.sin((h * Math.PI) / 180);
+  const l = (L + 0.3963377774 * a + 0.2158037573 * b) ** 3;
+  const m = (L - 0.1055613458 * a - 0.0638541728 * b) ** 3;
+  const s = (L - 0.0894841775 * a - 1.291485548 * b) ** 3;
+  return [
+    4.0767416621 * l - 3.3077115913 * m + 0.2309699292 * s,
+    -1.2684380046 * l + 2.6097574011 * m - 0.3413193965 * s,
+    -0.0041960863 * l - 0.7034186147 * m + 1.707614701 * s,
+  ].map((x) => {
+    const v = Math.min(1, Math.max(0, x));
+    return v <= 0.0031308 ? 12.92 * v : 1.055 * v ** (1 / 2.4) - 0.055;
   });
-  return channels[0] * 0.2126 + channels[1] * 0.7152 + channels[2] * 0.0722;
 }
 
-function contrast(a: string, b: string) {
-  const values = [luminance(a), luminance(b)].sort((x, y) => y - x);
-  return (values[0] + 0.05) / (values[1] + 0.05);
+function luminance(color: number[]) {
+  const [r, g, b] = color.map((v) =>
+    v <= 0.04045 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4
+  );
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
 }
 
-test("muted and subtle text use the accessible shared token", () => {
-  expect(token(light, "--app-muted")).toBe("var(--text-muted)");
-  expect(token(light, "--app-subtle")).toBe("var(--text-muted)");
-  // Includes raised, inset, overlay, media wells and composited selected surfaces.
-  const surfaces = [
-    [light, ["#ffffff", "#f4f4f5", "#e4e4e7", "#d4d4d8", "#d9e3e8", "#dfd5c7", "#eee7da", "#dce4dc", "#d6e1ed"]],
-    [dark, ["#000000", "#070707", "#0a0a0a", "#121212", "#171717", "#181818", "#2f2f2f", "#17263a", "#29251f", "#172a21", "#252039", "#252b33"]],
-  ] satisfies Array<[string, string[]]>;
-  for (const [theme, backgrounds] of surfaces) {
-    for (const background of backgrounds) {
-      expect(contrast(token(theme, "--text-muted"), background)).toBeGreaterThanOrEqual(4.5);
+function contrast(a: number[], b: number[]) {
+  const [high, low] = [luminance(a), luminance(b)].sort((x, y) => y - x);
+  return (high + 0.05) / (low + 0.05);
+}
+
+/** Ink at an alpha over a surface, composited the way browsers do. */
+function inkOver(ink: number[], surface: number[], alpha: number) {
+  return ink.map(
+    (value, index) => value * alpha + surface[index] * (1 - alpha)
+  );
+}
+
+test("text roles read on every surface in both themes", () => {
+  // text-1, text-2 and text-3 are ink at these alphas (Quartz tokens.css).
+  const textAlphas = { "text-1": 1, "text-2": 0.8, "text-3": 0.66 };
+  for (const [theme, t] of Object.entries(themes)) {
+    const ink = srgb(t.ink);
+    for (const surface of ["paper", "grey", "canvas"] as const) {
+      const background = srgb(t[surface]);
+      for (const [role, alpha] of Object.entries(textAlphas)) {
+        expect(
+          contrast(inkOver(ink, background, alpha), background),
+          `${theme} ${role} on ${surface}`
+        ).toBeGreaterThanOrEqual(4.5);
+      }
     }
   }
 });
 
-test("chart grid reaches 3:1 without brightening decorative borders", () => {
-  for (const theme of [light, dark]) {
-    for (const name of ["--surface-canvas", "--surface-panel", "--surface-panel-raised", "--surface-sunken", "--surface-overlay"]) {
-      expect(contrast(token(theme, "--app-chart-grid"), token(theme, name))).toBeGreaterThanOrEqual(3);
-    }
-  }
-  expect(token(light, "--app-border")).toBe("#e4e4e7");
-  expect(token(dark, "--app-border")).toBe("rgb(255 255 255 / 0.08)");
+test("the dark chassis is near black with distinct surface steps", () => {
+  const { canvas, paper, grey } = themes.dark;
+  expect(luminance(srgb(canvas))).toBeLessThan(0.005);
+  // The viewport and wells read as separate steps from the sidebar. Tone
+  // steps this dark are measured in oklch lightness, not contrast ratio.
+  expect(paper[0] - canvas[0]).toBeGreaterThanOrEqual(0.03);
+  expect(grey[0] - paper[0]).toBeGreaterThanOrEqual(0.03);
 });

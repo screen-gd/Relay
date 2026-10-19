@@ -31,7 +31,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { FieldLayout } from "@/components/ui/field-layout";
 import { Input } from "@/components/ui/input";
-import { Check, ChevronDown } from "lucide-react";
+import { Check, ChevronDown } from "@/components/icons";
 import { ProjectDatePicker } from "@/features/projects/project-dialogs";
 import { useConfirm } from "@/components/confirm-dialog";
 import { useOptionalAuth } from "@/lib/optional-auth";
@@ -111,7 +111,7 @@ function ContextMenuSelect({
           type="button"
           variant="outline"
           {...buttonProps}
-          className="w-full justify-between rounded-md border-input bg-input/30 text-left font-normal"
+          className="w-full justify-between bg-input/30 text-left"
         >
           <span
             className={
@@ -252,7 +252,7 @@ export function NewProjectDialog({
       }}
     >
       <DialogContent
-        className="max-h-[min(94dvh,900px)] overflow-y-auto border-border bg-background text-foreground sm:max-w-2xl"
+        className="max-h-[min(94dvh,900px)] overflow-y-auto sm:max-w-2xl"
         onCloseAutoFocus={(event) => {
           const target = returnFocusRef.current;
           if (!target?.isConnected) return;
@@ -261,7 +261,7 @@ export function NewProjectDialog({
         }}
       >
         <DialogHeader>
-          <DialogTitle className="text-2xl">New Project</DialogTitle>
+          <DialogTitle>New project</DialogTitle>
           <DialogDescription>
             Set the schedule, ownership, and production details for this
             project.
@@ -387,7 +387,10 @@ export function NewProjectDialog({
                           />
                         </div>
                         {clientError ? (
-                          <p role="alert" className="text-sm text-destructive">
+                          <p
+                            role="alert"
+                            className="text-destructive type-body"
+                          >
                             {clientError}
                           </p>
                         ) : null}
@@ -579,7 +582,7 @@ export function NewProjectDialog({
                   Cancel
                 </Button>
                 <Button type="submit" disabled={!canSubmit || isSubmitting}>
-                  {isSubmitting ? "Creating..." : "Create Project"}
+                  {isSubmitting ? "Creating..." : "Create project"}
                 </Button>
               </DialogFooter>
             )}

@@ -44,27 +44,42 @@ vi.mock("./earnings-qa", () => ({
   ),
 }));
 
+/** The view tabs the Payments page offers, in order. */
+function reportViews(html: string) {
+  const nav =
+    html.match(
+      /aria-label="Payment report views"[^>]*>([\s\S]*?)<\/nav>/
+    )?.[1] ?? "";
+  return [...nav.matchAll(/<button[^>]*>([^<]+)<\/button>/g)].map(
+    ([, label]) => label
+  );
+}
+
 describe("Report access", () => {
   it("shows basic reports to a Free account and keeps advanced reports gated", () => {
     state.advancedReports = false;
     state.canManageFinance = true;
     const html = renderToStaticMarkup(<ReportsApplication />);
     expect(html).toContain("Earned");
-    expect(html).toContain("Delivery and earnings trend");
+    expect(html).toContain("Earnings by month");
     expect(html).toContain("Work mix");
-    expect(html).toContain("Payment batches");
-    expect(html).not.toContain("Invoice drafts");
-    expect(html).not.toContain("Client totals");
-    expect(html).not.toContain("Export CSV");
+    // Payment batches live on the Payments view; Clients and Team are paid.
+    expect(reportViews(html)).toEqual(["Overview", "Payments"]);
+    expect(html).not.toContain("More actions");
   });
 
   it("keeps advanced sections available when the subscription allows them", () => {
     state.advancedReports = true;
     state.canManageFinance = true;
     const html = renderToStaticMarkup(<ReportsApplication />);
-    expect(html).toContain("Invoice drafts");
-    expect(html).toContain("Client totals");
-    expect(html).toContain("Export CSV");
+    expect(reportViews(html)).toEqual([
+      "Overview",
+      "Payments",
+      "Clients",
+      "Team",
+    ]);
+    // The exports sit in the header's More menu.
+    expect(html).toContain("More actions");
   });
 
   it("keeps financial totals restricted for members without finance access", () => {

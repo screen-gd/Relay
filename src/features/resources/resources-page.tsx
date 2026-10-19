@@ -33,7 +33,7 @@ import {
   SelectValue as OwnedSelectValue,
 } from "@/components/ui/select";
 import { Textarea as OwnedTextarea } from "@/components/ui/textarea";
-import { ExternalLink, Link2, Pencil, Plus, Trash2 } from "lucide-react";
+import { ExternalLink, Link2, Pencil, Plus, Trash2 } from "@/components/icons";
 import { createId, formatDate } from "@/features/routes/utils/date-utils";
 import type { ToastState } from "@/features/routes/shared/route-types";
 
@@ -188,13 +188,9 @@ export function ResourcesDesignPage({
         title="Resources"
         description="Save asset folders, references, review pages, and delivery links."
         actions={
-          <OwnedButton
-            type="button"
-            variant="outline"
-            onClick={openNewResource}
-          >
+          <OwnedButton type="button" size="sm" onClick={openNewResource}>
             <Plus aria-hidden="true" />
-            New Resource
+            New resource
           </OwnedButton>
         }
       />
@@ -207,7 +203,7 @@ export function ResourcesDesignPage({
             supporting="Saved asset and reference links"
           />
           <MetricItem
-            label="Project Linked"
+            label="Linked to projects"
             value={linkedToProjects}
             supporting="Attached to tracked projects"
           />
@@ -224,14 +220,14 @@ export function ResourcesDesignPage({
             <div className="relative min-w-0 flex-1 sm:max-w-md">
               <Link2
                 aria-hidden="true"
-                className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-[var(--app-muted)]"
+                className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-text-2"
               />
               <OwnedInput
                 aria-label="Search resources"
                 value={resourceSearch}
                 onChange={(event) => setResourceSearch(event.target.value)}
-                placeholder="Search resources, links, or projects..."
-                className="h-10 bg-[var(--app-control)] pl-9 shadow-none"
+                placeholder="Search resources, links or projects"
+                className="pl-9"
               />
             </div>
           }
@@ -242,7 +238,7 @@ export function ResourcesDesignPage({
             >
               <OwnedSelectTrigger
                 aria-label="Filter resources by category"
-                className="h-10 w-full sm:w-44"
+                className="w-full sm:w-44"
               >
                 <OwnedSelectValue placeholder="All categories" />
               </OwnedSelectTrigger>
@@ -259,65 +255,53 @@ export function ResourcesDesignPage({
         />
 
         <ContentSection
-          title="Resource Library"
+          title="Library"
           description={
             resourceSearch || resourceCategory !== "all"
               ? `${visibleResources.length} matching resources`
-              : "Manual links for now; this can later map to cloud storage APIs or OAuth providers."
+              : "Links you save by hand to folders, references and review pages."
           }
           metadata={
-            <OwnedBadge
-              variant="secondary"
-              className="self-start rounded-md bg-primary/15 text-primary sm:self-auto"
-            >
-              {resources.length} saved
-            </OwnedBadge>
+            <span className="text-text-3 type-label-sm data">
+              {resources.length}
+            </span>
           }
           bodyMode="flush"
         >
-          <div className="divide-y divide-border">
+          <div>
             {visibleResources.length ? (
               visibleResources.map((resource) => (
                 <article
                   key={resource.id}
-                  className="grid items-start gap-4 px-4 py-4 transition-colors hover:bg-[var(--app-soft-panel)] focus-within:bg-[var(--app-soft-panel)] lg:grid-cols-[minmax(0,1.4fr)_160px_minmax(0,1fr)_140px]"
+                  className="grid items-start gap-4 rule-row px-4 py-3 transition-colors duration-(--dur-fast) hover:bg-hover lg:grid-cols-[minmax(0,1.4fr)_160px_minmax(0,1fr)_120px] lg:items-center"
                 >
                   <div className="flex min-w-0 items-start gap-3">
-                    <span
-                      className="grid size-9 shrink-0 place-items-center rounded-md border border-[var(--app-border)] bg-[var(--app-soft-panel)] text-[var(--app-accent)]"
-                      aria-hidden="true"
-                    >
-                      <Link2 className="size-4" />
-                    </span>
                     <div className="min-w-0">
                       <div className="mb-1 flex flex-wrap items-center gap-2">
-                        <h3 className="truncate text-sm font-semibold">
+                        <h3 className="truncate type-label">
                           {resource.title}
                         </h3>
-                        <OwnedBadge
-                          variant="secondary"
-                          className="rounded-md text-[11px] font-medium"
-                        >
+                        <OwnedBadge variant="secondary">
                           {resource.category}
                         </OwnedBadge>
                       </div>
-                      <p className="truncate text-xs text-[var(--app-muted)]">
+                      <p className="truncate text-text-2 type-label-sm">
                         {resource.url}
                       </p>
                       {resource.notes ? (
-                        <p className="mt-1 text-xs leading-relaxed text-[var(--app-muted)]">
+                        <p className="mt-1 text-text-2 type-label-sm">
                           {resource.notes}
                         </p>
                       ) : null}
                     </div>
                   </div>
-                  <p className="text-sm text-muted-foreground lg:text-foreground">
+                  <p className="text-text-2 type-label">
                     {resource.projectId
                       ? projectName(resource.projectId) || "Linked project"
                       : "General"}
                   </p>
                   <time
-                    className="truncate text-xs text-[var(--app-muted)]"
+                    className="truncate text-text-2 type-label-sm"
                     dateTime={resource.updatedAt || resource.createdAt}
                   >
                     Updated{" "}
@@ -336,7 +320,6 @@ export function ResourcesDesignPage({
                       aria-label={`Open ${resource.title}`}
                       title="Open resource"
                       onClick={() => openResource(resource.url)}
-                      className="text-primary"
                     >
                       <ExternalLink aria-hidden="true" />
                     </OwnedButton>
@@ -357,7 +340,7 @@ export function ResourcesDesignPage({
                       aria-label={`Delete ${resource.title}`}
                       title="Delete resource"
                       onClick={() => removeResource(resource.id)}
-                      className="text-destructive hover:bg-destructive/10 hover:text-destructive"
+                      className="hover:text-fail-text"
                     >
                       <Trash2 aria-hidden="true" />
                     </OwnedButton>

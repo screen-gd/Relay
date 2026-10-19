@@ -464,7 +464,7 @@ Relay currently does not:
 - Convex reactive backend and database.
 - Browser local storage for Local Mode.
 - Convex Storage for current hosted Project files.
-- Tailwind CSS, owned Radix-based UI primitives, Lucide icons, Motion, TanStack Table, Recharts, and Sonner.
+- Tailwind CSS, owned Radix-based UI primitives, Hugeicons, Motion, TanStack Table, dither-kit charts, and Sonner.
 - dnd-kit for keyboard-accessible stage interaction.
 - Vercel for deployment, with an optional Cloudflare Worker build.
 - Vitest, `convex-test`, and Playwright for tests.

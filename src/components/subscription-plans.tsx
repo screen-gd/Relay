@@ -62,13 +62,12 @@ export function CapabilityUpgradePrompt({
     <div
       className={cn(
         "flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between",
-        !inline &&
-          "rounded-[var(--radius-panel)] border bg-[var(--surface-sunken)] p-4"
+        !inline && "rounded-[var(--radius-panel)] border bg-well p-4"
       )}
     >
       <div>
-        <p className="text-sm font-medium">Creator unlocks {name}.</p>
-        <p className="mt-1 text-xs text-muted-foreground">
+        <p className="type-label">Creator unlocks {name}.</p>
+        <p className="mt-1 text-muted-foreground type-label-sm">
           Creator is not available yet. Paid plans are coming later.
         </p>
       </div>
@@ -137,7 +136,7 @@ function BillingStatus({
       <CardContent className="flex flex-col gap-3 py-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <p className="font-semibold">{status.title}</p>
-          <p className="text-sm text-muted-foreground">{status.body}</p>
+          <p className="text-muted-foreground type-body">{status.body}</p>
         </div>
         <Badge variant={status.variant}>{subscription.plan}</Badge>
       </CardContent>
@@ -225,7 +224,7 @@ export function SubscriptionPricingView({
         </Card>
       ) : null}
       <div className="mb-4 flex items-center gap-2">
-        <span className="text-sm text-muted-foreground">Workspace plans</span>
+        <span className="text-muted-foreground type-body">Workspace plans</span>
         <Badge variant="outline">
           {trialsOpen
             ? "Creator trial: 7 days"
@@ -234,29 +233,29 @@ export function SubscriptionPricingView({
       </div>
       <Card className="mb-4">
         <CardContent className="space-y-3 py-5">
-          <h2 className="text-lg font-semibold">Start with Free</h2>
+          <h2 className="type-heading-sm">Start with Free</h2>
           <p>
             {FREE_OPEN_PROJECT_LIMIT} Projects in progress at a time, unlimited
             Clients and Project history, basic workflow tracking, standard
             Client Portals, and client review on embedded videos.
           </p>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-muted-foreground type-body">
             Free supports one Workspace owner. Hosted uploads and paid
             capabilities remain unavailable on Free.
           </p>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-muted-foreground type-body">
             Creator is ${CREATOR_MONTHLY_PRICE_USD} per Workspace per month.
             Team is ${TEAM_MONTHLY_PRICE_USD} per Workspace per month for{" "}
             {TEAM_INCLUDED_EDITOR_SEATS} editors, including the owner, plus $
             {EXTRA_EDITOR_MONTHLY_PRICE_USD} per extra editor. Clients and Team
             viewers do not need paid seats.
           </p>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-muted-foreground type-body">
             Creator adds Client Hub, custom portal branding, custom Workflow
             Templates, advanced reports, and payment plans and batches. Batches
             from a paid plan stay visible on Free.
           </p>
-          <p role="status" className="text-sm text-muted-foreground">
+          <p role="status" className="text-muted-foreground type-body">
             Paid plans are coming later and are not available to purchase yet.
           </p>
         </CardContent>
@@ -264,26 +263,24 @@ export function SubscriptionPricingView({
       {trialsOpen || trial?.active ? (
         <Card className="mb-4">
           <CardContent className="space-y-3 py-5">
-            <h2 className="text-lg font-semibold">
-              Try Creator free for 7 days
-            </h2>
+            <h2 className="type-heading-sm">Try Creator free for 7 days</h2>
             <p>
               Try hosted uploads, 5 GB of storage, custom Workflow Templates,
               advanced reports, Client Hub, custom portal branding, and payment
               plans and batches.
             </p>
-            <p className="text-sm text-muted-foreground">
+            <p className="text-muted-foreground type-body">
               No card required and no automatic charge. After 7 days your
               Workspace returns to Free; your existing work stays available. One
               trial per account and Workspace. Team does not include a free
               trial.
             </p>
             {trial?.active ? (
-              <p role="status" className="text-sm text-muted-foreground">
+              <p role="status" className="text-muted-foreground type-body">
                 Your Creator trial is active.
               </p>
             ) : trial?.used ? (
-              <p role="status" className="text-sm text-muted-foreground">
+              <p role="status" className="text-muted-foreground type-body">
                 This account or Workspace has already used its Creator trial.
               </p>
             ) : (
@@ -298,12 +295,12 @@ export function SubscriptionPricingView({
               </Button>
             )}
             {subscription && !subscription.canManageBilling ? (
-              <p className="text-sm text-muted-foreground">
+              <p className="text-muted-foreground type-body">
                 Only the Workspace Owner can start the trial.
               </p>
             ) : null}
             {trialError ? (
-              <p role="alert" className="text-sm text-destructive">
+              <p role="alert" className="text-destructive type-body">
                 {trialError}
               </p>
             ) : null}
@@ -312,9 +309,7 @@ export function SubscriptionPricingView({
       ) : (
         <Card className="mb-4">
           <CardContent className="space-y-3 py-5">
-            <h2 className="text-lg font-semibold">
-              Creator is not available yet
-            </h2>
+            <h2 className="type-heading-sm">Creator is not available yet</h2>
             <p>
               Client Hub, custom portal branding, custom Workflow Templates,
               advanced reports, and payment plans and batches arrive with paid
@@ -322,7 +317,7 @@ export function SubscriptionPricingView({
               storage is {CREATOR_LAUNCH_STORAGE_GB} GB for Creator and{" "}
               {TEAM_LAUNCH_STORAGE_GB} GB shared for Team.
             </p>
-            <p role="status" className="text-sm text-muted-foreground">
+            <p role="status" className="text-muted-foreground type-body">
               Creator and Team cannot be started or purchased right now.
             </p>
           </CardContent>
@@ -392,7 +387,7 @@ export function FirstLoginPlanDialog() {
           </DialogDescription>
         </DialogHeader>
         {error ? (
-          <p role="alert" className="text-sm text-destructive">
+          <p role="alert" className="text-destructive type-body">
             {error}
           </p>
         ) : null}

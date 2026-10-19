@@ -30,12 +30,18 @@ describe("Projects directory public states", () => {
   it("renders its table contract and empty action", () => {
     const html = renderToStaticMarkup(<PrecisionProjects {...baseProps} />);
     expect(html).toContain("Project library");
-    expect(html).toContain("No projects in this workspace");
-    expect(html).toContain("Create project");
+    expect(html).toContain("No projects yet");
+    expect(html).toContain("New project");
   });
 
   it("renders loading and error states", () => {
-    expect(renderToStaticMarkup(<PrecisionProjects {...baseProps} loading />)).toContain("Loading projects");
-    expect(renderToStaticMarkup(<PrecisionProjects {...baseProps} error="Projects failed to load." />)).toContain("Projects failed to load.");
+    expect(
+      renderToStaticMarkup(<PrecisionProjects {...baseProps} loading />)
+    ).toContain("Loading projects");
+    expect(
+      renderToStaticMarkup(
+        <PrecisionProjects {...baseProps} error="Projects failed to load." />
+      )
+    ).toContain("Projects failed to load.");
   });
 });

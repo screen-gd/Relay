@@ -39,20 +39,20 @@ function AnswerRow({
   const status = runStatus(question);
   return (
     <li className="grid gap-2 py-3">
-      <p className="text-sm font-medium text-foreground">{question.question}</p>
+      <p className="text-foreground type-label">{question.question}</p>
       {status ? (
-        <p role="status" className="text-xs text-foreground">
+        <p role="status" className="text-foreground type-label-sm">
           {status}
         </p>
       ) : null}
       {question.answer ? (
         <>
-          <p className="text-xs text-foreground">AI-drafted</p>
-          <p className="whitespace-pre-wrap text-sm text-foreground">
+          <p className="text-foreground type-label-sm">AI-drafted</p>
+          <p className="whitespace-pre-wrap text-foreground type-body">
             {question.answer.text}
           </p>
           {question.answer.citations.length ? (
-            <ul className="grid gap-1 text-xs text-foreground">
+            <ul className="grid gap-1 text-foreground type-label-sm">
               {question.answer.citations.map((citation, index) => (
                 <li
                   key={`${citation.label}:${index}`}
@@ -153,7 +153,7 @@ export function EarningsQa({
 
   return (
     <ContentSection title="Ask about earnings">
-      <div className="[&_button]:bg-transparent [&_button:hover]:bg-transparent [&_button]:dark:text-white [&_input]:dark:bg-black">
+      <div className=" ">
         <form
           className="flex flex-col gap-2 sm:flex-row"
           onSubmit={(event) => {
@@ -177,7 +177,7 @@ export function EarningsQa({
           </Button>
         </form>
         {error ? (
-          <p role="alert" className="mt-2 text-xs text-destructive">
+          <p role="alert" className="mt-2 text-destructive type-label-sm">
             {error}
           </p>
         ) : null}

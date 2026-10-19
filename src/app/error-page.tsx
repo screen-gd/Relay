@@ -14,38 +14,26 @@ export function RouteError({ error, reset }: ErrorComponentProps) {
   return (
     <main
       id="main-content"
-      className="grid min-h-dvh place-items-center bg-[var(--surface-canvas)] px-4 py-8 text-[var(--text-primary)]"
+      className="grid min-h-dvh place-items-center bg-page px-4 py-8 text-text-1"
     >
       <Card
-        className="w-full max-w-[560px] bg-[var(--surface-panel)] p-6 text-[var(--text-primary)] shadow-[var(--shadow-panel)] md:p-8"
+        className="w-full max-w-[520px] bg-well p-6 text-text-1 md:p-8"
         aria-labelledby="error-heading"
       >
         <div className="space-y-4">
           <RelayBrand compact />
           <div>
-            <p className="text-xs font-bold uppercase tracking-[0.12em] text-[var(--app-muted)]">
-              Unexpected error
-            </p>
-            <h1
-              id="error-heading"
-              className="mt-2 font-[family-name:var(--font-geist-sans)] text-[30px] font-bold leading-tight"
-            >
+            <h1 id="error-heading" className="type-heading">
               Relay needs a refresh
             </h1>
-            <p className="mt-2 text-sm leading-relaxed text-[var(--text-secondary)]">
+            <p className="mt-2 text-text-2 type-body">
               The tracker hit an unexpected app error. Your saved projects stay
               in local browser storage.
             </p>
           </div>
           <div className="flex flex-col gap-2 sm:flex-row">
-            <Button onClick={reset} className="min-h-11">
-              Try Again
-            </Button>
-            <Button
-              asChild
-              variant="outline"
-              className="min-h-11 border-[var(--app-border)] text-[var(--app-highlight)]"
-            >
+            <Button onClick={reset}>Try Again</Button>
+            <Button asChild variant="outline" className="text-text-1">
               <Link to="/">Back to Dashboard</Link>
             </Button>
           </div>

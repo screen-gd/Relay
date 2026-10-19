@@ -32,8 +32,12 @@ export function MasterDetail({
       )}
       {...props}
     >
-      <div className="h-full min-h-0 min-w-0">{master}</div>
-      <div className="h-full min-h-0 min-w-0">{detail}</div>
+      <div className={cn("h-full min-h-0 min-w-0", variant === "navigation")}>
+        {master}
+      </div>
+      <div className={cn("h-full min-h-0 min-w-0", variant === "detail-rail")}>
+        {detail}
+      </div>
       {inspector ? (
         <aside className="h-full min-h-0 min-w-0 lg:col-span-2 xl:col-span-1">
           {inspector}

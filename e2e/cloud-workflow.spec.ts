@@ -32,15 +32,15 @@ async function createCloudProject(
 ) {
   await page
     .getByRole("button", {
-      name: /New (?:Personal |Team )?Project|Create project|Quick create project/,
+      name: /New (?:personal |team )?project|Create project/i,
     })
     .first()
     .click();
-  const dialog = page.getByRole("dialog", { name: "New Project" });
+  const dialog = page.getByRole("dialog", { name: "New project" });
   await dialog.getByLabel("Project name").fill(title);
   await dialog.getByRole("button", { name: "Client", exact: true }).click();
   await page.getByRole("menuitem", { name: "E2E Client", exact: true }).click();
-  await dialog.getByRole("button", { name: "Create Project" }).click();
+  await dialog.getByRole("button", { name: "Create project" }).click();
   const row = projectRow(page, title);
   await expect(row).toBeVisible();
   const projectId = await row.getAttribute("data-project-id");
@@ -80,7 +80,7 @@ test.describe("authenticated editor to client workflow", () => {
       await expect(
         page
           .getByRole("button", {
-            name: /New (?:Personal |Team )?Project|Create project|Quick create project/,
+            name: /New (?:personal |team )?project|Create project/i,
           })
           .first()
       ).toBeVisible();
@@ -98,7 +98,7 @@ test.describe("authenticated editor to client workflow", () => {
         })
       ).toBeVisible();
 
-      await page.getByRole("button", { name: "Outputs and Versions" }).click();
+      await page.getByRole("button", { name: "Outputs" }).click();
       await page
         .getByRole("button", { name: "Add Output", exact: true })
         .click();
@@ -127,7 +127,7 @@ test.describe("authenticated editor to client workflow", () => {
         .getByRole("option", { name: "Sent to Client", exact: true })
         .click();
 
-      await page.getByRole("button", { name: "Client Review" }).click();
+      await page.getByRole("button", { name: "Client review" }).click();
       const portal = page.getByTestId("project-portal-panel");
       await portal
         .getByRole("checkbox", { name: new RegExp(outputTitle) })
@@ -188,7 +188,7 @@ test.describe("authenticated editor to client workflow", () => {
         "E2E Client"
       );
 
-      await page.getByRole("button", { name: "Outputs and Versions" }).click();
+      await page.getByRole("button", { name: "Outputs" }).click();
       const reviewHistory = page.getByTestId("media-version-review-history");
       const editorComment = reviewHistory
         .getByRole("article")
@@ -220,14 +220,14 @@ test.describe("authenticated editor to client workflow", () => {
       ).toHaveAttribute("aria-expanded", "true");
       await expect(editorComment).toContainText(commentBody);
 
-      await page.getByRole("button", { name: "Client Review" }).click();
+      await page.getByRole("button", { name: "Client review" }).click();
       await page.getByRole("button", { name: "Close portal" }).click();
       await clientPage.reload();
       await expect(
         clientPage.getByRole("heading", { name: "This portal is closed" })
       ).toBeVisible();
 
-      await page.getByRole("button", { name: "Outputs and Versions" }).click();
+      await page.getByRole("button", { name: "Outputs" }).click();
       await expect(page.getByText(commentBody, { exact: true })).toBeVisible();
     } finally {
       await clientContext?.close().catch(() => undefined);

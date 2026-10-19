@@ -74,10 +74,7 @@ export function ConfirmProvider({ children }: { children: ReactNode }) {
           if (!open) settle(false);
         }}
       >
-        <AlertDialogContent
-          size="sm"
-          className="border-border bg-background text-foreground"
-        >
+        <AlertDialogContent size="sm">
           <AlertDialogHeader>
             <AlertDialogTitle>{options?.title}</AlertDialogTitle>
             {options?.description ? (
