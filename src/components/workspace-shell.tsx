@@ -235,12 +235,10 @@ export function WorkspaceShell({
               id="main-content"
               data-testid="workspace-content-surface"
               tabIndex={-1}
-              className="min-h-0 flex-1 overflow-y-auto overscroll-contain outline-none"
+              className="flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain outline-none"
             >
               <PageHeaderContext.Provider value={pageHeaderContext}>
-                <div className="flex min-h-full flex-col lg:h-full">
-                  {children}
-                </div>
+                <div className="flex min-h-0 flex-1 flex-col">{children}</div>
               </PageHeaderContext.Provider>
             </main>
           </div>

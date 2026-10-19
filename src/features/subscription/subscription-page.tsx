@@ -26,6 +26,9 @@ export function SubscriptionPage() {
     startingTrial,
     trialError,
     startTrial,
+    switchingTestPlan,
+    testPlanError,
+    changeTestPlan,
   } = useSubscriptionController();
   return (
     <WorkspacePage
@@ -67,6 +70,9 @@ export function SubscriptionPage() {
               startingTrial={startingTrial}
               trialError={trialError}
               onStartTrial={() => void startTrial()}
+              switchingTestPlan={switchingTestPlan}
+              testPlanError={testPlanError}
+              onTestPlanChange={(plan) => void changeTestPlan(plan)}
             />
           ) : (
             <>

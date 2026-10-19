@@ -32,6 +32,8 @@ export type WorkspaceSubscriptionState = NonNullable<
   FunctionReturnType<typeof api.workspaceSubscriptions.getCurrent>
 >;
 
+const planLabels = { free: "Free", creator: "Creator", team: "Team" };
+
 const capabilityUpgradeCopy = {
   fileUploads: "File uploads",
   customWorkflowTemplates: "Custom Workflow Templates",
@@ -154,16 +156,73 @@ export function SubscriptionPricingView({
   onStartTrial,
   startingTrial = false,
   trialError = "",
+  onTestPlanChange,
+  switchingTestPlan = false,
+  testPlanError = "",
 }: {
   subscription?: WorkspaceSubscriptionState | null;
   trial?: FunctionReturnType<typeof api.creatorTrials.getAvailability>;
   onStartTrial?: () => void;
   startingTrial?: boolean;
   trialError?: string;
+  onTestPlanChange?: (plan: WorkspaceSubscriptionState["testPlan"]) => void;
+  switchingTestPlan?: boolean;
+  testPlanError?: string;
 }) {
   const trialsOpen = trial?.open === true;
   return (
     <div className="min-h-[calc(100dvh-15rem)] p-4 md:p-6">
+      {subscription?.canTestPlans ? (
+        <Card className="mb-4">
+          <CardContent className="space-y-3 py-5">
+            <h2 className="text-lg font-semibold">Private plan testing</h2>
+            <p className="text-sm text-muted-foreground">
+              Switch this Workspace’s plan without charges or expiry. Only your
+              account can change the test plan.
+            </p>
+            <p role="status" className="text-sm text-muted-foreground">
+              {subscription.testPlan !== null
+                ? `Testing ${planLabels[subscription.testPlan]}`
+                : "Using your normal plan"}
+            </p>
+            <div
+              role="group"
+              aria-label="Test Workspace plan"
+              className="flex flex-wrap gap-2"
+            >
+              {(["free", "creator", "team"] as const).map((plan) => (
+                <Button
+                  key={plan}
+                  type="button"
+                  variant="outline"
+                  aria-pressed={subscription.testPlan === plan}
+                  disabled={switchingTestPlan || !onTestPlanChange}
+                  onClick={() => onTestPlanChange?.(plan)}
+                >
+                  {planLabels[plan]}
+                </Button>
+              ))}
+              <Button
+                type="button"
+                variant="outline"
+                disabled={
+                  switchingTestPlan ||
+                  !onTestPlanChange ||
+                  subscription.testPlan === null
+                }
+                onClick={() => onTestPlanChange?.(null)}
+              >
+                Use normal plan
+              </Button>
+            </div>
+            {testPlanError ? (
+              <p role="alert" className="text-sm text-destructive">
+                {testPlanError}
+              </p>
+            ) : null}
+          </CardContent>
+        </Card>
+      ) : null}
       <div className="mb-4 flex items-center gap-2">
         <span className="text-muted-foreground type-body">Workspace plans</span>
         <Badge variant="outline">

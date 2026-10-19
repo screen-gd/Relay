@@ -129,7 +129,7 @@ function WorkspaceFrame({ children }: { children: ReactNode }) {
               setSettings((current) => ({ ...current, theme }))
             }
           >
-            <div className="flex min-h-full flex-col lg:h-full">
+            <div className="flex min-h-0 flex-1 flex-col">
               {sample ? (
                 <SampleModeBar />
               ) : sampleWorkspace.loaded ? (
