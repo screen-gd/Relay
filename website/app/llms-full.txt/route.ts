@@ -34,16 +34,11 @@ Relay helps freelance video editors and small post-production teams manage video
 
 For current plan details, read ${origin}/pricing rather than treating this summary as a price list.
 
-## Roadmap
-
-Upcoming and recently shipped features are listed at ${origin}/roadmap.
-
 ## Official public links
 
 - Product overview: ${origin}/
 - Features: ${origin}/features
 - Pricing: ${origin}/pricing
-- Roadmap: ${origin}/roadmap
 - Get started free: https://relay-app.cc.cd/
 - Contact: https://relay-app.cc.cd/contact
 - Accessibility: https://relay-app.cc.cd/accessibility

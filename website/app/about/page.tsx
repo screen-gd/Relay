@@ -26,7 +26,7 @@ const sections: readonly TrustSection[] = [
     id: "who-builds-it",
     heading: "Who builds it",
     paragraphs: [
-      "Relay is built by a small independent team. The app, this site, and the roadmap come from one project, and the roadmap list is generated from that project's issue tracker, so an entry appears as shipped only after the work behind it is closed.",
+      "Relay is built by a small independent team. The app and this site come from one project, so what the site says about the product tracks the work itself.",
       <>
         No company entity, office, or headcount is published for Relay. Email{" "}
         <a href={CONTACT_EMAIL_URL}>contact@relay-app.cc.cd</a> with questions,
@@ -65,7 +65,7 @@ const sections: readonly TrustSection[] = [
     id: "what-is-not-finished",
     heading: "What is not finished",
     paragraphs: [
-      "The roadmap page is the current record of what is in progress, planned, and recently shipped. Paid plans and checkout are still in development rather than scheduled here.",
+      "Paid plans and checkout are still in development, and no date is promised for them.",
     ],
   },
 ];

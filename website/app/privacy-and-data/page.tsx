@@ -20,7 +20,7 @@ const sections: readonly TrustSection[] = [
     id: "who-builds-relay",
     heading: "Who builds Relay",
     paragraphs: [
-      "Relay is built by a small independent team. The app, this site, and the public roadmap come from one project, and the roadmap list is generated from that project's issue tracker instead of a separate marketing schedule.",
+      "Relay is built by a small independent team. The app and this site come from one project, so what the site says about the product tracks the work itself rather than a separate marketing schedule.",
       <>
         Relay does not publish a company entity, an office, or a headcount.
         Questions about anything on this page go to{" "}
