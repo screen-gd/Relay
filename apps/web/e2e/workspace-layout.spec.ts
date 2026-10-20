@@ -62,6 +62,65 @@ function primaryNavigation(page: Page) {
   return page.getByRole("navigation", { name: "Primary navigation" });
 }
 
+for (const width of [320, 390]) {
+  test(`keeps project views and actions reachable at ${width}px`, async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width, height: 850 });
+    await seedLocalWorkspace(page, {
+      projects: [layoutProject],
+      clients: [layoutClient],
+    });
+    await openApp(page, "/projects");
+
+    const topBar = page.locator("header:has([data-slot='topbar-actions'])");
+    const more = topBar.getByRole("button", { name: "More actions" });
+    await expect(more).toBeInViewport({ ratio: 1 });
+    await more.click();
+    await page.getByRole("menuitem", { name: "Project groups" }).click();
+    const groups = page.getByRole("dialog", { name: /^Project groups$/i });
+    await expect(groups).toBeVisible();
+    await page.keyboard.press("Escape");
+    await expect(groups).toBeHidden();
+
+    await more.click();
+    await page.getByRole("menuitem", { name: "Completed projects" }).click();
+    await expect(page).toHaveURL(/\/projects\/history$/);
+    await page.goBack();
+    await expect(more).toBeVisible();
+
+    for (const [label, path] of [
+      ["List", "/projects"],
+      ["Calendar", "/calendar"],
+      ["Timeline", "/timeline"],
+    ]) {
+      const viewSelector = topBar.getByRole("button", {
+        name: /^Projects view:/,
+      });
+      await expect(viewSelector).toBeInViewport({ ratio: 1 });
+      await viewSelector.focus();
+      await page.keyboard.press("Enter");
+      await page.getByRole("menuitem", { name: label, exact: true }).click();
+      await expect(page).toHaveURL(new RegExp(`${path}$`));
+      await expect
+        .poll(() => topBar.evaluate((bar) => bar.scrollWidth - bar.clientWidth))
+        .toBeLessThanOrEqual(1);
+
+      const create = topBar.getByRole("button", {
+        name: "New project",
+        exact: true,
+      });
+      await expect(create).toHaveCount(1);
+      await expect(create).toBeInViewport({ ratio: 1 });
+      await create.click();
+      const dialog = page.getByRole("dialog", { name: "New project" });
+      await expect(dialog).toBeVisible();
+      await page.keyboard.press("Escape");
+      await expect(dialog).toBeHidden();
+    }
+  });
+}
+
 async function expectSameShell(
   page: Page,
   shellHandle: ElementHandle<SVGElement | HTMLElement>
