@@ -1,0 +1,25 @@
+.catalog {
+  container-type: inline-size;
+  --card: var(--surface-page);
+  --muted: var(--surface-card);
+  --border: var(--line-frame);
+}
+
+/* The website breakpoint follows the space inside the app's sidebar. */
+@container (max-width: 900px) {
+  .catalog .cards {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: none;
+    gap: 48px;
+  }
+
+  .cards .plan {
+    display: flex;
+    flex-direction: column;
+    grid-row: auto;
+  }
+
+  .plan .action {
+    margin-top: auto;
+  }
+}

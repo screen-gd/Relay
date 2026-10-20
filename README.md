@@ -98,6 +98,19 @@ Local work can be imported once into a new empty cloud account. Existing cloud w
 | Tests         | Vitest, convex-test, Playwright                      |
 | Hosting       | Vercel                                               |
 
+## Repository Layout
+
+A pnpm workspace. Run commands from the repository root; they forward to the
+right package.
+
+| Path              | Package          | What it is                                                     |
+| ----------------- | ---------------- | -------------------------------------------------------------- |
+| `apps/web`        | `@relay/web`     | The app (TanStack Start) and its Convex backend in `convex/`   |
+| `apps/website`    | `@relay/website` | The marketing site (Next.js on OpenNext)                       |
+| `packages/shared` | `@relay/shared`  | Plan limits, the plan catalog and its card styles, the app URL |
+| `scripts`         |                  | Repository tooling: brand assets and Convex skill mirrors      |
+| `docs`            |                  | Design system, brand, ADRs and agent docs                      |
+
 ## Development
 
 Requires Node.js 22+ and pnpm 10.11.1.
@@ -108,8 +121,10 @@ pnpm dev
 ```
 
 `pnpm dev` runs the Convex development deployment and the Vite dev server on
-`http://localhost:3100`. Use `pnpm dev:web` to run only the app.
+`http://localhost:3100`. Use `pnpm dev:web` to run only the app, and
+`pnpm dev:website` for the marketing site on `http://localhost:3000`.
 
+The app's environment files live in `apps/web` (`apps/web/.env.local`).
 Without `.env.local`, the app runs in Local Mode. Do not copy
 `.env.production` into `.env.local`: its live Clerk key only loads on the
 production domain. Use a Clerk development instance for local account testing.
@@ -121,18 +136,18 @@ back to Local Mode.
 Useful commands:
 
 ```bash
-pnpm lint          # TypeScript check
-pnpm check         # Lint, build, audit, UI allowlist
-pnpm test:e2e      # Playwright journeys
-pnpm verify        # Built-app route and responsive browser smoke checks
+pnpm lint                         # TypeScript check, both apps
+pnpm check                        # Lint, build, audit, UI allowlist
+pnpm test:e2e                     # Playwright journeys
+pnpm --filter @relay/web verify   # Built-app route and responsive browser smoke checks
 ```
 
 ## Vercel Deployment
 
-Import this repository into Vercel with the root directory set to the repository
-root, not `website`. Use the TanStack Start framework preset, Node.js 22 or 24,
-and the default pnpm install command. `vercel.json` uses `pnpm build`
-(`vite build`). Nitro detects Vercel during the build and writes the Vercel
+Import this repository into Vercel with the root directory set to `apps/web`.
+Use the TanStack Start framework preset, Node.js 22 or 24, and the default pnpm
+install command; Vercel installs the whole workspace from the repository root.
+`apps/web/vercel.json` uses `pnpm build` (`vite build`). Nitro detects Vercel during the build and writes the Vercel
 output itself, so the project needs no custom output directory.
 
 Configure these environment variables before building. Vite inlines `VITE_*`
@@ -157,14 +172,14 @@ Use an approved test backend and Clerk instance for previews. Changing the host
 does not deploy Convex or migrate data. Do not add `convex deploy` to the build
 command. Keep Clerk issuer configuration on the existing Convex deployment.
 
-The request middleware in `src/start.ts` forwards `/__clerk/*` scripts and API
+The request middleware in `apps/web/src/start.ts` forwards `/__clerk/*` scripts and API
 requests through Clerk's Frontend API proxy, including on the custom app
 domain. Keep the matching `CLERK_SECRET_KEY` set in Vercel so the handler can
 forward those requests. No other request runs Clerk on the server.
 
 Security headers, including the Content-Security-Policy, live in
-`security-headers.mjs` and apply to every response through Nitro route rules
-in `vite.config.ts`.
+`apps/web/security-headers.mjs` and apply to every response through Nitro
+route rules in `apps/web/vite.config.ts`.
 
 Before production cutover, configure the intended domain and permitted origins
 in Clerk and Vercel, then verify sign-in and signed-in Project journeys. Production
@@ -179,8 +194,8 @@ is a separate hosting setting; configure its audience in Vercel if enabled.
 
 The app can also run as a Cloudflare Worker. `pnpm build:cloudflare` runs
 `vite build --mode cloudflare`, which switches Nitro to its `cloudflare_module`
-preset and writes the Worker to `.output`. `wrangler.jsonc` deploys that
-output. These commands are not used by Vercel.
+preset and writes the Worker to `apps/web/.output`. `apps/web/wrangler.jsonc`
+deploys that output. Run these from `apps/web`. These commands are not used by Vercel.
 
 For a local Worker preview:
 
@@ -198,12 +213,12 @@ pnpm deploy:cloudflare
 ```
 
 Create two Workers Builds projects from this repository. The marketing site in
-`website/` is a separate Next.js app and keeps its OpenNext build:
+`apps/website/` is a separate Next.js app and keeps its OpenNext build:
 
-| Worker      | Root directory | Build command                           | Deploy command              |
-| ----------- | -------------- | --------------------------------------- | --------------------------- |
-| `relay`     | `/`            | `pnpm build:cloudflare`                 | `pnpm exec wrangler deploy` |
-| `relay-web` | `/website`     | `pnpm exec opennextjs-cloudflare build` | `pnpm exec wrangler deploy` |
+| Worker      | Root directory  | Build command                           | Deploy command              |
+| ----------- | --------------- | --------------------------------------- | --------------------------- |
+| `relay`     | `/apps/web`     | `pnpm build:cloudflare`                 | `pnpm exec wrangler deploy` |
+| `relay-web` | `/apps/website` | `pnpm exec opennextjs-cloudflare build` | `pnpm exec wrangler deploy` |
 
 Set these in the `relay` build environment, plus `CLERK_SECRET_KEY` as a
 Worker secret. Vite inlines `VITE_*` values at build time, so Worker runtime

@@ -8,13 +8,31 @@
 
 ## Page widths (`WorkspacePage family`)
 
-| Family                                                  | Width                     | Use                                       |
-| ------------------------------------------------------- | ------------------------- | ----------------------------------------- |
-| `data-index`, `master-detail`, `canvas`, `conversation` | full                      | lists, boards, calendars, chat            |
-| `library`                                               | full                      | templates, resources, files, integrations |
-| `administration`                                        | left-aligned, `max-w-5xl` | settings, account, profiles               |
+| Family                                                  | Width | Use                                       |
+| ------------------------------------------------------- | ----- | ----------------------------------------- |
+| `data-index`, `master-detail`, `canvas`, `conversation` | full  | lists, boards, calendars, chat            |
+| `library`                                               | full  | templates, resources, files, integrations |
+| `administration`                                        | full  | settings, account, profiles               |
+
+Administration sections fill the available page width. Keep prose and field groups readable inside their sections and arrange related settings in responsive columns. The standalone public profile keeps its own readable document width; it does not use the workspace shell.
+
+Settings, Account, and Profile forms may use a readable width while staying aligned to the shared left gutter. The Plans comparison uses the available viewport width for its three plan columns.
 
 `mode="fill"` pins the page to the viewport so lists scroll inside themselves; `document` lets the page scroll.
+
+## Shared alignment
+
+`WorkspacePage` owns the page gutters: 16px on phones, 24px from 640px up. Content starts 16px below the top bar on phones and 20px on larger screens. Both scrolling modes use a 16px section gap, as does `PageContent`. Pages use these defaults without adding their own outer padding or spacing.
+
+`PageHeader` keeps its accessible heading out of the content flow, including when its actions render into the top bar. Actions must not leave an empty row above the page. `PageToolbar` reserves at least the default control height and wraps on smaller screens.
+
+`MasterDetail` and `SplitPane` use a 16px column gap and 320px navigation or inspector columns. Dashboard supporting content uses that same column width and stacks below the main content before 1280px. Inspectors that use a mobile sheet remain hidden below their desktop breakpoint.
+
+Media's three-pane `MasterDetail` uses 200px collection navigation and a 280px preview inspector, with the library filling the space between them. Collections become a horizontal scrolling row below 1024px. The preview stays in a `Sheet` below 1536px so the library keeps usable space; a visible Details action opens the selection. Media rows and cards respond to the library container's width.
+
+`SplitPane` defaults to `mode="document"` and sizes to its content. Only bounded project and calendar views use `mode="fill"`. Document pages and metric strips do not shrink to fit the viewport; the page scrolls so KPI labels and supporting values remain visible.
+
+The `record` family is the edge-to-edge exception for project workspaces. Its tabs and 300px Properties rail touch the frame; the scrolling tab body uses the normal page gutters. Use the family rather than overriding `WorkspacePage` padding.
 
 ## Patterns
 

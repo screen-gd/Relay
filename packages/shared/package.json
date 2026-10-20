@@ -1,0 +1,13 @@
+{
+  "name": "@relay/shared",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Code shared by the Relay app, its Convex backend and the marketing site: plan limits, the plan catalog and its card styles.",
+  "type": "module",
+  "exports": {
+    "./links": "./src/links.ts",
+    "./plans": "./src/plans.ts",
+    "./pricing-plans.module.css": "./src/pricing-plans.module.css",
+    "./subscription-plans": "./src/subscription-plans.ts"
+  }
+}
