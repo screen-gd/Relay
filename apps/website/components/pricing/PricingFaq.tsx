@@ -1,4 +1,3 @@
-import Link from "next/link";
 import {
   CREATOR_MONTHLY_PRICE_USD,
   TEAM_MONTHLY_PRICE_USD,
@@ -36,8 +35,7 @@ const faqs = [
         {TEAM_INCLUDED_EDITOR_SEATS} editors and the owner counts as one. Extra
         editors are {formatUsd(EXTRA_EDITOR_MONTHLY_PRICE_USD)} each per month.
         Prices are subject to change. Both are still in development, and
-        checkout is not live, so there is no way to buy either one yet. Follow
-        the <Link href="/roadmap">roadmap</Link> for updates.
+        checkout is not live, so there is no way to buy either one yet.
       </>
     ),
   },

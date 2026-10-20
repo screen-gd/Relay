@@ -16,12 +16,9 @@ export const TRUST_LINKS = {
   about: { label: "About", href: "/about" },
   privacyData: { label: "Privacy & Data", href: "/privacy-and-data" },
 } as const;
-// Source of roadmap issues for lib/roadmap.ts. Not linked from the site.
-export const GITHUB_REPO = "screen-gd/Relay";
 export const X_URL = "https://x.com/connect_relay";
 
 export const NAV_ITEMS = [
   { label: "Features", href: "/features" },
   { label: "Pricing", href: "/pricing" },
-  { label: "Roadmap", href: "/roadmap" },
 ] as const;

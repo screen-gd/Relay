@@ -23,7 +23,6 @@ This is the public marketing site. Product access and private workspaces are on 
 - [Home](${origin}/): Product overview, workflow, client review, and delivery.
 - [Features](${origin}/features): What Relay does for projects, client review, delivery, and payments.
 - [Pricing](${origin}/pricing): Free, Creator, and Team plans.
-- [Roadmap](${origin}/roadmap): Upcoming and recently shipped features.
 - [Get started free](https://relay-app.cc.cd/): Open Relay. No invite is required.
 - [Full product summary](${origin}/llms-full.txt): A text summary of public product information.
 
