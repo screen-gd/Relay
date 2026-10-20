@@ -4,7 +4,7 @@ export function PrivacyPage() {
   return (
     <LegalPage
       title="Privacy Policy"
-      updatedAt="October 2, 2026"
+      updatedAt="October 21, 2026"
       intro="This Privacy Policy explains how Relay handles information when you use the website and app. Relay is designed to be local-first, with optional account-backed sync when Clerk and Convex are enabled."
       sections={[
         {
@@ -69,6 +69,60 @@ export function PrivacyPage() {
           ),
         },
         {
+          title: "AI assistance",
+          body: (
+            <>
+              <p>
+                AI is optional and off until the Workspace Owner enables it and
+                supplies the workspace&apos;s own provider API keys (bring your
+                own key, or BYOK). Owners and Editors with the required
+                workspace and project permissions can request AI assistance.
+                Viewers and Client Contacts cannot start AI runs.
+              </p>
+              <p>
+                Depending on the feature you request, Relay sends relevant
+                project and output titles, workflow details, dates, feedback,
+                transcript excerpts, brief text or PDF content, change-order
+                details, or earnings questions and permitted financial figures
+                to the selected provider. Content you include may contain
+                personal or confidential information. Only submit material you
+                have permission to share with that provider.
+              </p>
+              <p>
+                Default requests use Google Gemini. Optional better-model
+                retries use OpenAI. Provider charges go to the connected
+                provider account, including when you use Relay&apos;s Free plan.
+                Relay&apos;s monthly run limits still apply. AI drafts are
+                suggestions for human review and are not automatically sent to
+                clients.
+              </p>
+              <p>
+                Only the Workspace Owner can save, replace or remove provider
+                keys in Settings under Workspace AI assistance, or change
+                workspace AI consent. Keys are stored encrypted in Convex and
+                used by the backend to authenticate requests. Workspace queries
+                expose whether a key is configured, not its value. Relay does
+                not fall back to a shared Relay provider key.
+              </p>
+              <p>
+                Provider data use and retention depend on the connected account,
+                service tier and applicable regional terms. Google&apos;s rules
+                differ for paid and unpaid Gemini services. Relay disables
+                OpenAI response storage, but provider safety logging and caching
+                may still apply. Review the{" "}
+                <a href="https://ai.google.dev/gemini-api/terms">
+                  Gemini API terms
+                </a>{" "}
+                and{" "}
+                <a href="https://developers.openai.com/api/docs/guides/your-data">
+                  OpenAI data controls
+                </a>{" "}
+                before sending client material.
+              </p>
+            </>
+          ),
+        },
+        {
           title: "Cookies And Similar Technologies",
           body: (
             <>
@@ -94,9 +148,10 @@ export function PrivacyPage() {
               <p>
                 Service providers may include Cloudflare for hosting, edge
                 delivery, and security, Clerk for authentication, Convex for
-                optional cloud sync, and any third-party integration providers
-                you choose to connect or configure. Those providers process
-                information under their own terms and privacy commitments.
+                optional cloud sync, Google or OpenAI for AI requests you choose
+                to make, and any third-party integration providers you choose to
+                connect or configure. Those providers process information under
+                their own terms and privacy commitments.
               </p>
             </>
           ),
@@ -117,14 +172,33 @@ export function PrivacyPage() {
         {
           title: "Retention And Deletion",
           body: (
-            <p>
-              Local mode data remains in your browser until you edit it, delete
-              it, reset settings, or clear browser storage. Cloud-synced data
-              remains until you delete it in the app, request deletion, or the
-              account is removed according to our operational and legal needs.
-              Backup, security, and audit copies may persist for a limited
-              period where reasonably necessary.
-            </p>
+            <>
+              <p>
+                Local mode data remains in your browser until you edit or delete
+                it, or clear browser storage. Signing out or clearing browser
+                storage does not delete cloud records. Account mode has controls
+                to delete individual records, but no self-service account
+                deletion control. Use the{" "}
+                <a href="/contact">Relay contact page</a> for deletion requests.
+                Backup, security, and audit copies may remain where needed for
+                recovery, security or legal obligations.
+              </p>
+              <p>
+                Convex stores saved AI drafts, generated results and run
+                records, including provider, model, usage, status and source
+                references. Selected request content also passes through Convex
+                while a run is processed. Turning AI off or removing a key does
+                not delete existing drafts or run records.
+              </p>
+              <p>
+                Removing a provider key deletes its stored encrypted credential.
+                It prevents workers that have not retrieved the key from using
+                it, but cannot cancel a provider request already in progress or
+                retract data already sent. For provider-held data, use the
+                connected provider account&apos;s data controls. You can also
+                revoke a key in that provider account.
+              </p>
+            </>
           ),
         },
         {

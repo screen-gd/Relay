@@ -4,7 +4,7 @@ export function TermsPage() {
   return (
     <LegalPage
       title="Terms of Service"
-      updatedAt="June 1, 2026"
+      updatedAt="October 21, 2026"
       intro="These Terms of Service govern your access to and use of Relay, a local-first work tracker for video editors with optional account-backed sync."
       sections={[
         {
@@ -100,6 +100,46 @@ export function TermsPage() {
               policies. We are not responsible for third-party services,
               outages, permissions, data handling, or changes.
             </p>
+          ),
+        },
+        {
+          title: "AI assistance and provider accounts",
+          body: (
+            <>
+              <p>
+                AI assistance is optional and off by default. The Workspace
+                Owner controls consent and supplies the workspace&apos;s own
+                Google Gemini key and, optionally, an OpenAI key for
+                better-model retries. Only the Owner can save, replace or remove
+                these encrypted keys. Owners and Editors may request runs only
+                within their workspace and project permissions.
+              </p>
+              <p>
+                Requesting an AI feature sends the relevant project context,
+                feedback, transcripts, briefs or permitted financial data to the
+                selected provider as described in the{" "}
+                <a href="/privacy">Privacy Policy</a>. You must have permission
+                to submit that material and use the connected provider account.
+                Your provider&apos;s terms and data policies apply.
+              </p>
+              <p>
+                The connected provider account is responsible for provider
+                charges, including on Relay&apos;s Free plan. Relay&apos;s
+                monthly run allowance is a separate limit, not provider credit.
+                New queued attempts consume a run, including failed attempts and
+                requested better-model retries. Paid Relay plans and checkout
+                remain unavailable; configuring AI does not purchase a Relay
+                subscription.
+              </p>
+              <p>
+                AI output can be incomplete or incorrect. Review drafts and
+                verify their facts, figures and suitability before applying,
+                sharing or relying on them. Relay does not automatically send AI
+                drafts to clients. Disabling AI or removing a provider key does
+                not delete saved drafts or recall requests already sent to the
+                provider.
+              </p>
+            </>
           ),
         },
         {
