@@ -1,8 +1,0 @@
-.loading {
-  margin: 0;
-  padding-block: 28px;
-  border-top: 1px solid var(--border);
-  border-bottom: 1px solid var(--border);
-  color: var(--muted-foreground);
-  font-size: 16px;
-}

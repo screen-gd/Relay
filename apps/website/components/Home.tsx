@@ -7,7 +7,6 @@ import {
   WalletIcon,
 } from "@phosphor-icons/react/ssr";
 import Link from "next/link";
-import type { ReactNode } from "react";
 import { APP_URL } from "../lib/links";
 import { Button } from "@/components/ui/button";
 import { InteractiveHoverButton } from "@/components/ui/interactive-hover-button";
@@ -51,11 +50,10 @@ const features = [
 ] as const;
 
 /**
- * Home page sections: hero, feature grid, client review demo, pricing, and
- * the streamed roadmap preview (passed in from the server page). The hero is
- * static; the middle sections rise into view once on scroll.
+ * Home page sections: hero, feature grid, client review demo, and pricing. The
+ * hero is static; the middle sections rise into view once on scroll.
  */
-export default function Home({ roadmap }: { roadmap: ReactNode }) {
+export default function Home() {
   return (
     <>
       <section className="hero" aria-labelledby="hero-title">
@@ -128,8 +126,6 @@ export default function Home({ roadmap }: { roadmap: ReactNode }) {
           <PricingPlans />
         </div>
       </section>
-
-      {roadmap}
     </>
   );
 }
