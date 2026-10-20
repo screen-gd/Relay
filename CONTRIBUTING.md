@@ -57,7 +57,7 @@ pnpm check:full
 ```
 
 This includes production browser smoke checks. Playwright workflow journeys run
-separately with `pnpm exec playwright test`; they are not included in the current
+separately with `pnpm test:e2e`; they are not included in the current
 CI command. See [the testing guide](docs/testing.md) for coverage and limitations.
 
 Describe the checks you ran in the pull request. Include clear reproduction and verification steps for user-facing fixes.
@@ -66,7 +66,7 @@ Describe the checks you ran in the pull request. Include clear reproduction and 
 
 - Follow the existing TanStack Start, React, TypeScript, Tailwind, owned Radix UI, and Convex patterns.
 - Keep TypeScript strict and avoid `any` where a precise type is available.
-- Read `convex/_generated/ai/guidelines.md` before changing Convex code.
+- Read `apps/web/convex/_generated/ai/guidelines.md` before changing Convex code.
 - Derive authorization from the authenticated Convex identity; do not trust client-provided user IDs.
 - Keep public portal responses limited to explicit client-safe projections.
 - Prefer small, focused changes and add comments only where the behavior is not self-explanatory.
@@ -118,5 +118,5 @@ Playwright writes failure traces, screenshots, and videos to `test-results/`.
 Open the HTML report with:
 
 ```bash
-pnpm exec playwright show-report
+pnpm --filter @relay/web exec playwright show-report
 ```

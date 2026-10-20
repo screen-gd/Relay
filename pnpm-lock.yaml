@@ -15,13 +15,25 @@ overrides:
 
 importers:
   .:
+    devDependencies:
+      husky:
+        specifier: ^9.1.7
+        version: 9.1.7
+      lint-staged:
+        specifier: ^17.3.0
+        version: 17.3.0
+      prettier:
+        specifier: ^3.9.6
+        version: 3.9.6
+
+  apps/web:
     dependencies:
       "@ai-sdk/google":
         specifier: ^4.0.93
-        version: 4.0.93(zod@4.4.3)
+        version: 4.0.93(zod@4.6.7)
       "@ai-sdk/openai":
         specifier: ^4.0.91
-        version: 4.0.91(zod@4.4.3)
+        version: 4.0.91(zod@4.6.7)
       "@aws-sdk/client-s3":
         specifier: ^3.1093.0
         version: 3.1116.0
@@ -30,13 +42,13 @@ importers:
         version: 3.1116.0
       "@clerk/backend":
         specifier: ^3.16.12
-        version: 3.16.12(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
+        version: 3.23.2(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       "@clerk/tanstack-react-start":
         specifier: 1.6.5
         version: 1.6.5(@tanstack/react-router@1.170.41(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(@tanstack/react-start@1.168.60(crossws@0.4.15(srvx@1.0.5))(esbuild@0.28.1)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(rolldown@1.2.14)(vite@8.2.2(@types/node@24.13.3)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.16.9)(yaml@2.9.0)))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       "@convex-dev/migrations":
         specifier: 0.3.6
-        version: 0.3.6(convex-helpers@0.1.123(@standard-schema/spec@1.1.0)(convex@1.45.0(@clerk/react@6.17.8(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react@19.2.8))(react@19.2.8)(typescript@5.9.3)(zod@4.4.3))(convex@1.45.0(@clerk/react@6.17.8(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react@19.2.8))
+        version: 0.3.6(convex-helpers@0.1.123(@standard-schema/spec@1.1.0)(convex@1.45.0(@clerk/react@6.17.8(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react@19.2.8))(react@19.2.8)(typescript@5.9.3)(zod@4.6.7))(convex@1.45.0(@clerk/react@6.17.8(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react@19.2.8))
       "@convex-dev/rate-limiter":
         specifier: ^0.3.2
         version: 0.3.2(convex@1.45.0(@clerk/react@6.17.8(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react@19.2.8))(react@19.2.8)
@@ -55,6 +67,9 @@ importers:
       "@hugeicons/react":
         specifier: 1.1.10
         version: 1.1.10(react@19.2.8)
+      "@relay/shared":
+        specifier: workspace:*
+        version: link:../../packages/shared
       "@tanstack/react-form":
         specifier: ^1.33.5
         version: 1.33.5(@tanstack/react-start@1.168.60(crossws@0.4.15(srvx@1.0.5))(esbuild@0.28.1)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(rolldown@1.2.14)(vite@8.2.2(@types/node@24.13.3)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.16.9)(yaml@2.9.0)))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
@@ -75,7 +90,7 @@ importers:
         version: 2.0.0(next@16.3.6(@babel/core@7.29.7)(@playwright/test@1.62.1)(@types/node@24.13.3)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react@19.2.8)
       ai:
         specifier: ^7.0.136
-        version: 7.0.136(zod@4.4.3)
+        version: 7.0.136(zod@4.6.7)
       class-variance-authority:
         specifier: ^0.7.1
         version: 0.7.1
@@ -90,7 +105,7 @@ importers:
         version: 1.45.0(@clerk/react@6.17.8(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react@19.2.8)
       convex-helpers:
         specifier: ^0.1.123
-        version: 0.1.123(@standard-schema/spec@1.1.0)(convex@1.45.0(@clerk/react@6.17.8(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react@19.2.8))(react@19.2.8)(typescript@5.9.3)(zod@4.4.3)
+        version: 0.1.123(@standard-schema/spec@1.1.0)(convex@1.45.0(@clerk/react@6.17.8(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react@19.2.8))(react@19.2.8)(typescript@5.9.3)(zod@4.6.7)
       d3-scale:
         specifier: ^4.0.2
         version: 4.0.2
@@ -129,7 +144,7 @@ importers:
         version: 1.4.0
       zod:
         specifier: ^4.4.3
-        version: 4.4.3
+        version: 4.6.7
     devDependencies:
       "@clerk/testing":
         specifier: ^2.1.1
@@ -164,15 +179,6 @@ importers:
       convex-test:
         specifier: ^0.0.53
         version: 0.0.53(convex@1.45.0(@clerk/react@6.17.8(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react@19.2.8))
-      husky:
-        specifier: ^9.1.7
-        version: 9.1.7
-      lint-staged:
-        specifier: ^17.3.0
-        version: 17.3.0
-      prettier:
-        specifier: ^3.9.6
-        version: 3.9.6
       typescript:
         specifier: ^5.9.3
         version: 5.9.3
@@ -186,17 +192,20 @@ importers:
         specifier: ^4.148.0
         version: 4.148.0(@types/node@24.13.3)
 
-  website:
+  apps/website:
     dependencies:
       "@gsap/react":
         specifier: ^2.1.2
         version: 2.1.2(gsap@3.15.0)(react@19.2.8)
       "@opennextjs/cloudflare":
         specifier: 1.20.2
-        version: 1.20.2(next@16.3.6(@babel/core@7.29.7)(@playwright/test@1.62.1)(@types/node@24.13.3)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(wrangler@4.125.0(@types/node@24.13.3))
+        version: 1.20.2(next@16.3.6(@playwright/test@1.62.1)(@types/node@24.13.3)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(wrangler@4.148.0(@types/node@24.13.3))
       "@phosphor-icons/react":
         specifier: ^2.1.10
         version: 2.1.10(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
+      "@relay/shared":
+        specifier: workspace:*
+        version: link:../../packages/shared
       class-variance-authority:
         specifier: ^0.7.1
         version: 0.7.1
@@ -257,7 +266,9 @@ importers:
         version: 5.9.3
       wrangler:
         specifier: ^4.120.0
-        version: 4.125.0(@types/node@24.13.3)
+        version: 4.148.0(@types/node@24.13.3)
+
+  packages/shared: {}
 
 packages:
   "@ai-sdk/gateway@4.0.110":
@@ -844,13 +855,6 @@ packages:
       }
     engines: { node: ">=6.9.0" }
 
-  "@clerk/backend@3.16.12":
-    resolution:
-      {
-        integrity: sha512-R7g8L9/jOXdmU5FtIUTPxaWbSlcitKAlXRHsZj7YMzL6/kobRO69upchrqwU/5QHHb8BYCXOYE+gYEQMtUSmDg==,
-      }
-    engines: { node: ">=20.9.0" }
-
   "@clerk/backend@3.23.2":
     resolution:
       {
@@ -867,36 +871,6 @@ packages:
     peerDependencies:
       react: ^18.0.0 || ~19.0.3 || ~19.1.4 || ~19.2.3 || ~19.3.0-0
       react-dom: ^18.0.0 || ~19.0.3 || ~19.1.4 || ~19.2.3 || ~19.3.0-0
-
-  "@clerk/shared@4.29.3":
-    resolution:
-      {
-        integrity: sha512-sc9CNFDR3q+tJ8N5MkGcHGiXlgupQ6DMcZlXdk88kfo1Pl7G9EFK8e4mzp5D9OiYGRJ7rPnZCKiWoyInD59QXw==,
-      }
-    engines: { node: ">=20.9.0" }
-    peerDependencies:
-      react: ^18.0.0 || ~19.0.3 || ~19.1.4 || ~19.2.3 || ~19.3.0-0
-      react-dom: ^18.0.0 || ~19.0.3 || ~19.1.4 || ~19.2.3 || ~19.3.0-0
-    peerDependenciesMeta:
-      react:
-        optional: true
-      react-dom:
-        optional: true
-
-  "@clerk/shared@4.30.1":
-    resolution:
-      {
-        integrity: sha512-Mawatm7CTKZXBqIW8t/z9LfoAKgOHtRRxROpnJ4VIkTdgzj/mmAZhPOPjzUttPXXtulR1uLWisvQXEMNeF/jTQ==,
-      }
-    engines: { node: ">=20.9.0" }
-    peerDependencies:
-      react: ^18.0.0 || ~19.0.3 || ~19.1.4 || ~19.2.3 || ~19.3.0-0
-      react-dom: ^18.0.0 || ~19.0.3 || ~19.1.4 || ~19.2.3 || ~19.3.0-0
-    peerDependenciesMeta:
-      react:
-        optional: true
-      react-dom:
-        optional: true
 
   "@clerk/shared@4.40.0":
     resolution:
@@ -947,18 +921,6 @@ packages:
       }
     engines: { node: ">=22.0.0" }
 
-  "@cloudflare/unenv-preset@2.16.1":
-    resolution:
-      {
-        integrity: sha512-ECxObrMfyTl5bhQf/lZCXwo5G6xX9IAUo+nDMKK4SZ8m4Jvvxp52vilxyySSWh2YTZz8+HQ07qGH/2rEom1vDw==,
-      }
-    peerDependencies:
-      unenv: 2.0.0-rc.24
-      workerd: ">1.20260305.0 <2.0.0-0"
-    peerDependenciesMeta:
-      workerd:
-        optional: true
-
   "@cloudflare/unenv-preset@2.16.2":
     resolution:
       {
@@ -971,15 +933,6 @@ packages:
       workerd:
         optional: true
 
-  "@cloudflare/workerd-darwin-64@1.20260820.1":
-    resolution:
-      {
-        integrity: sha512-5F2/t7SVnugG3rscSe9da1LoHst+GiuVGPaE9BP6j5AonlFpiYi0eoJrl3wof9zDBIIgJZ87NjRj9TKjbbYgHg==,
-      }
-    engines: { node: ">=16" }
-    cpu: [x64]
-    os: [darwin]
-
   "@cloudflare/workerd-darwin-64@1.20261006.1":
     resolution:
       {
@@ -987,15 +940,6 @@ packages:
       }
     engines: { node: ">=16" }
     cpu: [x64]
-    os: [darwin]
-
-  "@cloudflare/workerd-darwin-arm64@1.20260820.1":
-    resolution:
-      {
-        integrity: sha512-jFnG7715+r9FXRZPpuWWe5Ayd9v/IJKDODARg56ffFJWWtte6bFNi5VY3GazBM04hEmxny6OjXQBh3j2E/wNZw==,
-      }
-    engines: { node: ">=16" }
-    cpu: [arm64]
     os: [darwin]
 
   "@cloudflare/workerd-darwin-arm64@1.20261006.1":
@@ -1007,15 +951,6 @@ packages:
     cpu: [arm64]
     os: [darwin]
 
-  "@cloudflare/workerd-linux-64@1.20260820.1":
-    resolution:
-      {
-        integrity: sha512-TbTYaCBht0OaOWmnVpg43hXVYtIti/Kg6lvO819H2DwbxPpK1BH0z2C+Y7ySrVJLlxZQeic5eN7/noqbP80hJg==,
-      }
-    engines: { node: ">=16" }
-    cpu: [x64]
-    os: [linux]
-
   "@cloudflare/workerd-linux-64@1.20261006.1":
     resolution:
       {
@@ -1023,15 +958,6 @@ packages:
       }
     engines: { node: ">=16" }
     cpu: [x64]
-    os: [linux]
-
-  "@cloudflare/workerd-linux-arm64@1.20260820.1":
-    resolution:
-      {
-        integrity: sha512-FQmri1UF7hBnnpeyC5SZJCAnsSRs3+Ykn9wlO5zxmE2qIgKfbJZ+toJ6qrQyugWlxE65juT33HU6aYLtutLJHw==,
-      }
-    engines: { node: ">=16" }
-    cpu: [arm64]
     os: [linux]
 
   "@cloudflare/workerd-linux-arm64@1.20261006.1":
@@ -1042,15 +968,6 @@ packages:
     engines: { node: ">=16" }
     cpu: [arm64]
     os: [linux]
-
-  "@cloudflare/workerd-windows-64@1.20260820.1":
-    resolution:
-      {
-        integrity: sha512-BPvCuMxIQfA47wtYsGbBG6Bcar57Qs7yHqU2jWkT1+sRnL/741/ZbQGP9kVRMQ5fwBMuqNFmQRzAu8gSm7ri/w==,
-      }
-    engines: { node: ">=16" }
-    cpu: [x64]
-    os: [win32]
 
   "@cloudflare/workerd-windows-64@1.20261006.1":
     resolution:
@@ -1899,12 +1816,6 @@ packages:
     peerDependenciesMeta:
       rclone.js:
         optional: true
-
-  "@oxc-project/types@0.146.0":
-    resolution:
-      {
-        integrity: sha512-XC0QsnnhVe7sLIWmYmdPw7x5P0h4W8vUU3Nv1ySgWXtvCz8NizoAEpGXA0sOYoJQV2Rl13LgURAHQ5cI5ILCSA==,
-      }
 
   "@oxc-project/types@0.154.0":
     resolution:
@@ -2841,28 +2752,10 @@ packages:
     cpu: [arm]
     os: [android]
 
-  "@rolldown/binding-android-arm-eabi@1.2.5":
-    resolution:
-      {
-        integrity: sha512-DLe/i+l8ynIBY7XEQ191TeZvCoowIGa18R+dIV30GW7DiOtp74i/xX8hs8GUjW5ARV7VZuie3d6AumSmCwbeRA==,
-      }
-    engines: { node: ^20.19.0 || >=22.12.0 }
-    cpu: [arm]
-    os: [android]
-
   "@rolldown/binding-android-arm64@1.2.14":
     resolution:
       {
         integrity: sha512-QiVxHofl6A8lQU7WAtOUY4QMVZXohxwz7WJJoeh8NBEUyKfIkMRKhYyq8az/1RypNiIXzNTtiS6KwHz0erxYRQ==,
-      }
-    engines: { node: ^20.19.0 || >=22.12.0 }
-    cpu: [arm64]
-    os: [android]
-
-  "@rolldown/binding-android-arm64@1.2.5":
-    resolution:
-      {
-        integrity: sha512-zXcwKlQApYAOELHd8PwKDFkagYF9Wy4e0RJ+0qnzl9Pjnpj75TEG8ufv40p2J7kCEfwZAsNiuzRIyNNMWT38ig==,
       }
     engines: { node: ^20.19.0 || >=22.12.0 }
     cpu: [arm64]
@@ -2877,28 +2770,10 @@ packages:
     cpu: [arm64]
     os: [darwin]
 
-  "@rolldown/binding-darwin-arm64@1.2.5":
-    resolution:
-      {
-        integrity: sha512-dK4QakI42nzWgJT5sm4y4y/O//D4OxM75/cH28RLV+nzIN9AY+YsbuUVrUTjlLjXR6vpyxFbSsbmNuJ6BP9sww==,
-      }
-    engines: { node: ^20.19.0 || >=22.12.0 }
-    cpu: [arm64]
-    os: [darwin]
-
   "@rolldown/binding-darwin-x64@1.2.14":
     resolution:
       {
         integrity: sha512-hyMKEGatjmBYCs/Q4sbIcL/GqpFEqsX3wc+HYVQ/85A4rxc1o7rPm4DUI4GV4k/h0ITddwFSGpqQunI14GXjTA==,
-      }
-    engines: { node: ^20.19.0 || >=22.12.0 }
-    cpu: [x64]
-    os: [darwin]
-
-  "@rolldown/binding-darwin-x64@1.2.5":
-    resolution:
-      {
-        integrity: sha512-fqSALaUu1Wjd1nK2uW2kJDWdLCc8lx1IcY+MTY26Aurfdx19anlzhqXOgCFbBFQnlFDTn4TC1/7Nz4Bl2mLP3A==,
       }
     engines: { node: ^20.19.0 || >=22.12.0 }
     cpu: [x64]
@@ -2913,28 +2788,10 @@ packages:
     cpu: [x64]
     os: [freebsd]
 
-  "@rolldown/binding-freebsd-x64@1.2.5":
-    resolution:
-      {
-        integrity: sha512-/vCnNxlkxs9tKxNDcyWUePpJ/PgTzxIaVhoM5SmG8UV+GR/IcPam4VYxi7GIMo7PSDuNqlJqvprqii9NqqVCMw==,
-      }
-    engines: { node: ^20.19.0 || >=22.12.0 }
-    cpu: [x64]
-    os: [freebsd]
-
   "@rolldown/binding-linux-arm-gnueabihf@1.2.14":
     resolution:
       {
         integrity: sha512-BqwKsdZQf6EqVWr8fv2MrDYzAvOZ7+NYFSJESRGs87fkseEhs0TU9TXgRJTkZoRRkxTizyEg1LKUXfU3/78uqg==,
-      }
-    engines: { node: ^20.19.0 || >=22.12.0 }
-    cpu: [arm]
-    os: [linux]
-
-  "@rolldown/binding-linux-arm-gnueabihf@1.2.5":
-    resolution:
-      {
-        integrity: sha512-abk0NLA519LxRCszmbE0jYKuQ9YPocOXTiOXOo6Yr+YAT95VH+PtqYAjOJvGKt3viEd/x4qzabAlwd5bHOOARg==,
       }
     engines: { node: ^20.19.0 || >=22.12.0 }
     cpu: [arm]
@@ -2949,28 +2806,10 @@ packages:
     cpu: [arm64]
     os: [linux]
 
-  "@rolldown/binding-linux-arm64-gnu@1.2.5":
-    resolution:
-      {
-        integrity: sha512-Y7eALiJ8lr0M2HH103Js+g7V34wf6snlpZLAsHI90uLhr3PVlNsbFVAXJC9d/V6BnPyKtpSwI+NcB/RLxsQxuA==,
-      }
-    engines: { node: ^20.19.0 || >=22.12.0 }
-    cpu: [arm64]
-    os: [linux]
-
   "@rolldown/binding-linux-arm64-musl@1.2.14":
     resolution:
       {
         integrity: sha512-BJ2CL19M6uuWesMgnqJzgxoI+N+eV7b0A9O9vLV42y+gitC41fNa8KElau1tHVzuLWX5GzEuxMPhAO0tQXQMkg==,
-      }
-    engines: { node: ^20.19.0 || >=22.12.0 }
-    cpu: [arm64]
-    os: [linux]
-
-  "@rolldown/binding-linux-arm64-musl@1.2.5":
-    resolution:
-      {
-        integrity: sha512-xMvZgnbZg4YVnR/AX2b3oOPDTFYJvUVaJg5FedA/LuvexAtXibZQej4cnTkw3rjsJ/ggUROB64TdtETiim+FYA==,
       }
     engines: { node: ^20.19.0 || >=22.12.0 }
     cpu: [arm64]
@@ -2985,28 +2824,10 @@ packages:
     cpu: [ppc64]
     os: [linux]
 
-  "@rolldown/binding-linux-ppc64-gnu@1.2.5":
-    resolution:
-      {
-        integrity: sha512-GRjeqTUDHTo5GwntsLaAMcBahG3nlpjftXWZLN73HiYQlhwEowvarFgQnRnQZtIp4keXX7quXFbG38uPZBa2EA==,
-      }
-    engines: { node: ^20.19.0 || >=22.12.0 }
-    cpu: [ppc64]
-    os: [linux]
-
   "@rolldown/binding-linux-s390x-gnu@1.2.14":
     resolution:
       {
         integrity: sha512-V/h8ePq1fKDrmtFMz6xcCN3DKvuvMRrwwD1q0PkBeeo4DpK64biaKvqWGVxqCeYKqeRk7gE7/iKPxLCn08O97A==,
-      }
-    engines: { node: ^20.19.0 || >=22.12.0 }
-    cpu: [s390x]
-    os: [linux]
-
-  "@rolldown/binding-linux-s390x-gnu@1.2.5":
-    resolution:
-      {
-        integrity: sha512-vLNTR45F2Uwc8AufkNXPmB4VliaXs+FvcheEogIzOXzO4l+LzieXF5A/TWxLy5HtqpsRCHUfd0lPVrrdgXdLHQ==,
       }
     engines: { node: ^20.19.0 || >=22.12.0 }
     cpu: [s390x]
@@ -3021,28 +2842,10 @@ packages:
     cpu: [x64]
     os: [linux]
 
-  "@rolldown/binding-linux-x64-gnu@1.2.5":
-    resolution:
-      {
-        integrity: sha512-Mgj59/HTuYeK9Gz2MA+mBWKnHsAgkBSec15ZMb1st3oIfFbX7gCjOae7GydHhzcyQi9Z/7M1QuN9bR3oFqF0jQ==,
-      }
-    engines: { node: ^20.19.0 || >=22.12.0 }
-    cpu: [x64]
-    os: [linux]
-
   "@rolldown/binding-linux-x64-musl@1.2.14":
     resolution:
       {
         integrity: sha512-3G3tnAmTpdk9jO3GQtyHXqeFD2SlecfTws/Y3M2mmj9nMBwwuLT4kur8sZKeu7ENUHSpVO3cIsm5A52LEWWwlg==,
-      }
-    engines: { node: ^20.19.0 || >=22.12.0 }
-    cpu: [x64]
-    os: [linux]
-
-  "@rolldown/binding-linux-x64-musl@1.2.5":
-    resolution:
-      {
-        integrity: sha512-mY8AP0/ichsbhAxGnLa3d3+MwV0EfgrPND2bplI3Ym8T6R2pJ0N87bvrKVwNXmdy3jnr6eQBecdqx/HMknBmpA==,
       }
     engines: { node: ^20.19.0 || >=22.12.0 }
     cpu: [x64]
@@ -3057,15 +2860,6 @@ packages:
     cpu: [arm64]
     os: [openharmony]
 
-  "@rolldown/binding-openharmony-arm64@1.2.5":
-    resolution:
-      {
-        integrity: sha512-8SLssA2oweAxyRgDp789ACfRb/3P+zNRJpzZxSizxF9m8NUDQ4+3xjo8ttjhVGGw6Qxb70oZiEtIjaKikCO7Yw==,
-      }
-    engines: { node: ^20.19.0 || >=22.12.0 }
-    cpu: [arm64]
-    os: [openharmony]
-
   "@rolldown/binding-win32-arm64-msvc@1.2.14":
     resolution:
       {
@@ -3075,28 +2869,10 @@ packages:
     cpu: [arm64]
     os: [win32]
 
-  "@rolldown/binding-win32-arm64-msvc@1.2.5":
-    resolution:
-      {
-        integrity: sha512-vGbruD5zquhoc8D9SViXgN2FBJtNdTyQ4DtG+SWiEGlJiAzoKcZ2xp+xuXCffhubVdt0NJlTZqkeRuERy7g8Cw==,
-      }
-    engines: { node: ^20.19.0 || >=22.12.0 }
-    cpu: [arm64]
-    os: [win32]
-
   "@rolldown/binding-win32-x64-msvc@1.2.14":
     resolution:
       {
         integrity: sha512-9mE94bf2GZUaR/fUSXCMpBoWkctu421Mi0ORpm4zqfbkjKep7RxzPFa5etcGs5h+2KApoWBOA/hAJa/7saGgEQ==,
-      }
-    engines: { node: ^20.19.0 || >=22.12.0 }
-    cpu: [x64]
-    os: [win32]
-
-  "@rolldown/binding-win32-x64-msvc@1.2.5":
-    resolution:
-      {
-        integrity: sha512-e/SXpgISz+IoqVcSSI0rx/d/he8zqLex+/rCWpnHpmVfmPIUjag9H6P7zotf0gJHwPUhQxZ/mF8tr6acebT9yw==,
       }
     engines: { node: ^20.19.0 || >=22.12.0 }
     cpu: [x64]
@@ -3795,15 +3571,6 @@ packages:
       vite:
         optional: true
 
-  "@tanstack/react-store@0.11.1":
-    resolution:
-      {
-        integrity: sha512-HaIGKI3YLmjBYIvy5DFDY23oNaYZIsTZfngey07Uh5iLVJgM3bIGCnZeOFOqzjFld9JHWcaHJnasD/bKoGKwJQ==,
-      }
-    peerDependencies:
-      react: ^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0
-      react-dom: ^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0
-
   "@tanstack/react-store@0.11.2":
     resolution:
       {
@@ -3910,12 +3677,6 @@ packages:
         integrity: sha512-x+xCXK2GtFzY6NbXqAg8YpU6cwAjDfMeYSNzxfGzntpjbwBRHHrXeC/kYUnBBQCV7wK4kJ8vBBQGP0OyYTasUg==,
       }
     engines: { node: ">=22.12.0" }
-
-  "@tanstack/store@0.11.1":
-    resolution:
-      {
-        integrity: sha512-mzTOBhypOuDJAy/D8n2MfUZ1HFkXnmSETviRyhqEC8LUE7/IZQExOTxMANj3KjTofYTkFNpBY67qaVrT41YccA==,
-      }
 
   "@tanstack/store@0.11.2":
     resolution:
@@ -5428,13 +5189,6 @@ packages:
       }
     hasBin: true
 
-  js-cookie@3.0.7:
-    resolution:
-      {
-        integrity: sha512-z/wZZgDrkNV1eA0ULjM/F9/50Ya8fbzgKneSpoPsXSGd0KnpdtHfOZWK+GcwLk+EZbS4F9RBhU+K2RgzuDaItw==,
-      }
-    engines: { node: ">=20" }
-
   js-cookie@3.0.8:
     resolution:
       {
@@ -5795,13 +5549,6 @@ packages:
         integrity: sha512-OqbOk5oEQeAZ8WXWydlu9HJjz9WVdEIvamMCcXmuqUYjTknH/sqsWvhQ3vgwKFRR1HpjvNBKQ37nbJgYzGqGcg==,
       }
     engines: { node: ">=6" }
-
-  miniflare@5.20260820.0-alpha:
-    resolution:
-      {
-        integrity: sha512-Bv1j2kcKKNwXLWuCx+j0xGt7z318mqQkJmEN6ellM9sCESbPBDTM9ofZMbKqx47jSnoGA3CiaUkAmzGVXUa/wQ==,
-      }
-    engines: { node: ">=22.0.0" }
 
   miniflare@5.20261006.0-alpha:
     resolution:
@@ -6297,14 +6044,6 @@ packages:
     resolution:
       {
         integrity: sha512-eTBTTqMR6uHKLgcUqpJP8ntzDI6V4LYA8negAMBEI7gkgVvOdrx6VsvS2Ym+83KhOPdLCHWJu0w7UQFJZhHKNw==,
-      }
-    engines: { node: ^20.19.0 || >=22.12.0 }
-    hasBin: true
-
-  rolldown@1.2.5:
-    resolution:
-      {
-        integrity: sha512-VD2IE5PUG4Oj8zz2VGykiYd5wbnjdIiSsNQb8Qu5B+noEp+A78mu2iVvpp27g8es14Tk9rofNs5Tku9iQCS4fA==,
       }
     engines: { node: ^20.19.0 || >=22.12.0 }
     hasBin: true
@@ -7017,14 +6756,6 @@ packages:
     engines: { node: ">=8" }
     hasBin: true
 
-  workerd@1.20260820.1:
-    resolution:
-      {
-        integrity: sha512-/wk4rFNHH6IVMXFe6aPEZsT5YWpWtfKTUMt7+rFkyeGbXcGCy4yxODmJatbqYj0jmqHETdz0+m2mT+vNjXnF7w==,
-      }
-    engines: { node: ">=16" }
-    hasBin: true
-
   workerd@1.20261006.1:
     resolution:
       {
@@ -7032,19 +6763,6 @@ packages:
       }
     engines: { node: ">=16" }
     hasBin: true
-
-  wrangler@4.125.0:
-    resolution:
-      {
-        integrity: sha512-yFpvggu+xk1Hdm/Uxwaqa19bb7GArME4CrCS3Vov68a2TZq2MPO+wLocKbbnIC9K0oLowcdau7/ycxbbNHKCEg==,
-      }
-    engines: { node: ">=22.0.0" }
-    hasBin: true
-    peerDependencies:
-      "@cloudflare/workers-types": ^5.20260820.1
-    peerDependenciesMeta:
-      "@cloudflare/workers-types":
-        optional: true
 
   wrangler@4.148.0:
     resolution:
@@ -7141,12 +6859,6 @@ packages:
         integrity: sha512-rLfVLB4FgQneDr0dv1oddCVZmKjcJ6yX6mS4pU82Mq/Dt9a3cLZQ62pDBL4AUO+uVrCvtWz3ZFUL2HFAFJ/BXQ==,
       }
 
-  zod@4.4.3:
-    resolution:
-      {
-        integrity: sha512-ytENFjIJFl2UwYglde2jchW2Hwm4GJFLDiSXWdTrJQBIN9Fcyp7n4DhxJEiWNAJMV1/BqWfW/kkg71UDcHJyTQ==,
-      }
-
   zod@4.6.7:
     resolution:
       {
@@ -7154,33 +6866,33 @@ packages:
       }
 
 snapshots:
-  "@ai-sdk/gateway@4.0.110(zod@4.4.3)":
+  "@ai-sdk/gateway@4.0.110(zod@4.6.7)":
     dependencies:
       "@ai-sdk/provider": 4.0.26
-      "@ai-sdk/provider-utils": 5.0.58(zod@4.4.3)
+      "@ai-sdk/provider-utils": 5.0.58(zod@4.6.7)
       "@vercel/oidc": 3.2.0
-      zod: 4.4.3
+      zod: 4.6.7
 
-  "@ai-sdk/google@4.0.93(zod@4.4.3)":
+  "@ai-sdk/google@4.0.93(zod@4.6.7)":
     dependencies:
       "@ai-sdk/provider": 4.0.26
-      "@ai-sdk/provider-utils": 5.0.58(zod@4.4.3)
-      zod: 4.4.3
+      "@ai-sdk/provider-utils": 5.0.58(zod@4.6.7)
+      zod: 4.6.7
 
-  "@ai-sdk/openai@4.0.91(zod@4.4.3)":
+  "@ai-sdk/openai@4.0.91(zod@4.6.7)":
     dependencies:
       "@ai-sdk/provider": 4.0.26
-      "@ai-sdk/provider-utils": 5.0.58(zod@4.4.3)
-      zod: 4.4.3
+      "@ai-sdk/provider-utils": 5.0.58(zod@4.6.7)
+      zod: 4.6.7
 
-  "@ai-sdk/provider-utils@5.0.58(zod@4.4.3)":
+  "@ai-sdk/provider-utils@5.0.58(zod@4.6.7)":
     dependencies:
       "@ai-sdk/provider": 4.0.26
       "@standard-schema/spec": 1.1.0
       "@workflow/serde": 4.1.0
       eventsource-parser: 3.1.1
       undici: 7.29.1
-      zod: 4.4.3
+      zod: 4.6.7
 
   "@ai-sdk/provider@4.0.26":
     dependencies:
@@ -7882,15 +7594,6 @@ snapshots:
       "@babel/helper-string-parser": 7.29.7
       "@babel/helper-validator-identifier": 7.29.7
 
-  "@clerk/backend@3.16.12(react-dom@19.2.8(react@19.2.8))(react@19.2.8)":
-    dependencies:
-      "@clerk/shared": 4.30.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
-      standardwebhooks: 1.0.0
-      tslib: 2.8.1
-    transitivePeerDependencies:
-      - react
-      - react-dom
-
   "@clerk/backend@3.23.2(react-dom@19.2.8(react@19.2.8))(react@19.2.8)":
     dependencies:
       "@clerk/shared": 4.40.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
@@ -7906,26 +7609,6 @@ snapshots:
       react: 19.2.8
       react-dom: 19.2.8(react@19.2.8)
       tslib: 2.8.1
-
-  "@clerk/shared@4.29.3(react-dom@19.2.8(react@19.2.8))(react@19.2.8)":
-    dependencies:
-      "@tanstack/query-core": 5.102.1
-      dequal: 2.0.3
-      glob-to-regexp: 0.4.1
-      js-cookie: 3.0.7
-    optionalDependencies:
-      react: 19.2.8
-      react-dom: 19.2.8(react@19.2.8)
-
-  "@clerk/shared@4.30.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8)":
-    dependencies:
-      "@tanstack/query-core": 5.102.1
-      dequal: 2.0.3
-      glob-to-regexp: 0.4.1
-      js-cookie: 3.0.7
-    optionalDependencies:
-      react: 19.2.8
-      react-dom: 19.2.8(react@19.2.8)
 
   "@clerk/shared@4.40.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)":
     dependencies:
@@ -7950,8 +7633,8 @@ snapshots:
 
   "@clerk/testing@2.2.28(@playwright/test@1.62.1)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)":
     dependencies:
-      "@clerk/backend": 3.16.12(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
-      "@clerk/shared": 4.29.3(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
+      "@clerk/backend": 3.23.2(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
+      "@clerk/shared": 4.40.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       dotenv: 17.2.2
     optionalDependencies:
       "@playwright/test": 1.62.1
@@ -7961,52 +7644,31 @@ snapshots:
 
   "@cloudflare/kv-asset-handler@0.5.0": {}
 
-  "@cloudflare/unenv-preset@2.16.1(unenv@2.0.0-rc.24)(workerd@1.20260820.1)":
-    dependencies:
-      unenv: 2.0.0-rc.24
-    optionalDependencies:
-      workerd: 1.20260820.1
-
   "@cloudflare/unenv-preset@2.16.2(unenv@2.0.0-rc.24)(workerd@1.20261006.1)":
     dependencies:
       unenv: 2.0.0-rc.24
     optionalDependencies:
       workerd: 1.20261006.1
 
-  "@cloudflare/workerd-darwin-64@1.20260820.1":
-    optional: true
-
   "@cloudflare/workerd-darwin-64@1.20261006.1":
-    optional: true
-
-  "@cloudflare/workerd-darwin-arm64@1.20260820.1":
     optional: true
 
   "@cloudflare/workerd-darwin-arm64@1.20261006.1":
     optional: true
 
-  "@cloudflare/workerd-linux-64@1.20260820.1":
-    optional: true
-
   "@cloudflare/workerd-linux-64@1.20261006.1":
-    optional: true
-
-  "@cloudflare/workerd-linux-arm64@1.20260820.1":
     optional: true
 
   "@cloudflare/workerd-linux-arm64@1.20261006.1":
     optional: true
 
-  "@cloudflare/workerd-windows-64@1.20260820.1":
-    optional: true
-
   "@cloudflare/workerd-windows-64@1.20261006.1":
     optional: true
 
-  "@convex-dev/migrations@0.3.6(convex-helpers@0.1.123(@standard-schema/spec@1.1.0)(convex@1.45.0(@clerk/react@6.17.8(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react@19.2.8))(react@19.2.8)(typescript@5.9.3)(zod@4.4.3))(convex@1.45.0(@clerk/react@6.17.8(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react@19.2.8))":
+  "@convex-dev/migrations@0.3.6(convex-helpers@0.1.123(@standard-schema/spec@1.1.0)(convex@1.45.0(@clerk/react@6.17.8(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react@19.2.8))(react@19.2.8)(typescript@5.9.3)(zod@4.6.7))(convex@1.45.0(@clerk/react@6.17.8(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react@19.2.8))":
     dependencies:
       convex: 1.45.0(@clerk/react@6.17.8(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react@19.2.8)
-      convex-helpers: 0.1.123(@standard-schema/spec@1.1.0)(convex@1.45.0(@clerk/react@6.17.8(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react@19.2.8))(react@19.2.8)(typescript@5.9.3)(zod@4.4.3)
+      convex-helpers: 0.1.123(@standard-schema/spec@1.1.0)(convex@1.45.0(@clerk/react@6.17.8(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react@19.2.8))(react@19.2.8)(typescript@5.9.3)(zod@4.6.7)
 
   "@convex-dev/rate-limiter@0.3.2(convex@1.45.0(@clerk/react@6.17.8(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react@19.2.8))(react@19.2.8)":
     dependencies:
@@ -8044,10 +7706,10 @@ snapshots:
       dotenv: 16.6.1
       eciesjs: 0.4.18
       execa: 5.1.1
-      fdir: 6.5.0(picomatch@4.0.5)
+      fdir: 6.5.0(picomatch@4.0.7)
       ignore: 5.3.2
       object-treeify: 1.1.33
-      picomatch: 4.0.5
+      picomatch: 4.0.7
       which: 4.0.0
 
   "@ecies/ciphers@0.2.6(@noble/ciphers@1.3.0)":
@@ -8378,7 +8040,7 @@ snapshots:
 
   "@oozcitak/util@10.0.0": {}
 
-  "@opennextjs/aws@4.1.0(next@16.3.6(@babel/core@7.29.7)(@playwright/test@1.62.1)(@types/node@24.13.3)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))":
+  "@opennextjs/aws@4.1.0(next@16.3.6(@playwright/test@1.62.1)(@types/node@24.13.3)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))":
     dependencies:
       "@ast-grep/napi": 0.40.5
       "@aws-sdk/client-cloudfront": 3.984.0
@@ -8401,11 +8063,11 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  "@opennextjs/cloudflare@1.20.2(next@16.3.6(@babel/core@7.29.7)(@playwright/test@1.62.1)(@types/node@24.13.3)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(wrangler@4.125.0(@types/node@24.13.3))":
+  "@opennextjs/cloudflare@1.20.2(next@16.3.6(@playwright/test@1.62.1)(@types/node@24.13.3)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(wrangler@4.148.0(@types/node@24.13.3))":
     dependencies:
       "@ast-grep/napi": 0.40.5
       "@dotenvx/dotenvx": 1.31.0
-      "@opennextjs/aws": 4.1.0(next@16.3.6(@babel/core@7.29.7)(@playwright/test@1.62.1)(@types/node@24.13.3)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))
+      "@opennextjs/aws": 4.1.0(next@16.3.6(@playwright/test@1.62.1)(@types/node@24.13.3)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))
       ci-info: 4.4.0
       cloudflare: 4.5.0
       comment-json: 4.6.2
@@ -8413,13 +8075,11 @@ snapshots:
       glob: 12.0.0
       next: 16.3.6(@babel/core@7.29.7)(@playwright/test@1.62.1)(@types/node@24.13.3)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       ts-tqdm: 0.8.6
-      wrangler: 4.125.0(@types/node@24.13.3)
+      wrangler: 4.148.0(@types/node@24.13.3)
       yargs: 18.1.0
     transitivePeerDependencies:
       - encoding
       - supports-color
-
-  "@oxc-project/types@0.146.0": {}
 
   "@oxc-project/types@0.154.0": {}
 
@@ -9206,91 +8866,46 @@ snapshots:
   "@rolldown/binding-android-arm-eabi@1.2.14":
     optional: true
 
-  "@rolldown/binding-android-arm-eabi@1.2.5":
-    optional: true
-
   "@rolldown/binding-android-arm64@1.2.14":
-    optional: true
-
-  "@rolldown/binding-android-arm64@1.2.5":
     optional: true
 
   "@rolldown/binding-darwin-arm64@1.2.14":
     optional: true
 
-  "@rolldown/binding-darwin-arm64@1.2.5":
-    optional: true
-
   "@rolldown/binding-darwin-x64@1.2.14":
-    optional: true
-
-  "@rolldown/binding-darwin-x64@1.2.5":
     optional: true
 
   "@rolldown/binding-freebsd-x64@1.2.14":
     optional: true
 
-  "@rolldown/binding-freebsd-x64@1.2.5":
-    optional: true
-
   "@rolldown/binding-linux-arm-gnueabihf@1.2.14":
-    optional: true
-
-  "@rolldown/binding-linux-arm-gnueabihf@1.2.5":
     optional: true
 
   "@rolldown/binding-linux-arm64-gnu@1.2.14":
     optional: true
 
-  "@rolldown/binding-linux-arm64-gnu@1.2.5":
-    optional: true
-
   "@rolldown/binding-linux-arm64-musl@1.2.14":
-    optional: true
-
-  "@rolldown/binding-linux-arm64-musl@1.2.5":
     optional: true
 
   "@rolldown/binding-linux-ppc64-gnu@1.2.14":
     optional: true
 
-  "@rolldown/binding-linux-ppc64-gnu@1.2.5":
-    optional: true
-
   "@rolldown/binding-linux-s390x-gnu@1.2.14":
-    optional: true
-
-  "@rolldown/binding-linux-s390x-gnu@1.2.5":
     optional: true
 
   "@rolldown/binding-linux-x64-gnu@1.2.14":
     optional: true
 
-  "@rolldown/binding-linux-x64-gnu@1.2.5":
-    optional: true
-
   "@rolldown/binding-linux-x64-musl@1.2.14":
-    optional: true
-
-  "@rolldown/binding-linux-x64-musl@1.2.5":
     optional: true
 
   "@rolldown/binding-openharmony-arm64@1.2.14":
     optional: true
 
-  "@rolldown/binding-openharmony-arm64@1.2.5":
-    optional: true
-
   "@rolldown/binding-win32-arm64-msvc@1.2.14":
     optional: true
 
-  "@rolldown/binding-win32-arm64-msvc@1.2.5":
-    optional: true
-
   "@rolldown/binding-win32-x64-msvc@1.2.14":
-    optional: true
-
-  "@rolldown/binding-win32-x64-msvc@1.2.5":
     optional: true
 
   "@rolldown/pluginutils@1.0.1": {}
@@ -9645,7 +9260,7 @@ snapshots:
     dependencies:
       "@tanstack/devtools-event-client": 0.4.4
       "@tanstack/pacer-lite": 0.1.1
-      "@tanstack/store": 0.11.1
+      "@tanstack/store": 0.11.2
 
   "@tanstack/history@1.162.4": {}
 
@@ -9656,7 +9271,7 @@ snapshots:
   "@tanstack/react-form@1.33.5(@tanstack/react-start@1.168.60(crossws@0.4.15(srvx@1.0.5))(esbuild@0.28.1)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(rolldown@1.2.14)(vite@8.2.2(@types/node@24.13.3)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.16.9)(yaml@2.9.0)))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)":
     dependencies:
       "@tanstack/form-core": 1.33.5
-      "@tanstack/react-store": 0.11.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
+      "@tanstack/react-store": 0.11.2(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       react: 19.2.8
     optionalDependencies:
       "@tanstack/react-start": 1.168.60(crossws@0.4.15(srvx@1.0.5))(esbuild@0.28.1)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(rolldown@1.2.14)(vite@8.2.2(@types/node@24.13.3)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.16.9)(yaml@2.9.0))
@@ -9744,13 +9359,6 @@ snapshots:
       - unloader
       - vite-plugin-solid
       - webpack
-
-  "@tanstack/react-store@0.11.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8)":
-    dependencies:
-      "@tanstack/store": 0.11.1
-      react: 19.2.8
-      react-dom: 19.2.8(react@19.2.8)
-      use-sync-external-store: 1.6.0(react@19.2.8)
 
   "@tanstack/react-store@0.11.2(react-dom@19.2.8(react@19.2.8))(react@19.2.8)":
     dependencies:
@@ -9885,8 +9493,6 @@ snapshots:
   "@tanstack/start-storage-context@1.167.36":
     dependencies:
       "@tanstack/router-core": 1.171.34
-
-  "@tanstack/store@0.11.1": {}
 
   "@tanstack/store@0.11.2": {}
 
@@ -10042,12 +9648,12 @@ snapshots:
     dependencies:
       humanize-ms: 1.2.1
 
-  ai@7.0.136(zod@4.4.3):
+  ai@7.0.136(zod@4.6.7):
     dependencies:
-      "@ai-sdk/gateway": 4.0.110(zod@4.4.3)
+      "@ai-sdk/gateway": 4.0.110(zod@4.6.7)
       "@ai-sdk/provider": 4.0.26
-      "@ai-sdk/provider-utils": 5.0.58(zod@4.4.3)
-      zod: 4.4.3
+      "@ai-sdk/provider-utils": 5.0.58(zod@4.6.7)
+      zod: 4.6.7
 
   ansi-colors@4.1.3: {}
 
@@ -10209,14 +9815,14 @@ snapshots:
 
   convert-source-map@2.0.0: {}
 
-  convex-helpers@0.1.123(@standard-schema/spec@1.1.0)(convex@1.45.0(@clerk/react@6.17.8(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react@19.2.8))(react@19.2.8)(typescript@5.9.3)(zod@4.4.3):
+  convex-helpers@0.1.123(@standard-schema/spec@1.1.0)(convex@1.45.0(@clerk/react@6.17.8(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react@19.2.8))(react@19.2.8)(typescript@5.9.3)(zod@4.6.7):
     dependencies:
       convex: 1.45.0(@clerk/react@6.17.8(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react@19.2.8)
     optionalDependencies:
       "@standard-schema/spec": 1.1.0
       react: 19.2.8
       typescript: 5.9.3
-      zod: 4.4.3
+      zod: 4.6.7
 
   convex-test@0.0.53(convex@1.45.0(@clerk/react@6.17.8(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react@19.2.8)):
     dependencies:
@@ -10480,9 +10086,9 @@ snapshots:
 
   fast-sha256@1.3.0: {}
 
-  fdir@6.5.0(picomatch@4.0.5):
+  fdir@6.5.0(picomatch@4.0.7):
     optionalDependencies:
-      picomatch: 4.0.5
+      picomatch: 4.0.7
 
   fetchdts@0.1.7: {}
 
@@ -10673,8 +10279,6 @@ snapshots:
 
   jiti@2.7.0: {}
 
-  js-cookie@3.0.7: {}
-
   js-cookie@3.0.8: {}
 
   js-tokens@4.0.0: {}
@@ -10832,19 +10436,6 @@ snapshots:
       mime-db: 1.54.0
 
   mimic-fn@2.1.0: {}
-
-  miniflare@5.20260820.0-alpha(@types/node@24.13.3):
-    dependencies:
-      "@cspotcode/source-map-support": 0.8.1
-      sharp: 0.35.4(@types/node@24.13.3)
-      undici: 7.29.1
-      workerd: 1.20260820.1
-      ws: 8.21.0
-      youch: 4.1.0-beta.10
-    transitivePeerDependencies:
-      - "@types/node"
-      - bufferutil
-      - utf-8-validate
 
   miniflare@5.20261006.0-alpha(@types/node@24.13.3):
     dependencies:
@@ -11201,27 +10792,6 @@ snapshots:
       "@rolldown/binding-win32-arm64-msvc": 1.2.14
       "@rolldown/binding-win32-x64-msvc": 1.2.14
 
-  rolldown@1.2.5:
-    dependencies:
-      "@oxc-project/types": 0.146.0
-      "@rolldown/pluginutils": 1.0.1
-    optionalDependencies:
-      "@rolldown/binding-android-arm-eabi": 1.2.5
-      "@rolldown/binding-android-arm64": 1.2.5
-      "@rolldown/binding-darwin-arm64": 1.2.5
-      "@rolldown/binding-darwin-x64": 1.2.5
-      "@rolldown/binding-freebsd-x64": 1.2.5
-      "@rolldown/binding-linux-arm-gnueabihf": 1.2.5
-      "@rolldown/binding-linux-arm64-gnu": 1.2.5
-      "@rolldown/binding-linux-arm64-musl": 1.2.5
-      "@rolldown/binding-linux-ppc64-gnu": 1.2.5
-      "@rolldown/binding-linux-s390x-gnu": 1.2.5
-      "@rolldown/binding-linux-x64-gnu": 1.2.5
-      "@rolldown/binding-linux-x64-musl": 1.2.5
-      "@rolldown/binding-openharmony-arm64": 1.2.5
-      "@rolldown/binding-win32-arm64-msvc": 1.2.5
-      "@rolldown/binding-win32-x64-msvc": 1.2.5
-
   rou3@0.8.1: {}
 
   rou3@0.9.2: {}
@@ -11435,8 +11005,8 @@ snapshots:
 
   tinyglobby@0.2.17:
     dependencies:
-      fdir: 6.5.0(picomatch@4.0.5)
-      picomatch: 4.0.5
+      fdir: 6.5.0(picomatch@4.0.7)
+      picomatch: 4.0.7
 
   tinyrainbow@3.1.1: {}
 
@@ -11533,9 +11103,9 @@ snapshots:
   vite@8.2.2(@types/node@24.13.3)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.16.9)(yaml@2.9.0):
     dependencies:
       lightningcss: 1.33.0
-      picomatch: 4.0.5
+      picomatch: 4.0.7
       postcss: 8.5.26
-      rolldown: 1.2.5
+      rolldown: 1.2.14
       tinyglobby: 0.2.17
     optionalDependencies:
       "@types/node": 24.13.3
@@ -11563,7 +11133,7 @@ snapshots:
       magic-string: 0.30.21
       obug: 2.1.4
       pathe: 2.0.3
-      picomatch: 4.0.5
+      picomatch: 4.0.7
       std-env: 4.2.0
       tinybench: 2.9.0
       tinyexec: 1.3.0
@@ -11601,14 +11171,6 @@ snapshots:
       siginfo: 2.0.0
       stackback: 0.0.2
 
-  workerd@1.20260820.1:
-    optionalDependencies:
-      "@cloudflare/workerd-darwin-64": 1.20260820.1
-      "@cloudflare/workerd-darwin-arm64": 1.20260820.1
-      "@cloudflare/workerd-linux-64": 1.20260820.1
-      "@cloudflare/workerd-linux-arm64": 1.20260820.1
-      "@cloudflare/workerd-windows-64": 1.20260820.1
-
   workerd@1.20261006.1:
     optionalDependencies:
       "@cloudflare/workerd-darwin-64": 1.20261006.1
@@ -11616,23 +11178,6 @@ snapshots:
       "@cloudflare/workerd-linux-64": 1.20261006.1
       "@cloudflare/workerd-linux-arm64": 1.20261006.1
       "@cloudflare/workerd-windows-64": 1.20261006.1
-
-  wrangler@4.125.0(@types/node@24.13.3):
-    dependencies:
-      "@cloudflare/kv-asset-handler": 0.5.0
-      "@cloudflare/unenv-preset": 2.16.1(unenv@2.0.0-rc.24)(workerd@1.20260820.1)
-      blake3-wasm: 2.1.5
-      esbuild: 0.28.1
-      miniflare: 5.20260820.0-alpha(@types/node@24.13.3)
-      path-to-regexp: 6.3.0
-      unenv: 2.0.0-rc.24
-      workerd: 1.20260820.1
-    optionalDependencies:
-      fsevents: 2.3.3
-    transitivePeerDependencies:
-      - "@types/node"
-      - bufferutil
-      - utf-8-validate
 
   wrangler@4.148.0(@types/node@24.13.3):
     dependencies:
@@ -11697,7 +11242,5 @@ snapshots:
       "@speed-highlight/core": 1.2.24
       cookie: 1.1.1
       youch-core: 0.3.3
-
-  zod@4.4.3: {}
 
   zod@4.6.7: {}

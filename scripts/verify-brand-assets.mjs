@@ -109,9 +109,12 @@ for (const name of appFiles) {
     throw new Error(`${name} differs between app and marketing outputs.`);
 }
 
-await verifyPublicReferences("src/app/layout.tsx", "public");
-await verifyPublicReferences("src/app/manifest.ts", "public");
-await verifyPublicReferences("website/app/layout.tsx", "website/public");
+await verifyPublicReferences("apps/web/src/app/layout.tsx", "apps/web/public");
+await verifyPublicReferences("apps/web/src/app/manifest.ts", "apps/web/public");
+await verifyPublicReferences(
+  "apps/website/app/layout.tsx",
+  "apps/website/public"
+);
 
 const browser = await chromium.launch({ headless: true });
 const page = await browser.newPage({ viewport: { width: 960, height: 310 } });
