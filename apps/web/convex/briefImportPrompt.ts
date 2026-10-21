@@ -2,6 +2,9 @@ import { z } from "zod";
 
 export const MAX_BRIEF_PDF_BYTES = 10_000_000;
 export const MAX_BRIEF_CHARACTERS = 12_000;
+/** Shown when a PDF brief import is attempted without R2 configured. */
+export const BRIEF_PDF_UNAVAILABLE_MESSAGE =
+  "PDF import is not available. Paste the brief text instead.";
 const date = z
   .string()
   .regex(/^\d{4}-\d{2}-\d{2}$/)

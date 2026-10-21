@@ -37,6 +37,12 @@ afterEach(() => {
 });
 async function fixture() {
   vi.useFakeTimers();
+  // The upload path needs R2 configured; the guard below is checked with the
+  // env vars removed.
+  vi.stubEnv("R2_ENDPOINT", "https://r2.test");
+  vi.stubEnv("R2_ACCESS_KEY_ID", "test-key");
+  vi.stubEnv("R2_SECRET_ACCESS_KEY", "test-secret");
+  vi.stubEnv("R2_BUCKET", "test-bucket");
   storage.send.mockImplementation(
     async (command: {
       constructor: { name: string };
@@ -479,4 +485,44 @@ test("cleanup preserves active runs, then removes their PDF after timeout", asyn
   await f.t.action(internal.briefImportUploads.cleanup, { uploadId });
   expect(storage.files.has(`brief-import/${uploadId}.pdf`)).toBe(false);
   expect(await f.t.run((ctx) => ctx.db.get(uploadId))).toBeNull();
+});
+
+test("PDF import is unavailable when the deployment has no R2 configuration", async () => {
+  for (const key of [
+    "R2_ENDPOINT",
+    "R2_ACCESS_KEY_ID",
+    "R2_SECRET_ACCESS_KEY",
+    "R2_BUCKET",
+  ])
+    vi.stubEnv(key, "");
+  const t = convexTest(schema, modules);
+  const owner = t.withIdentity({ tokenIdentifier: "owner" });
+  const workspaceId = await owner.mutation(api.team.createWorkspace, {
+    name: "Studio",
+  });
+  const workspace = await t.run(async (ctx) =>
+    ctx.db.normalizeId("teamWorkspaces", workspaceId)!
+  );
+  expect(await t.query(api.briefImport.pdfImportAvailable)).toBe(false);
+  await expect(
+    owner.action(api.briefImportUploads.generateUploadUrl, {
+      workspaceId: workspace,
+    })
+  ).rejects.toThrow("PDF import is not available");
+  await expect(
+    owner.action(api.briefImport.generate, {
+      workspaceId: workspace,
+      inputJson: JSON.stringify({ kind: "pdf", uploadId: "upload" }),
+      modelTier: "default",
+    })
+  ).rejects.toThrow("PDF import is not available");
+});
+
+test("PDF import is available when the deployment has R2 configured", async () => {
+  vi.stubEnv("R2_ENDPOINT", "https://r2.test");
+  vi.stubEnv("R2_ACCESS_KEY_ID", "test-key");
+  vi.stubEnv("R2_SECRET_ACCESS_KEY", "test-secret");
+  vi.stubEnv("R2_BUCKET", "test-bucket");
+  const t = convexTest(schema, modules);
+  expect(await t.query(api.briefImport.pdfImportAvailable)).toBe(true);
 });

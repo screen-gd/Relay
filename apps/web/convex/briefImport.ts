@@ -16,7 +16,9 @@ import {
   briefInputSchema,
   cleanBriefDraft,
   redactBriefContacts,
+  BRIEF_PDF_UNAVAILABLE_MESSAGE,
 } from "./briefImportPrompt";
+import { isR2Configured } from "./r2Settings";
 import { DEFAULT_WORKFLOW_STAGES } from "../src/lib/workflow-templates";
 import schema from "./schema";
 
@@ -67,6 +69,17 @@ export const workspace = query({
   },
 });
 
+/**
+ * PDF brief import needs temporary R2 storage. Whether it ships is an
+ * operational decision, so the option only shows up when the deployment has
+ * R2 configured. The answer is a boolean; no env value leaves the server.
+ */
+export const pdfImportAvailable = query({
+  args: {},
+  returns: v.boolean(),
+  handler: async (): Promise<boolean> => isR2Configured(),
+});
+
 const generateArgs = {
   workspaceId: v.id("teamWorkspaces"),
   inputJson: v.string(),
@@ -83,6 +96,8 @@ export const generate = action({
   ): Promise<{ runId: Id<"aiRuns">; reused: boolean }> => {
     if (args.inputJson.length > 60_000) throw new Error("Brief is too large");
     const input = briefInputSchema.parse(JSON.parse(args.inputJson));
+    if (input.kind === "pdf" && !isR2Configured())
+      throw new Error(BRIEF_PDF_UNAVAILABLE_MESSAGE);
     const sha256 =
       input.kind === "pdf"
         ? await ctx.runAction(internal.briefImportUploads.inspect, {
