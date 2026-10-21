@@ -15,7 +15,11 @@ import { v } from "convex/values";
 import { internal } from "./_generated/api";
 import { action, internalAction } from "./_generated/server";
 import type { Id } from "./_generated/dataModel";
-import { MAX_BRIEF_PDF_BYTES } from "./briefImportPrompt";
+import {
+  MAX_BRIEF_PDF_BYTES,
+  BRIEF_PDF_UNAVAILABLE_MESSAGE,
+} from "./briefImportPrompt";
+import { isR2Configured } from "./r2Settings";
 import { client } from "./r2";
 
 export function briefUploadKey(uploadId: Id<"briefUploads">) {
@@ -61,6 +65,7 @@ export const generateUploadUrl = action({
     ctx,
     args
   ): Promise<{ uploadId: Id<"briefUploads">; url: string }> => {
+    if (!isR2Configured()) throw new Error(BRIEF_PDF_UNAVAILABLE_MESSAGE);
     const { s3, config } = client();
     const { uploadId } = await ctx.runMutation(
       internal.briefImport.createUpload,
