@@ -39,7 +39,10 @@ import {
 import type { MediaVersionComment } from "@/features/media-version-comments/media-version-comments";
 import { parseMediaVersionComments } from "@/features/media-version-comments/media-version-comments-data";
 import type { AnnotationShape } from "@/features/media-version-comments/media-version-annotations";
-import { FrameAnnotationEditor } from "@/features/media-version-comments/annotation-overlay";
+import {
+  FrameAnnotationEditor,
+  AnnotationOverlay,
+} from "@/features/media-version-comments/annotation-overlay";
 import { trackOptionalEvent } from "@/lib/telemetry";
 import { cn } from "@/lib/utils";
 import { RelayBrand } from "@/app/relay-brand";
@@ -432,6 +435,47 @@ function formatDate(value: string | undefined) {
     : "Not scheduled";
 }
 
+/**
+ * One view row per browser session, but only for a display name the client
+ * actually committed: the portal calls commit() on the field's blur or on a
+ * first comment/approve submit — never while the name is still being typed.
+ */
+export function createCommittedViewRecorder({
+  token,
+  record,
+}: {
+  token: string;
+  record: (displayName: string) => Promise<unknown> | void;
+}) {
+  let committed = false;
+  return {
+    commit(displayName: string) {
+      const name = displayName.trim();
+      if (!name || committed) return;
+      const key = `${VIEWED_SESSION_KEY}:${token}`;
+      committed = true;
+      try {
+        if (window.sessionStorage.getItem(key)) return;
+      } catch {
+        // Session storage may be unavailable; the ref still limits this to one call.
+      }
+      const done = record(name);
+      if (!(done instanceof Promise)) return;
+      void done
+        .then(() => {
+          try {
+            window.sessionStorage.setItem(key, "1");
+          } catch {
+            // Storage is an enhancement; the visit is already recorded.
+          }
+        })
+        .catch(() => {
+          committed = false;
+        });
+    },
+  };
+}
+
 export function ClientPortalView({ token }: { token: string }) {
   const [pinInput, setPinInput] = useState("");
   const [pin, setPin] = useState<string | undefined>();
@@ -490,7 +534,6 @@ export function ClientPortalView({ token }: { token: string }) {
     {}
   );
   const trackedPortalOpen = useRef(false);
-  const viewRecorded = useRef(false);
 
   const publicComments = parseMediaVersionComments(publicCommentsResult);
   const publicFiles = readPublicFiles(publicFilesResult);
@@ -514,34 +557,25 @@ export function ClientPortalView({ token }: { token: string }) {
     trackOptionalEvent("client_portal_opened", { result: "active" });
   }, [access.kind]);
 
-  // A browser session counts as one visit: the guard runs before the call and
-  // is confirmed after it lands, so each call inserts exactly one row.
-  useEffect(() => {
-    if (access.kind !== "active" || viewRecorded.current) return;
-    const name = displayName.trim();
-    if (!name) return;
-    const key = `${VIEWED_SESSION_KEY}:${token}`;
-    try {
-      if (window.sessionStorage.getItem(key)) {
-        viewRecorded.current = true;
-        return;
-      }
-    } catch {
-      // Session storage may be disabled; the ref still limits this to one call.
-    }
-    viewRecorded.current = true;
-    void recordPortalView({ token, ...(pin ? { pin } : {}), displayName: name })
-      .then(() => {
-        try {
-          window.sessionStorage.setItem(key, "1");
-        } catch {
-          // Storage is an enhancement; the visit is already recorded.
-        }
-      })
-      .catch(() => {
-        viewRecorded.current = false;
-      });
-  }, [access.kind, displayName, token, pin, recordPortalView]);
+  // A browser session counts as one visit, recorded against the committed
+  // display name rather than every keystroke.
+  const recordSessionView = useMemo(
+    () =>
+      createCommittedViewRecorder({
+        token,
+        record: (name) =>
+          recordPortalView({
+            token,
+            ...(pin ? { pin } : {}),
+            displayName: name,
+          }),
+      }),
+    [token, pin, recordPortalView]
+  );
+
+  function commitDisplayName() {
+    recordSessionView.commit(displayName);
+  }
 
   function unlock(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -577,6 +611,7 @@ export function ClientPortalView({ token }: { token: string }) {
     timestampSeconds?: number,
     annotations?: readonly AnnotationShape[]
   ) {
+    commitDisplayName();
     setCommentBusyOutputId(outputId);
     try {
       await addPublicComment({
@@ -614,6 +649,7 @@ export function ClientPortalView({ token }: { token: string }) {
     outputId: string;
     mediaVersionId: string;
   }) {
+    commitDisplayName();
     const result = await approveVersion({
       token,
       ...(pin ? { pin } : {}),
@@ -733,6 +769,7 @@ export function ClientPortalView({ token }: { token: string }) {
       displayName={displayName}
       onDisplayNameChange={changeDisplayName}
       onClearDisplayName={clearDisplayName}
+      onDisplayNameCommit={commitDisplayName}
       onAddComment={addComment}
       onReopenComment={reopenComment}
       onApprove={approveCurrentVersion}
@@ -792,6 +829,7 @@ function ActivePortal({
   displayName,
   onDisplayNameChange,
   onClearDisplayName,
+  onDisplayNameCommit,
   onAddComment,
   onReopenComment,
   onApprove,
@@ -809,6 +847,7 @@ function ActivePortal({
   displayName: string;
   onDisplayNameChange: (value: string) => void;
   onClearDisplayName: () => void;
+  onDisplayNameCommit: () => void;
   onAddComment: (
     outputId: string,
     mediaVersionId: string,
@@ -989,6 +1028,7 @@ function ActivePortal({
                   displayName={displayName}
                   onDisplayNameChange={onDisplayNameChange}
                   onClearDisplayName={onClearDisplayName}
+                  onDisplayNameCommit={onDisplayNameCommit}
                   onAddComment={onAddComment}
                   onReopenComment={onReopenComment}
                   onApprove={onApprove}
@@ -1157,7 +1197,7 @@ function PublicFilesSection({
   );
 }
 
-/** Loads the comments stored on a superseded shared version. */
+/** Loads the comments stored on a superseded or locked shared version. */
 function PortalHistoricalVersionComments({
   token,
   pin,
@@ -1169,6 +1209,8 @@ function PortalHistoricalVersionComments({
   onDisplayNameChange,
   onClearDisplayName,
   onReopen,
+  notice,
+  onCommentSelect,
 }: {
   token: string;
   pin: string | undefined;
@@ -1180,6 +1222,8 @@ function PortalHistoricalVersionComments({
   onDisplayNameChange: (value: string) => void;
   onClearDisplayName: () => void;
   onReopen: (commentId: string) => Promise<void>;
+  notice: string;
+  onCommentSelect?: (comment: MediaVersionComment) => void;
 }) {
   const result = useQuery(
     api.mediaVersionComments.listForPortal,
@@ -1201,12 +1245,13 @@ function PortalHistoricalVersionComments({
       comments={comments}
       loading={result === undefined}
       readOnly
-      notice="Earlier version — read only"
+      notice={notice}
       displayName={displayName}
       onDisplayNameChange={onDisplayNameChange}
       onClearDisplayName={onClearDisplayName}
       onSubmit={async () => {}}
       onReopen={onReopen}
+      onCommentSelect={onCommentSelect}
     />
   );
 }
@@ -1226,8 +1271,10 @@ export function PublicVersionReview({
   displayName,
   onDisplayNameChange,
   onClearDisplayName,
+  onDisplayNameCommit,
   onSubmit,
   onReopen,
+  onCommentSelect,
   busy = false,
   busyCommentId,
 }: {
@@ -1241,8 +1288,10 @@ export function PublicVersionReview({
   displayName: string;
   onDisplayNameChange: (value: string) => void;
   onClearDisplayName: () => void;
+  onDisplayNameCommit?: () => void;
   onSubmit: (body: string, timestampSeconds?: number) => Promise<void>;
   onReopen: (commentId: string) => Promise<void>;
+  onCommentSelect?: (comment: MediaVersionComment) => void;
   busy?: boolean;
   busyCommentId?: string;
 }) {
@@ -1261,8 +1310,10 @@ export function PublicVersionReview({
         displayName={displayName}
         onDisplayNameChange={onDisplayNameChange}
         onClearDisplayName={onClearDisplayName}
+        onDisplayNameCommit={onDisplayNameCommit}
         onSubmit={onSubmit}
         onReopen={onReopen}
+        onCommentSelect={onCommentSelect}
         busy={busy}
         busyCommentId={busyCommentId}
       />
@@ -1279,6 +1330,7 @@ export function PublicOutputRow({
   displayName,
   onDisplayNameChange,
   onClearDisplayName,
+  onDisplayNameCommit,
   onAddComment,
   onReopenComment,
   onApprove,
@@ -1295,6 +1347,7 @@ export function PublicOutputRow({
   displayName: string;
   onDisplayNameChange: (value: string) => void;
   onClearDisplayName: () => void;
+  onDisplayNameCommit?: () => void;
   onAddComment: (
     outputId: string,
     mediaVersionId: string,
@@ -1318,9 +1371,11 @@ export function PublicOutputRow({
   const [confirmApprove, setConfirmApprove] = useState(false);
   const [approving, setApproving] = useState(false);
   const [approvalError, setApprovalError] = useState("");
-  // The projection updates shortly after approval; this keeps the line up until then.
-  const [approvedJustNow, setApprovedJustNow] = useState<
-    PublicApproval | undefined
+  // A clicked comment's stored marks preview over the player until another
+  // comment is clicked, the frame is clicked again to dismiss, or the version
+  // changes.
+  const [previewComment, setPreviewComment] = useState<
+    MediaVersionComment | undefined
   >();
   const state = output.reviewState
     ? (reviewLabels[output.reviewState] ?? output.reviewState)
@@ -1332,15 +1387,15 @@ export function PublicOutputRow({
     versions.find((version) => version.isCurrent) ??
     output.currentVersion;
   const isCurrent = Boolean(selected?.isCurrent);
+  // Server state wins once the projection catches up; the keyed transient
+  // pending-approval map keeps the line up for the approved version only.
   const approval =
-    approvedJustNow ??
     (selected?.approved
       ? {
           approvedAt: selected.approvedAt ?? "",
           approvedByName: selected.approvedByName ?? "Client",
         }
-      : undefined) ??
-    (selected ? approvals[selected.id] : undefined);
+      : undefined) ?? (selected ? approvals[selected.id] : undefined);
   const canApprove = Boolean(
     selected &&
     isCurrent &&
@@ -1365,7 +1420,14 @@ export function PublicOutputRow({
   // A different cut is a different frame; in-progress marks go with it.
   useEffect(() => {
     setAnnotations([]);
+    setPreviewComment(undefined);
   }, [selected?.id]);
+
+  function selectPreviewComment(comment: MediaVersionComment) {
+    setPreviewComment((current) =>
+      current?.id === comment.id ? undefined : comment
+    );
+  }
 
   async function confirmApproval() {
     if (!selected) return;
@@ -1376,14 +1438,12 @@ export function PublicOutputRow({
     setApproving(true);
     setApprovalError("");
     try {
-      const result = await onApprove({
+      await onApprove({
         outputId: output.id,
         mediaVersionId: selected.id,
       });
-      setApprovedJustNow({
-        approvedAt: result.approvedAt,
-        approvedByName: result.approvedByName,
-      });
+      // The projection updates shortly after; the keyed approvals map above
+      // keeps the line up for this version until the server state lands.
       setConfirmApprove(false);
     } catch (caught) {
       setApprovalError(
@@ -1537,12 +1597,24 @@ export function PublicOutputRow({
             disabled={!canComment}
           >
             {embedUrl ? (
-              <ReviewVideoPlayer
-                key={selected.id}
-                url={embedUrl}
-                title={`${output.title} — ${selected.label}`}
-                onReady={setPlayer}
-              />
+              <div
+                className="relative"
+                onPointerDown={() => setPreviewComment(undefined)}
+              >
+                <ReviewVideoPlayer
+                  key={selected.id}
+                  url={embedUrl}
+                  title={`${output.title} — ${selected.label}`}
+                  onReady={setPlayer}
+                />
+                {previewComment?.annotations?.length ? (
+                  <AnnotationOverlay
+                    shapes={previewComment.annotations}
+                    label={`Frame marks from ${previewComment.authorName}'s comment`}
+                    className="pointer-events-none"
+                  />
+                ) : null}
+              </div>
             ) : undefined}
           </FrameAnnotationEditor>
         </div>
@@ -1560,6 +1632,7 @@ export function PublicOutputRow({
               displayName={displayName}
               onDisplayNameChange={onDisplayNameChange}
               onClearDisplayName={onClearDisplayName}
+              onDisplayNameCommit={onDisplayNameCommit}
               onSubmit={async (body, timestampSeconds) => {
                 await onAddComment(
                   output.id,
@@ -1571,11 +1644,12 @@ export function PublicOutputRow({
                 setAnnotations([]);
               }}
               onReopen={onReopenComment}
+              onCommentSelect={selectPreviewComment}
               busy={busy}
               busyCommentId={busyCommentId}
             />
-          ) : selected.isCurrent ? null : (
-            // Historical versions read their own comments, form-less.
+          ) : (
+            // Locked and earlier versions read their own comments, form-less.
             <PortalHistoricalVersionComments
               key={selected.id}
               token={token}
@@ -1588,6 +1662,12 @@ export function PublicOutputRow({
               onDisplayNameChange={onDisplayNameChange}
               onClearDisplayName={onClearDisplayName}
               onReopen={onReopenComment}
+              notice={
+                selected.isCurrent
+                  ? "Approved version — read only"
+                  : "Earlier version — read only"
+              }
+              onCommentSelect={selectPreviewComment}
             />
           )}
         </div>
