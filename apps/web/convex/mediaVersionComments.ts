@@ -13,6 +13,10 @@ import {
   getSharedPortalVersion,
   publicPortalAccessValidator,
 } from "./projectPortals";
+import {
+  annotationShapeValidator,
+  normalizeAnnotations,
+} from "./mediaVersionAnnotations";
 
 type FunctionCtx = QueryCtx | MutationCtx;
 type ProjectPermission = "viewProjects" | "reviewProjects";
@@ -28,6 +32,7 @@ const publicCommentValidator = v.object({
   authorName: v.string(),
   body: v.string(),
   timestampSeconds: v.optional(v.number()),
+  annotations: v.optional(v.array(annotationShapeValidator)),
   resolved: v.boolean(),
   createdAt: v.string(),
   resolvedAt: v.union(v.string(), v.null()),
@@ -114,6 +119,9 @@ function publicComment(
     ...(comment.timestampSeconds === undefined
       ? {}
       : { timestampSeconds: comment.timestampSeconds }),
+    ...(comment.annotations === undefined
+      ? {}
+      : { annotations: comment.annotations }),
     resolved: comment.resolved,
     createdAt: comment.createdAt,
     resolvedAt: comment.resolvedAt ?? null,
@@ -230,6 +238,7 @@ export const addPublicComment = mutation({
     authorName: v.string(),
     body: v.string(),
     timestampSeconds: v.optional(v.number()),
+    annotations: v.optional(v.array(annotationShapeValidator)),
   },
   returns: publicCommentValidator,
   handler: async (ctx, args) => {
@@ -239,6 +248,9 @@ export const addPublicComment = mutation({
     const body = args.body.trim().slice(0, MAX_COMMENT_BODY);
     if (!authorName) throw new Error("Display name is required");
     if (!body) throw new Error("Comment cannot be empty");
+    const annotations = args.annotations
+      ? normalizeAnnotations(args.annotations)
+      : undefined;
     if (
       args.timestampSeconds !== undefined &&
       (!Number.isSafeInteger(args.timestampSeconds) ||
@@ -268,6 +280,9 @@ export const addPublicComment = mutation({
       ...(args.timestampSeconds === undefined
         ? {}
         : { timestampSeconds: args.timestampSeconds }),
+      ...(annotations === undefined || annotations.length === 0
+        ? {}
+        : { annotations }),
       resolved: false,
       createdAt: new Date().toISOString(),
     });

@@ -38,6 +38,7 @@ import {
 } from "./domainValidators";
 import { deadlineRiskFindingValidator } from "./deadlineRiskRules";
 import { stageAssetKindValidator } from "./stageAssetsValidators";
+import { annotationShapeValidator } from "./mediaVersionAnnotations";
 import { riskDigest } from "./riskDigestValidators";
 import { earningsQuestion } from "./earningsQaValidators";
 import { revisionScopeTables } from "./revisionScopeTables";
@@ -272,6 +273,8 @@ export default defineSchema({
     authorName: v.string(),
     body: v.string(),
     timestampSeconds: v.optional(v.number()),
+    // Optional so existing comments stay valid; coordinates are normalized.
+    annotations: v.optional(v.array(annotationShapeValidator)),
     resolved: v.boolean(),
     createdAt: v.string(),
     resolvedAt: v.optional(v.string()),
