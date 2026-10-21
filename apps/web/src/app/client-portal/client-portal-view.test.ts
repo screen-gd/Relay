@@ -3,6 +3,7 @@ import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import {
   PublicOutputRow,
+  PublicStageAssetsSection,
   PublicVersionReview,
   readPublicPortalAccess,
 } from "./client-portal-view";
@@ -65,6 +66,7 @@ describe("public Client Portal boundary", () => {
         stage: "Review",
         progress: 75,
         revisions: { used: 2, limit: 3 },
+        stageAssets: [],
         outputs: [
           {
             id: "main",
@@ -335,4 +337,149 @@ describe("client portal approval and version history", () => {
     expect(markup).not.toContain('id="comment-body-v2"');
     expect(markup).not.toContain("Clear saved name");
   });
+});
+
+describe("portal stage files", () => {
+  const access = readPublicPortalAccess({
+    access: "active",
+    project: {
+      title: "Launch film",
+      stageAssets: [
+        {
+          stageLabel: "Planning",
+          assets: [
+            {
+              id: "a1",
+              kind: "brief",
+              title: "Creative brief",
+              stageLabel: "Planning",
+              url: "https://example.com/brief.pdf",
+            },
+            {
+              id: "a2",
+              kind: "unknown",
+              title: "Dropped kind",
+              stageLabel: "Planning",
+              url: "https://example.com/unknown",
+            },
+          ],
+        },
+        {
+          stageLabel: "Editing",
+          assets: [
+            {
+              id: "a3",
+              kind: "raw_footage",
+              title: "Unsafe link",
+              stageLabel: "Editing",
+              url: "javascript:alert(1)",
+            },
+            {
+              id: "a4",
+              kind: "script",
+              title: "Voice script",
+              stageLabel: "Editing",
+              url: "https://example.com/script.pdf",
+            },
+          ],
+        },
+      ],
+    },
+  });
+  if (access.kind !== "active") throw new Error("Expected an active portal");
+
+  it("groups the assets the editor shared by stage label", () => {
+    expect(access.portal.stageAssets).toEqual([
+      {
+        stageLabel: "Planning",
+        assets: [
+          {
+            id: "a1",
+            kind: "brief",
+            title: "Creative brief",
+            stageLabel: "Planning",
+            url: "https://example.com/brief.pdf",
+          },
+        ],
+      },
+      {
+        stageLabel: "Editing",
+        assets: [
+          {
+            id: "a4",
+            kind: "script",
+            title: "Voice script",
+            stageLabel: "Editing",
+            url: "https://example.com/script.pdf",
+          },
+        ],
+      },
+    ]);
+  });
+
+  it("renders each asset as a plain link that opens in a new tab", () => {
+    const markup = renderToStaticMarkup(
+      createElement(PublicStageAssetsSection, {
+        groups: access.portal.stageAssets,
+      })
+    );
+    expect(markup).toContain("Creative brief");
+    expect(markup).toContain("Voice script");
+    expect(markup).toContain(">Brief<");
+    expect(markup).toContain(">Script<");
+    expect(markup).toContain("Planning");
+    expect(markup).toContain('href="https://example.com/brief.pdf"');
+    expect(markup).toContain('target="_blank"');
+    expect(markup).toContain('rel="noopener noreferrer"');
+    expect(markup).not.toContain("Dropped kind");
+    expect(markup).not.toContain("Unsafe link");
+  });
+
+  it("renders nothing when no stage assets were shared", () => {
+    const markup = renderToStaticMarkup(
+      createElement(PublicStageAssetsSection, { groups: [] })
+    );
+    expect(markup).toBe("");
+  });
+});
+
+it("draws a comment's frame marks at their relative positions", () => {
+  const markup = renderToStaticMarkup(
+    createElement(PublicVersionReview, {
+      versionId: "v2",
+      comments: [
+        {
+          id: "c1",
+          outputId: "main",
+          mediaVersionId: "v2",
+          authorName: "Jordan Lee",
+          body: "Circle the logo",
+          resolved: false,
+          createdAt: "2026-10-20T09:00:00.000Z",
+          annotations: [
+            { type: "pin", x: 0.5, y: 0.5 },
+            {
+              type: "stroke",
+              points: [
+                { x: 0.1, y: 0.1 },
+                { x: 0.9, y: 0.9 },
+              ],
+            },
+          ],
+        },
+      ] as readonly MediaVersionComment[],
+      displayName: "",
+      onDisplayNameChange: () => {},
+      onClearDisplayName: () => {},
+      onSubmit: async () => {},
+      onReopen: async () => {},
+    })
+  );
+  expect(markup).toContain('viewBox="0 0 160 90"');
+  expect(markup).toContain('cx="80"');
+  expect(markup).toContain("16,9 144,81");
+  expect(markup).toContain("2 frame marks on this comment");
+  // Read-only threads show the marks without any drawing tools.
+  expect(markup).not.toContain(">Pin<");
+  expect(markup).not.toContain(">Draw<");
 });
