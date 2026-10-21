@@ -56,7 +56,7 @@ async function requireIdentity(ctx: QueryCtx | MutationCtx) {
   return identity;
 }
 
-async function requireFileUploadCapability(
+export async function requireFileUploadCapability(
   ctx: QueryCtx | MutationCtx,
   project: ProjectRecord
 ) {
@@ -95,15 +95,17 @@ async function workspaceIdForProject(
   return workspaceId;
 }
 
-function actorName(identity: Awaited<ReturnType<typeof requireIdentity>>) {
+export function actorName(
+  identity: Awaited<ReturnType<typeof requireIdentity>>
+) {
   return identity.name || identity.nickname || identity.email || "Relay user";
 }
 
-function cleanText(value: string, maxLength: number) {
+export function cleanText(value: string, maxLength: number) {
   return value.trim().slice(0, maxLength);
 }
 
-function validExternalUrl(value: string) {
+export function validExternalUrl(value: string) {
   try {
     const url = new URL(value);
     return url.protocol === "https:" || url.protocol === "http:";
@@ -122,7 +124,7 @@ const SAFE_FILE_TYPES: Record<string, readonly string[]> = {
   "image/webp": ["webp"],
 };
 
-function validateSafeFile(
+export function validateSafeFile(
   fileName: string,
   mimeType: string,
   size: number,
@@ -153,7 +155,7 @@ async function validateProjectOutput(
   }
 }
 
-async function reserveWorkspaceCapacity(
+export async function reserveWorkspaceCapacity(
   ctx: MutationCtx,
   project: ProjectRecord,
   workspaceId: Id<"teamWorkspaces">,
@@ -197,7 +199,7 @@ async function reserveWorkspaceCapacity(
   return reservationId;
 }
 
-async function commitStorageReservation(
+export async function commitStorageReservation(
   ctx: MutationCtx,
   reservationId: Id<"workspaceStorageReservations">,
   project: ProjectRecord,

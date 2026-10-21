@@ -37,6 +37,7 @@ import {
   workflowStageValidator,
 } from "./domainValidators";
 import { deadlineRiskFindingValidator } from "./deadlineRiskRules";
+import { stageAssetKindValidator } from "./stageAssetsValidators";
 import { riskDigest } from "./riskDigestValidators";
 import { earningsQuestion } from "./earningsQaValidators";
 import { revisionScopeTables } from "./revisionScopeTables";
@@ -385,6 +386,39 @@ export default defineSchema({
       "clientVisible",
       "createdAt",
     ]),
+
+  /**
+   * A Project asset attached to one workflow stage. The row holds either an
+   * uploaded file (Relay storage or R2) or an external link, mirroring the
+   * provider union on `projectFileVersions`. Stage scope is by id, so renaming
+   * or reordering a stage keeps its assets. Archived rows stay for history.
+   * Client visibility is recorded per asset; the public Client Portal does not
+   * read this table, so an asset never reaches a portal response.
+   */
+  projectStageAssets: defineTable({
+    projectId: v.string(),
+    workflowStageId: v.optional(v.string()),
+    ownerUserId: v.string(),
+    teamId: v.optional(v.string()),
+    kind: stageAssetKindValidator,
+    title: v.string(),
+    provider: fileProviderValidator,
+    storageId: v.optional(v.id("_storage")),
+    r2Key: v.optional(v.string()),
+    externalUrl: v.optional(v.string()),
+    fileName: v.string(),
+    mimeType: v.string(),
+    size: v.number(),
+    clientVisible: v.boolean(),
+    archived: v.boolean(),
+    createdByUserId: v.string(),
+    createdByName: v.string(),
+    createdAt: v.string(),
+    updatedAt: v.string(),
+  })
+    .index("by_projectId_and_createdAt", ["projectId", "createdAt"])
+    .index("by_projectId_and_workflowStageId", ["projectId", "workflowStageId"])
+    .index("by_storageId", ["storageId"]),
 
   projectFileVersions: defineTable({
     projectId: v.string(),
