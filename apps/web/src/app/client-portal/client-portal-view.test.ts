@@ -1,13 +1,31 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import {
   PublicOutputRow,
   PublicStageAssetsSection,
   PublicVersionReview,
+  createCommittedViewRecorder,
   readPublicPortalAccess,
 } from "./client-portal-view";
 import type { MediaVersionComment } from "@/features/media-version-comments/media-version-comments";
+
+// The superseded/locked version block reads its own query; SSR needs a stub.
+const commentRowsByMediaVersion = vi.hoisted(
+  () => ({}) as Record<string, unknown[]>
+);
+
+vi.mock("convex/react", () => ({
+  useQuery: (
+    _fn: unknown,
+    args: { mediaVersionId?: string } | "skip" | undefined
+  ) =>
+    args && args !== "skip" && args.mediaVersionId
+      ? (commentRowsByMediaVersion[args.mediaVersionId] ?? undefined)
+      : undefined,
+  useMutation: () => () => {},
+  useConvexAuth: () => ({ isAuthenticated: false, isLoading: false }),
+}));
 
 describe("public Client Portal boundary", () => {
   it("renders only the allowlisted current-version contract and clear access states", () => {
@@ -482,4 +500,117 @@ it("draws a comment's frame marks at their relative positions", () => {
   // Read-only threads show the marks without any drawing tools.
   expect(markup).not.toContain(">Pin<");
   expect(markup).not.toContain(">Draw<");
+});
+
+describe("committed portal view recording", () => {
+  it("recordView is not called while typing; it fires once on the committed name", () => {
+    const record = vi.fn();
+    const recorder = createCommittedViewRecorder({ token: "tok", record });
+    // Mid-typing values like "J" are never committed, so they never record.
+    expect(record).not.toHaveBeenCalled();
+    recorder.commit("  ");
+    expect(record).not.toHaveBeenCalled();
+    // Committing — blur or a first submit — records the full name once.
+    recorder.commit("Jordan");
+    expect(record).toHaveBeenCalledTimes(1);
+    expect(record).toHaveBeenCalledWith("Jordan");
+  });
+
+  it("records at most one view per session even when committed again", () => {
+    const record = vi.fn();
+    const recorder = createCommittedViewRecorder({ token: "tok", record });
+    recorder.commit("Jordan");
+    recorder.commit("Jordan Lee");
+    expect(record).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe("transient approval per version", () => {
+  const pendingOutput = {
+    id: "main",
+    title: "Main film",
+    reviewState: "sent_to_client",
+    currentVersion: {
+      id: "v3",
+      versionNumber: 3,
+      title: "Final cut",
+      source: { url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ" },
+      isCurrent: true,
+      isLocked: false,
+      approved: false,
+      approvedAt: null,
+      approvedByName: null,
+    },
+    versions: [
+      {
+        id: "v3",
+        versionNumber: 3,
+        title: "Final cut",
+        source: { url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ" },
+        isCurrent: true,
+        isLocked: false,
+        approved: false,
+        approvedAt: null,
+        approvedByName: null,
+      },
+      {
+        id: "v2",
+        versionNumber: 2,
+        title: "Review cut",
+        source: { url: "https://vimeo.com/987654321" },
+        isCurrent: false,
+        isLocked: false,
+        approved: false,
+        approvedAt: null,
+        approvedByName: null,
+      },
+    ],
+  };
+
+  it("shows the approval only on the version that was approved", () => {
+    const props = {
+      ...rowProps(pendingOutput),
+      approvals: {
+        v3: {
+          approvedAt: "2026-10-21T10:00:00.000Z",
+          approvedByName: "Jordan Lee",
+        },
+      },
+    };
+    const approvedMarkup = renderToStaticMarkup(
+      createElement(PublicOutputRow, { ...props, selectedVersionId: "v3" })
+    );
+    expect(approvedMarkup).toContain("Approved by Jordan Lee · Oct 21, 2026");
+    // Switching back to unapproved v2 must not inherit v3's sign-off.
+    const v2Markup = renderToStaticMarkup(
+      createElement(PublicOutputRow, { ...props, selectedVersionId: "v2" })
+    );
+    expect(v2Markup).not.toContain("Approved by Jordan Lee");
+    expect(v2Markup).not.toContain("Approve version");
+    expect(v2Markup).not.toContain("Add comment");
+  });
+
+  it("still lists the locked current version's comments read-only", () => {
+    commentRowsByMediaVersion["v3"] = [
+      {
+        id: "c9",
+        outputId: "main",
+        mediaVersionId: "v3",
+        authorName: "Jordan Lee",
+        body: "Tighten the fade",
+        timestampSeconds: 30,
+        resolved: false,
+        createdAt: "2026-10-21T09:00:00.000Z",
+      },
+    ];
+    const markup = renderToStaticMarkup(
+      createElement(PublicOutputRow, approvedOutputProps())
+    );
+    expect(markup).toContain("Tighten the fade");
+    expect(markup).toContain("Approved version — read only");
+    expect(markup).toContain("At 0:30");
+    expect(markup).not.toContain("Add comment");
+    expect(markup).not.toContain('id="comment-body-v3"');
+    expect(markup).not.toContain("Approve version");
+  });
 });
