@@ -7,7 +7,12 @@ import {
   type QueryCtx,
 } from "./_generated/server";
 import type { Doc } from "./_generated/dataModel";
-import { getPublicPortalAccess } from "./projectPortals";
+import {
+  assertMediaVersionUnlocked,
+  getPublicPortalAccess,
+  getSharedPortalVersion,
+  publicPortalAccessValidator,
+} from "./projectPortals";
 
 type FunctionCtx = QueryCtx | MutationCtx;
 type ProjectPermission = "viewProjects" | "reviewProjects";
@@ -15,6 +20,18 @@ type ProjectPermission = "viewProjects" | "reviewProjects";
 const MAX_COMMENTS = 100;
 const MAX_COMMENT_BODY = 2_000;
 const MAX_AUTHOR_NAME = 120;
+
+const publicCommentValidator = v.object({
+  id: v.id("mediaVersionComments"),
+  outputId: v.string(),
+  mediaVersionId: v.string(),
+  authorName: v.string(),
+  body: v.string(),
+  timestampSeconds: v.optional(v.number()),
+  resolved: v.boolean(),
+  createdAt: v.string(),
+  resolvedAt: v.union(v.string(), v.null()),
+});
 
 async function identity(ctx: FunctionCtx) {
   const value = await ctx.auth.getUserIdentity();
@@ -63,30 +80,24 @@ async function requireProjectAccess(
   return { identity: currentIdentity, project };
 }
 
+/** Mutating client paths require a current shared version that has not been approved. */
 async function sharedVersion(
   ctx: FunctionCtx,
   portal: Doc<"projectPortals">,
   outputId: string,
   mediaVersionId: string
 ) {
-  if (!portal.selectedOutputIds.includes(outputId)) return null;
-  const output = await ctx.db
-    .query("projectOutputs")
-    .withIndex("by_outputId", (q) => q.eq("id", outputId))
-    .unique();
-  if (!output || output.projectId !== portal.projectId || output.archived)
-    return null;
-  const version = await ctx.db
-    .query("projectMediaVersions")
-    .withIndex("by_versionId", (q) => q.eq("id", mediaVersionId))
-    .unique();
-  if (
-    !version ||
-    version.outputId !== output._id ||
-    output.currentMediaVersionId !== version._id
-  )
-    return null;
-  return { output, version };
+  const shared = await getSharedPortalVersion(
+    ctx,
+    portal,
+    outputId,
+    mediaVersionId
+  );
+  if (!shared) return null;
+  assertMediaVersionUnlocked(shared.version);
+  return shared.output.currentMediaVersionId === shared.version._id
+    ? shared
+    : null;
 }
 
 function publicComment(
@@ -119,6 +130,7 @@ async function currentComments(ctx: QueryCtx, portal: Doc<"projectPortals">) {
     if (
       !output ||
       output.projectId !== portal.projectId ||
+      output.ownerUserId !== portal.ownerUserId ||
       output.archived ||
       !output.currentMediaVersionId
     )
@@ -141,7 +153,14 @@ async function currentComments(ctx: QueryCtx, portal: Doc<"projectPortals">) {
       .order("desc")
       .take(MAX_COMMENTS);
     comments.push(
-      ...rows.map((comment) => publicComment(comment, output.id, current.id))
+      ...rows
+        .filter(
+          (comment) =>
+            comment.projectId === portal.projectId &&
+            comment.ownerUserId === portal.ownerUserId &&
+            comment.outputId === output._id
+        )
+        .map((comment) => publicComment(comment, output.id, current.id))
     );
   }
   return comments
@@ -149,11 +168,52 @@ async function currentComments(ctx: QueryCtx, portal: Doc<"projectPortals">) {
     .slice(0, MAX_COMMENTS);
 }
 
+/** Reads current comments by default, or a selected historical shared version. */
 export const listForPortal = query({
-  args: { token: v.string(), pin: v.optional(v.string()) },
+  args: {
+    token: v.string(),
+    pin: v.optional(v.string()),
+    outputId: v.optional(v.string()),
+    mediaVersionId: v.optional(v.string()),
+  },
+  returns: v.object({
+    access: publicPortalAccessValidator,
+    comments: v.array(publicCommentValidator),
+  }),
   handler: async (ctx, args) => {
     const result = await getPublicPortalAccess(ctx, args.token, args.pin);
     if (!result.portal) return { access: result.access, comments: [] };
+    if (args.outputId !== undefined || args.mediaVersionId !== undefined) {
+      if (args.outputId === undefined || args.mediaVersionId === undefined)
+        throw new Error("Choose both a Project Output and Media Version");
+      const shared = await getSharedPortalVersion(
+        ctx,
+        result.portal,
+        args.outputId,
+        args.mediaVersionId
+      );
+      if (!shared) throw new Error("Shared Media Version not found");
+      const rows = await ctx.db
+        .query("mediaVersionComments")
+        .withIndex("by_mediaVersionId", (q) =>
+          q.eq("mediaVersionId", shared.version._id)
+        )
+        .order("desc")
+        .take(MAX_COMMENTS);
+      return {
+        access: "active" as const,
+        comments: rows
+          .filter(
+            (comment) =>
+              comment.projectId === result.portal.projectId &&
+              comment.outputId === shared.output._id &&
+              comment.ownerUserId === result.portal.ownerUserId
+          )
+          .map((comment) =>
+            publicComment(comment, shared.output.id, shared.version.id)
+          ),
+      };
+    }
     return {
       access: "active" as const,
       comments: await currentComments(ctx, result.portal),
@@ -171,6 +231,7 @@ export const addPublicComment = mutation({
     body: v.string(),
     timestampSeconds: v.optional(v.number()),
   },
+  returns: publicCommentValidator,
   handler: async (ctx, args) => {
     const result = await getPublicPortalAccess(ctx, args.token, args.pin);
     if (!result.portal) throw new Error(`Portal access ${result.access}`);
@@ -222,6 +283,7 @@ export const reopenPublicComment = mutation({
     pin: v.optional(v.string()),
     commentId: v.id("mediaVersionComments"),
   },
+  returns: publicCommentValidator,
   handler: async (ctx, args) => {
     const result = await getPublicPortalAccess(ctx, args.token, args.pin);
     if (!result.portal) throw new Error(`Portal access ${result.access}`);

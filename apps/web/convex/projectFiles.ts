@@ -11,7 +11,10 @@ import {
 } from "./_generated/server";
 import type { Doc, Id } from "./_generated/dataModel";
 import { recordProjectActivity } from "./projectActivity";
-import { getPublicPortalAccess } from "./projectPortals";
+import {
+  assertMediaVersionUnlocked,
+  getPublicPortalAccess,
+} from "./projectPortals";
 import {
   fileCategoryValidator,
   fileProviderValidator,
@@ -328,6 +331,29 @@ async function insertVersion(
 ) {
   const now = new Date().toISOString();
   validateSafeFile(args.fileName, args.mimeType, args.size, args.provider);
+  // Existing files keep their output association when a caller omits the output id.
+  const existingFile = args.projectFileId
+    ? await ctx.db.get(args.projectFileId)
+    : null;
+  if (
+    args.projectFileId &&
+    (!existingFile || existingFile.projectId !== args.project.id)
+  )
+    throw new Error("Project file not found");
+  const outputIds = new Set([
+    args.projectOutputId,
+    existingFile?.projectOutputId,
+  ]);
+  for (const outputId of outputIds) {
+    if (!outputId) continue;
+    const output = await ctx.db.get(outputId);
+    if (!output || output.projectId !== args.project.id)
+      throw new Error("Project Output not found");
+    const current = output.currentMediaVersionId
+      ? await ctx.db.get(output.currentMediaVersionId)
+      : null;
+    if (current) assertMediaVersionUnlocked(current);
+  }
   await validateProjectOutput(ctx, args.project.id, args.projectOutputId);
   const projectVersions = await ctx.db
     .query("projectFileVersions")

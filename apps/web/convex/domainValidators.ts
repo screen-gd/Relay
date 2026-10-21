@@ -158,6 +158,7 @@ export const revisionStatusValidator = v.union(
 );
 
 export const notificationKindValidator = v.union(
+  v.literal("client_approval"),
   v.literal("mention"),
   v.literal("project_mention"),
   v.literal("project_comment"),
@@ -210,6 +211,8 @@ export const projectActivityKindValidator = v.union(
 );
 
 export const portalEventKindValidator = v.union(
+  v.literal("portal_viewed"),
+  v.literal("version_approved"),
   v.literal("project_created"),
   v.literal("portal_published"),
   v.literal("work_started"),

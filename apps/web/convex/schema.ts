@@ -236,6 +236,9 @@ export default defineSchema({
     notes: v.string(),
     createdByUserId: v.string(),
     createdAt: v.string(),
+    approvedAt: v.optional(v.string()),
+    approvedByName: v.optional(v.string()),
+    locked: v.optional(v.boolean()),
   })
     .index("by_versionId", ["id"])
     .index("by_outputId_and_versionNumber", ["outputId", "versionNumber"]),
@@ -331,12 +334,20 @@ export default defineSchema({
   }).index("by_portalId_and_createdAt", ["portalId", "createdAt"]),
 
   portalEvents: defineTable({
-    portalId: v.id("clientPortals"),
+    portalId: v.union(v.id("clientPortals"), v.id("projectPortals")),
     kind: portalEventKindValidator,
+    displayName: v.optional(v.string()),
+    mediaVersionId: v.optional(v.id("projectMediaVersions")),
     title: v.string(),
     body: v.string(),
     createdAt: v.string(),
-  }).index("by_portalId_and_createdAt", ["portalId", "createdAt"]),
+  })
+    .index("by_portalId_and_createdAt", ["portalId", "createdAt"])
+    .index("by_portalId_and_kind_and_createdAt", [
+      "portalId",
+      "kind",
+      "createdAt",
+    ]),
 
   projectActivity: defineTable({
     projectId: v.string(),
@@ -543,14 +554,17 @@ export default defineSchema({
   }).index("by_teamId_and_projectId", ["teamId", "projectId"]),
 
   teamNotifications: defineTable({
-    teamId: v.string(),
+    teamId: v.optional(v.string()),
     userId: v.string(),
     kind: notificationKindValidator,
     projectId: v.optional(v.string()),
+    outputId: v.optional(v.string()),
+    mediaVersionId: v.optional(v.string()),
     message: v.string(),
     read: v.boolean(),
     createdAt: v.string(),
   })
+    .index("by_userId_and_kind_and_createdAt", ["userId", "kind", "createdAt"])
     .index("by_teamId_and_userId_and_createdAt", [
       "teamId",
       "userId",
