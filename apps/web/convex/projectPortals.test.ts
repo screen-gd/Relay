@@ -3,6 +3,7 @@
 import { convexTest } from "convex-test";
 import { expect, test } from "vitest";
 import { api } from "./_generated/api";
+import type { Doc } from "./_generated/dataModel";
 import schema from "./schema";
 
 const modules = import.meta.glob("./**/*.ts");
@@ -83,6 +84,238 @@ async function seedProject(t: ReturnType<typeof convexTest>) {
     };
   });
 }
+
+async function stageAssetPortalFixture() {
+  const t = convexTest(schema, modules);
+  const ids = await seedProject(t);
+  const owner = t.withIdentity({ tokenIdentifier: "owner" });
+  const portal = await owner.mutation(api.projectPortals.publish, {
+    projectId: "project-portal",
+    config: {
+      publicNotes: "",
+      showStartDate: false,
+      showDueDate: false,
+      selectedOutputIds: [],
+      expiresAt: null,
+    },
+  });
+  const addLink = (
+    title: string,
+    workflowStageId: string,
+    clientVisible?: boolean,
+    kind: Doc<"projectStageAssets">["kind"] = "raw_footage"
+  ) =>
+    owner.mutation(api.stageAssets.addLinkAsset, {
+      projectId: "project-portal",
+      workflowStageId,
+      kind,
+      title,
+      clientVisible,
+      externalUrl: `https://assets.example.com/${encodeURIComponent(title)}`,
+    });
+  return { t, owner, ids, portal, addLink };
+}
+
+test("projects only explicitly visible active stage assets in workflow order", async () => {
+  const { t, owner, ids, portal, addLink } = await stageAssetPortalFixture();
+  const reviewId = await addLink("Shared originals", "review", true);
+  const briefId = await addLink("Client brief", "planned", true, "brief");
+  await addLink("Private footage", "review", false);
+  const defaultId = await addLink("Private by default", "planned");
+  const archivedId = await addLink("Archived client asset", "planned", true);
+  await t.run(async (ctx) => {
+    await ctx.db.patch(archivedId, { archived: true });
+    const visible = await ctx.db.get(reviewId);
+    if (!visible) throw new Error("Asset fixture missing");
+    const { _id, _creationTime, ...fields } = visible;
+    await ctx.db.insert("projectStageAssets", {
+      ...fields,
+      projectId: "other-project",
+      title: "Other project secret",
+    });
+    await ctx.db.insert("projectStageAssets", {
+      ...fields,
+      ownerUserId: "other-owner",
+      title: "Other owner secret",
+    });
+    await ctx.db.insert("projectStageAssets", {
+      ...fields,
+      provider: "r2",
+      r2Key: "private/r2-key",
+      title: "R2 unsupported",
+    });
+  });
+  expect(await t.run((ctx) => ctx.db.get(defaultId))).toMatchObject({
+    clientVisible: false,
+  });
+  await owner.mutation(api.projectPortals.setStatus, {
+    portalId: portal.portalId,
+    status: "open",
+  });
+  const result = await t.query(api.projectPortals.getByToken, {
+    token: portal.token,
+  });
+  if (result.access !== "active") throw new Error("Expected active portal");
+  expect(result.stageAssets).toEqual([
+    {
+      stageLabel: "Planned",
+      assets: [
+        {
+          id: briefId,
+          kind: "brief",
+          title: "Client brief",
+          stageLabel: "Planned",
+          url: "https://assets.example.com/Client%20brief",
+        },
+      ],
+    },
+    {
+      stageLabel: "Client Review",
+      assets: [
+        {
+          id: reviewId,
+          kind: "raw_footage",
+          title: "Shared originals",
+          stageLabel: "Client Review",
+          url: "https://assets.example.com/Shared%20originals",
+        },
+      ],
+    },
+  ]);
+  const json = JSON.stringify(result);
+  for (const secret of [
+    "Private footage",
+    "Private by default",
+    "Archived client asset",
+    "Other project secret",
+    "Other owner secret",
+    "R2 unsupported",
+    "ownerUserId",
+    "teamId",
+    "createdByUserId",
+    "storageId",
+    "r2Key",
+    "fileName",
+    "workflowStageId",
+    "workflowStages",
+  ]) {
+    expect(json).not.toContain(secret);
+  }
+  await t.run(async (ctx) => {
+    const project = await ctx.db.get(ids.projectId);
+    if (!project) throw new Error("Project fixture missing");
+    await ctx.db.patch(project._id, {
+      workflowStages: [...project.workflowStages]
+        .reverse()
+        .map((stage) =>
+          stage.id === "review" ? { ...stage, label: "Final review" } : stage
+        ),
+    });
+  });
+  const renamed = await t.query(api.projectPortals.getByToken, {
+    token: portal.token,
+  });
+  if (renamed.access !== "active") throw new Error("Expected active portal");
+  expect(renamed.stageAssets.map((group) => group.stageLabel)).toEqual([
+    "Final review",
+    "Planned",
+  ]);
+  expect(renamed.stageAssets[0]?.assets[0]).toMatchObject({
+    id: reviewId,
+    stageLabel: "Final review",
+  });
+});
+
+test("stage assets stay behind portal status, expiry, token and PIN checks", async () => {
+  const { t, owner, portal, addLink } = await stageAssetPortalFixture();
+  await addLink("Gated asset", "planned", true);
+  const request = { token: portal.token };
+  expect(await t.query(api.projectPortals.getByToken, request)).toEqual({
+    access: "unpublished",
+  });
+  await owner.mutation(api.projectPortals.setStatus, {
+    portalId: portal.portalId,
+    status: "open",
+  });
+  await owner.mutation(api.projectPortals.setPin, {
+    portalId: portal.portalId,
+    pin: "1234",
+  });
+  expect(await t.query(api.projectPortals.getByToken, request)).toEqual({
+    access: "pin_required",
+  });
+  expect(
+    await t.query(api.projectPortals.getByToken, { ...request, pin: "wrong" })
+  ).toEqual({ access: "invalid_pin" });
+  expect(
+    await t.query(api.projectPortals.getByToken, { token: "crafted-token" })
+  ).toEqual({ access: "invalid_token" });
+  const unlocked = await t.query(api.projectPortals.getByToken, {
+    ...request,
+    pin: "1234",
+  });
+  expect(unlocked).toMatchObject({
+    access: "active",
+    stageAssets: [{ assets: [{ title: "Gated asset" }] }],
+  });
+  await owner.mutation(api.projectPortals.setStatus, {
+    portalId: portal.portalId,
+    status: "closed",
+  });
+  expect(
+    await t.query(api.projectPortals.getByToken, { ...request, pin: "1234" })
+  ).toEqual({ access: "closed" });
+  await owner.mutation(api.projectPortals.setStatus, {
+    portalId: portal.portalId,
+    status: "open",
+  });
+  await owner.mutation(api.projectPortals.updateSettings, {
+    portalId: portal.portalId,
+    changes: { expiresAt: "2020-01-01T00:00:00.000Z" },
+  });
+  expect(
+    await t.query(api.projectPortals.getByToken, { ...request, pin: "1234" })
+  ).toEqual({ access: "expired" });
+});
+
+test("serves visible Convex stage uploads without storage metadata", async () => {
+  const { t, owner, portal, addLink } = await stageAssetPortalFixture();
+  const assetId = await addLink("Hosted brief", "planned", true);
+  const url = await t.run(async (ctx) => {
+    const storageId = await ctx.storage.store(new Blob(["Client brief"]));
+    await ctx.db.patch(assetId, {
+      provider: "convex",
+      storageId,
+      externalUrl: undefined,
+      fileName: "internal-upload-name.txt",
+    });
+    return ctx.storage.getUrl(storageId);
+  });
+  await owner.mutation(api.projectPortals.setStatus, {
+    portalId: portal.portalId,
+    status: "open",
+  });
+  const result = await t.query(api.projectPortals.getByToken, {
+    token: portal.token,
+  });
+  if (result.access !== "active") throw new Error("Expected active portal");
+  expect(result.stageAssets).toEqual([
+    {
+      stageLabel: "Planned",
+      assets: [
+        {
+          id: assetId,
+          kind: "raw_footage",
+          title: "Hosted brief",
+          stageLabel: "Planned",
+          url,
+        },
+      ],
+    },
+  ]);
+  expect(JSON.stringify(result)).not.toContain("internal-upload-name.txt");
+  expect(JSON.stringify(result)).not.toContain("storageId");
+});
 
 test("publishes a PIN-gated portal with an allowlisted current-version projection", async () => {
   const t = convexTest(schema, modules);
