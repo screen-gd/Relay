@@ -13,6 +13,7 @@ import { internal } from "./_generated/api";
 import { action, internalAction } from "./_generated/server";
 import type { Id } from "./_generated/dataModel";
 import { fileCategoryValidator, fileStatusValidator } from "./domainValidators";
+import { r2Settings } from "./r2Settings";
 
 type UploadSessionResult = {
   sessionId: Id<"r2UploadSessions">;
@@ -39,22 +40,8 @@ type R2DownloadTarget = {
   mimeType: string;
 };
 
-function r2Config() {
-  const endpoint = process.env.R2_ENDPOINT;
-  const region = process.env.R2_REGION ?? "auto";
-  const accessKeyId = process.env.R2_ACCESS_KEY_ID;
-  const secretAccessKey = process.env.R2_SECRET_ACCESS_KEY;
-  const bucket = process.env.R2_BUCKET;
-  if (!endpoint || !accessKeyId || !secretAccessKey || !bucket) {
-    throw new Error(
-      "R2 is not configured. Set R2_ENDPOINT, R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY, and R2_BUCKET."
-    );
-  }
-  return { endpoint, region, accessKeyId, secretAccessKey, bucket };
-}
-
 export function client() {
-  const config = r2Config();
+  const config = r2Settings();
   return {
     config,
     s3: new S3Client({

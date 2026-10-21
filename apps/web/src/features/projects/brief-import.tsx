@@ -8,6 +8,7 @@ import {
   briefDraftSchema,
   MAX_BRIEF_CHARACTERS,
   MAX_BRIEF_PDF_BYTES,
+  BRIEF_PDF_UNAVAILABLE_MESSAGE,
 } from "../../../convex/briefImportPrompt";
 import type { z } from "zod";
 import type { Client } from "@/lib/types";
@@ -46,6 +47,18 @@ export function BriefImport({
   const generate = useAction(api.briefImport.generate);
   const uploadPdf = useAction(api.briefImportUploads.generateUploadUrl);
   const confirm = useMutation(api.briefImport.confirm);
+  const pdfImportAvailable = useQuery(api.briefImport.pdfImportAvailable, {});
+  const canUploadPdf = pdfImportAvailable === true;
+  /**
+   * The PDF option waits for the deployment answer, so the hint never
+   * promises a file upload the deployment cannot store.
+   */
+  const sourceHint =
+    pdfImportAvailable === true
+      ? "PDF up to 10 MB, or 12,000 characters. Nothing is created until you confirm."
+      : pdfImportAvailable === false
+        ? "PDF import is not available. Paste up to 12,000 characters instead. Nothing is created until you confirm."
+        : "Up to 12,000 characters. Nothing is created until you confirm.";
   const [text, setText] = useState("");
   const [pdf, setPdf] = useState<File | null>(null);
   const [runId, setRunId] = useState<Id<"aiRuns">>();
@@ -76,6 +89,7 @@ export function BriefImport({
     setError("");
     setBusy(true);
     try {
+      if (pdf && !canUploadPdf) throw new Error(BRIEF_PDF_UNAVAILABLE_MESSAGE);
       if (pdf && pdf.size > MAX_BRIEF_PDF_BYTES)
         throw new Error(
           "PDF must be 10 MB or smaller. Paste text for a larger brief."
@@ -179,22 +193,21 @@ export function BriefImport({
             }}
             placeholder="Paste your brief"
           />
-          <Input
-            aria-label="PDF brief (up to 10 MB)"
-            type="file"
-            accept=".pdf,application/pdf"
-            disabled={running}
-            onChange={(event) => {
-              setPdf(event.target.files?.[0] ?? null);
-              setRunId(undefined);
-              setEdited(undefined);
-              setQuestionText(undefined);
-            }}
-          />
-          <p className="type-label-sm">
-            PDF up to 10 MB, or 12,000 characters. Nothing is created until you
-            confirm.
-          </p>
+          {canUploadPdf ? (
+            <Input
+              aria-label="PDF brief (up to 10 MB)"
+              type="file"
+              accept=".pdf,application/pdf"
+              disabled={running}
+              onChange={(event) => {
+                setPdf(event.target.files?.[0] ?? null);
+                setRunId(undefined);
+                setEdited(undefined);
+                setQuestionText(undefined);
+              }}
+            />
+          ) : null}
+          <p className="type-label-sm">{sourceHint}</p>
           <div className="flex gap-3">
             <Button
               type="button"
