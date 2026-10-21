@@ -49,16 +49,24 @@ type PublicSource = {
 type PublicVersion = {
   changelog?: string;
   id: string;
+  versionNumber: number;
   label: string;
   createdAt?: string;
   source: PublicSource;
+  isCurrent: boolean;
+  isLocked: boolean;
+  approved: boolean;
+  approvedAt: string | null;
+  approvedByName: string | null;
 };
+type PublicApproval = { approvedAt: string; approvedByName: string };
 type PublicOutput = {
   id: string;
   title: string;
   reviewState?: string;
   dueDate?: string;
   currentVersion?: PublicVersion;
+  versions: PublicVersion[];
 };
 type PublicFile = {
   id: string;
@@ -73,6 +81,7 @@ type PublicFile = {
 type PublicPortal = {
   title: string;
   clientName?: string;
+  editorDisplayName?: string;
   summary?: string;
   notes?: string;
   startDate?: string;
@@ -93,7 +102,14 @@ type PublicAccess =
   | { kind: "active"; portal: PublicPortal };
 
 const DISPLAY_NAME_KEY = "relay:client-portal-display-name:v1";
-const PUBLIC_STAGES = ["Planning", "In Progress", "Review", "Delivered"];
+const VIEWED_SESSION_KEY = "relay:client-portal-viewed";
+const PUBLIC_STAGES = [
+  "Planning",
+  "In Progress",
+  "Review",
+  "Approved",
+  "Delivered",
+];
 const reviewLabels: Record<string, string> = {
   draft: "In progress",
   sent_to_client: "Ready for review",
@@ -191,6 +207,8 @@ export function readPublicPortalAccess(value: unknown): PublicAccess {
     portal: {
       title,
       clientName: text(project.clientName) ?? text(project.client),
+      editorDisplayName:
+        text(source.editorDisplayName) ?? text(project.editorDisplayName),
       summary: text(project.summary) ?? text(project.clientSummary),
       notes: text(project.publicNotes) ?? text(project.clientNotes),
       startDate: text(project.startDate),
@@ -221,14 +239,29 @@ function readOutputs(value: unknown): PublicOutput[] {
     if (!isRecord(item)) return [];
     const title = text(item.title) ?? text(item.name);
     if (!title) return [];
+    const versions = Array.isArray(item.versions)
+      ? item.versions.flatMap((entry) => {
+          const version = isRecord(entry)
+            ? readVersion(entry, `${index + 1}`)
+            : undefined;
+          return version ? [version] : [];
+        })
+      : [];
     const currentValue = isRecord(item.currentVersion)
       ? item.currentVersion
       : isRecord(item.currentMediaVersion)
         ? item.currentMediaVersion
         : undefined;
-    const current = currentValue
-      ? readVersion(currentValue, `${index + 1}`)
-      : undefined;
+    // The current cut is flagged `isCurrent` in the projection or arrives as
+    // its own record on legacy hosts; both resolve to the same PublicVersion.
+    const current =
+      versions.find((version) => version.isCurrent) ??
+      (currentValue ? readVersion(currentValue, `${index + 1}`) : undefined);
+    if (current) {
+      current.isCurrent = true;
+      if (!versions.some((version) => version.id === current.id))
+        versions.unshift(current);
+    }
     return [
       {
         id: text(item.id) ?? `output-${index + 1}`,
@@ -238,6 +271,7 @@ function readOutputs(value: unknown): PublicOutput[] {
         ),
         dueDate: text(item.dueDate),
         ...(current ? { currentVersion: current } : {}),
+        versions,
       },
     ];
   });
@@ -266,12 +300,19 @@ function readVersion(
               ].includes(host)
             ? "Dropbox"
             : "Link";
+  const approvedAt = text(value.approvedAt) ?? null;
   return {
     id: text(value.id) ?? fallbackId,
+    versionNumber: number(value.versionNumber) ?? 1,
     changelog: text(value.changelog),
     label: text(value.label) ?? text(value.title) ?? "Current version",
     createdAt: text(value.createdAt),
     source: { provider, url },
+    isCurrent: value.isCurrent === true,
+    isLocked: value.isLocked === true,
+    approved: value.approved === true || approvedAt !== null,
+    approvedAt,
+    approvedByName: text(value.approvedByName) ?? null,
   };
 }
 
@@ -293,6 +334,7 @@ function normalizePublicStage(value: string | undefined) {
     normalized === "feedback"
   )
     return "Review";
+  if (normalized === "approved") return "Approved";
   if (
     normalized === "delivered" ||
     normalized === "complete" ||
@@ -375,10 +417,16 @@ export function ClientPortalView({ token }: { token: string }) {
   const reopenPublicComment = useMutation(
     api.mediaVersionComments.reopenPublicComment
   );
+  const approveVersion = useMutation(api.projectPortals.approve);
+  const recordPortalView = useMutation(api.projectPortals.recordView);
   const [displayName, setDisplayName] = useState("");
   const [commentBusyOutputId, setCommentBusyOutputId] = useState("");
   const [busyCommentId, setBusyCommentId] = useState("");
+  const [approvals, setApprovals] = useState<Record<string, PublicApproval>>(
+    {}
+  );
   const trackedPortalOpen = useRef(false);
+  const viewRecorded = useRef(false);
 
   const publicComments = parseMediaVersionComments(publicCommentsResult);
   const publicFiles = readPublicFiles(publicFilesResult);
@@ -401,6 +449,35 @@ export function ClientPortalView({ token }: { token: string }) {
     trackedPortalOpen.current = true;
     trackOptionalEvent("client_portal_opened", { result: "active" });
   }, [access.kind]);
+
+  // A browser session counts as one visit: the guard runs before the call and
+  // is confirmed after it lands, so each call inserts exactly one row.
+  useEffect(() => {
+    if (access.kind !== "active" || viewRecorded.current) return;
+    const name = displayName.trim();
+    if (!name) return;
+    const key = `${VIEWED_SESSION_KEY}:${token}`;
+    try {
+      if (window.sessionStorage.getItem(key)) {
+        viewRecorded.current = true;
+        return;
+      }
+    } catch {
+      // Session storage may be disabled; the ref still limits this to one call.
+    }
+    viewRecorded.current = true;
+    void recordPortalView({ token, ...(pin ? { pin } : {}), displayName: name })
+      .then(() => {
+        try {
+          window.sessionStorage.setItem(key, "1");
+        } catch {
+          // Storage is an enhancement; the visit is already recorded.
+        }
+      })
+      .catch(() => {
+        viewRecorded.current = false;
+      });
+  }, [access.kind, displayName, token, pin, recordPortalView]);
 
   function unlock(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -463,6 +540,29 @@ export function ClientPortalView({ token }: { token: string }) {
     } finally {
       setBusyCommentId("");
     }
+  }
+
+  // Signs off the current shared cut with the portal display name; the row is
+  // shown immediately while the reactive projection catches up.
+  async function approveCurrentVersion(data: {
+    outputId: string;
+    mediaVersionId: string;
+  }) {
+    const result = await approveVersion({
+      token,
+      ...(pin ? { pin } : {}),
+      outputId: data.outputId,
+      mediaVersionId: data.mediaVersionId,
+      displayName: displayName.trim(),
+    });
+    setApprovals((current) => ({
+      ...current,
+      [result.mediaVersionId]: {
+        approvedAt: result.approvedAt,
+        approvedByName: result.approvedByName,
+      },
+    }));
+    return result;
   }
 
   if (access.kind === "loading")
@@ -558,6 +658,8 @@ export function ClientPortalView({ token }: { token: string }) {
   return (
     <ActivePortal
       portal={access.portal}
+      token={token}
+      pin={pin}
       comments={publicComments}
       commentsLoading={publicCommentsResult === undefined}
       files={publicFiles}
@@ -567,6 +669,8 @@ export function ClientPortalView({ token }: { token: string }) {
       onClearDisplayName={clearDisplayName}
       onAddComment={addComment}
       onReopenComment={reopenComment}
+      onApprove={approveCurrentVersion}
+      approvals={approvals}
       busyOutputId={commentBusyOutputId}
       busyCommentId={busyCommentId}
     />
@@ -613,6 +717,8 @@ function AccessState({
 
 function ActivePortal({
   portal,
+  token,
+  pin,
   comments,
   commentsLoading,
   files,
@@ -622,10 +728,14 @@ function ActivePortal({
   onClearDisplayName,
   onAddComment,
   onReopenComment,
+  onApprove,
+  approvals,
   busyOutputId,
   busyCommentId,
 }: {
   portal: PublicPortal;
+  token: string;
+  pin: string | undefined;
   comments: readonly MediaVersionComment[];
   commentsLoading: boolean;
   files: readonly PublicFile[];
@@ -640,6 +750,11 @@ function ActivePortal({
     timestampSeconds?: number
   ) => Promise<void>;
   onReopenComment: (commentId: string) => Promise<void>;
+  onApprove: (data: {
+    outputId: string;
+    mediaVersionId: string;
+  }) => Promise<{ approvedAt: string; approvedByName: string }>;
+  approvals: Record<string, PublicApproval>;
   busyOutputId: string;
   busyCommentId: string;
 }) {
@@ -671,6 +786,17 @@ function ActivePortal({
           {portal.clientName ? (
             <p className="mt-3 text-muted-foreground type-body">
               For {portal.clientName}
+            </p>
+          ) : null}
+          {portal.editorDisplayName ? (
+            <p
+              className={
+                portal.clientName
+                  ? "mt-1 text-muted-foreground type-body"
+                  : "mt-3 text-muted-foreground type-body"
+              }
+            >
+              Shared by {portal.editorDisplayName}
             </p>
           ) : null}
           {portal.summary ? (
@@ -734,7 +860,7 @@ function ActivePortal({
               style={{ width: `${portal.progress}%` }}
             />
           </div>
-          <ol className="mt-7 grid grid-cols-2 gap-y-5 sm:grid-cols-4 sm:gap-x-4">
+          <ol className="mt-7 grid grid-cols-2 gap-y-5 sm:grid-cols-5 sm:gap-x-4">
             {PUBLIC_STAGES.map((stage, index) => {
               const complete = currentIndex >= 0 && index < currentIndex;
               const current = stage === currentStage;
@@ -777,7 +903,7 @@ function ActivePortal({
                 Shared outputs
               </h2>
               <p className="mt-1 text-muted-foreground type-body">
-                Only the current version shared by your editor appears here.
+                Every version your editor has shared appears here.
               </p>
               <RevisionAllowance allowance={portal.revisions} />
             </div>
@@ -789,6 +915,8 @@ function ActivePortal({
                 <PublicOutputRow
                   key={output.id}
                   output={output}
+                  token={token}
+                  pin={pin}
                   comments={comments}
                   commentsLoading={commentsLoading}
                   displayName={displayName}
@@ -796,6 +924,8 @@ function ActivePortal({
                   onClearDisplayName={onClearDisplayName}
                   onAddComment={onAddComment}
                   onReopenComment={onReopenComment}
+                  onApprove={onApprove}
+                  approvals={approvals}
                   busy={busyOutputId === output.id}
                   busyCommentId={busyCommentId}
                 />
@@ -911,8 +1041,123 @@ function PublicFilesSection({
   );
 }
 
+/** Loads the comments stored on a superseded shared version. */
+function PortalHistoricalVersionComments({
+  token,
+  pin,
+  outputId,
+  versionId,
+  player,
+  supportsPlayerTimestamps,
+  displayName,
+  onDisplayNameChange,
+  onClearDisplayName,
+  onReopen,
+}: {
+  token: string;
+  pin: string | undefined;
+  outputId: string;
+  versionId: string;
+  player?: ReviewPlayer;
+  supportsPlayerTimestamps: boolean;
+  displayName: string;
+  onDisplayNameChange: (value: string) => void;
+  onClearDisplayName: () => void;
+  onReopen: (commentId: string) => Promise<void>;
+}) {
+  const result = useQuery(
+    api.mediaVersionComments.listForPortal,
+    token && outputId && versionId
+      ? {
+          token,
+          ...(pin ? { pin } : {}),
+          outputId,
+          mediaVersionId: versionId,
+        }
+      : "skip"
+  );
+  const comments = parseMediaVersionComments(result);
+  return (
+    <PublicVersionReview
+      versionId={versionId}
+      player={player}
+      supportsPlayerTimestamps={supportsPlayerTimestamps}
+      comments={comments}
+      loading={result === undefined}
+      readOnly
+      notice="Earlier version — read only"
+      displayName={displayName}
+      onDisplayNameChange={onDisplayNameChange}
+      onClearDisplayName={onClearDisplayName}
+      onSubmit={async () => {}}
+      onReopen={onReopen}
+    />
+  );
+}
+
+/**
+ * The comment block for one shared version: normal, read-only for
+ * earlier versions, or form-less once the version is approved and locked.
+ */
+export function PublicVersionReview({
+  versionId,
+  player,
+  supportsPlayerTimestamps,
+  comments,
+  loading = false,
+  readOnly = false,
+  notice,
+  displayName,
+  onDisplayNameChange,
+  onClearDisplayName,
+  onSubmit,
+  onReopen,
+  busy = false,
+  busyCommentId,
+}: {
+  versionId: string;
+  player?: ReviewPlayer;
+  supportsPlayerTimestamps?: boolean;
+  comments: readonly MediaVersionComment[];
+  loading?: boolean;
+  readOnly?: boolean;
+  notice?: string;
+  displayName: string;
+  onDisplayNameChange: (value: string) => void;
+  onClearDisplayName: () => void;
+  onSubmit: (body: string, timestampSeconds?: number) => Promise<void>;
+  onReopen: (commentId: string) => Promise<void>;
+  busy?: boolean;
+  busyCommentId?: string;
+}) {
+  return (
+    <section aria-label="Version comments">
+      {notice ? (
+        <p className="mt-6 text-muted-foreground type-label-sm">{notice}</p>
+      ) : null}
+      <PublicMediaVersionComments
+        versionId={versionId}
+        player={player}
+        supportsPlayerTimestamps={supportsPlayerTimestamps}
+        comments={comments}
+        loading={loading}
+        disabled={readOnly}
+        displayName={displayName}
+        onDisplayNameChange={onDisplayNameChange}
+        onClearDisplayName={onClearDisplayName}
+        onSubmit={onSubmit}
+        onReopen={onReopen}
+        busy={busy}
+        busyCommentId={busyCommentId}
+      />
+    </section>
+  );
+}
+
 export function PublicOutputRow({
   output,
+  token,
+  pin,
   comments,
   commentsLoading,
   displayName,
@@ -920,10 +1165,15 @@ export function PublicOutputRow({
   onClearDisplayName,
   onAddComment,
   onReopenComment,
+  onApprove,
+  approvals,
+  selectedVersionId,
   busy,
   busyCommentId,
 }: {
   output: PublicOutput;
+  token: string;
+  pin: string | undefined;
   comments: readonly MediaVersionComment[];
   commentsLoading: boolean;
   displayName: string;
@@ -936,21 +1186,93 @@ export function PublicOutputRow({
     timestampSeconds?: number
   ) => Promise<void>;
   onReopenComment: (commentId: string) => Promise<void>;
+  onApprove: (data: {
+    outputId: string;
+    mediaVersionId: string;
+  }) => Promise<{ approvedAt: string; approvedByName: string }>;
+  approvals: Record<string, PublicApproval>;
+  selectedVersionId?: string;
   busy: boolean;
   busyCommentId: string;
 }) {
   const [player, setPlayer] = useState<ReviewPlayer>();
+  const [requestedId, setRequestedId] = useState(output.currentVersion?.id);
+  const [confirmApprove, setConfirmApprove] = useState(false);
+  const [approving, setApproving] = useState(false);
+  const [approvalError, setApprovalError] = useState("");
+  // The projection updates shortly after approval; this keeps the line up until then.
+  const [approvedJustNow, setApprovedJustNow] = useState<
+    PublicApproval | undefined
+  >();
   const state = output.reviewState
     ? (reviewLabels[output.reviewState] ?? output.reviewState)
     : undefined;
-  const currentVersion = output.currentVersion;
-  const media = currentVersion
-    ? normalizeMediaUrl(currentVersion.source.url)
-    : undefined;
+  const versions = output.versions;
+  const selected =
+    versions.find((version) => version.id === selectedVersionId) ??
+    versions.find((version) => version.id === requestedId) ??
+    versions.find((version) => version.isCurrent) ??
+    output.currentVersion;
+  const isCurrent = Boolean(selected?.isCurrent);
+  const approval =
+    approvedJustNow ??
+    (selected?.approved
+      ? {
+          approvedAt: selected.approvedAt ?? "",
+          approvedByName: selected.approvedByName ?? "Client",
+        }
+      : undefined) ??
+    (selected ? approvals[selected.id] : undefined);
+  const canApprove = Boolean(
+    selected &&
+    isCurrent &&
+    output.reviewState === "sent_to_client" &&
+    !selected.isLocked &&
+    !selected.approved &&
+    !approval
+  );
+  const canComment = Boolean(
+    selected &&
+    isCurrent &&
+    !selected.isLocked &&
+    !selected.approved &&
+    !approval
+  );
+  const media = selected ? normalizeMediaUrl(selected.source.url) : undefined;
   const embedUrl =
     media?.ok && media.value.provider !== "external"
       ? media.value.embedUrl
       : undefined;
+
+  async function confirmApproval() {
+    if (!selected) return;
+    if (!displayName.trim()) {
+      setApprovalError("Enter your display name before approving.");
+      return;
+    }
+    setApproving(true);
+    setApprovalError("");
+    try {
+      const result = await onApprove({
+        outputId: output.id,
+        mediaVersionId: selected.id,
+      });
+      setApprovedJustNow({
+        approvedAt: result.approvedAt,
+        approvedByName: result.approvedByName,
+      });
+      setConfirmApprove(false);
+    } catch (caught) {
+      setApprovalError(
+        caught instanceof Error
+          ? caught.message
+          : "Could not approve this version."
+      );
+    } finally {
+      setApproving(false);
+    }
+  }
+
   return (
     <article className="grid gap-4 py-5 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
       <div className="min-w-0">
@@ -960,62 +1282,173 @@ export function PublicOutputRow({
           {output.dueDate ? (
             <span>Due {formatDate(output.dueDate)}</span>
           ) : null}
-          {currentVersion ? (
+          {selected ? (
             <span>
-              {currentVersion.source.provider} · {currentVersion.label}
+              {selected.source.provider} · {selected.label}
             </span>
           ) : null}
         </div>
       </div>
-      {currentVersion ? (
-        <a
-          href={currentVersion.source.url}
-          target="_blank"
-          rel="noreferrer"
-          className="inline-flex w-fit items-center gap-2 underline decoration-border underline-offset-4 hover:decoration-foreground focus-visible:outline-none type-label"
-        >
-          Open current version{" "}
-          <ArrowUpRight className="size-4" aria-hidden="true" />
-        </a>
+      {selected ? (
+        <div className="flex flex-wrap items-center gap-4 sm:justify-end">
+          <a
+            href={selected.source.url}
+            target="_blank"
+            rel="noreferrer"
+            className="inline-flex w-fit items-center gap-2 underline decoration-border underline-offset-4 hover:decoration-foreground focus-visible:outline-none type-label"
+          >
+            {isCurrent ? (
+              <>
+                Open current version{" "}
+                <ArrowUpRight className="size-4" aria-hidden="true" />
+              </>
+            ) : (
+              <>
+                Open this version{" "}
+                <ArrowUpRight className="size-4" aria-hidden="true" />
+              </>
+            )}
+          </a>
+          {canApprove ? (
+            <Button
+              type="button"
+              size="sm"
+              onClick={() => {
+                setConfirmApprove(true);
+                setApprovalError("");
+              }}
+              disabled={busy || approving}
+            >
+              Approve version
+            </Button>
+          ) : null}
+        </div>
       ) : (
         <span className="text-muted-foreground type-body">
           No version shared yet
         </span>
       )}
-      {currentVersion?.changelog ? (
+      {canApprove && confirmApprove ? (
+        <div className="sm:col-span-2">
+          <p className="type-body">
+            Approve {selected?.label}? This locks the version against further
+            comments and uploads.
+          </p>
+          <div className="mt-3 flex flex-wrap gap-2">
+            <Button
+              type="button"
+              size="sm"
+              onClick={() => void confirmApproval()}
+              disabled={approving}
+            >
+              {approving ? "Approving..." : "Confirm approval"}
+            </Button>
+            <Button
+              type="button"
+              size="sm"
+              variant="ghost"
+              onClick={() => {
+                setConfirmApprove(false);
+                setApprovalError("");
+              }}
+              disabled={approving}
+            >
+              Cancel
+            </Button>
+          </div>
+          {approvalError ? (
+            <p role="alert" className="mt-2 text-destructive type-label-sm">
+              {approvalError}
+            </p>
+          ) : null}
+        </div>
+      ) : null}
+      {versions.length > 1 ? (
+        <div
+          role="group"
+          aria-label="Versions"
+          className="sm:col-span-2 flex flex-wrap items-center gap-1"
+        >
+          {versions.map((version) => (
+            <Button
+              key={version.id}
+              type="button"
+              size="sm"
+              variant={version.id === selected?.id ? "outline" : "ghost"}
+              aria-pressed={version.id === selected?.id}
+              onClick={() => {
+                setRequestedId(version.id);
+                setApprovalError("");
+              }}
+            >
+              v{version.versionNumber}
+              {version.isCurrent ? " · Current" : ""}
+            </Button>
+          ))}
+        </div>
+      ) : null}
+      {approval ? (
+        <div className="sm:col-span-2 flex items-center gap-2 type-label">
+          <LockKeyhole
+            className="size-4 text-muted-foreground"
+            aria-hidden="true"
+          />
+          Approved by {approval.approvedByName || "Client"} ·{" "}
+          {formatDate(approval.approvedAt)}
+        </div>
+      ) : null}
+      {selected?.changelog ? (
         <section aria-label="What changed" className="sm:col-span-2">
           <h4 className="type-label">What changed</h4>
           <p className="mt-2 whitespace-pre-wrap type-body">
-            {currentVersion.changelog}
+            {selected.changelog}
           </p>
         </section>
       ) : null}
-      {embedUrl && currentVersion ? (
+      {embedUrl && selected ? (
         <ReviewVideoPlayer
+          key={selected.id}
           url={embedUrl}
-          title={`${output.title} — ${currentVersion.label}`}
+          title={`${output.title} — ${selected.label}`}
           onReady={setPlayer}
         />
       ) : null}
-      {currentVersion ? (
+      {selected ? (
         <div className="sm:col-span-2">
-          <PublicMediaVersionComments
-            key={currentVersion.id}
-            player={player}
-            supportsPlayerTimestamps={!!embedUrl}
-            versionId={currentVersion.id}
-            comments={comments}
-            displayName={displayName}
-            onDisplayNameChange={onDisplayNameChange}
-            onClearDisplayName={onClearDisplayName}
-            onSubmit={(body, timestampSeconds) =>
-              onAddComment(output.id, currentVersion.id, body, timestampSeconds)
-            }
-            onReopen={onReopenComment}
-            busyCommentId={busyCommentId}
-            busy={busy}
-            loading={commentsLoading}
-          />
+          {canComment ? (
+            <PublicVersionReview
+              key={selected.id}
+              player={player}
+              supportsPlayerTimestamps={!!embedUrl}
+              versionId={selected.id}
+              comments={comments}
+              loading={commentsLoading}
+              displayName={displayName}
+              onDisplayNameChange={onDisplayNameChange}
+              onClearDisplayName={onClearDisplayName}
+              onSubmit={(body, timestampSeconds) =>
+                onAddComment(output.id, selected.id, body, timestampSeconds)
+              }
+              onReopen={onReopenComment}
+              busy={busy}
+              busyCommentId={busyCommentId}
+            />
+          ) : selected.isCurrent ? null : (
+            // Historical versions read their own comments, form-less.
+            <PortalHistoricalVersionComments
+              key={selected.id}
+              token={token}
+              pin={pin}
+              outputId={output.id}
+              versionId={selected.id}
+              player={player}
+              supportsPlayerTimestamps={!!embedUrl}
+              displayName={displayName}
+              onDisplayNameChange={onDisplayNameChange}
+              onClearDisplayName={onClearDisplayName}
+              onReopen={onReopenComment}
+            />
+          )}
         </div>
       ) : null}
     </article>

@@ -86,6 +86,60 @@ function timeLabel(time: string) {
   }).format(new Date(2000, 0, 1, hours, minutes));
 }
 
+/** Short "how long ago" label for the client-visit list. */
+function relativeTime(value: string) {
+  const date = new Date(value);
+  if (!Number.isFinite(date.getTime())) return "";
+  const minutes = Math.floor((Date.now() - date.getTime()) / 60_000);
+  if (minutes < 1) return "Just now";
+  if (minutes < 60) return `${minutes}m ago`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours}h ago`;
+  const days = Math.floor(hours / 24);
+  if (days < 7) return `${days}d ago`;
+  return new Intl.DateTimeFormat("en", {
+    month: "short",
+    day: "numeric",
+  }).format(date);
+}
+
+/** Recent client visits recorded by the portal, newest first. */
+function PortalViewsSection({ projectId }: { projectId: string }) {
+  const views = useQuery(api.projectPortals.listViews, { projectId });
+  const [showAll, setShowAll] = useState(false);
+  if (!views?.length) return null;
+  // Keep the panel short; the editor can expand to the full recent history.
+  const shown = showAll ? views : views.slice(0, 10);
+  return (
+    <ContentSection titleId="portal-views-title" title="Viewed by">
+      <ul className="grid gap-1.5">
+        {shown.map((view, index) => (
+          <li
+            key={`${view.viewedAt}-${index}`}
+            className="flex items-baseline justify-between gap-4 type-body-sm"
+          >
+            <span className="min-w-0 truncate">{view.displayName}</span>
+            <span className="shrink-0 text-muted-foreground type-label-sm">
+              {relativeTime(view.viewedAt)}
+            </span>
+          </li>
+        ))}
+      </ul>
+      {views.length > 10 ? (
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          className="-ms-2.5 mt-1"
+          onClick={() => setShowAll((current) => !current)}
+        >
+          {showAll ? "Show fewer" : `Show all (${views.length})`}
+        </Button>
+      ) : null}
+    </ContentSection>
+  );
+}
+
 /**
  * Edits a local `YYYY-MM-DDTHH:mm` value with the app date picker and a time
  * select, so the portal expiry never opens the browser datetime picker.
@@ -676,6 +730,8 @@ export function ProjectPortalPanel({
           </CollapsibleContent>
         </Collapsible>
       </ContentSection>
+
+      {canEdit ? <PortalViewsSection projectId={project.id} /> : null}
 
       {canDraftUpdates ? (
         <StatusDrafts
