@@ -38,6 +38,8 @@ import {
 } from "@/features/client-portals/internal/revision-allowance";
 import type { MediaVersionComment } from "@/features/media-version-comments/media-version-comments";
 import { parseMediaVersionComments } from "@/features/media-version-comments/media-version-comments-data";
+import type { AnnotationShape } from "@/features/media-version-comments/media-version-annotations";
+import { FrameAnnotationEditor } from "@/features/media-version-comments/annotation-overlay";
 import { trackOptionalEvent } from "@/lib/telemetry";
 import { cn } from "@/lib/utils";
 import { RelayBrand } from "@/app/relay-brand";
@@ -78,6 +80,19 @@ type PublicFile = {
   mimeType: string;
   updatedAt?: string;
 };
+type PublicStageAssetKind =
+  "brief" | "raw_footage" | "script" | "brand" | "other";
+type PublicStageAsset = {
+  id: string;
+  kind: PublicStageAssetKind;
+  title: string;
+  stageLabel: string;
+  url: string;
+};
+type PublicStageAssetGroup = {
+  stageLabel: string;
+  assets: PublicStageAsset[];
+};
 type PublicPortal = {
   title: string;
   clientName?: string;
@@ -89,6 +104,7 @@ type PublicPortal = {
   stage: string;
   progress: number;
   outputs: PublicOutput[];
+  stageAssets: PublicStageAssetGroup[];
   revisions: PortalRevisionAllowance | null;
   branding?: { name: string; accentColor: string };
 };
@@ -165,6 +181,53 @@ function readPublicFiles(value: unknown): PublicFile[] {
   });
 }
 
+const STAGE_ASSET_KIND_LABELS: Record<PublicStageAssetKind, string> = {
+  brief: "Brief",
+  raw_footage: "Raw footage",
+  script: "Script",
+  brand: "Brand",
+  other: "Other",
+};
+
+function stageAssetKind(value: unknown): PublicStageAssetKind | undefined {
+  return value === "brief" ||
+    value === "raw_footage" ||
+    value === "script" ||
+    value === "brand" ||
+    value === "other"
+    ? value
+    : undefined;
+}
+
+/** Reads the portal's client-visible stage assets, grouped in workflow order. */
+function readStageAssets(value: unknown): PublicStageAssetGroup[] {
+  if (!Array.isArray(value)) return [];
+  return value.flatMap((group) => {
+    if (!isRecord(group)) return [];
+    const entries: unknown[] = Array.isArray(group.assets) ? group.assets : [];
+    const groupLabel = text(group.stageLabel);
+    const assets = entries.flatMap((item) => {
+      if (!isRecord(item)) return [];
+      const title = text(item.title);
+      const url = safeUrl(item.url);
+      const kind = stageAssetKind(item.kind);
+      const stageLabel = text(item.stageLabel) ?? groupLabel;
+      if (!title || !url || !kind || !stageLabel) return [];
+      return [
+        {
+          id: text(item.id) ?? `${stageLabel}-${title}`,
+          kind,
+          title,
+          stageLabel,
+          url,
+        },
+      ];
+    });
+    const stageLabel = groupLabel ?? assets[0]?.stageLabel;
+    return stageLabel && assets.length ? [{ stageLabel, assets }] : [];
+  });
+}
+
 function fileKind(mimeType: string) {
   const mime = mimeType.toLowerCase();
   if (
@@ -219,6 +282,7 @@ export function readPublicPortalAccess(value: unknown): PublicAccess {
         Math.min(100, number(project.progress) ?? progressForStage(stage))
       ),
       outputs: readOutputs(project.outputs ?? source.outputs),
+      stageAssets: readStageAssets(project.stageAssets ?? source.stageAssets),
       revisions: readRevisionAllowance(source.revisions),
       branding:
         brandingName &&
@@ -510,7 +574,8 @@ export function ClientPortalView({ token }: { token: string }) {
     outputId: string,
     mediaVersionId: string,
     body: string,
-    timestampSeconds?: number
+    timestampSeconds?: number,
+    annotations?: readonly AnnotationShape[]
   ) {
     setCommentBusyOutputId(outputId);
     try {
@@ -522,6 +587,7 @@ export function ClientPortalView({ token }: { token: string }) {
         authorName: displayName.trim(),
         body,
         ...(timestampSeconds !== undefined ? { timestampSeconds } : {}),
+        ...(annotations?.length ? { annotations: [...annotations] } : {}),
       });
       trackOptionalEvent("comment_added", { surface: "portal" });
     } finally {
@@ -747,7 +813,8 @@ function ActivePortal({
     outputId: string,
     mediaVersionId: string,
     body: string,
-    timestampSeconds?: number
+    timestampSeconds?: number,
+    annotations?: readonly AnnotationShape[]
   ) => Promise<void>;
   onReopenComment: (commentId: string) => Promise<void>;
   onApprove: (data: {
@@ -937,6 +1004,7 @@ function ActivePortal({
             </div>
           )}
         </section>
+        <PublicStageAssetsSection groups={portal.stageAssets} />
         <PublicFilesSection files={files} loading={filesLoading} />
         {portal.notes ? (
           <section
@@ -959,6 +1027,54 @@ function ActivePortal({
   );
 }
 
+export function PublicStageAssetsSection({
+  groups,
+}: {
+  groups: readonly PublicStageAssetGroup[];
+}) {
+  if (!groups.length) return null;
+  const count = groups.reduce((total, group) => total + group.assets.length, 0);
+  return (
+    <section
+      aria-labelledby="stage-files-title"
+      className="border-t border-border py-10"
+    >
+      <div className="flex items-end justify-between gap-4">
+        <h2 id="stage-files-title" className="type-heading-sm">
+          Files
+        </h2>
+        <Badge variant="outline">{count}</Badge>
+      </div>
+      <div className="mt-6 grid gap-6">
+        {groups.map((group) => (
+          <div key={group.stageLabel}>
+            <h3 className="text-muted-foreground type-label-sm">
+              {group.stageLabel}
+            </h3>
+            <ul className="mt-2 divide-y divide-border border-y border-border">
+              {group.assets.map((asset) => (
+                <li key={asset.id}>
+                  <a
+                    href={asset.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 py-3 outline-none hover:underline focus-visible:focus-ring"
+                  >
+                    <span className="font-semibold">{asset.title}</span>
+                    <span className="text-muted-foreground type-label-sm">
+                      {STAGE_ASSET_KIND_LABELS[asset.kind]}
+                    </span>
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
 function PublicFilesSection({
   files,
   loading,
@@ -974,10 +1090,10 @@ function PublicFilesSection({
       <div className="flex items-end justify-between gap-4">
         <div>
           <h2 id="files-title" className="type-heading-sm">
-            Files
+            Downloads
           </h2>
           <p className="mt-1 text-muted-foreground type-body">
-            Files your editor has chosen to share.
+            Files you can open or download.
           </p>
         </div>
         <Badge variant="outline">{loading ? "…" : files.length}</Badge>
@@ -1183,7 +1299,8 @@ export function PublicOutputRow({
     outputId: string,
     mediaVersionId: string,
     body: string,
-    timestampSeconds?: number
+    timestampSeconds?: number,
+    annotations?: readonly AnnotationShape[]
   ) => Promise<void>;
   onReopenComment: (commentId: string) => Promise<void>;
   onApprove: (data: {
@@ -1197,6 +1314,7 @@ export function PublicOutputRow({
 }) {
   const [player, setPlayer] = useState<ReviewPlayer>();
   const [requestedId, setRequestedId] = useState(output.currentVersion?.id);
+  const [annotations, setAnnotations] = useState<AnnotationShape[]>([]);
   const [confirmApprove, setConfirmApprove] = useState(false);
   const [approving, setApproving] = useState(false);
   const [approvalError, setApprovalError] = useState("");
@@ -1243,6 +1361,11 @@ export function PublicOutputRow({
     media?.ok && media.value.provider !== "external"
       ? media.value.embedUrl
       : undefined;
+
+  // A different cut is a different frame; in-progress marks go with it.
+  useEffect(() => {
+    setAnnotations([]);
+  }, [selected?.id]);
 
   async function confirmApproval() {
     if (!selected) return;
@@ -1405,13 +1528,24 @@ export function PublicOutputRow({
           </p>
         </section>
       ) : null}
-      {embedUrl && selected ? (
-        <ReviewVideoPlayer
-          key={selected.id}
-          url={embedUrl}
-          title={`${output.title} — ${selected.label}`}
-          onReady={setPlayer}
-        />
+      {selected && (embedUrl || canComment) ? (
+        <div className="sm:col-span-2">
+          <FrameAnnotationEditor
+            shapes={annotations}
+            onChange={setAnnotations}
+            label={`Frame notes for ${output.title}`}
+            disabled={!canComment}
+          >
+            {embedUrl ? (
+              <ReviewVideoPlayer
+                key={selected.id}
+                url={embedUrl}
+                title={`${output.title} — ${selected.label}`}
+                onReady={setPlayer}
+              />
+            ) : undefined}
+          </FrameAnnotationEditor>
+        </div>
       ) : null}
       {selected ? (
         <div className="sm:col-span-2">
@@ -1426,9 +1560,16 @@ export function PublicOutputRow({
               displayName={displayName}
               onDisplayNameChange={onDisplayNameChange}
               onClearDisplayName={onClearDisplayName}
-              onSubmit={(body, timestampSeconds) =>
-                onAddComment(output.id, selected.id, body, timestampSeconds)
-              }
+              onSubmit={async (body, timestampSeconds) => {
+                await onAddComment(
+                  output.id,
+                  selected.id,
+                  body,
+                  timestampSeconds,
+                  annotations
+                );
+                setAnnotations([]);
+              }}
               onReopen={onReopenComment}
               busy={busy}
               busyCommentId={busyCommentId}

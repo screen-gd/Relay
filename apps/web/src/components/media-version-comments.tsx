@@ -33,6 +33,7 @@ import {
 } from "@/features/media-version-comments/review-timestamps";
 import type { ReviewPlayer } from "@/components/review-video-player";
 import { RevisionList } from "@/features/media-version-comments/revision-list";
+import { AnnotationOverlay } from "@/features/media-version-comments/annotation-overlay";
 import {
   TranscriptLine,
   TranscriptReview,
@@ -47,6 +48,42 @@ function commentDate(value: string) {
         year: "numeric",
       }).format(date)
     : "Recently";
+}
+
+function CommentAnnotation({
+  comment,
+  onSeek,
+}: {
+  comment: MediaVersionComment;
+  onSeek?: (seconds: number) => void;
+}) {
+  const shapes = comment.annotations;
+  if (!shapes?.length) return null;
+  const label = `${shapes.length} frame ${
+    shapes.length === 1 ? "mark" : "marks"
+  } on this comment`;
+  const frame = (
+    <span className="relative block aspect-video w-full max-w-72 overflow-hidden bg-well">
+      <AnnotationOverlay shapes={shapes} label={label} />
+    </span>
+  );
+  const seconds = comment.timestampSeconds;
+  return (
+    <div className="mt-3">
+      {onSeek && seconds !== undefined ? (
+        <button
+          type="button"
+          aria-label={`Show the frame at ${formatReviewTimestamp(seconds)}`}
+          className="block w-full max-w-72 outline-none focus-visible:focus-ring"
+          onClick={() => onSeek(seconds)}
+        >
+          {frame}
+        </button>
+      ) : (
+        frame
+      )}
+    </div>
+  );
 }
 
 function CommentRow({
@@ -100,6 +137,7 @@ function CommentRow({
         )
       ) : null}
       <p className="mt-2 whitespace-pre-wrap type-body">{comment.body}</p>
+      <CommentAnnotation comment={comment} onSeek={onSeek} />
       <TranscriptLine commentIds={[comment.id]} />
       {action ? (
         <Button
