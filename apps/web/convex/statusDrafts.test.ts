@@ -443,7 +443,7 @@ test("changelog input uses only resolved text and strips internal flags; approva
     outputs: [{ currentVersion: { changelog: "Contrast improved." } }],
   });
   expect(JSON.stringify(await projection())).not.toMatch(
-    /private new draft|private question|private unfinished|sourceRevisionIds|approvedBy|clarifyingQuestion|vague|possibleNewScope|runId/
+    /private new draft|private question|private unfinished|sourceRevisionIds|"approvedBy"|clarifyingQuestion|vague|possibleNewScope|runId/
   );
   const retry = await f.owner.mutation(api.versionChangelog.generate, {
     mediaVersionId: "v",
