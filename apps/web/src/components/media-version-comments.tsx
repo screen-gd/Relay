@@ -62,12 +62,17 @@ function CommentAnnotation({
   const label = `${shapes.length} frame ${
     shapes.length === 1 ? "mark" : "marks"
   } on this comment`;
+  const seconds = comment.timestampSeconds;
   const frame = (
     <span className="relative block aspect-video w-full max-w-72 overflow-hidden bg-well">
       <AnnotationOverlay shapes={shapes} label={label} />
+      {seconds !== undefined ? (
+        <span className="absolute bottom-1 left-2 font-mono text-muted-foreground type-label-sm">
+          {formatReviewTimestamp(seconds)}
+        </span>
+      ) : null}
     </span>
   );
-  const seconds = comment.timestampSeconds;
   return (
     <div className="mt-3">
       {onSeek && seconds !== undefined ? (
@@ -243,8 +248,10 @@ export function PublicMediaVersionComments({
   displayName,
   onDisplayNameChange,
   onClearDisplayName,
+  onDisplayNameCommit,
   onSubmit,
   onReopen,
+  onCommentSelect,
   busyCommentId,
   busy = false,
   loading = false,
@@ -257,8 +264,10 @@ export function PublicMediaVersionComments({
   displayName: string;
   onDisplayNameChange: (value: string) => void;
   onClearDisplayName: () => void;
+  onDisplayNameCommit?: () => void;
   onSubmit: (body: string, timestampSeconds?: number) => Promise<void>;
   onReopen: (commentId: string) => Promise<void>;
+  onCommentSelect?: (comment: MediaVersionComment) => void;
   busyCommentId?: string;
   busy?: boolean;
   loading?: boolean;
@@ -331,6 +340,8 @@ export function PublicMediaVersionComments({
           currentComments.map((comment) => (
             <CommentRow
               key={comment.id}
+              // Seeking and selecting the comment land together, so its frame
+              // marks preview over the player while the timestamp is shown.
               onSeek={
                 player
                   ? (seconds) => {
@@ -341,6 +352,7 @@ export function PublicMediaVersionComments({
                             "Could not seek in this player. Use the timestamp shown on the comment."
                           )
                         );
+                      onCommentSelect?.(comment);
                     }
                   : undefined
               }
@@ -383,6 +395,7 @@ export function PublicMediaVersionComments({
             id={`comment-name-${versionId}`}
             value={displayName}
             onChange={(event) => onDisplayNameChange(event.target.value)}
+            onBlur={onDisplayNameCommit}
             maxLength={120}
             autoComplete="name"
           />
