@@ -14,7 +14,7 @@ export function contentSecurityPolicy({ development = false } = {}) {
     "object-src 'none'",
     `script-src 'self' 'unsafe-inline'${development ? " 'unsafe-eval'" : ""} https://*.clerk.accounts.dev https://*.clerk.com https://clerk.relay-app.cc.cd https://challenges.cloudflare.com https://*.protect.clerk.com https://static.cloudflareinsights.com https://js.stripe.com https://checkout.stripe.com https://www.youtube.com https://player.vimeo.com`,
     "style-src 'self' 'unsafe-inline'",
-    `connect-src 'self'${development ? " ws: wss:" : ""} https://*.convex.cloud wss://*.convex.cloud https://*.clerk.accounts.dev https://*.clerk.com https://clerk.relay-app.cc.cd https://*.protect.clerk.com:* https://clerk-telemetry.com https://cloudflareinsights.com https://api.stripe.com https://m.stripe.network https://r.stripe.com https://q.stripe.com https://checkout.stripe.com`,
+    `connect-src 'self'${development ? " ws: wss:" : ""} https://*.convex.cloud wss://*.convex.cloud https://*.convex.site https://*.clerk.accounts.dev https://*.clerk.com https://clerk.relay-app.cc.cd https://*.protect.clerk.com:* https://clerk-telemetry.com https://cloudflareinsights.com https://api.stripe.com https://m.stripe.network https://r.stripe.com https://q.stripe.com https://checkout.stripe.com`,
     "worker-src 'self' blob:",
     "upgrade-insecure-requests",
   ].join("; ");
