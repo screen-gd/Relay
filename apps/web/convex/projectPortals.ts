@@ -1,8 +1,8 @@
 import { approvedVersionChangelog } from "./versionChangelog";
 import { clampRevisionLimit } from "./clientPortals";
 import { loadRoundSummary } from "./revisionRounds";
-import { requireProjectVisibility } from "./projectAccess";
-import { v } from "convex/values";
+import { canSeeTeamProject, requireProjectVisibility } from "./projectAccess";
+import { type Infer, v } from "convex/values";
 import type { Doc } from "./_generated/dataModel";
 import {
   mutation,
@@ -10,24 +10,81 @@ import {
   type MutationCtx,
   type QueryCtx,
 } from "./_generated/server";
-import { projectPortalStatusValidator } from "./domainValidators";
+import {
+  fileCategoryValidator,
+  mediaSourceValidator,
+  projectOutputReviewStateValidator,
+  projectPortalStatusValidator,
+} from "./domainValidators";
 import { resolveWorkspaceEntitlements } from "./workspaceSubscriptions";
+import { recordProjectActivity } from "./projectActivity";
+import { syncProjectLifecycle } from "./projectLifecycle";
+import schema from "./schema";
 
 type FunctionCtx = QueryCtx | MutationCtx;
-type PublicAccess =
-  | "active"
-  | "unpublished"
-  | "closed"
-  | "expired"
-  | "invalid_token"
-  | "pin_required"
-  | "invalid_pin";
+type PublicAccess = Infer<typeof publicPortalAccessValidator>;
 
 const MAX_OUTPUTS = 20;
 const MAX_NOTES = 2_000;
 const MIN_PIN_LENGTH = 4;
 const MAX_PIN_LENGTH = 128;
 const PIN_ITERATIONS = 120_000;
+
+const publicPortalFailureAccessValidator = v.union(
+  v.literal("unpublished"),
+  v.literal("closed"),
+  v.literal("expired"),
+  v.literal("invalid_token"),
+  v.literal("pin_required"),
+  v.literal("invalid_pin")
+);
+export const publicPortalAccessValidator = v.union(
+  v.literal("active"),
+  publicPortalFailureAccessValidator
+);
+
+const publicVersionValidator = v.object({
+  id: v.string(),
+  versionNumber: v.number(),
+  title: v.string(),
+  source: mediaSourceValidator,
+  changelog: v.union(v.string(), v.null()),
+  isCurrent: v.boolean(),
+  isLocked: v.boolean(),
+  approved: v.boolean(),
+  approvedAt: v.union(v.string(), v.null()),
+  approvedByName: v.union(v.string(), v.null()),
+});
+
+const publicProjectionValidator = v.object({
+  project: v.object({
+    title: v.string(),
+    stage: v.string(),
+    progress: v.number(),
+    publicNotes: v.string(),
+    startDate: v.union(v.string(), v.null()),
+    dueDate: v.union(v.string(), v.null()),
+  }),
+  editorDisplayName: v.string(),
+  outputs: v.array(
+    v.object({
+      id: v.string(),
+      title: v.string(),
+      category: fileCategoryValidator,
+      reviewState: projectOutputReviewStateValidator,
+      currentVersion: v.union(publicVersionValidator, v.null()),
+      versions: v.array(publicVersionValidator),
+    })
+  ),
+  revisions: v.union(
+    v.object({ used: v.number(), limit: v.number() }),
+    v.null()
+  ),
+  branding: v.union(
+    v.object({ name: v.string(), accentColor: v.string() }),
+    v.null()
+  ),
+});
 
 const portalConfigValidator = v.object({
   publicNotes: v.string(),
@@ -246,6 +303,54 @@ export async function getPublicPortalAccess(
   return { portal, access: "active" as const };
 }
 
+/** Resolves only versions of an output selected by this portal, up to its current cut. */
+export async function getSharedPortalVersion(
+  ctx: FunctionCtx,
+  portal: Doc<"projectPortals">,
+  outputId: string,
+  mediaVersionId: string
+) {
+  if (!portal.selectedOutputIds.includes(outputId)) return null;
+  const output = await ctx.db
+    .query("projectOutputs")
+    .withIndex("by_outputId", (q) => q.eq("id", outputId))
+    .unique();
+  if (
+    !output ||
+    output.archived ||
+    output.projectId !== portal.projectId ||
+    output.ownerUserId !== portal.ownerUserId ||
+    !output.currentMediaVersionId
+  )
+    return null;
+  const current = await ctx.db.get(output.currentMediaVersionId);
+  const version = await ctx.db
+    .query("projectMediaVersions")
+    .withIndex("by_versionId", (q) => q.eq("id", mediaVersionId))
+    .unique();
+  if (
+    !current ||
+    current.outputId !== output._id ||
+    current.projectId !== portal.projectId ||
+    current.ownerUserId !== portal.ownerUserId ||
+    !version ||
+    version.outputId !== output._id ||
+    version.projectId !== portal.projectId ||
+    version.ownerUserId !== portal.ownerUserId ||
+    version.versionNumber > current.versionNumber
+  )
+    return null;
+  return { output, version };
+}
+
+/** A client sign-off makes that Media Version immutable to further submissions. */
+export function assertMediaVersionUnlocked(
+  version: Doc<"projectMediaVersions">
+) {
+  if (version.locked || version.approvedAt)
+    throw new Error("This version is approved and locked");
+}
+
 function publicStageForPurpose(
   purpose: Doc<"projects">["workflowStages"][number]["purpose"] | undefined
 ) {
@@ -257,7 +362,7 @@ function publicStageForPurpose(
     case "client_review":
       return { stage: "Review", progress: 75 };
     case "approved":
-      return { stage: "Review", progress: 90 };
+      return { stage: "Approved", progress: 90 };
     case "delivered":
       return { stage: "Delivered", progress: 100 };
     case "planned":
@@ -297,7 +402,8 @@ async function publicOutputs(
   const visible = [];
   for (const outputId of portal.selectedOutputIds) {
     const output = byId.get(outputId);
-    if (!output || output.archived) continue;
+    if (!output || output.archived || output.ownerUserId !== portal.ownerUserId)
+      continue;
     const versions = await ctx.db
       .query("projectMediaVersions")
       .withIndex("by_outputId_and_versionNumber", (q) =>
@@ -308,20 +414,36 @@ async function publicOutputs(
     const current = versions.find(
       ({ _id }) => _id === output.currentMediaVersionId
     );
+    const publicVersions = await Promise.all(
+      versions
+        .filter(
+          (version) =>
+            current &&
+            version.versionNumber <= current.versionNumber &&
+            version.projectId === portal.projectId &&
+            version.ownerUserId === portal.ownerUserId
+        )
+        .map(async (version) => ({
+          id: version.id,
+          versionNumber: version.versionNumber,
+          title: version.title,
+          source: version.source,
+          changelog: await approvedVersionChangelog(ctx, version._id),
+          isCurrent: version._id === output.currentMediaVersionId,
+          isLocked: Boolean(version.locked || version.approvedAt),
+          approved: Boolean(version.approvedAt),
+          approvedAt: version.approvedAt ?? null,
+          approvedByName: version.approvedByName ?? null,
+        }))
+    );
     visible.push({
       id: output.id,
       title: output.title,
       category: output.category,
       reviewState: output.reviewState,
-      currentVersion: current
-        ? {
-            id: current.id,
-            versionNumber: current.versionNumber,
-            title: current.title,
-            source: current.source,
-            changelog: await approvedVersionChangelog(ctx, current._id),
-          }
-        : null,
+      currentVersion:
+        publicVersions.find((version) => version.isCurrent) ?? null,
+      versions: publicVersions,
     });
   }
   return visible;
@@ -370,8 +492,22 @@ async function publicProjection(
     ? (await resolveWorkspaceEntitlements(ctx, workspaceId)).capabilities
         .customPortalBranding
     : false;
+  const settings = await ctx.db
+    .query("settings")
+    .withIndex("by_userId", (q) => q.eq("userId", project.ownerUserId))
+    .unique();
+  const editor = workspace
+    ? await ctx.db
+        .query("teamMembers")
+        .withIndex("by_teamId_and_userId", (q) =>
+          q.eq("teamId", workspace._id).eq("userId", project.ownerUserId)
+        )
+        .unique()
+    : null;
   return {
     project: publicProject(project, portal),
+    editorDisplayName:
+      settings?.profileName.trim() || editor?.name.trim() || "Editor",
     outputs: await publicOutputs(ctx, project.id, portal),
     revisions: await revisionAllowance(ctx, project, workspace),
     branding: brandingAllowed
@@ -565,6 +701,10 @@ export const regenerateToken = mutation({
 
 export const getByToken = query({
   args: { token: v.string(), pin: v.optional(v.string()) },
+  returns: v.union(
+    v.object({ access: publicPortalFailureAccessValidator }),
+    publicProjectionValidator.extend({ access: v.literal("active") })
+  ),
   handler: async (ctx, args) => {
     const result = await getPublicPortalAccess(ctx, args.token, args.pin);
     if (!result.portal) return { access: result.access };
@@ -572,10 +712,218 @@ export const getByToken = query({
       .query("projects")
       .withIndex("by_projectId", (q) => q.eq("id", result.portal.projectId))
       .unique();
-    if (!project) return { access: "invalid_token" as const };
+    if (!project || project.ownerUserId !== result.portal.ownerUserId)
+      return { access: "invalid_token" as const };
     return {
       access: "active" as const,
       ...(await publicProjection(ctx, project, result.portal)),
     };
+  },
+});
+
+/** Approves exactly the current shared cut, recording sign-off and notifying its editors. */
+export const approve = mutation({
+  args: {
+    token: v.string(),
+    pin: v.optional(v.string()),
+    outputId: v.string(),
+    mediaVersionId: v.string(),
+    displayName: v.string(),
+  },
+  returns: v.object({
+    outputId: v.string(),
+    mediaVersionId: v.string(),
+    approvedAt: v.string(),
+    approvedByName: v.string(),
+    isLocked: v.literal(true),
+  }),
+  handler: async (ctx, args) => {
+    const access = await getPublicPortalAccess(ctx, args.token, args.pin);
+    if (!access.portal) throw new Error(`Portal access ${access.access}`);
+    const shared = await getSharedPortalVersion(
+      ctx,
+      access.portal,
+      args.outputId,
+      args.mediaVersionId
+    );
+    if (!shared || shared.output.currentMediaVersionId !== shared.version._id)
+      throw new Error("Only the current shared Media Version can be approved");
+    if (shared.version.approvedAt || shared.version.locked)
+      throw new Error("This version has already been approved and locked");
+    if (shared.output.reviewState !== "sent_to_client")
+      throw new Error("This output must be sent to the client before approval");
+    const approvedByName = args.displayName.trim().slice(0, 120);
+    if (!approvedByName) throw new Error("Display name is required");
+    const project = await ctx.db
+      .query("projects")
+      .withIndex("by_projectId", (q) => q.eq("id", access.portal.projectId))
+      .unique();
+    if (!project || project.ownerUserId !== access.portal.ownerUserId)
+      throw new Error("Project not found");
+    const stage = project.workflowStages.find(
+      (stage) => stage.purpose === "approved"
+    );
+    if (!stage)
+      throw new Error(
+        "The Project workflow needs a stage with the approved purpose"
+      );
+    const approvedAt = new Date().toISOString();
+    await ctx.db.patch(shared.version._id, {
+      approvedAt,
+      approvedByName,
+      locked: true,
+    });
+    await ctx.db.patch(shared.output._id, {
+      reviewState: "approved",
+      updatedAt: approvedAt,
+    });
+    await ctx.db.patch(project._id, {
+      workflowStageId: stage.id,
+      status: "Review",
+      completedAt: undefined,
+      updatedAt: approvedAt,
+    });
+    await syncProjectLifecycle(ctx, project._id);
+    await recordProjectActivity(ctx, {
+      project,
+      actorUserId: "client",
+      actorName: approvedByName,
+      kind: "status_changed",
+      message: `${approvedByName} approved ${shared.output.title} v${shared.version.versionNumber}. Project moved to ${stage.label}.`,
+      detail: `Media Version: ${shared.version.id}`,
+      createdAt: approvedAt,
+    });
+    await ctx.db.insert("portalEvents", {
+      portalId: access.portal._id,
+      kind: "version_approved",
+      title: "Version approved",
+      body: `${shared.output.title} v${shared.version.versionNumber} was approved.`,
+      displayName: approvedByName,
+      mediaVersionId: shared.version._id,
+      createdAt: approvedAt,
+    });
+    const workspaceId = project.teamId
+      ? ctx.db.normalizeId("teamWorkspaces", project.teamId)
+      : null;
+    const workspace = workspaceId
+      ? await ctx.db.get(workspaceId)
+      : await ctx.db
+          .query("teamWorkspaces")
+          .withIndex("by_ownerUserId", (q) =>
+            q.eq("ownerUserId", project.ownerUserId)
+          )
+          .unique();
+    const teamId = project.teamId ?? workspace?._id;
+    const recipients = new Set([project.ownerUserId]);
+    if (project.teamId) {
+      const teamId = project.teamId;
+      for (const userId of new Set([
+        ...project.assigneeUserIds,
+        shared.version.createdByUserId,
+      ])) {
+        const member = await ctx.db
+          .query("teamMembers")
+          .withIndex("by_teamId_and_userId", (q) =>
+            q.eq("teamId", teamId).eq("userId", userId)
+          )
+          .unique();
+        if (
+          member?.status === "active" &&
+          member.permissions.viewProjects &&
+          member.role !== "Reviewer" &&
+          canSeeTeamProject(
+            project,
+            member,
+            workspace?.allowAllTeamProjects ?? false
+          )
+        )
+          recipients.add(userId);
+      }
+    }
+    for (const userId of recipients)
+      await ctx.db.insert("teamNotifications", {
+        teamId,
+        userId,
+        kind: "client_approval",
+        projectId: project.id,
+        outputId: shared.output.id,
+        mediaVersionId: shared.version.id,
+        message: `${approvedByName} approved ${project.title}: ${shared.output.title} v${shared.version.versionNumber}.`,
+        read: false,
+        createdAt: approvedAt,
+      });
+    return {
+      outputId: shared.output.id,
+      mediaVersionId: shared.version.id,
+      approvedAt,
+      approvedByName,
+      isLocked: true as const,
+    };
+  },
+});
+
+/** Records a named visit after token and PIN validation; no network identifiers are stored. */
+export const recordView = mutation({
+  args: {
+    token: v.string(),
+    pin: v.optional(v.string()),
+    displayName: v.string(),
+  },
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    const access = await getPublicPortalAccess(ctx, args.token, args.pin);
+    if (!access.portal) throw new Error(`Portal access ${access.access}`);
+    const displayName = args.displayName.trim().slice(0, 120);
+    if (!displayName) throw new Error("Display name is required");
+    await ctx.db.insert("portalEvents", {
+      portalId: access.portal._id,
+      kind: "portal_viewed",
+      title: "Portal viewed",
+      body: "A client viewed the Project portal.",
+      displayName,
+      createdAt: new Date().toISOString(),
+    });
+    return null;
+  },
+});
+
+/** Lists recent named portal visits for an editor who can manage this Project's portal. */
+export const listViews = query({
+  args: { projectId: v.string() },
+  returns: v.array(v.object({ displayName: v.string(), viewedAt: v.string() })),
+  handler: async (ctx, args) => {
+    await requireProjectAccess(ctx, args.projectId, "managePortal");
+    const portal = await ctx.db
+      .query("projectPortals")
+      .withIndex("by_projectId", (q) => q.eq("projectId", args.projectId))
+      .unique();
+    if (!portal) return [];
+    const events = await ctx.db
+      .query("portalEvents")
+      .withIndex("by_portalId_and_kind_and_createdAt", (q) =>
+        q.eq("portalId", portal._id).eq("kind", "portal_viewed")
+      )
+      .order("desc")
+      .take(100);
+    return events.map((event) => ({
+      displayName: event.displayName ?? "Client",
+      viewedAt: event.createdAt,
+    }));
+  },
+});
+
+/** Includes approval notifications for solo editors who have no Team membership. */
+export const listApprovalNotifications = query({
+  args: {},
+  returns: v.array(schema.doc("teamNotifications")),
+  handler: async (ctx) => {
+    const identity = await requireIdentity(ctx);
+    return ctx.db
+      .query("teamNotifications")
+      .withIndex("by_userId_and_kind_and_createdAt", (q) =>
+        q.eq("userId", identity.tokenIdentifier).eq("kind", "client_approval")
+      )
+      .order("desc")
+      .take(25);
   },
 });
