@@ -1,6 +1,9 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Link } from "@tanstack/react-router";
+import { useQuery } from "convex/react";
+import { api } from "../../../convex/_generated/api";
 import { useNotificationController } from "./notification-controller";
+import { projectLink } from "@/features/projects/project-view";
 import { Button as OwnedButton } from "@/components/ui/button";
 import {
   Popover as OwnedPopover,
@@ -21,7 +24,21 @@ export function NotificationBell() {
     markAllNotificationsRead,
   } = useNotificationController();
   const teamNotifications = teamData?.notifications ?? [];
-  const unreadCount = teamNotifications.filter(
+  // Solo editors read their approval rows directly when no Workspace query covers them.
+  const approvalNotifications = useQuery(
+    api.projectPortals.listApprovalNotifications,
+    isConvexAuthenticated ? {} : "skip"
+  );
+  const notifications = useMemo(() => {
+    const teamIds = new Set(teamNotifications.map((row) => row._id));
+    const extras = (approvalNotifications ?? []).filter(
+      (row) => !teamIds.has(row._id)
+    );
+    return [...teamNotifications, ...extras].sort((left, right) =>
+      right.createdAt.localeCompare(left.createdAt)
+    );
+  }, [teamNotifications, approvalNotifications]);
+  const unreadCount = notifications.filter(
     (notification) => !notification.read
   ).length;
   const teamNotificationSyncUnavailable = Boolean(
@@ -93,8 +110,8 @@ export function NotificationBell() {
               ? "Connecting team notifications..."
               : teamNotificationSyncUnavailable
                 ? "Team notifications are not connected"
-                : teamNotifications.length
-                  ? `${unreadCount} unread team notification${unreadCount === 1 ? "" : "s"}`
+                : notifications.length
+                  ? `${unreadCount} unread notification${unreadCount === 1 ? "" : "s"}`
                   : "Project activity and feedback"}
           </p>
         </div>
@@ -108,9 +125,9 @@ export function NotificationBell() {
             Clerk is signed in, but Convex auth is not connected. Check Team
             sync before relying on shared notifications.
           </p>
-        ) : teamNotifications.length ? (
+        ) : notifications.length ? (
           <ul className="workspace-scrollbar-hidden max-h-[min(26rem,calc(100dvh-10rem))] space-y-1 overscroll-contain overflow-y-auto py-1">
-            {teamNotifications.map((notification) => (
+            {notifications.map((notification) => (
               <li
                 key={notification._id}
                 className={`rounded-soft px-2.5 py-2 transition-colors duration-(--dur-fast) hover:bg-hover ${notification.read ? "" : "bg-selected"}`}
@@ -139,20 +156,41 @@ export function NotificationBell() {
                     Mark read
                   </OwnedButton>
                 ) : null}
-                <Link
-                  to="/team"
-                  onClick={() => {
-                    setNotificationOpen(false);
-                    if (!notification.read) {
-                      void markNotificationRead({
-                        notificationId: notification._id,
-                      });
-                    }
-                  }}
-                  className="mt-1 ms-3 inline-flex type-label-sm text-text-2 hover:text-text-1 hover:underline"
-                >
-                  Open Team
-                </Link>
+                {notification.kind === "client_approval" &&
+                notification.projectId ? (
+                  <Link
+                    {...projectLink({
+                      projectId: notification.projectId,
+                      view: "review",
+                    })}
+                    onClick={() => {
+                      setNotificationOpen(false);
+                      if (!notification.read) {
+                        void markNotificationRead({
+                          notificationId: notification._id,
+                        });
+                      }
+                    }}
+                    className="mt-1 ms-3 inline-flex type-label-sm text-text-2 hover:text-text-1 hover:underline"
+                  >
+                    Open project
+                  </Link>
+                ) : (
+                  <Link
+                    to="/team"
+                    onClick={() => {
+                      setNotificationOpen(false);
+                      if (!notification.read) {
+                        void markNotificationRead({
+                          notificationId: notification._id,
+                        });
+                      }
+                    }}
+                    className="mt-1 ms-3 inline-flex type-label-sm text-text-2 hover:text-text-1 hover:underline"
+                  >
+                    Open Team
+                  </Link>
+                )}
               </li>
             ))}
           </ul>
