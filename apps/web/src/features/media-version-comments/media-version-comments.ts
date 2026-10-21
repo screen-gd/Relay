@@ -1,3 +1,8 @@
+import {
+  parseAnnotations,
+  type AnnotationShape,
+} from "./media-version-annotations";
+
 export type MediaVersionComment = {
   id: string;
   outputId: string;
@@ -5,6 +10,7 @@ export type MediaVersionComment = {
   authorName: string;
   body: string;
   timestampSeconds?: number;
+  annotations?: readonly AnnotationShape[];
   resolved: boolean;
   createdAt: string;
   resolvedAt?: string | null;
@@ -53,6 +59,7 @@ export function readMediaVersionComment(
   if (!id || !mediaVersionId) return undefined;
   const resolvedAt =
     value.resolvedAt === null ? null : text(value.resolvedAt) || undefined;
+  const annotations = parseAnnotations(value.annotations);
   return {
     id,
     outputId: text(value.outputId),
@@ -65,6 +72,7 @@ export function readMediaVersionComment(
     value.timestampSeconds <= 604_800
       ? { timestampSeconds: value.timestampSeconds }
       : {}),
+    ...(annotations.length ? { annotations } : {}),
     resolved: value.resolved === true,
     createdAt: text(value.createdAt),
     ...(resolvedAt === undefined ? {} : { resolvedAt }),

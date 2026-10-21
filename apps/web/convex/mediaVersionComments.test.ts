@@ -295,3 +295,132 @@ test("manual timestamps work for linked videos and invalid timestamps are reject
     ).rejects.toThrow("Timestamp must");
   }
 });
+
+const annotationArgs = {
+  outputId: "main-output",
+  mediaVersionId: "current-v1",
+  authorName: "Client",
+  body: "This frame needs a fix",
+};
+
+test("annotated comments store their shapes for the portal and the editor", async () => {
+  const t = convexTest(schema, modules);
+  await seed(t);
+  const { owner, token } = await publishOpen(t);
+  const annotations = [
+    { type: "pin" as const, x: 0.25, y: 0.5 },
+    {
+      type: "stroke" as const,
+      points: [
+        { x: 0, y: 0 },
+        { x: 1, y: 1 },
+      ],
+    },
+  ];
+
+  const comment = await t.mutation(api.mediaVersionComments.addPublicComment, {
+    token,
+    ...annotationArgs,
+    timestampSeconds: 12,
+    annotations,
+  });
+  expect(comment.annotations).toEqual(annotations);
+
+  const portal = await t.query(api.mediaVersionComments.listForPortal, {
+    token,
+  });
+  expect(portal.comments[0]).toMatchObject({
+    body: annotationArgs.body,
+    timestampSeconds: 12,
+    annotations,
+  });
+
+  const editor = await owner.query(api.mediaVersionComments.listForProject, {
+    projectId: "comments-project",
+  });
+  expect(editor[0]).toMatchObject({ annotations });
+});
+
+test("invalid annotations are rejected before they are stored", async () => {
+  const t = convexTest(schema, modules);
+  await seed(t);
+  const { token } = await publishOpen(t);
+  const base = { token, ...annotationArgs };
+
+  await expect(
+    t.mutation(api.mediaVersionComments.addPublicComment, {
+      ...base,
+      annotations: Array.from({ length: 21 }, () => ({
+        type: "pin" as const,
+        x: 0.5,
+        y: 0.5,
+      })),
+    })
+  ).rejects.toThrow("at most 20");
+  await expect(
+    t.mutation(api.mediaVersionComments.addPublicComment, {
+      ...base,
+      annotations: [
+        {
+          type: "stroke",
+          points: Array.from({ length: 201 }, () => ({ x: 0.5, y: 0.5 })),
+        },
+      ],
+    })
+  ).rejects.toThrow("at most 200");
+  await expect(
+    t.mutation(api.mediaVersionComments.addPublicComment, {
+      ...base,
+      annotations: [{ type: "stroke", points: [{ x: 0.5, y: 0.5 }] }],
+    })
+  ).rejects.toThrow("at least two");
+  await expect(
+    t.mutation(api.mediaVersionComments.addPublicComment, {
+      ...base,
+      annotations: [{ type: "pin", x: Number.NaN, y: 0.5 }],
+    })
+  ).rejects.toThrow("finite");
+  await expect(
+    t.mutation(api.mediaVersionComments.addPublicComment, {
+      ...base,
+      annotations: [{ type: "pin", x: 4, y: 0.5 }],
+    })
+  ).rejects.toThrow("normalized");
+
+  expect(
+    (await t.query(api.mediaVersionComments.listForPortal, { token })).comments
+  ).toHaveLength(0);
+});
+
+test("an approved and locked version rejects annotated comments", async () => {
+  const t = convexTest(schema, modules);
+  await seed(t);
+  const { token } = await publishOpen(t);
+  await t.run(async (ctx) => {
+    const project = await ctx.db
+      .query("projects")
+      .withIndex("by_projectId", (q) => q.eq("id", "comments-project"))
+      .unique();
+    if (!project) throw new Error("Project fixture failed");
+    await ctx.db.patch(project._id, {
+      workflowStages: [
+        ...project.workflowStages,
+        { id: "approved", label: "Approved", purpose: "approved" },
+      ],
+    });
+  });
+  await t.mutation(api.projectPortals.approve, {
+    token,
+    outputId: "main-output",
+    mediaVersionId: "current-v1",
+    displayName: "Client",
+  });
+
+  await expect(
+    t.mutation(api.mediaVersionComments.addPublicComment, {
+      token,
+      ...annotationArgs,
+      annotations: [{ type: "pin", x: 0.4, y: 0.6 }],
+    })
+  ).rejects.toThrow("approved and locked");
+});
