@@ -5,6 +5,7 @@ import { v, type Infer } from "convex/values";
 // lands in the same place on the editor's desktop player.
 export const MAX_ANNOTATION_SHAPES = 20;
 export const MAX_STROKE_POINTS = 200;
+export const MAX_ANNOTATION_POINTS = 600;
 export const MIN_STROKE_POINTS = 2;
 // Normalizing a pointer position introduces float drift; values inside this
 // margin are clamped, anything further out is a malformed submission.
@@ -48,6 +49,14 @@ export function normalizeAnnotations(
   if (shapes.length > MAX_ANNOTATION_SHAPES)
     throw new Error(
       `A comment can hold at most ${MAX_ANNOTATION_SHAPES} annotations`
+    );
+  const totalPoints = shapes.reduce(
+    (total, shape) => total + (shape.type === "pin" ? 1 : shape.points.length),
+    0
+  );
+  if (totalPoints > MAX_ANNOTATION_POINTS)
+    throw new Error(
+      `A comment can hold at most ${MAX_ANNOTATION_POINTS} annotation points`
     );
   return shapes.map((shape) => {
     if (shape.type === "pin")

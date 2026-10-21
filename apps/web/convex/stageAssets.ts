@@ -1,6 +1,16 @@
 import { v } from "convex/values";
 import type { UserIdentity } from "convex/server";
-import { mutation, query, type MutationCtx } from "./_generated/server";
+import {
+  env,
+  httpAction,
+  internalMutation,
+  internalQuery,
+  mutation,
+  query,
+  type MutationCtx,
+} from "./_generated/server";
+import { internal } from "./_generated/api";
+import schema from "./schema";
 import type { Doc } from "./_generated/dataModel";
 import { requireProjectAccess } from "./projectAccess";
 import { recordProjectActivity } from "./projectActivity";
@@ -228,6 +238,10 @@ export const addLinkAsset = mutation({
  */
 export const generateUploadUrl = mutation({
   args: { projectId: v.string(), size: v.number() },
+  returns: v.object({
+    reservationId: v.id("workspaceStorageReservations"),
+    url: v.string(),
+  }),
   handler: async (ctx, args) => {
     const { identity, project } = await requireProjectAccess(
       ctx,
@@ -246,11 +260,101 @@ export const generateUploadUrl = mutation({
       args.size,
       entitlement.storageQuotaBytes
     );
+    const token = crypto.randomUUID();
+    await ctx.db.patch(reservationId, { stageUploadToken: token });
     return {
       reservationId,
-      url: await ctx.storage.generateUploadUrl(),
+      url: `${env.CONVEX_SITE_URL}/api/stage-assets/upload?token=${token}`,
     };
   },
+});
+
+export const uploadReservation = internalQuery({
+  args: { token: v.string() },
+  returns: v.union(schema.doc("workspaceStorageReservations"), v.null()),
+  handler: (ctx, args) =>
+    ctx.db
+      .query("workspaceStorageReservations")
+      .withIndex("by_stageUploadToken", (q) =>
+        q.eq("stageUploadToken", args.token)
+      )
+      .unique(),
+});
+
+/** Only the upload endpoint can bind newly stored bytes to a reservation. */
+export const bindUpload = internalMutation({
+  args: { token: v.string(), storageId: v.id("_storage") },
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    const reservation = await ctx.db
+      .query("workspaceStorageReservations")
+      .withIndex("by_stageUploadToken", (q) =>
+        q.eq("stageUploadToken", args.token)
+      )
+      .unique();
+    if (
+      !reservation ||
+      reservation.status !== "pending" ||
+      reservation.expiresAt <= Date.now() ||
+      reservation.storageId
+    )
+      throw new Error("Upload reservation unavailable");
+    const metadata = await ctx.db.system.get(args.storageId);
+    if (!metadata || metadata.size > reservation.bytes)
+      throw new Error("Uploaded file exceeds the reserved size");
+    await ctx.db.patch(reservation._id, {
+      storageId: args.storageId,
+      stageUploadToken: undefined,
+    });
+    return null;
+  },
+});
+
+const uploadHeaders = {
+  "access-control-allow-origin": "*",
+  "access-control-allow-methods": "POST, OPTIONS",
+  "access-control-allow-headers": "Content-Type",
+  "cache-control": "no-store",
+  "content-type": "application/json",
+};
+
+/** Keeps the direct-upload POST contract while recording server-side ownership. */
+export const upload = httpAction(async (ctx, request) => {
+  if (request.method === "OPTIONS")
+    return new Response(null, { status: 204, headers: uploadHeaders });
+  const token = new URL(request.url).searchParams.get("token");
+  if (!token)
+    return new Response("{}", { status: 400, headers: uploadHeaders });
+  const reservation = await ctx.runQuery(
+    internal.stageAssets.uploadReservation,
+    {
+      token,
+    }
+  );
+  if (
+    !reservation ||
+    reservation.status !== "pending" ||
+    reservation.expiresAt <= Date.now() ||
+    reservation.storageId
+  )
+    return new Response("{}", { status: 403, headers: uploadHeaders });
+  const blob = await request.blob();
+  if (blob.size > reservation.bytes)
+    return new Response("{}", { status: 413, headers: uploadHeaders });
+  const storageId = await ctx.storage.store(blob);
+  try {
+    await ctx.runMutation(internal.stageAssets.bindUpload, {
+      token,
+      storageId,
+    });
+  } catch {
+    await ctx.storage.delete(storageId);
+    return new Response("{}", { status: 403, headers: uploadHeaders });
+  }
+  return new Response(JSON.stringify({ storageId }), {
+    status: 200,
+    headers: uploadHeaders,
+  });
 });
 
 /**
@@ -278,6 +382,14 @@ export const addUploadedAsset = mutation({
     );
     await requireFileUploadCapability(ctx, project);
     const stage = requireStage(project, args.workflowStageId);
+    const reservation = await ctx.db.get(args.reservationId);
+    if (
+      !reservation ||
+      reservation.projectId !== project.id ||
+      reservation.uploaderUserId !== identity.tokenIdentifier ||
+      reservation.storageId !== args.storageId
+    )
+      throw new Error("Uploaded file does not belong to this reservation");
     const metadata = await ctx.db.system.get(args.storageId);
     if (!metadata) throw new Error("Uploaded file not found");
     const fileName = cleanText(args.fileName, 240) || "asset";
@@ -291,12 +403,20 @@ export const addUploadedAsset = mutation({
     const existing = await ctx.db
       .query("projectStageAssets")
       .withIndex("by_storageId", (q) => q.eq("storageId", args.storageId))
-      .unique();
+      .first();
     if (existing) {
       throw new Error(
         "This uploaded file is already attached to a stage asset"
       );
     }
+    const projectFileVersion = await ctx.db
+      .query("projectFileVersions")
+      .withIndex("by_storageId", (q) => q.eq("storageId", args.storageId))
+      .first();
+    if (projectFileVersion)
+      throw new Error(
+        "This uploaded file is already attached to a project version"
+      );
     await ensureAssetCapacity(ctx, project.id);
     const now = new Date().toISOString();
     const assetId = await ctx.db.insert("projectStageAssets", {

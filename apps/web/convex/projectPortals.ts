@@ -883,10 +883,13 @@ export const approve = mutation({
           )
           .unique();
     const teamId = project.teamId ?? workspace?._id;
-    const recipients = new Set([project.ownerUserId]);
+    const recipients = new Set<string>(
+      project.teamId ? [] : [project.ownerUserId]
+    );
     if (project.teamId) {
       const teamId = project.teamId;
       for (const userId of new Set([
+        project.ownerUserId,
         ...project.assigneeUserIds,
         shared.version.createdByUserId,
       ])) {
@@ -931,7 +934,7 @@ export const approve = mutation({
   },
 });
 
-/** Records a named visit after token and PIN validation; no network identifiers are stored. */
+/** Keeps the latest visit per name, up to 200 names per portal. */
 export const recordView = mutation({
   args: {
     token: v.string(),
@@ -944,6 +947,26 @@ export const recordView = mutation({
     if (!access.portal) throw new Error(`Portal access ${access.access}`);
     const displayName = args.displayName.trim().slice(0, 120);
     if (!displayName) throw new Error("Display name is required");
+    const existing = await ctx.db
+      .query("portalEvents")
+      .withIndex("by_portalId_and_kind_and_displayName", (q) =>
+        q
+          .eq("portalId", access.portal._id)
+          .eq("kind", "portal_viewed")
+          .eq("displayName", displayName)
+      )
+      .first();
+    if (existing) {
+      await ctx.db.patch(existing._id, { createdAt: new Date().toISOString() });
+      return null;
+    }
+    const views = await ctx.db
+      .query("portalEvents")
+      .withIndex("by_portalId_and_kind_and_displayName", (q) =>
+        q.eq("portalId", access.portal._id).eq("kind", "portal_viewed")
+      )
+      .take(200);
+    if (views.length >= 200) return null;
     await ctx.db.insert("portalEvents", {
       portalId: access.portal._id,
       kind: "portal_viewed",

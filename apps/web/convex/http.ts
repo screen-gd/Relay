@@ -2,6 +2,7 @@ import { httpRouter } from "convex/server";
 import { verifyWebhook } from "@clerk/backend/webhooks";
 import { internal } from "./_generated/api";
 import { httpAction } from "./_generated/server";
+import { upload as uploadStageAsset } from "./stageAssets";
 import {
   clerkUserIdFromBillingEvent,
   parseClerkBillingEvent,
@@ -51,6 +52,14 @@ function parseWaitlistInput(value: unknown): WaitlistInput | null {
 }
 
 const http = httpRouter();
+
+for (const method of ["POST", "OPTIONS"] as const) {
+  http.route({
+    path: "/api/stage-assets/upload",
+    method,
+    handler: uploadStageAsset,
+  });
+}
 
 http.route({
   path: "/api/clerk-billing",
