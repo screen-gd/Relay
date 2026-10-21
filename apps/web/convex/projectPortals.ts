@@ -20,6 +20,7 @@ import { resolveWorkspaceEntitlements } from "./workspaceSubscriptions";
 import { recordProjectActivity } from "./projectActivity";
 import { syncProjectLifecycle } from "./projectLifecycle";
 import schema from "./schema";
+import { stageAssetKindValidator } from "./stageAssetsValidators";
 
 type FunctionCtx = QueryCtx | MutationCtx;
 type PublicAccess = Infer<typeof publicPortalAccessValidator>;
@@ -66,6 +67,20 @@ const publicProjectionValidator = v.object({
     dueDate: v.union(v.string(), v.null()),
   }),
   editorDisplayName: v.string(),
+  stageAssets: v.array(
+    v.object({
+      stageLabel: v.string(),
+      assets: v.array(
+        v.object({
+          id: v.id("projectStageAssets"),
+          kind: stageAssetKindValidator,
+          title: v.string(),
+          stageLabel: v.string(),
+          url: v.string(),
+        })
+      ),
+    })
+  ),
   outputs: v.array(
     v.object({
       id: v.string(),
@@ -472,6 +487,59 @@ async function revisionAllowance(
   };
 }
 
+/** Projects explicitly shared assets without exposing storage or workspace metadata. */
+async function publicStageAssets(ctx: QueryCtx, project: Doc<"projects">) {
+  const assets = await ctx.db
+    .query("projectStageAssets")
+    .withIndex("by_projectId_and_createdAt", (q) =>
+      q.eq("projectId", project.id)
+    )
+    .order("desc")
+    .take(200);
+  const groups = project.workflowStages.map((stage) => ({
+    stageId: stage.id,
+    stageLabel: stage.label,
+  }));
+  const stageIds = new Set(groups.map((group) => group.stageId));
+  return (
+    await Promise.all(
+      [...groups, { stageId: undefined, stageLabel: "Unassigned" }].map(
+        async ({ stageId, stageLabel }) => {
+          const visible = [];
+          for (const asset of assets) {
+            if (
+              !asset.clientVisible ||
+              asset.archived ||
+              asset.ownerUserId !== project.ownerUserId ||
+              asset.teamId !== project.teamId ||
+              (stageIds.has(asset.workflowStageId ?? "")
+                ? asset.workflowStageId
+                : undefined) !== stageId
+            )
+              continue;
+            // Match portal file downloads. R2 signing requires a separate Node action.
+            const url =
+              asset.provider === "external"
+                ? asset.externalUrl
+                : asset.provider === "convex" && asset.storageId
+                  ? await ctx.storage.getUrl(asset.storageId)
+                  : null;
+            if (!url) continue;
+            visible.push({
+              id: asset._id,
+              kind: asset.kind,
+              title: asset.title,
+              stageLabel,
+              url,
+            });
+          }
+          return { stageLabel, assets: visible };
+        }
+      )
+    )
+  ).filter((group) => group.assets.length > 0);
+}
+
 async function publicProjection(
   ctx: QueryCtx,
   project: Doc<"projects">,
@@ -509,6 +577,7 @@ async function publicProjection(
     editorDisplayName:
       settings?.profileName.trim() || editor?.name.trim() || "Editor",
     outputs: await publicOutputs(ctx, project.id, portal),
+    stageAssets: await publicStageAssets(ctx, project),
     revisions: await revisionAllowance(ctx, project, workspace),
     branding: brandingAllowed
       ? {

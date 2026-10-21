@@ -89,6 +89,34 @@ async function setupProject(plan: "free" | "creator" = "creator") {
 }
 
 describe("stage assets", () => {
+  test("uploaded assets default to internal visibility", async () => {
+    const { t, owner } = await setupProject();
+    const { reservationId } = await owner.mutation(
+      api.stageAssets.generateUploadUrl,
+      {
+        projectId: "project-assets",
+        size: 5,
+      }
+    );
+    const storageId = await t.run((ctx) =>
+      ctx.storage.store(new Blob(["brief"], { type: "text/plain" }))
+    );
+    const assetId = await owner.mutation(api.stageAssets.addUploadedAsset, {
+      projectId: "project-assets",
+      workflowStageId: "planned",
+      kind: "brief",
+      title: "Private uploaded brief",
+      storageId,
+      reservationId,
+      fileName: "brief.txt",
+      mimeType: "text/plain",
+    });
+    expect(await t.run((ctx) => ctx.db.get(assetId))).toMatchObject({
+      clientVisible: false,
+      provider: "convex",
+    });
+  });
+
   test("adds a link to a stage and lists it with the stage id", async () => {
     const { owner } = await setupProject();
 

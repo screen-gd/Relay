@@ -386,8 +386,7 @@ export function ProjectStageAssets({
                 Client visible
               </OwnedLabel>
               <p className="text-text-3 type-label-sm">
-                Recorded on the asset. Client Portals do not publish stage
-                assets yet.
+                Visible assets show in the client portal.
               </p>
             </div>
             {!canUploadFiles ? (
