@@ -1,11 +1,13 @@
 /// <reference types="vite/client" />
 
 import { convexTest } from "convex-test";
-import { describe, expect, test } from "vitest";
+import { afterEach, describe, expect, test, vi } from "vitest";
 import { api } from "./_generated/api";
+import type { Id } from "./_generated/dataModel";
 import schema from "./schema";
 
 const modules = import.meta.glob("./**/*.ts");
+afterEach(() => vi.unstubAllEnvs());
 
 const ownerPermissions = {
   viewProjects: true,
@@ -18,6 +20,7 @@ const ownerPermissions = {
 };
 
 async function setupProject(plan: "free" | "creator" = "creator") {
+  vi.stubEnv("CONVEX_SITE_URL", "https://test.convex.site");
   const t = convexTest(schema, modules);
   const createdAt = new Date().toISOString();
   const workspaceId = await t.run((ctx) =>
@@ -88,26 +91,46 @@ async function setupProject(plan: "free" | "creator" = "creator") {
   };
 }
 
+async function uploadBrief(
+  t: ReturnType<typeof convexTest>,
+  upload: { url: string; reservationId: Id<"workspaceStorageReservations"> }
+) {
+  const url = new URL(upload.url);
+  const response = await t.fetch(url.pathname + url.search, {
+    method: "POST",
+    headers: { "content-type": "text/plain" },
+    body: "brief",
+  });
+  expect(response.status).toBe(200);
+  const reservation = await t.run((ctx) => ctx.db.get(upload.reservationId));
+  if (!reservation?.storageId) throw new Error("Upload was not bound");
+  expect(await response.json()).toEqual({ storageId: reservation.storageId });
+  return reservation.storageId;
+}
+
+const assetArgs = {
+  projectId: "project-assets",
+  kind: "brief",
+  title: "Brief",
+  fileName: "brief.txt",
+  mimeType: "text/plain",
+} as const;
+
 describe("stage assets", () => {
   test("uploaded assets default to internal visibility", async () => {
     const { t, owner } = await setupProject();
-    const { reservationId } = await owner.mutation(
-      api.stageAssets.generateUploadUrl,
-      {
-        projectId: "project-assets",
-        size: 5,
-      }
-    );
-    const storageId = await t.run((ctx) =>
-      ctx.storage.store(new Blob(["brief"], { type: "text/plain" }))
-    );
+    const upload = await owner.mutation(api.stageAssets.generateUploadUrl, {
+      projectId: "project-assets",
+      size: 5,
+    });
+    const storageId = await uploadBrief(t, upload);
     const assetId = await owner.mutation(api.stageAssets.addUploadedAsset, {
       projectId: "project-assets",
       workflowStageId: "planned",
       kind: "brief",
       title: "Private uploaded brief",
       storageId,
-      reservationId,
+      reservationId: upload.reservationId,
       fileName: "brief.txt",
       mimeType: "text/plain",
     });
@@ -115,6 +138,133 @@ describe("stage assets", () => {
       clientVisible: false,
       provider: "convex",
     });
+  });
+
+  test("rejects foreign storage IDs and binds the upload URL to one object", async () => {
+    const { t, owner } = await setupProject();
+    const upload = await owner.mutation(api.stageAssets.generateUploadUrl, {
+      projectId: "project-assets",
+      size: 5,
+    });
+    const foreignId = await t.run((ctx) =>
+      ctx.storage.store(new Blob(["other"], { type: "text/plain" }))
+    );
+    await expect(
+      owner.mutation(api.stageAssets.addUploadedAsset, {
+        ...assetArgs,
+        reservationId: upload.reservationId,
+        storageId: foreignId,
+      })
+    ).rejects.toThrow("does not belong to this reservation");
+    const storageId = await uploadBrief(t, upload);
+    const url = new URL(upload.url);
+    expect(
+      (
+        await t.fetch(url.pathname + url.search, {
+          method: "POST",
+          body: "brief",
+        })
+      ).status
+    ).toBe(403);
+    await expect(
+      owner.mutation(api.stageAssets.addUploadedAsset, {
+        ...assetArgs,
+        reservationId: upload.reservationId,
+        storageId: foreignId,
+      })
+    ).rejects.toThrow("does not belong to this reservation");
+    await owner.mutation(api.stageAssets.addUploadedAsset, {
+      ...assetArgs,
+      reservationId: upload.reservationId,
+      storageId,
+    });
+    await expect(
+      owner.mutation(api.stageAssets.addUploadedAsset, {
+        ...assetArgs,
+        reservationId: upload.reservationId,
+        storageId,
+      })
+    ).rejects.toThrow("already attached to a stage asset");
+  });
+
+  test.each([{ projectId: "other-project" }, { uploaderUserId: "other-user" }])(
+    "rejects an upload owned by another project or user: %j",
+    async (foreign) => {
+      const { t, owner } = await setupProject();
+      const upload = await owner.mutation(api.stageAssets.generateUploadUrl, {
+        projectId: "project-assets",
+        size: 5,
+      });
+      const storageId = await uploadBrief(t, upload);
+      await t.run((ctx) => ctx.db.patch(upload.reservationId, foreign));
+      await expect(
+        owner.mutation(api.stageAssets.addUploadedAsset, {
+          ...assetArgs,
+          reservationId: upload.reservationId,
+          storageId,
+        })
+      ).rejects.toThrow("does not belong to this reservation");
+    }
+  );
+
+  test("rejects project-file bytes even when bound to the supplied reservation", async () => {
+    const { t, owner } = await setupProject();
+    const upload = await owner.mutation(api.stageAssets.generateUploadUrl, {
+      projectId: "project-assets",
+      size: 5,
+    });
+    const storageId = await uploadBrief(t, upload);
+    await owner.mutation(api.projectFiles.saveStorageVersion, {
+      projectId: "project-assets",
+      storageId,
+      reservationId: upload.reservationId,
+      category: "Reference",
+      title: "File brief",
+      description: "",
+      status: "draft",
+      clientVisible: false,
+      downloadable: false,
+      fileName: "brief.txt",
+      mimeType: "text/plain",
+      notes: "",
+    });
+    await expect(
+      owner.mutation(api.stageAssets.addUploadedAsset, {
+        ...assetArgs,
+        reservationId: upload.reservationId,
+        storageId,
+      })
+    ).rejects.toThrow("already attached to a project version");
+  });
+
+  test("project files cannot reuse stage asset bytes", async () => {
+    const { t, owner } = await setupProject();
+    const upload = await owner.mutation(api.stageAssets.generateUploadUrl, {
+      projectId: "project-assets",
+      size: 5,
+    });
+    const storageId = await uploadBrief(t, upload);
+    await owner.mutation(api.stageAssets.addUploadedAsset, {
+      ...assetArgs,
+      reservationId: upload.reservationId,
+      storageId,
+    });
+    await expect(
+      owner.mutation(api.projectFiles.saveStorageVersion, {
+        projectId: "project-assets",
+        storageId,
+        reservationId: upload.reservationId,
+        category: "Reference",
+        title: "File brief",
+        description: "",
+        status: "draft",
+        clientVisible: false,
+        downloadable: false,
+        fileName: "brief.txt",
+        mimeType: "text/plain",
+        notes: "",
+      })
+    ).rejects.toThrow("already attached to a stage asset");
   });
 
   test("adds a link to a stage and lists it with the stage id", async () => {

@@ -1,7 +1,7 @@
 /// <reference types="vite/client" />
 
 import { convexTest } from "convex-test";
-import { expect, test } from "vitest";
+import { expect, test, vi } from "vitest";
 import { api } from "./_generated/api";
 import type { Doc } from "./_generated/dataModel";
 import schema from "./schema";
@@ -725,6 +725,102 @@ test("approval notifies assigned Team editors while notifications remain private
   await expect(
     t.query(api.projectPortals.listApprovalNotifications, {})
   ).rejects.toThrow("Not authenticated");
+});
+
+test.each([
+  { role: "Reviewer", status: "active", viewProjects: true },
+  { role: "Editor", status: "invited", viewProjects: true },
+  { role: "Editor", status: "active", viewProjects: false },
+] as const)(
+  "team approval excludes an ineligible project owner: %j",
+  async (access) => {
+    const { t, owner, ids, approval } = await approvalFixture(true);
+    await t.run(async (ctx) => {
+      const member = await ctx.db.query("teamMembers").first();
+      if (!member) throw new Error("Owner membership missing");
+      await ctx.db.patch(ids.projectId, { teamId: member.teamId });
+      await ctx.db.patch(member._id, {
+        role: access.role,
+        status: access.status,
+        permissions: {
+          ...member.permissions,
+          viewProjects: access.viewProjects,
+        },
+      });
+    });
+    await t.mutation(api.projectPortals.approve, approval);
+    expect(
+      await owner.query(api.projectPortals.listApprovalNotifications, {})
+    ).toEqual([]);
+  }
+);
+
+test("repeated named views update one row and the name cap preserves existing visits", async () => {
+  const { t, owner, portal } = await approvalFixture();
+  vi.useFakeTimers();
+  try {
+    const start = Date.UTC(2026, 9, 21, 12);
+    for (let i = 0; i < 10; i++) {
+      vi.setSystemTime(start + i * 1000);
+      await t.mutation(api.projectPortals.recordView, {
+        token: portal.token,
+        displayName: " Alex ",
+      });
+    }
+    expect(
+      await owner.query(api.projectPortals.listViews, {
+        projectId: "project-portal",
+      })
+    ).toEqual([
+      { displayName: "Alex", viewedAt: new Date(start + 9000).toISOString() },
+    ]);
+    const events = await t.run((ctx) =>
+      ctx.db
+        .query("portalEvents")
+        .withIndex("by_portalId_and_kind_and_displayName", (q) =>
+          q.eq("portalId", portal.portalId).eq("kind", "portal_viewed")
+        )
+        .take(201)
+    );
+    expect(events).toHaveLength(1);
+    const event = events[0];
+    if (!event) throw new Error("View missing");
+    const { _id, _creationTime, ...fields } = event;
+    await t.run(async (ctx) => {
+      for (let i = 0; i < 199; i++) {
+        await ctx.db.insert("portalEvents", {
+          ...fields,
+          displayName: `Client ${i}`,
+        });
+      }
+    });
+    vi.setSystemTime(start + 10_000);
+    await t.mutation(api.projectPortals.recordView, {
+      token: portal.token,
+      displayName: "New name",
+    });
+    await t.mutation(api.projectPortals.recordView, {
+      token: portal.token,
+      displayName: "Alex",
+    });
+    const capped = await t.run((ctx) =>
+      ctx.db
+        .query("portalEvents")
+        .withIndex("by_portalId_and_kind_and_displayName", (q) =>
+          q.eq("portalId", portal.portalId).eq("kind", "portal_viewed")
+        )
+        .take(201)
+    );
+    expect(capped).toHaveLength(200);
+    expect(capped.some((event) => event.displayName === "New name")).toBe(
+      false
+    );
+    expect(
+      capped.find((event) => event.displayName === "Alex")?.createdAt
+    ).toBe(new Date(start + 10_000).toISOString());
+  } finally {
+    vi.useRealTimers();
+  }
 });
 
 test("historical versions retain comments and approval while only the current shared cut can change", async () => {

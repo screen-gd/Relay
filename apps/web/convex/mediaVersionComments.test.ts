@@ -1,8 +1,9 @@
 /// <reference types="vite/client" />
 
 import { convexTest } from "convex-test";
-import { expect, test } from "vitest";
+import { expect, test, vi } from "vitest";
 import { api } from "./_generated/api";
+import type { AnnotationShape } from "./mediaVersionAnnotations";
 import schema from "./schema";
 
 const modules = import.meta.glob("./**/*.ts");
@@ -391,6 +392,180 @@ test("invalid annotations are rejected before they are stored", async () => {
     (await t.query(api.mediaVersionComments.listForPortal, { token })).comments
   ).toHaveLength(0);
 });
+
+test("annotations keep 20 shapes but allow only 600 total points, including pins", async () => {
+  const t = convexTest(schema, modules);
+  await seed(t);
+  const { token } = await publishOpen(t);
+  const shapes: AnnotationShape[] = [
+    ...Array.from({ length: 17 }, () => ({
+      type: "pin" as const,
+      x: 0.5,
+      y: 0.5,
+    })),
+    ...[200, 200, 183].map((length) => ({
+      type: "stroke" as const,
+      points: Array.from({ length }, () => ({ x: 0.5, y: 0.5 })),
+    })),
+  ];
+  const comment = await t.mutation(api.mediaVersionComments.addPublicComment, {
+    token,
+    ...annotationArgs,
+    annotations: shapes,
+  });
+  expect(comment.annotations).toEqual(shapes);
+  const last = shapes[19];
+  if (!last || last.type !== "stroke") throw new Error("Stroke missing");
+  last.points.push({ x: 0.5, y: 0.5 });
+  await expect(
+    t.mutation(api.mediaVersionComments.addPublicComment, {
+      token,
+      ...annotationArgs,
+      annotations: shapes,
+    })
+  ).rejects.toThrow("at most 600 annotation points");
+});
+
+test("a portal accepts ten public comments per minute and recovers after the window", async () => {
+  const t = convexTest(schema, modules);
+  await seed(t);
+  const { token } = await publishOpen(t);
+  vi.useFakeTimers();
+  try {
+    vi.setSystemTime(Date.UTC(2026, 9, 21, 12));
+    const args = { token, ...annotationArgs };
+    for (let i = 0; i < 10; i++)
+      await t.mutation(api.mediaVersionComments.addPublicComment, args);
+    await expect(
+      t.mutation(api.mediaVersionComments.addPublicComment, args)
+    ).rejects.toThrow("at most 10 comments per minute");
+    vi.setSystemTime(Date.now() + 60_001);
+    await t.mutation(api.mediaVersionComments.addPublicComment, args);
+    expect(
+      (await t.query(api.mediaVersionComments.listForPortal, { token }))
+        .comments
+    ).toHaveLength(11);
+  } finally {
+    vi.useRealTimers();
+  }
+});
+
+test("comment lists stay below the read limit with 20 outputs and legacy maximum annotations", async () => {
+  const t = convexTest({ schema, modules, transactionLimits: true });
+  await seed(t);
+  const { owner, token } = await publishOpen(t);
+  const versions = await t.run(async (ctx) => {
+    const originalOutput = await ctx.db.query("projectOutputs").first();
+    const originalVersion = await ctx.db.query("projectMediaVersions").first();
+    const portal = await ctx.db.query("projectPortals").first();
+    if (!originalOutput || !originalVersion || !portal)
+      throw new Error("Fixture missing");
+    const {
+      _id: outputId,
+      _creationTime: outputTime,
+      ...outputFields
+    } = originalOutput;
+    const {
+      _id: versionId,
+      _creationTime: versionTime,
+      ...versionFields
+    } = originalVersion;
+    const rows = [
+      {
+        outputId,
+        versionId,
+        outputName: "main-output",
+        versionName: "current-v1",
+      },
+    ];
+    for (let i = 1; i < 20; i++) {
+      const outputId = await ctx.db.insert("projectOutputs", {
+        ...outputFields,
+        id: `output-${i}`,
+      });
+      const versionId = await ctx.db.insert("projectMediaVersions", {
+        ...versionFields,
+        outputId,
+        id: `version-${i}`,
+      });
+      await ctx.db.patch(outputId, { currentMediaVersionId: versionId });
+      rows.push({
+        outputId,
+        versionId,
+        outputName: `output-${i}`,
+        versionName: `version-${i}`,
+      });
+    }
+    await ctx.db.patch(portal._id, {
+      selectedOutputIds: rows.map((row) => row.outputName),
+    });
+    return rows;
+  });
+  const annotations: AnnotationShape[] = Array.from({ length: 20 }, () => ({
+    type: "stroke",
+    points: Array.from({ length: 200 }, () => ({ x: 0.5, y: 0.5 })),
+  }));
+  for (const [index, version] of versions.entries()) {
+    await t.run(async (ctx) => {
+      for (let i = 0; i < (index === 0 ? 60 : 9); i++) {
+        await ctx.db.insert("mediaVersionComments", {
+          ownerUserId: "owner",
+          projectId: "comments-project",
+          outputId: version.outputId,
+          mediaVersionId: version.versionId,
+          authorName: "Client",
+          body: `${index}:${i}`,
+          annotations,
+          resolved: false,
+          createdAt: new Date(
+            Date.UTC(2026, 9, 21) + index * 60_000 + i * 1000
+          ).toISOString(),
+        });
+      }
+    });
+  }
+  // The previous per-output scan exceeded Convex's 16 MiB transaction budget.
+  await expect(
+    t.query(async (ctx) => {
+      for (const version of versions)
+        await ctx.db
+          .query("mediaVersionComments")
+          .withIndex("by_mediaVersionId", (q) =>
+            q.eq("mediaVersionId", version.versionId)
+          )
+          .order("desc")
+          .take(100);
+    })
+  ).rejects.toThrow("Read too much data");
+  const aggregate = await t.query(async (ctx) => {
+    const result = await ctx.runQuery(api.mediaVersionComments.listForPortal, {
+      token,
+    });
+    return { result, metrics: await ctx.meta.getTransactionMetrics() };
+  });
+  expect(aggregate.result.comments).toHaveLength(50);
+  expect(aggregate.result.comments[0]?.body).toBe("19:8");
+  expect(aggregate.result.comments[49]?.body).toBe("14:4");
+  expect(aggregate.metrics.bytesRead.used).toBeLessThan(8 * 1024 * 1024);
+  const selected = await t.query(api.mediaVersionComments.listForPortal, {
+    token,
+    outputId: "main-output",
+    mediaVersionId: "current-v1",
+  });
+  expect(selected.comments).toHaveLength(50);
+  expect(
+    selected.comments.every(
+      (comment) => comment.mediaVersionId === "current-v1"
+    )
+  ).toBe(true);
+  const project = await owner.query(api.mediaVersionComments.listForProject, {
+    projectId: "comments-project",
+  });
+  expect(project).toHaveLength(50);
+  expect(project.map((comment) => comment.body)).toEqual(
+    aggregate.result.comments.map((comment) => comment.body)
+  );
+}, 30_000);
 
 test("an approved and locked version rejects annotated comments", async () => {
   const t = convexTest(schema, modules);

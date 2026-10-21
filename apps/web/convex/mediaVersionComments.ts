@@ -21,7 +21,8 @@ import {
 type FunctionCtx = QueryCtx | MutationCtx;
 type ProjectPermission = "viewProjects" | "reviewProjects";
 
-const MAX_COMMENTS = 100;
+const MAX_COMMENTS = 50;
+const MAX_PUBLIC_COMMENTS_PER_MINUTE = 10;
 const MAX_COMMENT_BODY = 2_000;
 const MAX_AUTHOR_NAME = 120;
 
@@ -130,6 +131,7 @@ function publicComment(
 
 async function currentComments(ctx: QueryCtx, portal: Doc<"projectPortals">) {
   const comments: Array<ReturnType<typeof publicComment>> = [];
+  const streams = [];
   for (const outputId of portal.selectedOutputIds.slice(0, 20)) {
     const output = await ctx.db
       .query("projectOutputs")
@@ -143,40 +145,56 @@ async function currentComments(ctx: QueryCtx, portal: Doc<"projectPortals">) {
       !output.currentMediaVersionId
     )
       continue;
-    const versions = await ctx.db
-      .query("projectMediaVersions")
-      .withIndex("by_outputId_and_versionNumber", (q) =>
-        q.eq("outputId", output._id)
-      )
-      .take(100);
-    const current = versions.find(
-      (version) => version._id === output.currentMediaVersionId
-    );
-    if (!current) continue;
-    const rows = await ctx.db
+    const current = await ctx.db.get(output.currentMediaVersionId);
+    if (
+      !current ||
+      current.outputId !== output._id ||
+      current.projectId !== portal.projectId ||
+      current.ownerUserId !== portal.ownerUserId
+    )
+      continue;
+    const iterator = ctx.db
       .query("mediaVersionComments")
-      .withIndex("by_mediaVersionId", (q) =>
+      .withIndex("by_mediaVersionId_and_createdAt", (q) =>
         q.eq("mediaVersionId", current._id)
       )
       .order("desc")
-      .take(MAX_COMMENTS);
-    comments.push(
-      ...rows
-        .filter(
-          (comment) =>
-            comment.projectId === portal.projectId &&
-            comment.ownerUserId === portal.ownerUserId &&
-            comment.outputId === output._id
-        )
-        .map((comment) => publicComment(comment, output.id, current.id))
-    );
+      [Symbol.asyncIterator]();
+    streams.push({ iterator, head: await iterator.next(), output, current });
   }
-  return comments
-    .sort((left, right) => right.createdAt.localeCompare(left.createdAt))
-    .slice(0, MAX_COMMENTS);
+  // Merge version indexes: at most 50 rows plus one lookahead per output.
+  try {
+    for (let read = 0; read < MAX_COMMENTS; read++) {
+      let newest;
+      for (const stream of streams) {
+        if (stream.head.done) continue;
+        if (
+          !newest ||
+          stream.head.value.createdAt > newest.head.value.createdAt ||
+          (stream.head.value.createdAt === newest.head.value.createdAt &&
+            stream.head.value._creationTime > newest.head.value._creationTime)
+        )
+          newest = stream;
+      }
+      if (!newest || newest.head.done) break;
+      const comment = newest.head.value;
+      if (
+        comment.projectId === portal.projectId &&
+        comment.ownerUserId === portal.ownerUserId &&
+        comment.outputId === newest.output._id
+      )
+        comments.push(
+          publicComment(comment, newest.output.id, newest.current.id)
+        );
+      if (read + 1 < MAX_COMMENTS) newest.head = await newest.iterator.next();
+    }
+    return comments;
+  } finally {
+    for (const stream of streams) await stream.iterator.return?.();
+  }
 }
 
-/** Reads current comments by default, or a selected historical shared version. */
+/** Returns up to 50 recent comments, optionally from a selected shared version. */
 export const listForPortal = query({
   args: {
     token: v.string(),
@@ -203,7 +221,7 @@ export const listForPortal = query({
       if (!shared) throw new Error("Shared Media Version not found");
       const rows = await ctx.db
         .query("mediaVersionComments")
-        .withIndex("by_mediaVersionId", (q) =>
+        .withIndex("by_mediaVersionId_and_createdAt", (q) =>
           q.eq("mediaVersionId", shared.version._id)
         )
         .order("desc")
@@ -229,6 +247,7 @@ export const listForPortal = query({
   },
 });
 
+/** Accepts at most ten comments per portal in a sliding one-minute window. */
 export const addPublicComment = mutation({
   args: {
     token: v.string(),
@@ -270,7 +289,19 @@ export const addPublicComment = mutation({
       throw new Error(
         "Comments can only be added to the current shared Media Version"
       );
+    // A sliding portal-wide window bounds public writes without scanning history.
+    const recent = await ctx.db
+      .query("mediaVersionComments")
+      .withIndex("by_portalId_and_createdAt", (q) =>
+        q
+          .eq("portalId", result.portal._id)
+          .gte("createdAt", new Date(Date.now() - 60_000).toISOString())
+      )
+      .take(MAX_PUBLIC_COMMENTS_PER_MINUTE);
+    if (recent.length >= MAX_PUBLIC_COMMENTS_PER_MINUTE)
+      throw new Error("This portal accepts at most 10 comments per minute");
     const commentId = await ctx.db.insert("mediaVersionComments", {
+      portalId: result.portal._id,
       ownerUserId: result.portal.ownerUserId,
       projectId: result.portal.projectId,
       outputId: shared.output._id,
@@ -329,48 +360,32 @@ export const reopenPublicComment = mutation({
   },
 });
 
+/** Reads the 50 newest project comments across current and historical versions. */
 export const listForProject = query({
   args: { projectId: v.string() },
+  returns: v.array(publicCommentValidator),
   handler: async (ctx, args) => {
     await requireProjectAccess(ctx, args.projectId, "viewProjects");
-    const outputs = await ctx.db
-      .query("projectOutputs")
-      .withIndex("by_projectId", (q) => q.eq("projectId", args.projectId))
-      .take(100);
-    const outputById = new Map(
-      outputs.map((output) => [output._id, output.id])
+    const rows = await ctx.db
+      .query("mediaVersionComments")
+      .withIndex("by_projectId_and_createdAt", (q) =>
+        q.eq("projectId", args.projectId)
+      )
+      .order("desc")
+      .take(MAX_COMMENTS);
+    return Promise.all(
+      rows.map(async (comment) => {
+        const [output, version] = await Promise.all([
+          ctx.db.get(comment.outputId),
+          ctx.db.get(comment.mediaVersionId),
+        ]);
+        return publicComment(
+          comment,
+          output?.id ?? comment.outputId,
+          version?.id ?? comment.mediaVersionId
+        );
+      })
     );
-    const comments: Array<ReturnType<typeof publicComment>> = [];
-    for (const output of outputs) {
-      const versions = await ctx.db
-        .query("projectMediaVersions")
-        .withIndex("by_outputId_and_versionNumber", (q) =>
-          q.eq("outputId", output._id)
-        )
-        .take(100);
-      const versionById = new Map(
-        versions.map((version) => [version._id, version.id])
-      );
-      const rows = await ctx.db
-        .query("mediaVersionComments")
-        .withIndex("by_outputId_and_resolved", (q) =>
-          q.eq("outputId", output._id)
-        )
-        .order("desc")
-        .take(MAX_COMMENTS);
-      comments.push(
-        ...rows.map((comment) =>
-          publicComment(
-            comment,
-            outputById.get(comment.outputId) ?? comment.outputId,
-            versionById.get(comment.mediaVersionId) ?? comment.mediaVersionId
-          )
-        )
-      );
-    }
-    return comments
-      .sort((left, right) => right.createdAt.localeCompare(left.createdAt))
-      .slice(0, MAX_COMMENTS);
   },
 });
 
