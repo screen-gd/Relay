@@ -2,7 +2,7 @@ import { linkOptions, useNavigate } from "@tanstack/react-router";
 import { useCallback } from "react";
 
 export type ProjectWorkspaceView =
-  "overview" | "outputs" | "review" | "files" | "activity";
+  "overview" | "outputs" | "review" | "files" | "assets" | "activity";
 
 export function projectWorkspaceView(
   value: string | null
@@ -11,6 +11,7 @@ export function projectWorkspaceView(
     value === "outputs" ||
     value === "review" ||
     value === "files" ||
+    value === "assets" ||
     value === "activity"
     ? value
     : "overview";

@@ -137,6 +137,10 @@ type PrecisionProjectsProps = {
   onManageProjectGroups: (scope: WorkspaceScope) => void;
   /** Opens completed Projects; omitted where every Project is already listed. */
   onOpenHistory?: () => void;
+  /** Opens the Project's grouped stage assets, from a board card. */
+  onViewProjectAssets?: (item: WorkItem) => void;
+  /** Live stage asset counts keyed by Project id; absent until loaded. */
+  stageAssetCounts?: Readonly<Record<string, number>>;
   /** Shown above the list, such as the Free Project limit. */
   notice?: ReactNode;
 };
@@ -238,17 +242,21 @@ function ProjectBoardCard({
   project,
   selected,
   disabled,
+  assetCount,
   stageChoices,
   onSelect,
   onOpen,
+  onOpenAssets,
   onUpdateProjectStatus,
 }: {
   project: WorkItem;
   selected: boolean;
   disabled: boolean;
+  assetCount: number;
   stageChoices: ProjectStageMenuChoice[];
   onSelect: () => void;
   onOpen: () => void;
+  onOpenAssets: () => void;
   onUpdateProjectStatus: PrecisionProjectsProps["onUpdateProjectStatus"];
 }) {
   return (
@@ -288,6 +296,20 @@ function ProjectBoardCard({
             <span className="mt-3 block text-text-2 type-label-sm data">
               {formatDate(project.dueDate)}
             </span>
+            {assetCount ? (
+              <button
+                type="button"
+                className="mt-2 text-start text-text-2 type-label-sm data underline-offset-2 hover:text-text-1 hover:underline focus-visible:focus-ring"
+                aria-label={`View ${assetCount} stage assets for ${project.title}`}
+                onPointerDown={(event) => event.stopPropagation()}
+                onClick={(event) => {
+                  event.stopPropagation();
+                  onOpenAssets();
+                }}
+              >
+                {assetCount} {assetCount === 1 ? "asset" : "assets"}
+              </button>
+            ) : null}
           </div>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -1043,12 +1065,20 @@ export function PrecisionProjects(props: PrecisionProjectsProps) {
                                 !props.canUpdateProjectStatus &&
                                 Boolean(project.teamId)
                               }
+                              assetCount={
+                                props.stageAssetCounts?.[project.id] ?? 0
+                              }
                               stageChoices={getStageChoices(project)}
                               onSelect={() => {
                                 select(project);
                                 setMobileInspectorOpen(true);
                               }}
                               onOpen={() => props.onViewProject(project)}
+                              onOpenAssets={() => {
+                                if (props.onViewProjectAssets)
+                                  props.onViewProjectAssets(project);
+                                else props.onViewProject(project);
+                              }}
                               onUpdateProjectStatus={
                                 props.onUpdateProjectStatus
                               }
