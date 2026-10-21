@@ -18,6 +18,7 @@ const state = vi.hoisted(() => ({
   isAuthenticated: false,
   isLoading: false,
   workspace: undefined as typeof workspace | null | undefined,
+  pdfImportAvailable: undefined as boolean | undefined,
 }));
 
 vi.mock("convex/react", () => ({
@@ -25,10 +26,13 @@ vi.mock("convex/react", () => ({
     isAuthenticated: state.isAuthenticated,
     isLoading: state.isLoading,
   }),
-  useQuery: (fn: Parameters<typeof getFunctionName>[0]) =>
-    getFunctionName(fn) === "briefImport:workspace"
-      ? state.workspace
-      : undefined,
+  useQuery: (fn: Parameters<typeof getFunctionName>[0]) => {
+    const name = getFunctionName(fn);
+    if (name === "briefImport:workspace") return state.workspace;
+    if (name === "briefImport:pdfImportAvailable")
+      return state.pdfImportAvailable;
+    return undefined;
+  },
   useAction: () => vi.fn(),
   useMutation: () => vi.fn(),
 }));
@@ -41,14 +45,15 @@ beforeEach(() => {
   state.isAuthenticated = false;
   state.isLoading = false;
   state.workspace = undefined;
+  state.pdfImportAvailable = undefined;
 });
 
-function render() {
+function render(open = false) {
   return renderToStaticMarkup(
     <BriefImport
       clients={[]}
       onCreated={vi.fn()}
-      open={false}
+      open={open}
       onOpenChange={vi.fn()}
     />
   );
@@ -95,4 +100,18 @@ test("offers the import to a connected Workspace", () => {
   const html = render();
   expect(html).toContain("Import brief");
   expect(html).not.toContain('data-slot="ai-locked-notice"');
+});
+
+test("offers the PDF upload only when the deployment can store it", () => {
+  state.isAuthenticated = true;
+  state.workspace = workspace;
+  state.pdfImportAvailable = true;
+  const available = render(true);
+  expect(available).toContain('type="file"');
+  expect(available).toContain("PDF up to 10 MB");
+  state.pdfImportAvailable = false;
+  const unavailable = render(true);
+  expect(unavailable).not.toContain('type="file"');
+  expect(unavailable).toContain("PDF import is not available");
+  expect(unavailable).toContain("Paste up to 12,000 characters");
 });
