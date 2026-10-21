@@ -62,6 +62,8 @@ import type * as riskDigestPrompt from "../riskDigestPrompt.js";
 import type * as riskDigestValidators from "../riskDigestValidators.js";
 import type * as salaryPlans from "../salaryPlans.js";
 import type * as settings from "../settings.js";
+import type * as stageAssets from "../stageAssets.js";
+import type * as stageAssetsValidators from "../stageAssetsValidators.js";
 import type * as statusDrafts from "../statusDrafts.js";
 import type * as statusDraftsAccess from "../statusDraftsAccess.js";
 import type * as statusDraftsActions from "../statusDraftsActions.js";
@@ -143,6 +145,8 @@ declare const fullApi: ApiFromModules<{
   riskDigestValidators: typeof riskDigestValidators;
   salaryPlans: typeof salaryPlans;
   settings: typeof settings;
+  stageAssets: typeof stageAssets;
+  stageAssetsValidators: typeof stageAssetsValidators;
   statusDrafts: typeof statusDrafts;
   statusDraftsAccess: typeof statusDraftsAccess;
   statusDraftsActions: typeof statusDraftsActions;

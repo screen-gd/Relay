@@ -11,6 +11,7 @@ import { useProjectActivity } from "./project-activity";
 import { ProjectWorkspace } from "./project-workspace";
 import { useProjectNavigation } from "./project-view";
 import { useProjectsApplicationState } from "./use-projects-application-state";
+import { useStageAssetCounts } from "./project-stage-asset-data";
 
 export function ProjectsApplication({
   projectId,
@@ -31,6 +32,13 @@ export function ProjectsApplication({
   const { activeProjectView, setActiveProjectView, detailProjectId } =
     useProjectsApplicationState({ projectId, projectView });
   const isSample = sample || access.sample;
+  const stageAssetCounts = useStageAssetCounts(
+    isSample
+      ? []
+      : [...access.personalProjects, ...access.teamProjects]
+          .map((project) => project.id)
+          .slice(0, 100)
+  );
   const detailProject = projectId
     ? (access.items.find((project) => project.id === detailProjectId) ?? null)
     : null;
@@ -129,6 +137,15 @@ export function ProjectsApplication({
       }
       onNewProject={actions.openNewProject}
       onViewProject={actions.openProjectDetails}
+      onViewProjectAssets={(project) =>
+        void openProject({
+          projectId: project.id,
+          view: "assets",
+          sample: isSample,
+          replace: true,
+        })
+      }
+      stageAssetCounts={stageAssetCounts}
       onEditProject={actions.openEditProject}
       onDeleteProject={actions.requestDeleteProject}
       onArchiveProject={actions.archiveProject}

@@ -51,6 +51,7 @@ import type {
 } from "./project-view";
 import { ProjectSelect } from "@/features/projects/project-select";
 import { RevisionScopePanel } from "@/features/revision-scope/revision-scope-panel";
+import { ProjectStageAssets } from "./project-stage-assets";
 
 const statusOptions: ProjectStatus[] = [...PROJECT_STATUS_VALUES];
 
@@ -60,6 +61,7 @@ const projectViews: ReadonlyArray<{ id: ProjectWorkspaceView; label: string }> =
     { id: "outputs", label: "Outputs" },
     { id: "review", label: "Client review" },
     { id: "files", label: "Files" },
+    { id: "assets", label: "Assets" },
     { id: "activity", label: "Activity" },
   ];
 
@@ -484,6 +486,10 @@ export function ProjectWorkspace({
                   </ContentSection>
                   <ProjectFileManager project={project} canEdit={canEdit} />
                 </>
+              ) : null}
+
+              {view === "assets" ? (
+                <ProjectStageAssets project={project} canEdit={canEdit} />
               ) : null}
 
               {view === "activity" ? (
