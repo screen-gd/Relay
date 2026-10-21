@@ -367,6 +367,14 @@ async function insertVersion(
     throw new Error("This project has reached its 500-version history limit");
   }
   if (args.storageId) {
+    const stageAsset = await ctx.db
+      .query("projectStageAssets")
+      .withIndex("by_storageId", (q) => q.eq("storageId", args.storageId))
+      .first();
+    if (stageAsset)
+      throw new Error(
+        "This uploaded file is already attached to a stage asset"
+      );
     const existingStorageReference = await ctx.db
       .query("projectFileVersions")
       .withIndex("by_storageId", (q) => q.eq("storageId", args.storageId))
