@@ -266,6 +266,7 @@ export default defineSchema({
     .index("by_tokenHash", ["tokenHash"]),
 
   mediaVersionComments: defineTable({
+    portalId: v.optional(v.id("projectPortals")),
     ownerUserId: v.string(),
     projectId: v.string(),
     outputId: v.id("projectOutputs"),
@@ -279,7 +280,10 @@ export default defineSchema({
     createdAt: v.string(),
     resolvedAt: v.optional(v.string()),
   })
+    .index("by_projectId_and_createdAt", ["projectId", "createdAt"])
+    .index("by_portalId_and_createdAt", ["portalId", "createdAt"])
     .index("by_mediaVersionId", ["mediaVersionId"])
+    .index("by_mediaVersionId_and_createdAt", ["mediaVersionId", "createdAt"])
     .index("by_mediaVersionId_and_resolved", ["mediaVersionId", "resolved"])
     .index("by_outputId_and_resolved", ["outputId", "resolved"]),
 
@@ -347,6 +351,11 @@ export default defineSchema({
     createdAt: v.string(),
   })
     .index("by_portalId_and_createdAt", ["portalId", "createdAt"])
+    .index("by_portalId_and_kind_and_displayName", [
+      "portalId",
+      "kind",
+      "displayName",
+    ])
     .index("by_portalId_and_kind_and_createdAt", [
       "portalId",
       "kind",
@@ -464,6 +473,8 @@ export default defineSchema({
     projectId: v.string(),
     uploaderUserId: v.string(),
     bytes: v.number(),
+    stageUploadToken: v.optional(v.string()),
+    storageId: v.optional(v.id("_storage")),
     status: v.union(
       v.literal("pending"),
       v.literal("committed"),
@@ -471,7 +482,9 @@ export default defineSchema({
     ),
     createdAt: v.string(),
     expiresAt: v.number(),
-  }).index("by_workspaceId_and_status", ["workspaceId", "status"]),
+  })
+    .index("by_workspaceId_and_status", ["workspaceId", "status"])
+    .index("by_stageUploadToken", ["stageUploadToken"]),
 
   clientContacts: defineTable({
     workspaceId: v.id("teamWorkspaces"),
