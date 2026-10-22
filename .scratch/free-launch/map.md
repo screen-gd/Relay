@@ -15,7 +15,7 @@ All 25 GitHub issues below are open at this snapshot. Implemented work is not ye
 
 PR #122 targets `main` so GitHub recognizes its `Closes` links for #93, #103, #104, #107, and #115. Until #109 merges, #122's diff also includes that PR's changes. No repository default-branch or branch-protection change is required.
 
-The implementation handoff reports 302 Convex tests and 315 unit tests passing, plus type checking, MUI allowlist, design, CSP, and app production-build checks. This tracking update does not rerun those checks or claim live-account verification.
+The latest verification passes 311 Convex tests and 315 unit tests, both app typechecks and production builds, MUI allowlist, design, CSP and marketing-origin checks. Both Cloudflare builds also pass locally. These checks do not establish live-account behavior.
 
 ## Implemented in PR #122
 
@@ -30,14 +30,14 @@ The implementation handoff reports 302 Convex tests and 315 unit tests passing, 
 These checks remain separate from the five implementation issues' automatic closure.
 
 - [#88: Relay name clearance](https://github.com/screen-gd/Relay/issues/88). Screen's decision remains open.
-- [#90: Matching releases](https://github.com/screen-gd/Relay/issues/90). Deploy matching app, marketing, and Convex revisions only after separate release authorization. No deployment has been performed.
+- [#90: Matching releases](https://github.com/screen-gd/Relay/issues/90). Convex production deployment is authorized, but requires the matching app CSP first. App publication approval and Cloudflare access are pending. No deployment has been performed.
 - [#91: Production authentication](https://github.com/screen-gd/Relay/issues/91). Verify Clerk sign-in and Convex identity on the intended release.
 - [#92: Workspace BYOK](https://github.com/screen-gd/Relay/issues/92). Configure and verify the intended production encryption key and provider flow.
-- [#94: Privacy and terms](https://github.com/screen-gd/Relay/issues/94). [Rechecked October 23](issues/01-check-byok-policy.md): BYOK copy is in #109, but live policies still lack it. Deletion claims, the marketing provider list, production retention, contact routing, and Screen's approval remain open. The 24 focused BYOK tests pass. No closing link is configured.
+- [#94: Privacy and terms](https://github.com/screen-gd/Relay/issues/94). [Updated October 23](issues/01-check-byok-policy.md): BYOK copy is in #109; #122 implements cleanup and aligns deletion/provider/contact source copy. Publication, production retention, mail verification and Screen's policy review remain open. No closing link is configured.
 - [#95: Editor and client journeys](https://github.com/screen-gd/Relay/issues/95). Verify the deployed revision, including the portal approval, annotations, visibility, and Free limits above. Record the environment and results. Screen owns live-account testing.
-- [#96: Support email](https://github.com/screen-gd/Relay/issues/96). Align addresses and verify receipt and replies.
+- [#96: Support email](https://github.com/screen-gd/Relay/issues/96). Source addresses now agree; verify receipt and replies.
 - [#97: Recovery and monitoring](https://github.com/screen-gd/Relay/issues/97). Prove cloud recovery and production monitoring.
-- [#98: Marketing promises and metadata](https://github.com/screen-gd/Relay/issues/98). [Rechecked October 23](issues/02-check-marketing-release.md): live metadata/discovery URLs, app links, missing-page behavior, and roadmap removal pass. Build/release provenance, the approval promise before #122 ships, deletion copy, and contact/provider alignment remain open.
+- [#98: Marketing promises and metadata](https://github.com/screen-gd/Relay/issues/98). [Updated October 23](issues/02-check-marketing-release.md): live metadata/discovery URLs, app links, missing-page behavior and roadmap removal pass. Source deletion/provider/contact corrections are in #122. Build/release provenance, matching client-approval publication and live copy verification remain open.
 
 ## Deferred work
 

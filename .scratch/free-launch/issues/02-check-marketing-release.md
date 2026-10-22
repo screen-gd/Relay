@@ -1,6 +1,6 @@
 # 02: Check marketing release claims and metadata
 
-Status: open; deployed discovery checks pass, release/configuration evidence and copy alignment pending
+Status: open; source corrections and deployed discovery checks pass, publication and release/configuration evidence pending
 
 Implementation follow-up (2026-10-23): PR #122 implements the deletion promise, describes shared-record/background-cleanup limits, adds optional Gemini/OpenAI processing to the provider list, uses one shared support address, and removes obsolete roadmap-token setup instructions. Marketing build/typecheck and both server checks pass. Production release evidence and the live publication check remain open. The current app CSP blocks the backend's secure upload endpoint until the matching app build is published. Cloudflare account sign-in is needed to repair its build checks; no production backend push has occurred yet.
 Updated: 2026-10-23
@@ -21,10 +21,11 @@ Blocked by: matching release #90; related policy #94 and support #96 checks
 
 - [ ] Record the intended marketing build environment and matching deployed revision with #90. Source settings and served URLs are correct, but the hosting build dashboard was not inspected and the deployed commit was not established.
 - [ ] Align the live homepage's client-approval promise with the matching app/Convex release. Implementation remains in open PR #122.
-- [ ] Resolve the complete-deletion promise mismatch and omitted AI providers described in [the #94 check](01-check-byok-policy.md).
+- [x] Implement the deletion cleanup, correct source promises and add optional AI providers described in [the #94 check](01-check-byok-policy.md).
+- [ ] Publish and verify the corrected trust page after owner policy review.
 - [ ] Confirm marketing/app contact routing in #96.
-- [ ] Remove the stale roadmap/token instructions from `apps/website/.env.example` when making the copy/configuration correction.
+- [x] Remove the stale roadmap/token instructions from `apps/website/.env.example`.
 
-The public documents were read through HTTP. No deployment, source-code change, signed-in browser journey, email send, or search indexing verification was performed. Keep #98 open and do not add an automatic closing link yet.
+The public documents were read through HTTP; PR #122 contains the subsequent source corrections. No deployment, signed-in browser journey, email send, or search indexing verification was performed. Keep #98 open and do not add an automatic closing link yet.
 
 Back to the [Free launch map](../map.md).
