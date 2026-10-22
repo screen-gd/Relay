@@ -3,7 +3,7 @@
 Updated: 2026-10-23
 Status: implementation awaiting merge; launch verification pending
 
-Implementation follow-up: Project deletion now has bounded background cleanup, bound native uploads, original-Workspace storage accounting, retries, confirmed brief-result removal, and stale resource import guards. The second independent review cleared all five findings; 311 Convex tests and 315 unit tests pass. Both app builds, both typechecks, design/MUI checks and marketing tests pass. Production dry runs pass without index deletions. The live app still blocks `*.convex.site` in its CSP, so publish the matching app build before deploying the new upload backend. Cloudflare build repair is waiting for account sign-in.
+Implementation follow-up: Project deletion now has bounded background cleanup, bound native uploads, original-Workspace storage accounting, retries, confirmed brief-result removal, and stale resource import guards. The second independent review cleared all five findings; 313 Convex tests and 320 unit tests pass. Both app builds, both typechecks, design/MUI checks and marketing tests pass. Production dry runs pass without index deletions. The live app still blocks `*.convex.site` in its CSP, so publish the matching app build before deploying the new upload backend. Cloudflare build repair is waiting for account sign-in.
 
 GitHub repository: [screen-gd/Relay](https://github.com/screen-gd/Relay/issues).
 All 25 GitHub issues below are open at this snapshot. Implemented work is not yet deployed.
@@ -15,7 +15,7 @@ All 25 GitHub issues below are open at this snapshot. Implemented work is not ye
 
 PR #122 targets `main` so GitHub recognizes its `Closes` links for #93, #103, #104, #107, and #115. Until #109 merges, #122's diff also includes that PR's changes. No repository default-branch or branch-protection change is required.
 
-The latest verification passes 311 Convex tests and 315 unit tests, both app typechecks and production builds, MUI allowlist, design, CSP and marketing-origin checks. Both Cloudflare builds also pass locally. These checks do not establish live-account behavior.
+The latest verification passes 313 Convex tests and 320 unit tests, both app typechecks and production builds, MUI allowlist, design, CSP and marketing-origin checks. Both Cloudflare builds also pass locally. These checks do not establish live-account behavior.
 
 ## Implemented in PR #122
 

@@ -17,11 +17,14 @@ export type StageAssetKind = (typeof STAGE_ASSET_KINDS)[number];
 export type StageAssetId = Id<"projectStageAssets">;
 
 /** Project stage assets: the list, the upload reservation, and the editors. */
-export function useProjectStageAssets(projectId: string) {
+export function useProjectStageAssets(
+  projectId: string,
+  includeArchived = false
+) {
   const auth = useConvexAuth();
   const data = useQuery(
     api.stageAssets.listForProject,
-    auth.isAuthenticated ? { projectId } : "skip"
+    auth.isAuthenticated ? { projectId, includeArchived } : "skip"
   );
   return {
     ...auth,
@@ -31,6 +34,7 @@ export function useProjectStageAssets(projectId: string) {
     generateUploadUrl: useMutation(api.stageAssets.generateUploadUrl),
     addUploadedAsset: useMutation(api.stageAssets.addUploadedAsset),
     removeAsset: useMutation(api.stageAssets.removeAsset),
+    permanentlyDeleteAsset: useMutation(api.stageAssets.permanentlyDeleteAsset),
     releaseUploadReservation: useMutation(
       api.projectFiles.releaseUploadReservation
     ),

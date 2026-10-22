@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import {
   MAX_STROKE_POINTS,
+  addAnnotationShape,
+  extendAnnotationStroke,
   type AnnotationPoint,
   type AnnotationShape,
 } from "./media-version-annotations";
@@ -133,15 +135,18 @@ export function FrameAnnotationEditor({
   onChange,
   label,
   disabled = false,
+  preview,
   children,
 }: {
   shapes: readonly AnnotationShape[];
   onChange: (next: AnnotationShape[]) => void;
   label: string;
   disabled?: boolean;
+  preview?: { shapes: readonly AnnotationShape[]; label: string };
   children?: ReactNode;
 }) {
   const [tool, setTool] = useState<Tool | null>(null);
+  const [limitMessage, setLimitMessage] = useState("");
   const drawing = useRef<number | null>(null);
   const active = !disabled && tool !== null;
 
@@ -150,21 +155,32 @@ export function FrameAnnotationEditor({
   }
 
   function undo() {
+    setLimitMessage("");
     onChange(shapes.slice(0, -1));
   }
 
   function start(event: PointerEvent<SVGSVGElement>) {
-    if (!active || !tool) return;
+    if (!active || !tool || drawing.current !== null) return;
     event.preventDefault();
-    event.currentTarget.setPointerCapture(event.pointerId);
-    drawing.current = event.pointerId;
     const point = readPoint(event);
-    if (tool === "pin") {
-      onChange([...shapes, { type: "pin", x: point.x, y: point.y }]);
-      drawing.current = null;
+    const next = addAnnotationShape(
+      shapes,
+      tool === "pin"
+        ? { type: "pin", x: point.x, y: point.y }
+        : { type: "stroke", points: [point, point] }
+    );
+    if (!next) {
+      setLimitMessage(
+        "Drawing limit reached. Undo or clear marks to add more."
+      );
       return;
     }
-    onChange([...shapes, { type: "stroke", points: [point, point] }]);
+    setLimitMessage("");
+    onChange(next);
+    if (tool === "stroke") {
+      event.currentTarget.setPointerCapture(event.pointerId);
+      drawing.current = event.pointerId;
+    }
   }
 
   function move(event: PointerEvent<SVGSVGElement>) {
@@ -178,11 +194,16 @@ export function FrameAnnotationEditor({
       Math.abs(previous.x - point.x) + Math.abs(previous.y - point.y) < 0.002
     )
       return;
-    const points =
-      last.points.length >= MAX_STROKE_POINTS
-        ? last.points
-        : [...last.points, point];
-    onChange([...shapes.slice(0, -1), { type: "stroke", points }]);
+    const next = extendAnnotationStroke(shapes, point);
+    if (!next) {
+      setLimitMessage(
+        last.points.length >= MAX_STROKE_POINTS
+          ? "Stroke limit reached. Start another stroke, or undo a mark."
+          : "Drawing limit reached. Undo or clear marks to add more."
+      );
+      return;
+    }
+    onChange(next);
   }
 
   function end(event: PointerEvent<SVGSVGElement>) {
@@ -201,6 +222,13 @@ export function FrameAnnotationEditor({
         )}
       >
         {children}
+        {preview ? (
+          <AnnotationOverlay
+            shapes={preview.shapes}
+            label={preview.label}
+            className="pointer-events-none"
+          />
+        ) : null}
         <svg
           viewBox={`0 0 ${FRAME_WIDTH} ${FRAME_HEIGHT}`}
           preserveAspectRatio="none"
@@ -259,13 +287,21 @@ export function FrameAnnotationEditor({
             size="sm"
             variant="ghost"
             disabled={!shapes.length}
-            onClick={() => onChange([])}
+            onClick={() => {
+              setLimitMessage("");
+              onChange([]);
+            }}
           >
             <Trash2 aria-hidden="true" />
             Clear
           </Button>
         </div>
       )}
+      {!disabled && limitMessage ? (
+        <p role="status" className="mt-2 text-muted-foreground type-label-sm">
+          {limitMessage}
+        </p>
+      ) : null}
     </section>
   );
 }

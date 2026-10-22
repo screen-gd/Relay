@@ -39,10 +39,7 @@ import {
 import type { MediaVersionComment } from "@/features/media-version-comments/media-version-comments";
 import { parseMediaVersionComments } from "@/features/media-version-comments/media-version-comments-data";
 import type { AnnotationShape } from "@/features/media-version-comments/media-version-annotations";
-import {
-  FrameAnnotationEditor,
-  AnnotationOverlay,
-} from "@/features/media-version-comments/annotation-overlay";
+import { FrameAnnotationEditor } from "@/features/media-version-comments/annotation-overlay";
 import { trackOptionalEvent } from "@/lib/telemetry";
 import { cn } from "@/lib/utils";
 import { RelayBrand } from "@/app/relay-brand";
@@ -1588,33 +1585,32 @@ export function PublicOutputRow({
           </p>
         </section>
       ) : null}
-      {selected && (embedUrl || canComment) ? (
-        <div className="sm:col-span-2">
+      {selected && (embedUrl || canComment || previewComment) ? (
+        <div
+          className="sm:col-span-2"
+          onPointerDown={() => setPreviewComment(undefined)}
+        >
           <FrameAnnotationEditor
             shapes={annotations}
             onChange={setAnnotations}
             label={`Frame notes for ${output.title}`}
             disabled={!canComment}
+            preview={
+              previewComment?.annotations?.length
+                ? {
+                    shapes: previewComment.annotations,
+                    label: `Frame marks from ${previewComment.authorName}'s comment`,
+                  }
+                : undefined
+            }
           >
             {embedUrl ? (
-              <div
-                className="relative"
-                onPointerDown={() => setPreviewComment(undefined)}
-              >
-                <ReviewVideoPlayer
-                  key={selected.id}
-                  url={embedUrl}
-                  title={`${output.title} — ${selected.label}`}
-                  onReady={setPlayer}
-                />
-                {previewComment?.annotations?.length ? (
-                  <AnnotationOverlay
-                    shapes={previewComment.annotations}
-                    label={`Frame marks from ${previewComment.authorName}'s comment`}
-                    className="pointer-events-none"
-                  />
-                ) : null}
-              </div>
+              <ReviewVideoPlayer
+                key={selected.id}
+                url={embedUrl}
+                title={`${output.title} — ${selected.label}`}
+                onReady={setPlayer}
+              />
             ) : undefined}
           </FrameAnnotationEditor>
         </div>

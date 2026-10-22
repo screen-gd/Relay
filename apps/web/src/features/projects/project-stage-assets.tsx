@@ -60,6 +60,7 @@ export function ProjectStageAssets({
   canEdit: boolean;
 }) {
   const confirm = useConfirm();
+  const [showArchived, setShowArchived] = useState(false);
   const {
     isAuthenticated,
     isLoading,
@@ -68,9 +69,10 @@ export function ProjectStageAssets({
     generateUploadUrl,
     addUploadedAsset,
     removeAsset,
+    permanentlyDeleteAsset,
     releaseUploadReservation,
     parseStorageId,
-  } = useProjectStageAssets(project.id);
+  } = useProjectStageAssets(project.id, showArchived);
   const subscription = useQuery(
     api.workspaceSubscriptions.getCurrent,
     isAuthenticated ? {} : "skip"
@@ -197,22 +199,32 @@ export function ProjectStageAssets({
   async function remove(asset: StageAsset) {
     if (
       !(await confirm({
-        title: "Remove this asset?",
-        description: "It is archived, so project history keeps it.",
-        confirmLabel: "Remove",
+        title: asset.archived
+          ? "Permanently delete this asset?"
+          : "Archive this asset?",
+        description: asset.archived
+          ? asset.provider === "external"
+            ? "The asset link is removed permanently. Project Activity is kept. The file stays with its provider."
+            : "The uploaded file is deleted and its storage is freed. This cannot be undone. Project Activity is kept."
+          : "It is hidden from the stage and client portal. Hosted files still use storage until you delete them permanently.",
+        confirmLabel: asset.archived ? "Delete permanently" : "Archive",
         destructive: true,
       }))
     )
       return;
     try {
+      setBusy(true);
       setError("");
-      await removeAsset({ assetId: asset._id });
+      if (asset.archived) await permanentlyDeleteAsset({ assetId: asset._id });
+      else await removeAsset({ assetId: asset._id });
     } catch (caught) {
       setError(
         caught instanceof Error
           ? caught.message
           : "Could not remove this asset."
       );
+    } finally {
+      setBusy(false);
     }
   }
 
@@ -235,6 +247,15 @@ export function ProjectStageAssets({
         }
         bodyMode="flush"
       >
+        {canEdit && isAuthenticated ? (
+          <OwnedLabel className="flex items-center gap-2 px-4 py-3 text-text-2 type-label-sm">
+            <OwnedSwitch
+              checked={showArchived}
+              onCheckedChange={setShowArchived}
+            />
+            Show archived assets
+          </OwnedLabel>
+        ) : null}
         {isLoading ? (
           <div className="grid gap-2 p-4">
             <OwnedSkeleton className="h-10" />
@@ -284,12 +305,18 @@ export function ProjectStageAssets({
                         <span className="shrink-0 text-text-3 type-label-sm">
                           {STAGE_ASSET_KIND_LABELS[asset.kind]}
                         </span>
+                        {asset.archived ? (
+                          <span className="text-text-3 type-label-sm">
+                            Archived
+                          </span>
+                        ) : null}
                         {canEdit ? (
                           <OwnedButton
                             type="button"
                             variant="ghost"
                             size="icon-sm"
-                            aria-label={`Remove ${asset.title}`}
+                            aria-label={`${asset.archived ? "Permanently delete" : "Archive"} ${asset.title}`}
+                            disabled={busy}
                             onClick={() => void remove(asset)}
                           >
                             <Trash2 aria-hidden="true" />

@@ -445,4 +445,104 @@ describe("stage assets", () => {
     const stored = await t.run((ctx) => ctx.db.get(assetId));
     expect(stored?.archived).toBe(true);
   });
+
+  test("permanent deletion frees native storage, preserves Activity and is idempotent", async () => {
+    const { t, owner } = await setupProject();
+    const upload = await owner.mutation(api.stageAssets.generateUploadUrl, {
+      projectId: "project-assets",
+      size: 5,
+    });
+    const storageId = await uploadBrief(t, upload);
+    const assetId = await owner.mutation(api.stageAssets.addUploadedAsset, {
+      ...assetArgs,
+      reservationId: upload.reservationId,
+      storageId,
+    });
+    await expect(
+      owner.mutation(api.stageAssets.permanentlyDeleteAsset, { assetId })
+    ).rejects.toThrow("Archive this asset");
+    const intruder = t.withIdentity({
+      tokenIdentifier: "intruder",
+      subject: "intruder",
+    });
+    await expect(
+      intruder.mutation(api.stageAssets.permanentlyDeleteAsset, { assetId })
+    ).rejects.toThrow("Project access required");
+    await owner.mutation(api.stageAssets.removeAsset, { assetId });
+    expect(
+      await t.run(async (ctx) => (await ctx.storage.get(storageId)) !== null)
+    ).toBe(true);
+    expect(
+      await t.run((ctx) => ctx.db.query("workspaceSubscriptions").unique())
+    ).toMatchObject({ retainedStorageBytes: 5 });
+    await owner.mutation(api.stageAssets.permanentlyDeleteAsset, { assetId });
+    await owner.mutation(api.stageAssets.permanentlyDeleteAsset, { assetId });
+    expect(await t.run((ctx) => ctx.storage.get(storageId))).toBeNull();
+    expect(await t.run((ctx) => ctx.db.get(assetId))).toBeNull();
+    expect(
+      await t.run((ctx) => ctx.db.query("workspaceSubscriptions").unique())
+    ).toMatchObject({ retainedStorageBytes: 0 });
+    const history = await owner.query(api.projectActivity.listForProject, {
+      projectId: "project-assets",
+    });
+    expect(
+      history.filter((event) => event.message.includes("permanently deleted"))
+    ).toHaveLength(1);
+    expect(history.some((event) => event.kind === "project_file_added")).toBe(
+      true
+    );
+  });
+
+  test("permanent deletion credits the original upload Workspace after membership changes", async () => {
+    const { t, owner } = await setupProject();
+    const upload = await owner.mutation(api.stageAssets.generateUploadUrl, {
+      projectId: "project-assets",
+      size: 5,
+    });
+    const storageId = await uploadBrief(t, upload);
+    const assetId = await owner.mutation(api.stageAssets.addUploadedAsset, {
+      ...assetArgs,
+      reservationId: upload.reservationId,
+      storageId,
+    });
+    const original = await t.run((ctx) =>
+      ctx.db.query("workspaceSubscriptions").unique()
+    );
+    if (!original) throw new Error("Subscription missing");
+    const otherWorkspace = await t.run(async (ctx) => {
+      const other = await ctx.db.insert("teamWorkspaces", {
+        ownerUserId: "owner",
+        name: "New Workspace",
+        inviteCode: "NEW",
+        createdAt: new Date().toISOString(),
+      });
+      const { _id, _creationTime, ...subscription } = original;
+      await ctx.db.insert("workspaceSubscriptions", {
+        ...subscription,
+        workspaceId: other,
+        retainedStorageBytes: 100,
+      });
+      const membership = await ctx.db.query("teamMembers").unique();
+      if (!membership) throw new Error("Membership missing");
+      await ctx.db.patch(membership._id, { teamId: other });
+      // Legacy rows can use the committed reservation's recorded charge.
+      await ctx.db.patch(assetId, { storageWorkspaceId: undefined });
+      return other;
+    });
+    await owner.mutation(api.stageAssets.removeAsset, { assetId });
+    await owner.mutation(api.stageAssets.permanentlyDeleteAsset, { assetId });
+    expect(await t.run((ctx) => ctx.db.get(original._id))).toMatchObject({
+      retainedStorageBytes: 0,
+    });
+    expect(
+      await t.run((ctx) =>
+        ctx.db
+          .query("workspaceSubscriptions")
+          .withIndex("by_workspaceId", (q) =>
+            q.eq("workspaceId", otherWorkspace)
+          )
+          .unique()
+      )
+    ).toMatchObject({ retainedStorageBytes: 100 });
+  });
 });

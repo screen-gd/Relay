@@ -53,9 +53,11 @@ function commentDate(value: string) {
 function CommentAnnotation({
   comment,
   onSeek,
+  onSelect,
 }: {
   comment: MediaVersionComment;
   onSeek?: (seconds: number) => void;
+  onSelect?: () => void;
 }) {
   const shapes = comment.annotations;
   if (!shapes?.length) return null;
@@ -75,12 +77,19 @@ function CommentAnnotation({
   );
   return (
     <div className="mt-3">
-      {onSeek && seconds !== undefined ? (
+      {onSelect || (onSeek && seconds !== undefined) ? (
         <button
           type="button"
-          aria-label={`Show the frame at ${formatReviewTimestamp(seconds)}`}
+          aria-label={
+            seconds === undefined
+              ? "Show frame marks on the player"
+              : `Show the frame at ${formatReviewTimestamp(seconds)}`
+          }
           className="block w-full max-w-72 outline-none focus-visible:focus-ring"
-          onClick={() => onSeek(seconds)}
+          onClick={() => {
+            onSelect?.();
+            if (seconds !== undefined) onSeek?.(seconds);
+          }}
         >
           {frame}
         </button>
@@ -96,11 +105,13 @@ function CommentRow({
   action,
   busy,
   onSeek,
+  onSelect,
 }: {
   comment: MediaVersionComment;
   action?: () => Promise<void>;
   busy?: boolean;
   onSeek?: (seconds: number) => void;
+  onSelect?: () => void;
 }) {
   return (
     <article id={`comment-${comment.id}`} className="rounded-lg bg-well p-3">
@@ -131,7 +142,10 @@ function CommentRow({
             variant="outline"
             size="sm"
             className="mt-3"
-            onClick={() => onSeek(comment.timestampSeconds!)}
+            onClick={() => {
+              onSeek(comment.timestampSeconds!);
+              onSelect?.();
+            }}
           >
             Jump to {formatReviewTimestamp(comment.timestampSeconds)}
           </Button>
@@ -142,7 +156,11 @@ function CommentRow({
         )
       ) : null}
       <p className="mt-2 whitespace-pre-wrap type-body">{comment.body}</p>
-      <CommentAnnotation comment={comment} onSeek={onSeek} />
+      <CommentAnnotation
+        comment={comment}
+        onSeek={onSeek}
+        onSelect={onSelect}
+      />
       <TranscriptLine commentIds={[comment.id]} />
       {action ? (
         <Button
@@ -340,8 +358,9 @@ export function PublicMediaVersionComments({
           currentComments.map((comment) => (
             <CommentRow
               key={comment.id}
-              // Seeking and selecting the comment land together, so its frame
-              // marks preview over the player while the timestamp is shown.
+              onSelect={
+                onCommentSelect ? () => onCommentSelect(comment) : undefined
+              }
               onSeek={
                 player
                   ? (seconds) => {
@@ -352,7 +371,6 @@ export function PublicMediaVersionComments({
                             "Could not seek in this player. Use the timestamp shown on the comment."
                           )
                         );
-                      onCommentSelect?.(comment);
                     }
                   : undefined
               }

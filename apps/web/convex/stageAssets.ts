@@ -504,3 +504,65 @@ export const removeAsset = mutation({
     return null;
   },
 });
+
+/** Archived native uploads can be deleted without removing their Activity. */
+export const permanentlyDeleteAsset = mutation({
+  args: { assetId: v.id("projectStageAssets") },
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    const asset = await ctx.db.get(args.assetId);
+    if (!asset) return null;
+    const { identity, project } = await requireProjectAccess(
+      ctx,
+      asset.projectId,
+      "editProjects"
+    );
+    if (!asset.archived)
+      throw new Error("Archive this asset before deleting it permanently");
+    // Stage uploads currently create native objects only. Do not release an
+    // R2 charge before its external object has been removed successfully.
+    if (asset.r2Key)
+      throw new Error(
+        "This hosted asset needs operator cleanup before deletion"
+      );
+    if (asset.storageId && asset.size > 0) {
+      const reservation = !asset.storageWorkspaceId
+        ? await ctx.db
+            .query("workspaceStorageReservations")
+            .withIndex("by_storageId", (q) =>
+              q.eq("storageId", asset.storageId)
+            )
+            .first()
+        : null;
+      const workspaceId =
+        asset.storageWorkspaceId ??
+        (reservation?.status === "committed"
+          ? reservation.workspaceId
+          : undefined);
+      if (!workspaceId)
+        throw new Error("Storage ownership needs operator reconciliation");
+      const subscription = await ctx.db
+        .query("workspaceSubscriptions")
+        .withIndex("by_workspaceId", (q) => q.eq("workspaceId", workspaceId))
+        .unique();
+      if (!subscription) throw new Error("Workspace subscription missing");
+      await ctx.db.patch(subscription._id, {
+        retainedStorageBytes: Math.max(
+          0,
+          (subscription.retainedStorageBytes ?? 0) - asset.size
+        ),
+        updatedAt: new Date().toISOString(),
+      });
+    }
+    if (asset.storageId) await ctx.storage.delete(asset.storageId);
+    await ctx.db.delete(asset._id);
+    await logAssetActivity(
+      ctx,
+      project,
+      identity,
+      "project_file_removed",
+      `${asset.title} was permanently deleted from project assets.`
+    );
+    return null;
+  },
+});

@@ -14,6 +14,12 @@ R2 object deletion happens before the corresponding metadata and retained quota 
 
 Shared Clients, Salary Plans, Salary Batches, Workspace-wide AI/financial summaries, and files held by external video hosts are preserved. Deleting a Project is not a complete account or Workspace erasure request.
 
+## Freeing storage for one stage asset
+
+Archive the asset, enable **Show archived assets**, then choose **Delete permanently**. For native uploads, the mutation deletes the file, releases its original Workspace's retained quota, and removes the asset row in one transaction. Project Activity remains. External links are removed without deleting the provider's file. Repeated deletion does not credit quota twice.
+
+Stage upload APIs currently create native files only. Individual permanent deletion refuses R2 rows or legacy native rows without reliable original billing attribution; reconcile those through a reviewed operator procedure. Project-wide cleanup supports R2 and records unattributed legacy bytes as described above.
+
 ## Operator checks
 
 - Inspect `projectDeletions` in the intended deployment. `completedAt` means all job phases finished; a missing value means cleanup is pending. Use `retryAfter` to distinguish a waiting upload target from an interrupted job.
@@ -24,7 +30,7 @@ Shared Clients, Salary Plans, Salary Batches, Workspace-wide AI/financial summar
 
 ## Deployment scope
 
-The secure native upload endpoint uses the Convex HTTP host (`*.convex.site`). The matching app CSP is included in PR #122. Publish that app CSP before deploying this backend: the currently served app policy does not allow that host. The existing upload response shape is unchanged, but changing the URL origin still requires the browser policy to permit it.
+The secure native upload endpoint uses the Convex HTTP host (`*.convex.site`). The matching app CSP is included in PR #122. Publish that app CSP before deploying this backend: the currently served app policy does not allow that host. Apply a CSP-only update to the current app release if the backend does not yet serve the new frontend's functions. Then deploy the backend and the complete matching app. The existing upload response shape is unchanged, but changing the URL origin still requires the browser policy to permit it.
 
 The schema update adds a job table and indexes. It does not backfill deletion jobs or purge orphaned records from past Project deletions. No production deletion test or bulk purge is part of deploying this code. Any cleanup of historical orphaned data needs its own reviewed inventory and authorization.
 

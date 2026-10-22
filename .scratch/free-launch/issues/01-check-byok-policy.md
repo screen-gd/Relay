@@ -2,7 +2,7 @@
 
 Status: open; copy implemented, publication and operational verification pending
 
-Implementation follow-up (2026-10-23): the deletion promise is implemented in PR #122 with background cleanup, immediate portal revocation, storage retry/recovery, upload ownership checks, and preserved shared Client/Salary history. Five independent-review findings were fixed and cleared in a second review. Marketing provider descriptions and app/site support addresses now agree. Nine deletion tests are part of the 311 passing Convex tests. The policy copy describes these boundaries. Coordinated app/backend publication, actual backup/log retention, mail delivery and Screen's policy review remain open; the live CSP must allow the new HTTP upload endpoint before the backend switch.
+Implementation follow-up (2026-10-23): the deletion promise is implemented in PR #122 with background cleanup, immediate portal revocation, storage retry/recovery, upload ownership checks, and preserved shared Client/Salary history. Five independent-review findings were fixed and cleared in a second review. Marketing provider descriptions and app/site support addresses now agree. Nine deletion tests are part of the 313 passing Convex tests. The policy copy describes these boundaries. Coordinated app/backend publication, actual backup/log retention, mail delivery and Screen's policy review remain open; the live CSP must allow the new HTTP upload endpoint before the backend switch.
 Updated: 2026-10-23
 GitHub: [#94](https://github.com/screen-gd/Relay/issues/94)
 Implementation: [PR #109](https://github.com/screen-gd/Relay/pull/109) and [PR #122](https://github.com/screen-gd/Relay/pull/122)

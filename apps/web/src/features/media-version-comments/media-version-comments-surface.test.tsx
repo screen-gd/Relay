@@ -1,7 +1,11 @@
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { MediaVersionComments } from "@/components/media-version-comments";
+import {
+  MediaVersionComments,
+  PublicMediaVersionComments,
+} from "@/components/media-version-comments";
+import { FrameAnnotationEditor } from "./annotation-overlay";
 
 const visit = { isSignedIn: false, isAuthenticated: false };
 
@@ -51,6 +55,54 @@ beforeEach(() => {
 });
 
 describe("version review surface", () => {
+  it("shows selected marks on a frame without an embedded player", () => {
+    const html = renderToStaticMarkup(
+      createElement(FrameAnnotationEditor, {
+        shapes: [],
+        onChange: vi.fn(),
+        label: "Frame notes",
+        disabled: true,
+        preview: {
+          shapes: [{ type: "pin", x: 0.5, y: 0.5 }],
+          label: "Frame marks from Client's comment",
+        },
+      })
+    );
+    expect(html).toContain(
+      'aria-label="Frame marks from Client&#x27;s comment"'
+    );
+    expect(html).toContain('cx="80"');
+    expect(html).toContain("aspect-video");
+  });
+
+  it("lets an untimed drawing be selected without seeking a player", () => {
+    const html = renderToStaticMarkup(
+      createElement(PublicMediaVersionComments, {
+        versionId: "version-1",
+        comments: [
+          {
+            id: "untimed-drawing",
+            outputId: "output-a",
+            mediaVersionId: "version-1",
+            authorName: "Client",
+            body: "Move this logo",
+            annotations: [{ type: "pin", x: 0.5, y: 0.5 }],
+            resolved: false,
+            createdAt: "2026-10-23T00:00:00Z",
+          },
+        ],
+        displayName: "Client",
+        onDisplayNameChange: vi.fn(),
+        onClearDisplayName: vi.fn(),
+        onSubmit: async () => {},
+        onReopen: async () => {},
+        onCommentSelect: vi.fn(),
+      })
+    );
+    expect(html).toContain('aria-label="Show frame marks on the player"');
+    expect(html).not.toContain("Jump to");
+  });
+
   it("offers the note box on a version in a local workspace", () => {
     const html = renderVersion(false);
 

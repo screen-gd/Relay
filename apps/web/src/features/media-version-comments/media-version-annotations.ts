@@ -9,6 +9,47 @@ export type AnnotationShape =
 
 export const MAX_ANNOTATION_SHAPES = 20;
 export const MAX_STROKE_POINTS = 200;
+export const MAX_ANNOTATION_POINTS = 600;
+
+function pointCount(shapes: readonly AnnotationShape[]) {
+  return shapes.reduce(
+    (total, shape) => total + (shape.type === "pin" ? 1 : shape.points.length),
+    0
+  );
+}
+
+/** Keeps a drawing within the same budgets accepted by the comment endpoint. */
+export function addAnnotationShape(
+  shapes: readonly AnnotationShape[],
+  shape: AnnotationShape
+): AnnotationShape[] | undefined {
+  const added = shape.type === "pin" ? 1 : shape.points.length;
+  if (
+    shapes.length >= MAX_ANNOTATION_SHAPES ||
+    (shape.type === "stroke" &&
+      (shape.points.length < 2 || shape.points.length > MAX_STROKE_POINTS)) ||
+    pointCount(shapes) + added > MAX_ANNOTATION_POINTS
+  )
+    return undefined;
+  return [...shapes, shape];
+}
+
+export function extendAnnotationStroke(
+  shapes: readonly AnnotationShape[],
+  point: AnnotationPoint
+): AnnotationShape[] | undefined {
+  const last = shapes.at(-1);
+  if (
+    last?.type !== "stroke" ||
+    last.points.length >= MAX_STROKE_POINTS ||
+    pointCount(shapes) >= MAX_ANNOTATION_POINTS
+  )
+    return undefined;
+  return [
+    ...shapes.slice(0, -1),
+    { type: "stroke", points: [...last.points, point] },
+  ];
+}
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null;
