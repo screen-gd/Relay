@@ -162,7 +162,7 @@ resolution does not resolve client comments. The internal review history
 subscribes to the list and run state, groups themes and sorts timestamps, and
 links directly to source comment anchors. Drafts are labelled `AI-drafted`.
 
-The separate [eval harness](../../evals/feedback-revisions/README.md) checks four
+The separate [eval harness](../../apps/web/evals/feedback-revisions/README.md) checks four
 synthetic threads offline and can compare both tiers with explicit paid opt-in.
 It is excluded from normal test runs. Add 15–20 anonymised real threads in its
 `fixtures/real/` directory before assessing quality or changing the better model.

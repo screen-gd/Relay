@@ -8,7 +8,7 @@ based on quality.
 Offline fixture check (no provider calls):
 
 ```powershell
-pnpm exec vitest run --config evals/feedback-revisions/vitest.config.mts
+pnpm --filter @relay/web exec vitest run --config evals/feedback-revisions/vitest.config.mts
 ```
 
 Paid comparison requires explicit opt-in and dedicated evaluation credentials in
@@ -18,7 +18,7 @@ Do not use browser variables or commit keys.
 
 ```powershell
 $env:RELAY_RUN_PAID_EVALS = "1"
-pnpm exec vitest run --config evals/feedback-revisions/vitest.config.mts
+pnpm --filter @relay/web exec vitest run --config evals/feedback-revisions/vitest.config.mts
 ```
 
 The report prints each model's source grouping, expected group matches, vague and
