@@ -272,13 +272,20 @@ export const generateUploadUrl = mutation({
 export const uploadReservation = internalQuery({
   args: { token: v.string() },
   returns: v.union(schema.doc("workspaceStorageReservations"), v.null()),
-  handler: (ctx, args) =>
-    ctx.db
+  handler: async (ctx, args) => {
+    const reservation = await ctx.db
       .query("workspaceStorageReservations")
       .withIndex("by_stageUploadToken", (q) =>
         q.eq("stageUploadToken", args.token)
       )
-      .unique(),
+      .unique();
+    if (!reservation) return null;
+    const project = await ctx.db
+      .query("projects")
+      .withIndex("by_projectId", (q) => q.eq("id", reservation.projectId))
+      .first();
+    return project ? reservation : null;
+  },
 });
 
 /** Only the upload endpoint can bind newly stored bytes to a reservation. */
@@ -299,6 +306,11 @@ export const bindUpload = internalMutation({
       reservation.storageId
     )
       throw new Error("Upload reservation unavailable");
+    const project = await ctx.db
+      .query("projects")
+      .withIndex("by_projectId", (q) => q.eq("id", reservation.projectId))
+      .first();
+    if (!project) throw new Error("Project not found");
     const metadata = await ctx.db.system.get(args.storageId);
     if (!metadata || metadata.size > reservation.bytes)
       throw new Error("Uploaded file exceeds the reserved size");
@@ -427,6 +439,7 @@ export const addUploadedAsset = mutation({
       kind: args.kind,
       title,
       provider: "convex",
+      storageWorkspaceId: reservation.workspaceId,
       storageId: args.storageId,
       fileName,
       mimeType,

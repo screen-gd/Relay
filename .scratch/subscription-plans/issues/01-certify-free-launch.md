@@ -4,7 +4,9 @@
 
 **Blocked by:** None (can start immediately).
 
-**Status:** local automated verification complete; live-account testing owned by Screen
+**Status:** local implementation and automated verification complete in PRs #109 and #122; merge and live-account verification pending
+
+Updated: 2026-10-23. See the [current issue status](../../free-launch/map.md) for GitHub links, remaining launch work, and deferred features.
 
 - [x] Public and in-app subscription copy says the launch is Free-only and exposes no Clerk Billing, Stripe, or checkout controls.
 - [ ] A signed-in owner can complete onboarding, Projects, Clients, standard Client Portals, Reviews, delivery, External Video Embeds, and Salary Plans.
@@ -13,7 +15,16 @@
 - [ ] Deployment receives separate approval before release.
 - [ ] The deployed Free journeys pass focused smoke tests after deployment.
 
-## Local evidence (2026-09-17)
+## Current tracking (2026-10-23)
+
+- [PR #109](https://github.com/screen-gd/Relay/pull/109) contains the Quartz UI, monorepo, shared plans, and BYOK policy copy. Merge it before [PR #122](https://github.com/screen-gd/Relay/pull/122).
+- PR #122 implements client approval and version locking (#103), account-free review and version history (#115), draw-on-frame feedback (#104), stage assets (#107), and the PDF import availability guard (#93).
+- PR #122 targets `main` and has closing links for all five issues. GitHub issues stay open until merge; implementation is not a production release.
+- The implementation handoff reports 302 Convex tests and 315 unit tests passing, plus type checking, the MUI allowlist, design check, CSP test, and app production build. These checks were not rerun for this tracking-only update.
+- Screen still owns the phone approval/notification/history check, phone-to-desktop annotation check, stage-asset visibility check, and deployed Free journeys. The PDF launch decision and any live R2 bucket/CORS/cleanup verification remain open. R2-hosted stage assets do not appear in the portal yet.
+- GitHub launch issues #88, #90, #91, #92, #94, #95, #96, #97, and #98 remain open. Local paid-plan tickets 02-10 and client-payment issues #116-#121 remain deferred.
+
+## Historical local evidence (2026-09-17)
 
 Existing subscription and Salary Plan implementation was preserved. Added
 `convex/freeLaunch.test.ts` to exercise public functions with mocked signed-in

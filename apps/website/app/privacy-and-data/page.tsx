@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import PageHeader from "../../components/site/PageHeader";
 import TrustPage, { TrustSection } from "../../components/site/TrustPage";
-import { APP_URL, CONTACT_EMAIL_URL } from "../../lib/links";
+import { APP_URL, CONTACT_EMAIL, CONTACT_EMAIL_URL } from "../../lib/links";
 import { siteOpenGraph } from "../../lib/site-metadata";
 
 export const metadata: Metadata = {
@@ -24,7 +24,7 @@ const sections: readonly TrustSection[] = [
       <>
         Relay does not publish a company entity, an office, or a headcount.
         Questions about anything on this page go to{" "}
-        <a href={CONTACT_EMAIL_URL}>contact@relay-app.cc.cd</a>.
+        <a href={CONTACT_EMAIL_URL}>{CONTACT_EMAIL}</a>.
       </>,
     ],
   },
@@ -53,6 +53,11 @@ const sections: readonly TrustSection[] = [
         term: "Convex",
         children:
           "Holds the database and live queries for account workspaces, and stores uploaded files for workspaces whose plan includes file uploads. Project uploads use Convex Storage today; the repository also carries a Cloudflare R2 path for files that is not enabled yet.",
+      },
+      {
+        term: "Google Gemini and OpenAI",
+        children:
+          "Optional AI requests use the Workspace's own provider keys. The Owner enables AI and manages encrypted keys. Relay sends selected Project context, Comments, transcript excerpts, briefs or permitted financial figures to the selected provider. Provider charges belong to that provider account. Removing a key does not recall data already sent.",
       },
       {
         term: "Clerk",
@@ -88,7 +93,8 @@ const sections: readonly TrustSection[] = [
     id: "delete",
     heading: "Delete",
     paragraphs: [
-      "Records are deleted where they live. A project is deleted from its own page, and the confirmation states that the deletion is permanent and removes the project's files, versions, client portal, and Activity history.",
+      "Deleting a Project removes it from the Workspace and closes its Client Portal links immediately. Background cleanup removes its Project Outputs, Media Versions, Comments, transcripts, Project AI drafts, Activity history and Relay-hosted files. Cleanup retries storage failures and waits for existing upload links to expire before its final storage cleanup. Files kept by external video hosts are not deleted by Relay.",
+      "Shared Client records, Salary Plans, Salary Batches and Workspace-wide AI or financial summaries remain. Relay retains a Project identifier to prevent old imports from restoring deleted links. Project deletion does not remove provider backups or security logs immediately; contact support for a complete Workspace deletion request.",
       "Files are archived from the project's Files panel, and an archived file can be deleted permanently from there. Clients are archived and restored rather than deleted, so their project history stays.",
       "Local mode has no delete-all control: clearing this browser's site data removes the workspace.",
       <>
@@ -118,7 +124,7 @@ export default function PrivacyAndDataPage() {
     <>
       <PageHeader
         title="Privacy & Data"
-        description="Where Relay keeps your work, which providers host it, and how to export or delete it. Last updated October 14, 2026."
+        description="Where Relay keeps your work, which providers host it, and how to export or delete it. Last updated October 23, 2026."
       />
       <TrustPage sections={sections} />
     </>

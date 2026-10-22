@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import PageHeader from "../../components/site/PageHeader";
 import TrustPage, { TrustSection } from "../../components/site/TrustPage";
-import { CONTACT_EMAIL_URL } from "../../lib/links";
+import { CONTACT_EMAIL, CONTACT_EMAIL_URL } from "../../lib/links";
 import { siteOpenGraph } from "../../lib/site-metadata";
 
 export const metadata: Metadata = {
@@ -29,7 +29,7 @@ const sections: readonly TrustSection[] = [
       "Relay is built by a small independent team. The app and this site come from one project, so what the site says about the product tracks the work itself.",
       <>
         No company entity, office, or headcount is published for Relay. Email{" "}
-        <a href={CONTACT_EMAIL_URL}>contact@relay-app.cc.cd</a> with questions,
+        <a href={CONTACT_EMAIL_URL}>{CONTACT_EMAIL}</a> with questions,
         corrections, or feature requests.
       </>,
     ],

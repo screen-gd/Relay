@@ -4,7 +4,7 @@ export function PrivacyPage() {
   return (
     <LegalPage
       title="Privacy Policy"
-      updatedAt="October 21, 2026"
+      updatedAt="October 23, 2026"
       intro="This Privacy Policy explains how Relay handles information when you use the website and app. Relay is designed to be local-first, with optional account-backed sync when Clerk and Convex are enabled."
       sections={[
         {
@@ -182,6 +182,24 @@ export function PrivacyPage() {
                 <a href="/contact">Relay contact page</a> for deletion requests.
                 Backup, security, and audit copies may remain where needed for
                 recovery, security or legal obligations.
+              </p>
+              <p>
+                Deleting a Project closes its Client Portal links and removes
+                the Project from the Workspace immediately. Background cleanup
+                removes its outputs, Media Versions, Comments, transcripts,
+                Project AI drafts, activity and Relay-hosted files. Storage
+                failures retry; final cleanup of upload targets waits for
+                existing upload links to expire. Relay does not delete files
+                from external video hosts.
+              </p>
+              <p>
+                Shared Client records, Salary Plans, Salary Batches and
+                Workspace-wide AI or financial summaries remain. A Project
+                identifier is retained to prevent stale imports from restoring
+                deleted links. Provider backups and security logs follow their
+                configured retention and are not immediately purged by a Project
+                deletion. Contact support for a complete Workspace or account
+                deletion request.
               </p>
               <p>
                 Convex stores saved AI drafts, generated results and run

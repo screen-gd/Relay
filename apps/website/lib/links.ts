@@ -1,9 +1,9 @@
 // Shared external URLs and site navigation for the marketing site.
-import { APP_URL } from "@relay/shared/links";
+import { APP_URL, SUPPORT_EMAIL, SUPPORT_EMAIL_URL } from "@relay/shared/links";
 
 export { APP_URL };
-export const CONTACT_EMAIL = "contact@relay-app.cc.cd";
-export const CONTACT_EMAIL_URL = `mailto:${CONTACT_EMAIL}`;
+export const CONTACT_EMAIL = SUPPORT_EMAIL;
+export const CONTACT_EMAIL_URL = SUPPORT_EMAIL_URL;
 // Legal pages are served by the app. About and Privacy & Data are pages of
 // this site, and Privacy & Data links to the app's policy for the binding text.
 export const LEGAL_LINKS = [

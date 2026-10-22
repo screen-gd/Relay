@@ -4,7 +4,7 @@
 
 **Blocked by:** 04: Launch Creator with Razorpay. 05: Certify the Creator client experience.
 
-**Status:** blocked
+**Status:** deferred by Screen; blocked by tickets 04 and 05
 
 - [ ] Active application and marketing copy contains only approved Free and Creator terms.
 - [ ] No active code, configuration, test, or support control treats Clerk Billing or Stripe as a payment authority.

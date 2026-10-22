@@ -15,7 +15,7 @@ separate send-as setup is configured.
 
 No Resend or Turnstile settings are required for contact email. The contact form,
 `POST /api/contact` endpoint and five sending-service tests have been removed.
-The public email address is defined in `src/lib/support-contact.ts`.
+The public email address is defined in `packages/shared/src/links.ts` and used by both the app's `apps/web/src/lib/support-contact.ts` and the marketing site's `apps/website/lib/links.ts`.
 
 The old `RESEND_API_KEY`, `CONTACT_TURNSTILE_SECRET_KEY`,
 `CONTACT_TURNSTILE_SITE_KEY` and `CONTACT_FROM_EMAIL` bindings can be removed

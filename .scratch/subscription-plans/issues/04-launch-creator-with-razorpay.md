@@ -4,7 +4,7 @@
 
 **Blocked by:** 03: Add the provider-neutral subscription foundation.
 
-**Status:** blocked
+**Status:** deferred by Screen; blocked by the subscription foundation in ticket 03
 
 - [ ] Only the Workspace owner can start checkout or manage the subscription.
 - [ ] Checkout shows only the approved price, billing period, trial, renewal, cancellation, and refund terms.

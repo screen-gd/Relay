@@ -42,10 +42,24 @@ export const replaceAll = mutation({
     const nextResources = args.resources.slice(0, RESOURCE_LINK_LIMIT);
 
     await Promise.all(existing.map((resource) => ctx.db.delete(resource._id)));
-    await Promise.all(
-      nextResources.map((resource) =>
-        ctx.db.insert("resourceLinks", { ...resource, userId })
+    const deleted = new Set<string>();
+    for (const projectId of new Set(
+      nextResources.map((resource) => resource.projectId).filter(Boolean)
+    )) {
+      if (
+        await ctx.db
+          .query("projectDeletions")
+          .withIndex("by_projectId", (q) => q.eq("projectId", projectId))
+          .first()
       )
+        deleted.add(projectId);
+    }
+    await Promise.all(
+      nextResources
+        .filter((resource) => !deleted.has(resource.projectId))
+        .map((resource) =>
+          ctx.db.insert("resourceLinks", { ...resource, userId })
+        )
     );
   },
 });

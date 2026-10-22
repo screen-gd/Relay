@@ -44,6 +44,16 @@ import { earningsQuestion } from "./earningsQaValidators";
 import { revisionScopeTables } from "./revisionScopeTables";
 
 export default defineSchema({
+  projectDeletions: defineTable({
+    projectId: v.string(),
+    workspaceId: v.optional(v.id("teamWorkspaces")),
+    phase: v.number(),
+    retryAfter: v.number(),
+    unattributedStorageBytes: v.optional(v.number()),
+    completedAt: v.optional(v.number()),
+  })
+    .index("by_projectId", ["projectId"])
+    .index("by_completedAt_and_retryAfter", ["completedAt", "retryAfter"]),
   aiProviderKeys: defineTable({
     workspaceId: v.id("teamWorkspaces"),
     provider: aiProviderValidator,
@@ -70,7 +80,9 @@ export default defineSchema({
   briefImports: defineTable({
     runId: v.id("aiRuns"),
     projectId: v.string(),
-  }).index("by_runId", ["runId"]),
+  })
+    .index("by_runId", ["runId"])
+    .index("by_projectId", ["projectId"]),
   statusDrafts: defineTable(statusDraft)
     .index("by_projectId_and_requestedBy", ["projectId", "requestedBy"])
     .index("by_runId", ["runId"]),
@@ -93,14 +105,19 @@ export default defineSchema({
   })
     .index("by_workspaceId", ["workspaceId"])
     .index("by_userId", ["userId"]),
-  aiRuns: defineTable(aiRunValidator).index(
-    "by_workspaceId_and_requestedBy_and_requestHash",
-    ["workspaceId", "requestedBy", "requestHash"]
-  ),
+  aiRuns: defineTable(aiRunValidator)
+    .index("by_projectId", ["projectId"])
+    .index("by_workspaceId_and_requestedBy_and_requestHash", [
+      "workspaceId",
+      "requestedBy",
+      "requestHash",
+    ]),
   // Latest rule-based deadline-risk findings per Workspace, replaced by each scan.
   deadlineRiskFindings: defineTable(
     deadlineRiskFindingValidator.extend({ workspaceId: v.id("teamWorkspaces") })
-  ).index("by_workspaceId", ["workspaceId"]),
+  )
+    .index("by_workspaceId", ["workspaceId"])
+    .index("by_projectId", ["projectId"]),
   deadlineRiskScans: defineTable({
     workspaceId: v.id("teamWorkspaces"),
     /** Workspace-local day the findings were evaluated for (YYYY-MM-DD). */
@@ -243,6 +260,7 @@ export default defineSchema({
     locked: v.optional(v.boolean()),
   })
     .index("by_versionId", ["id"])
+    .index("by_projectId", ["projectId"])
     .index("by_outputId_and_versionNumber", ["outputId", "versionNumber"]),
 
   projectPortals: defineTable({
@@ -404,11 +422,11 @@ export default defineSchema({
    * uploaded file (Relay storage or R2) or an external link, mirroring the
    * provider union on `projectFileVersions`. Stage scope is by id, so renaming
    * or reordering a stage keeps its assets. Archived rows stay for history.
-   * Client visibility is recorded per asset; the public Client Portal does not
-   * read this table, so an asset never reaches a portal response.
+   * The public Client Portal includes only client-visible, unarchived assets.
    */
   projectStageAssets: defineTable({
     projectId: v.string(),
+    storageWorkspaceId: v.optional(v.id("teamWorkspaces")),
     workflowStageId: v.optional(v.string()),
     ownerUserId: v.string(),
     teamId: v.optional(v.string()),
@@ -434,6 +452,7 @@ export default defineSchema({
 
   projectFileVersions: defineTable({
     projectId: v.string(),
+    storageWorkspaceId: v.optional(v.id("teamWorkspaces")),
     projectFileId: v.id("projectFiles"),
     versionNumber: v.number(),
     status: v.optional(fileStatusValidator),
@@ -466,7 +485,7 @@ export default defineSchema({
     status: v.union(v.literal("pending"), v.literal("completed")),
     createdAt: v.string(),
     expiresAt: v.number(),
-  }),
+  }).index("by_projectId", ["projectId"]),
 
   workspaceStorageReservations: defineTable({
     workspaceId: v.id("teamWorkspaces"),
@@ -484,6 +503,8 @@ export default defineSchema({
     expiresAt: v.number(),
   })
     .index("by_workspaceId_and_status", ["workspaceId", "status"])
+    .index("by_storageId", ["storageId"])
+    .index("by_projectId", ["projectId"])
     .index("by_stageUploadToken", ["stageUploadToken"]),
 
   clientContacts: defineTable({
@@ -504,6 +525,7 @@ export default defineSchema({
     publishedAt: v.string(),
   })
     .index("by_workspaceId_and_projectId", ["workspaceId", "projectId"])
+    .index("by_projectId", ["projectId"])
     .index("by_workspaceId_and_clientId", ["workspaceId", "clientId"]),
 
   teamWorkspaces: defineTable({
@@ -581,7 +603,9 @@ export default defineSchema({
     projectId: v.optional(v.string()),
     message: v.string(),
     createdAt: v.string(),
-  }).index("by_teamId_and_createdAt", ["teamId", "createdAt"]),
+  })
+    .index("by_teamId_and_createdAt", ["teamId", "createdAt"])
+    .index("by_projectId", ["projectId"]),
 
   teamChatMessages: defineTable({
     teamId: v.string(),
@@ -601,7 +625,9 @@ export default defineSchema({
     timecode: v.optional(v.string()),
     mentions: v.array(v.string()),
     createdAt: v.string(),
-  }).index("by_teamId_and_projectId", ["teamId", "projectId"]),
+  })
+    .index("by_teamId_and_projectId", ["teamId", "projectId"])
+    .index("by_projectId", ["projectId"]),
 
   teamNotifications: defineTable({
     teamId: v.optional(v.string()),
@@ -614,6 +640,7 @@ export default defineSchema({
     read: v.boolean(),
     createdAt: v.string(),
   })
+    .index("by_projectId", ["projectId"])
     .index("by_userId_and_kind_and_createdAt", ["userId", "kind", "createdAt"])
     .index("by_teamId_and_userId_and_createdAt", [
       "teamId",
@@ -770,7 +797,9 @@ export default defineSchema({
     notes: v.string(),
     createdAt: v.string(),
     updatedAt: v.string(),
-  }).index("by_userId", ["userId"]),
+  })
+    .index("by_userId", ["userId"])
+    .index("by_projectId", ["projectId"]),
 
   waitlistSignups: defineTable({
     name: v.string(),

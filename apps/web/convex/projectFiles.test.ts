@@ -16,6 +16,19 @@ import {
 
 const modules = import.meta.glob("./**/*.ts");
 
+async function bindStoredUpload(
+  t: ReturnType<typeof convexTest>,
+  reservationId: import("./_generated/dataModel").Id<"workspaceStorageReservations">,
+  storageId: import("./_generated/dataModel").Id<"_storage">
+) {
+  const reservation = await t.run((ctx) => ctx.db.get(reservationId));
+  if (!reservation?.stageUploadToken) throw new Error("Upload token missing");
+  await t.mutation(internal.stageAssets.bindUpload, {
+    token: reservation.stageUploadToken,
+    storageId,
+  });
+}
+
 describe("timecode validation", () => {
   test.each(["00:12", "01:05", "00:01:25"])("accepts %s", (timecode) => {
     expect(isValidTimecode(timecode)).toBe(true);
@@ -469,6 +482,7 @@ describe("project file management", () => {
       api.projectFiles.generateUploadUrl,
       { projectId: "project-files", size: 10 }
     );
+    await bindStoredUpload(t, reservationId, storageId);
     await owner.mutation(api.projectFiles.saveStorageVersion, {
       projectId: "project-files",
       storageId,
@@ -506,6 +520,7 @@ describe("project file management", () => {
       projectId: "project-files",
       size: 8,
     });
+    await bindStoredUpload(t, upload.reservationId, storageId);
     const fileId = await owner.mutation(api.projectFiles.saveStorageVersion, {
       projectId: "project-files",
       storageId,
@@ -550,6 +565,7 @@ describe("project file management", () => {
       projectId: "project-files",
       size: 4,
     });
+    await bindStoredUpload(t, upload.reservationId, storageId);
     await owner.mutation(api.projectFiles.saveStorageVersion, {
       projectId: "project-files",
       storageId,
@@ -678,6 +694,7 @@ describe("project file management", () => {
       projectId: "project-files",
       size: 6,
     });
+    await bindStoredUpload(t, first.reservationId, storageId);
     await owner.mutation(api.projectFiles.saveStorageVersion, {
       ...version,
       reservationId: first.reservationId,
@@ -686,6 +703,7 @@ describe("project file management", () => {
       projectId: "project-files",
       size: 6,
     });
+    await bindStoredUpload(t, second.reservationId, storageId);
     await expect(
       owner.mutation(api.projectFiles.saveStorageVersion, {
         ...version,

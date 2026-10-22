@@ -2,6 +2,7 @@ import { requireProjectAccess } from "./projectAccess";
 import { v } from "convex/values";
 import { internal } from "./_generated/api";
 import {
+  env,
   internalMutation,
   internalQuery,
   mutation,
@@ -323,6 +324,7 @@ async function insertVersion(
     provider: FileProvider;
     storageId?: Id<"_storage">;
     r2Key?: string;
+    storageWorkspaceId?: Id<"teamWorkspaces">;
     externalUrl?: string;
     externalId?: string;
     fileName: string;
@@ -438,6 +440,7 @@ async function insertVersion(
   const versionNumber = await nextVersionNumber(ctx, fileId);
   await ctx.db.insert("projectFileVersions", {
     projectId: args.project.id,
+    storageWorkspaceId: args.storageWorkspaceId,
     projectFileId: fileId,
     versionNumber,
     status: args.status,
@@ -643,10 +646,19 @@ export const generateUploadUrl = mutation({
     );
     return {
       reservationId,
-      url: await ctx.storage.generateUploadUrl(),
+      url: `${env.CONVEX_SITE_URL}/api/project-files/upload?token=${await bindUploadToken(ctx, reservationId)}`,
     };
   },
 });
+
+async function bindUploadToken(
+  ctx: MutationCtx,
+  reservationId: Id<"workspaceStorageReservations">
+) {
+  const token = crypto.randomUUID();
+  await ctx.db.patch(reservationId, { stageUploadToken: token });
+  return token;
+}
 
 export const releaseExpiredReservation = internalMutation({
   args: { reservationId: v.id("workspaceStorageReservations") },
@@ -676,6 +688,11 @@ export const releaseExpiredReservation = internalMutation({
       });
     }
     await ctx.db.patch(args.reservationId, { status: "released" });
+    if (
+      reservation.storageId &&
+      (await ctx.db.system.get(reservation.storageId))
+    )
+      await ctx.storage.delete(reservation.storageId);
     return null;
   },
 });
@@ -705,6 +722,11 @@ export const releaseUploadReservation = mutation({
       });
     }
     await ctx.db.patch(args.reservationId, { status: "released" });
+    if (
+      reservation.storageId &&
+      (await ctx.db.system.get(reservation.storageId))
+    )
+      await ctx.storage.delete(reservation.storageId);
     return null;
   },
 });
@@ -814,6 +836,8 @@ export const finalizeR2Upload = internalMutation({
       throw new Error("R2 upload session already used");
     if (session.expiresAt <= Date.now())
       throw new Error("R2 upload session expired");
+    const reservation = await ctx.db.get(args.reservationId);
+    if (!reservation) throw new Error("Upload reservation not found");
     if (
       args.projectFileId &&
       session.projectFileId &&
@@ -833,6 +857,7 @@ export const finalizeR2Upload = internalMutation({
       clientVisible: args.clientVisible,
       downloadable: args.downloadable,
       provider: "r2",
+      storageWorkspaceId: reservation.workspaceId,
       r2Key: session.key,
       fileName: args.fileName,
       mimeType: args.mimeType,
@@ -875,6 +900,9 @@ export const saveStorageVersion = mutation({
       "editProjects"
     );
     await requireFileUploadCapability(ctx, project);
+    const reservation = await ctx.db.get(args.reservationId);
+    if (!reservation || reservation.storageId !== args.storageId)
+      throw new Error("Uploaded file does not belong to this reservation");
     const metadata = await ctx.db.system.get(args.storageId);
     if (!metadata) throw new Error("Uploaded file not found");
     const fileId = await insertVersion(ctx, {
@@ -882,6 +910,7 @@ export const saveStorageVersion = mutation({
       project,
       identity,
       provider: "convex",
+      storageWorkspaceId: reservation.workspaceId,
       size: metadata.size,
       mimeType:
         args.mimeType || metadata.contentType || "application/octet-stream",

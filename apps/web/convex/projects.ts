@@ -1,4 +1,5 @@
 import { getWorkspaceClient } from "./workspaceClients";
+import { startProjectDeletion } from "./projectDeletion";
 import { requireProjectAccess, canSeeTeamProject } from "./projectAccess";
 import {
   paginationOptsValidator,
@@ -786,6 +787,13 @@ export const create = mutation({
     }
     const id = project.id.trim().slice(0, 80);
     if (!id) throw new Error("Project id is required");
+    if (
+      await ctx.db
+        .query("projectDeletions")
+        .withIndex("by_projectId", (q) => q.eq("projectId", id))
+        .first()
+    )
+      throw new Error("Deleted Project ids cannot be reused");
     if (!project.title.trim()) throw new Error("Project title is required");
     const existing = await ctx.db
       .query("projects")
@@ -1034,6 +1042,7 @@ export const setArchived = mutation({
 
 export const remove = mutation({
   args: { projectId: v.string() },
+  returns: v.null(),
   handler: async (ctx, args) => {
     const identity = await requireIdentity(ctx);
     const project = await getProject(ctx, args.projectId);
@@ -1051,7 +1060,7 @@ export const remove = mutation({
     } else if (project.ownerUserId !== identity.tokenIdentifier) {
       throw new Error("Project access required");
     }
-    await ctx.db.delete(project._id);
+    await startProjectDeletion(ctx, project);
     return null;
   },
 });

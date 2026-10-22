@@ -314,5 +314,5 @@ export function sortProjectTableProjects(
 }
 
 export function getProjectTableDeletionWarning(projectTitle: string) {
-  return `Permanently deleting ${projectTitle} removes its files, versions, client portal, and Activity history. This cannot be undone.`;
+  return `Permanently deleting ${projectTitle} closes its Client Portal and queues removal of its files, Media Versions, Comments, and Activity history. Shared Client and payment history remain. This cannot be undone.`;
 }

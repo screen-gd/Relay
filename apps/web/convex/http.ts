@@ -54,11 +54,12 @@ function parseWaitlistInput(value: unknown): WaitlistInput | null {
 const http = httpRouter();
 
 for (const method of ["POST", "OPTIONS"] as const) {
-  http.route({
-    path: "/api/stage-assets/upload",
-    method,
-    handler: uploadStageAsset,
-  });
+  for (const path of [
+    "/api/stage-assets/upload",
+    "/api/project-files/upload",
+  ]) {
+    http.route({ path, method, handler: uploadStageAsset });
+  }
 }
 
 http.route({

@@ -40,6 +40,7 @@ import type * as mediaVersionComments from "../mediaVersionComments.js";
 import type * as migrations from "../migrations.js";
 import type * as projectAccess from "../projectAccess.js";
 import type * as projectActivity from "../projectActivity.js";
+import type * as projectDeletion from "../projectDeletion.js";
 import type * as projectFiles from "../projectFiles.js";
 import type * as projectGroups from "../projectGroups.js";
 import type * as projectLifecycle from "../projectLifecycle.js";
@@ -123,6 +124,7 @@ declare const fullApi: ApiFromModules<{
   migrations: typeof migrations;
   projectAccess: typeof projectAccess;
   projectActivity: typeof projectActivity;
+  projectDeletion: typeof projectDeletion;
   projectFiles: typeof projectFiles;
   projectGroups: typeof projectGroups;
   projectLifecycle: typeof projectLifecycle;

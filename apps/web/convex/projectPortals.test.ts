@@ -2,7 +2,7 @@
 
 import { convexTest } from "convex-test";
 import { expect, test, vi } from "vitest";
-import { api } from "./_generated/api";
+import { api, internal } from "./_generated/api";
 import type { Doc } from "./_generated/dataModel";
 import schema from "./schema";
 
@@ -615,6 +615,15 @@ test("locked versions reject comments, reopening, and file uploads including an 
   const reservation = await owner.mutation(api.projectFiles.generateUploadUrl, {
     projectId: "project-portal",
     size: 5,
+  });
+  const reservedUpload = await t.run((ctx) =>
+    ctx.db.get(reservation.reservationId)
+  );
+  if (!reservedUpload?.stageUploadToken)
+    throw new Error("Upload token missing");
+  await t.mutation(internal.stageAssets.bindUpload, {
+    token: reservedUpload.stageUploadToken,
+    storageId,
   });
   await t.mutation(api.projectPortals.approve, approval);
   await expect(
