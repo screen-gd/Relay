@@ -5,7 +5,7 @@
   "type": "module",
   "packageManager": "pnpm@10.11.1",
   "engines": {
-    "node": ">=22"
+    "node": ">=22.23.4 <23"
   },
   "scripts": {
     "dev": "convex dev --start \"pnpm dev:web\"",
@@ -66,8 +66,8 @@
     "motion": "^12.40.0",
     "nitro": "3.0.260903-beta",
     "radix-ui": "^1.5.0",
-    "react": "^19.2.8",
-    "react-dom": "^19.2.8",
+    "react": "^19.2.9",
+    "react-dom": "^19.2.9",
     "react-is": "^19.2.8",
     "recharts": "^3.8.1",
     "tailwind-merge": "^3.6.0",
@@ -91,8 +91,8 @@
     "lint-staged": "^17.3.0",
     "prettier": "^3.9.6",
     "typescript": "^5.9.3",
-    "vite": "^8.2.2",
-    "vitest": "^4.1.8",
+    "vite": "^8.3.4",
+    "vitest": "^4.1.12",
     "wrangler": "^4.148.0"
   }
 }
