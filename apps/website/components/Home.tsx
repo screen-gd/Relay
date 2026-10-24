@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { InteractiveHoverButton } from "@/components/ui/interactive-hover-button";
 import ClientReviewDemo from "./ClientReviewDemo";
 import PricingPlans from "./pricing/PricingPlans";
+import HeroFlames from "./site/HeroFlames";
 import HeroVideo from "./site/HeroVideo";
 import Reveal from "./site/Reveal";
 import SectionHeading from "./site/SectionHeading";
@@ -73,6 +74,7 @@ export default function Home() {
               </Button>
             </div>
           </div>
+          <HeroFlames pinned />
           <div className="product-reveal">
             <HeroVideo
               video={{

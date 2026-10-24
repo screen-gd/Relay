@@ -1,5 +1,6 @@
 import { ArrowDownIcon } from "@phosphor-icons/react/ssr";
 import styles from "./FeatureIndex.module.css";
+import HeroFlames from "../site/HeroFlames";
 
 const chapters = [
   { href: "#workflow", label: "Workflow" },
@@ -9,10 +10,14 @@ const chapters = [
   { href: "#proof", label: "Activity" },
 ] as const;
 
-/** Rail-to-rail row of jump links to each /features chapter, under the page header. */
+/**
+ * Rail-to-rail row of jump links to each /features chapter, under the page
+ * header. Its top line is the ground for the header's side flames.
+ */
 export default function FeatureIndex() {
   return (
     <nav className={styles.frame} aria-label="Features on this page">
+      <HeroFlames />
       <ol className={styles.list}>
         {chapters.map(({ href, label }, index) => (
           <li key={href}>
