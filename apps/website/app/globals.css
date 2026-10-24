@@ -253,6 +253,60 @@ body::before {
 }
 
 /*
+ * ASCII flames beside the title area (components/site/HeroFlames.tsx). Stands
+ * on the top edge of its positioned parent and scrolls with it. Pages showing
+ * the flames drop the fixed side dither. Canvases are sized in JS; glyphs use
+ * the mono font.
+ */
+body:has(.hero-flames) .dither-backdrop {
+  display: none;
+}
+
+.hero-flames {
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  width: 100vw;
+  height: 440px;
+  pointer-events: none;
+  transform: translateX(-50%);
+}
+
+.hero-flames canvas {
+  position: absolute;
+  bottom: 0;
+  display: block;
+  height: 100%;
+  font-family: var(--font-mono);
+}
+
+.hero-flames .is-left {
+  left: 0;
+}
+
+.hero-flames .is-right {
+  right: 0;
+}
+
+/* Pinned: an empty box in the flow; the canvases stand on the bottom of the
+   screen. No transform, which would trap fixed children. */
+.hero-flames.is-pinned {
+  position: relative;
+  bottom: auto;
+  left: auto;
+  width: auto;
+  height: 0;
+  transform: none;
+}
+
+.hero-flames.is-pinned canvas {
+  position: fixed;
+  z-index: -1;
+  bottom: 0;
+  height: 520px;
+}
+
+/*
  * Dashed frame line with a square node where it crosses each rail.
  * Used under the header and above the footer.
  */
