@@ -1,8 +1,8 @@
 export const brandSource = "docs/brand/relay-circular-mark.svg";
 export const socialPreviewSource = "docs/brand/relay/social-preview.png";
 export const brandTargets = [
-  "public/brand/relay",
-  "website/public/brand/relay",
+  "apps/web/public/brand/relay",
+  "apps/website/public/brand/relay",
 ];
 export const faviconSizes = [16, 32, 64];
 export const appIconSizes = [192, 256, 512, 1024];
@@ -16,7 +16,7 @@ export const vectorViewBoxes = {
   "lockup-accent.svg": "0 0 320 100",
 };
 // The social preview is the main app's link-preview image only. The marketing
-// site uses its own hero screenshot (website/public/social/hero.png).
-export const socialPreviewTarget = "public/brand/relay";
+// site uses its own hero screenshot (apps/website/public/social/hero.png).
+export const socialPreviewTarget = "apps/web/public/brand/relay";
 export const socialPreviewViewBox = "0 0 1600 900";
 export const socialPreviewFiles = ["social-preview.svg", "social-preview.png"];

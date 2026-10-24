@@ -2,6 +2,9 @@
 
 Status: Free usability only; Razorpay work deferred until Screen creates an account
 Date: 2026-09-17
+Updated: 2026-10-23
+
+Current implementation and GitHub issue status: [Free launch map](../free-launch/map.md). Free-launch work is awaiting merges and Screen's live-account verification. Paid-plan tickets 02-10 remain deferred.
 
 ## Problem Statement
 

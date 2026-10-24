@@ -4,7 +4,7 @@
 
 **Blocked by:** 02: Approve the Razorpay subscription contract.
 
-**Status:** blocked
+**Status:** deferred by Screen; blocked by the Razorpay contract decision in ticket 02
 
 - [ ] The Workspace subscription projection uses Relay plan, billing, capacity, and lifecycle terms rather than Clerk-specific field names.
 - [ ] Provider customer, subscription, plan, payment, and event identifiers remain opaque outside the billing boundary.

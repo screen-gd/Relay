@@ -73,7 +73,7 @@ pnpm test:convex
 pnpm test:stripe-csp
 pnpm build
 pnpm verify:browser
-E2E_LOCAL_ONLY=1 pnpm exec playwright test
+E2E_LOCAL_ONLY=1 pnpm test:e2e
 ```
 
 `pnpm check:full` runs type checks, the UI import check, the production build,

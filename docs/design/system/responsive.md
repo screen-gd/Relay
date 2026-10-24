@@ -1,35 +1,12 @@
 # Responsive behavior
 
-## Purpose
+Supported widths run from 320px; layouts are designed against 390 and 1280.
 
-Keep work usable from a 320px phone through a wide desktop without losing key data.
+| Width         | Shell                                                                              | Pages                                                     |
+| ------------- | ---------------------------------------------------------------------------------- | --------------------------------------------------------- |
+| under 640px   | sidebar in a sheet behind the top bar menu button; New project icon in the top bar | single column; toolbars wrap; tables become row lists     |
+| 640 to 1023px | same sheet                                                                         | two-column grids where they fit                           |
+| 1024px and up | sidebar beside the framed viewport; foldable to the rail                           | split panes, record Properties column                     |
+| 1280px and up |                                                                                    | list inspectors appear beside lists instead of in a sheet |
 
-## Anatomy
-
-Use fluid content rails, CSS grid/flex, container-aware components, mobile sheets, horizontal-scroll data regions, prioritized cards, and filter summaries.
-
-## Behavior
-
-Collapse the sidebar; keep title, search, and primary action; move secondary actions to overflow; use deliberate table scroll or a complete prioritized list; keep selected detail in a sheet.
-
-## States
-
-Handle loading, empty, error, and dialogs within the viewport. Focused controls must remain visible when sticky headers or footers exist.
-
-## Responsive rules
-
-Test 320, 390, 768, 1024, and 1440px, landscape, touch, keyboard, 200% zoom, and reduced motion. Complex tables may scroll in two dimensions when necessary; other content must reflow.
-
-## Accessibility
-
-Do not hide essential fields or actions only to fit width. Label scroll regions and keep focus order aligned with the task order.
-
-## Preserved features
-
-Keep mobile project inspector sheets, responsive media/project layouts, calendar/timeline behavior, and shell mobile navigation.
-
-## Acceptance checks
-
-- No accidental page-level horizontal scroll below 400px.
-- Every feature has a tested small-screen action path.
-- Data tables announce their scroll or prioritized alternative.
+The same content shows at every width; only arrangement and disclosure change. Breadcrumb parents stay visible on phones so there is always a way back.

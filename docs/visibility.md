@@ -2,6 +2,14 @@
 
 Research date: 2026-10-02. All external sources below were accessed on that date.
 
+## Live recheck (2026-10-23)
+
+The marketing origin fixes are now visible in public HTTP responses. Home, Features, Pricing, About, and Privacy & Data use self-canonical and Open Graph URLs on `web.relay-app.cc.cd`; robots, sitemap, and both text summaries use that origin for discovery links. Product/primary app links use `relay-app.cc.cd`. Roadmap removal #112 is merged, `/roadmap` and a nonexistent path return 404, and `/waitlist` reaches the app. The existing marketing-origin test passes. These observations do not prove search indexing or identify the deployed commit/build environment.
+
+[#98](https://github.com/screen-gd/Relay/issues/98) remains open for matching release and build-configuration evidence. PR #122 now implements Project cleanup, describes its limits, lists optional AI providers and shares the app's support address. The live approval promise and corrected trust copy still need the matching release; policy-owner review and mail verification remain in [#94](https://github.com/screen-gd/Relay/issues/94) and #96. Full results are in the [local marketing check](../.scratch/free-launch/issues/02-check-marketing-release.md). The HTTP recheck was read-only; the source corrections followed it. No production deployment has been performed.
+
+The research and status table below are the October 2 snapshot; this recheck supersedes their earlier "not deployed" origin findings. Other historical observations were not reverified unless listed above.
+
 Marketing site: https://web.relay-app.cc.cd/ . App: https://relay-app.cc.cd/ . Frameworks: the marketing site runs Next.js 16.3.6 through OpenNext on Cloudflare Workers; the app runs TanStack Start on Vercel.
 
 Primary audience: freelance video editors working with creators and brands. Small post-production teams are a future commercial audience, because Creator and Team are currently planned offers. Geography: English-speaking users worldwide, inferred from the site; no narrower customer market was supplied. Primary conversion: create a first real project on Free. Supporting outcomes: return within a week, send a client review link, and deliver a project. Account creation alone does not prove activation.

@@ -4,7 +4,7 @@
 
 **Blocked by:** 04: Launch Creator with Razorpay.
 
-**Status:** blocked
+**Status:** deferred by Screen; blocked by Creator checkout in ticket 04
 
 - [ ] A Creator owner can manage authenticated Client Contacts separately from Team Members.
 - [x] Client Contacts see only Projects explicitly published to Clients they can access.
