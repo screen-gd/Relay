@@ -23,7 +23,7 @@ Clerk or Stripe commercial terms carry forward. The implementation checklist liv
 | Plan    | Monthly |   Annual | Trial  | Storage                 | Internal Editors   |
 | ------- | ------: | -------: | ------ | ----------------------- | ------------------ |
 | Free    |      $0 |       $0 | None   | No Relay-hosted uploads | 1 Workspace owner  |
-| Creator |     $10 | Deferred | 7 days | 25 GB launch target     | 1 Workspace owner  |
+| Creator |   $9.99 | Deferred | 7 days | 25 GB launch target     | 1 Workspace owner  |
 | Team    |     $29 | Deferred | None   | 100 GB launch target    | 3 included Editors |
 
 Team costs $29 per Workspace per month for three Editors, including the Owner,
@@ -87,7 +87,7 @@ YouTube and Vimeo embed directly in shared portals and support playback timestam
 
 ## Creator (post-launch)
 
-Creator is $10 per Workspace per month for a professional client workflow.
+Creator is $9.99 per Workspace per month for a professional client workflow.
 
 Includes everything in Free, plus:
 

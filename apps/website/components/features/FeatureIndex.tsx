@@ -18,7 +18,12 @@ export default function FeatureIndex() {
           <li key={href}>
             <a href={href}>
               <span className={styles.number}>0{index + 1}</span>
-              <span>{label}</span>
+              <span className={styles.labelRoll}>
+                <span className={styles.labelOriginal}>{label}</span>
+                <span className={styles.labelCopy} aria-hidden="true">
+                  {label}
+                </span>
+              </span>
               <ArrowDownIcon size={15} aria-hidden="true" />
             </a>
           </li>

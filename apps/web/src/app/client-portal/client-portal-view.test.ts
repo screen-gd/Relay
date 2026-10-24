@@ -261,7 +261,7 @@ describe("client portal approval and version history", () => {
       createElement(PublicOutputRow, approvedOutputProps())
     );
     expect(markup).toContain("Approved by Jordan Lee · Oct 21, 2026");
-    expect(markup).not.toContain("Add comment");
+    expect(markup).not.toContain("Post comment");
     expect(markup).not.toContain('id="comment-body-v3"');
     expect(markup).not.toContain("Approve version");
   });
@@ -351,7 +351,7 @@ describe("client portal approval and version history", () => {
     // Only the v2 thread is shown and the form is gone; the timecode stays.
     expect(markup).toContain("Tighten the opening");
     expect(markup).not.toContain("Latest review note");
-    expect(markup).not.toContain("Add comment");
+    expect(markup).not.toContain("Post comment");
     expect(markup).not.toContain('id="comment-body-v2"');
     expect(markup).not.toContain("Clear saved name");
   });
@@ -587,7 +587,7 @@ describe("transient approval per version", () => {
     );
     expect(v2Markup).not.toContain("Approved by Jordan Lee");
     expect(v2Markup).not.toContain("Approve version");
-    expect(v2Markup).not.toContain("Add comment");
+    expect(v2Markup).not.toContain("Post comment");
   });
 
   it("still lists the locked current version's comments read-only", () => {
@@ -608,8 +608,8 @@ describe("transient approval per version", () => {
     );
     expect(markup).toContain("Tighten the fade");
     expect(markup).toContain("Approved version — read only");
-    expect(markup).toContain("At 0:30");
-    expect(markup).not.toContain("Add comment");
+    expect(markup).toContain(">0:30</span>");
+    expect(markup).not.toContain("Post comment");
     expect(markup).not.toContain('id="comment-body-v3"');
     expect(markup).not.toContain("Approve version");
   });

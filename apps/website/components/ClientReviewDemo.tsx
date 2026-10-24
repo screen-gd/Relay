@@ -13,6 +13,10 @@ import {
 } from "@phosphor-icons/react/ssr";
 import { useEffect, useRef, useState, type CSSProperties } from "react";
 import chapter from "./features/chapter.module.css";
+import DemoDialog from "./features/DemoDialog";
+import ui from "./features/app-ui.module.css";
+import styles from "./ClientReviewDemo.module.css";
+import FrameNotes, { type FrameMark } from "./features/FrameNotes";
 import AnimatedList from "./react-bits/AnimatedList";
 import Reveal from "./site/Reveal";
 import SectionHeading from "./site/SectionHeading";
@@ -41,13 +45,22 @@ const facts = [
   },
 ] as const;
 
-const comments = [
+type ReviewComment = {
+  id: number;
+  author: string;
+  avatar: string;
+  time: string;
+  text: string;
+  seconds: number;
+  marks?: readonly FrameMark[];
+};
+const initialComments: ReviewComment[] = [
   {
     id: 1,
     author: "Maya Chen",
     avatar: "/avatars/maya-chen.jpg",
     time: "00:04",
-    text: "Can we hold this shot for half a second longer?",
+    text: "Hold this shot a little longer.",
     seconds: 4,
   },
   {
@@ -74,7 +87,7 @@ const comments = [
     text: "Can we soften the highlights on the road?",
     seconds: 20,
   },
-] as const;
+];
 
 const formatTime = (seconds: number) => {
   const safeSeconds = Number.isFinite(seconds) && seconds > 0 ? seconds : 0;
@@ -103,6 +116,17 @@ export default function ClientReviewDemo({ variant }: { variant?: "chapter" }) {
   const [playing, setPlaying] = useState(false);
   const [muted, setMuted] = useState(false);
   const [approved, setApproved] = useState(false);
+  const version = "v4";
+  const [confirmApproval, setConfirmApproval] = useState(false);
+  const [commentComposerOpen, setCommentComposerOpen] = useState(false);
+  const [postedComments, setComments] = useState(initialComments);
+  const [displayName, setDisplayName] = useState("Maya Chen");
+  const [manualTime, setManualTime] = useState("");
+  const [commentError, setCommentError] = useState("");
+  const [marks, setMarks] = useState<FrameMark[]>([]);
+  const comments = postedComments;
+  const readOnly = approved;
+  const [draft, setDraft] = useState("");
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [playbackError, setPlaybackError] = useState(false);
@@ -172,6 +196,7 @@ export default function ClientReviewDemo({ variant }: { variant?: "chapter" }) {
     setPlaybackError(false);
     video.pause();
     video.currentTime = nextTime;
+    if (variant === "chapter") return;
     try {
       await video.play();
     } catch {
@@ -185,6 +210,17 @@ export default function ClientReviewDemo({ variant }: { variant?: "chapter" }) {
     const nextTime = clampTime(seconds, duration || video?.duration || 0);
     setCurrentTime(nextTime);
     if (video && Number.isFinite(nextTime)) video.currentTime = nextTime;
+  };
+
+  const resetReview = () => {
+    setApproved(false);
+    setComments(initialComments);
+    setDraft("");
+    setMarks([]);
+    setManualTime("");
+    setCommentId(null);
+    videoRef.current?.pause();
+    seek(0);
   };
 
   return (
@@ -220,22 +256,32 @@ export default function ClientReviewDemo({ variant }: { variant?: "chapter" }) {
             />
             <i aria-hidden="true" />
             <b>Summer launch film</b>
-            <span className="review-version">v4</span>
+            <span className="review-version">{version}</span>
           </div>
           <button
             className="review-approve"
             type="button"
             aria-pressed={approved}
-            onClick={() => setApproved((value) => !value)}
+            disabled={approved}
+            onClick={() => setConfirmApproval(true)}
           >
             {approved ? (
               <>
                 <CheckIcon size={15} aria-hidden="true" /> Approved
               </>
             ) : (
-              "Approve v4"
+              "Approve version"
             )}
           </button>
+          {approved && (
+            <button
+              className={ui.textButton}
+              type="button"
+              onClick={resetReview}
+            >
+              Reset demo
+            </button>
+          )}
         </div>
 
         <div className="review-room-grid">
@@ -369,6 +415,17 @@ export default function ClientReviewDemo({ variant }: { variant?: "chapter" }) {
                 )}
               </button>
             </div>
+            {variant === "chapter" && (
+              <FrameNotes
+                marks={marks}
+                onChange={(nextMarks) => {
+                  setMarks(nextMarks);
+                  setCommentId(null);
+                }}
+                preview={comment?.marks}
+                disabled={readOnly}
+              />
+            )}
           </div>
 
           <aside
@@ -380,6 +437,7 @@ export default function ClientReviewDemo({ variant }: { variant?: "chapter" }) {
               <small>{comments.length}</small>
             </header>
             <AnimatedList
+              disableAnimation={variant === "chapter"}
               className="review-comment-list"
               items={comments}
               selectedIndex={comments.findIndex(
@@ -411,9 +469,180 @@ export default function ClientReviewDemo({ variant }: { variant?: "chapter" }) {
                 </button>
               )}
             />
+            {readOnly ? (
+              <p className={styles.locked} role="status">
+                Approved · This version is read only.
+              </p>
+            ) : (
+              <div className={styles.commentAction}>
+                <button
+                  className={ui.button}
+                  type="button"
+                  onClick={() => {
+                    videoRef.current?.pause();
+                    setCommentComposerOpen(true);
+                  }}
+                >
+                  Leave a comment
+                </button>
+              </div>
+            )}
           </aside>
         </div>
       </Reveal>
+
+      <DemoDialog
+        open={commentComposerOpen && !readOnly}
+        onOpenChange={setCommentComposerOpen}
+        title={"Comment at " + formatTime(currentTime)}
+      >
+        <form
+          className={styles.composer}
+          onSubmit={(event) => {
+            event.preventDefault();
+            const text = draft.trim();
+            if (!text) return;
+            if (variant === "chapter" && !displayName.trim()) {
+              setCommentError("Enter your display name before commenting.");
+              return;
+            }
+            const timestampParts = manualTime.trim().split(":");
+            if (
+              manualTime.trim() &&
+              !/^\d+(:[0-5]\d){1,2}$/.test(manualTime.trim())
+            ) {
+              setCommentError("Use a timestamp such as 0:04 or 1:02:30.");
+              return;
+            }
+            const enteredSeconds = timestampParts.reduce(
+              (total, part) => total * 60 + Number(part),
+              0
+            );
+            if (manualTime.trim() && !Number.isSafeInteger(enteredSeconds)) {
+              setCommentError(
+                "Enter a valid timestamp within this sample video."
+              );
+              return;
+            }
+            if (
+              manualTime.trim() &&
+              duration > 0 &&
+              enteredSeconds > duration
+            ) {
+              setCommentError("Use a timestamp within this sample video.");
+              return;
+            }
+            setCommentError("");
+            const id = Math.max(...comments.map((item) => item.id)) + 1;
+            const seconds = manualTime.trim()
+              ? enteredSeconds
+              : Math.floor(currentTime);
+            setComments((current) =>
+              [
+                ...current,
+                {
+                  id,
+                  author: variant === "chapter" ? displayName.trim() : "You",
+                  avatar: "/avatars/maya-chen.jpg",
+                  time: formatTime(seconds),
+                  text,
+                  seconds,
+                  marks: [...marks],
+                },
+              ].sort((a, b) => a.seconds - b.seconds)
+            );
+            setCommentId(id);
+            setDraft("");
+            setManualTime("");
+            setMarks([]);
+            setCommentComposerOpen(false);
+          }}
+        >
+          {variant === "chapter" && (
+            <>
+              <div className={styles.nameLabel}>
+                <span>Display name</span>
+                <button
+                  type="button"
+                  className={ui.textButton}
+                  onClick={() => setDisplayName("")}
+                >
+                  Clear saved name
+                </button>
+              </div>
+              <input
+                className={ui.input}
+                aria-label="Display name"
+                value={displayName}
+                onChange={(event) => setDisplayName(event.target.value)}
+                maxLength={120}
+              />
+              <label className={ui.field}>
+                Timestamp (optional)
+                <span className={styles.timestampRow}>
+                  <input
+                    className={ui.input}
+                    value={manualTime}
+                    onChange={(event) => setManualTime(event.target.value)}
+                    placeholder="m:ss or h:mm:ss"
+                  />
+                  <button
+                    className={ui.button}
+                    type="button"
+                    onClick={() => setManualTime(formatTime(currentTime))}
+                  >
+                    Use current time
+                  </button>
+                </span>
+              </label>
+            </>
+          )}
+          <label className={ui.field}>
+            {variant === "chapter"
+              ? "Comment"
+              : "Comment at " + formatTime(currentTime)}
+            <textarea
+              className={ui.input}
+              value={draft}
+              onFocus={() => videoRef.current?.pause()}
+              onChange={(event) => setDraft(event.target.value)}
+              placeholder="Leave feedback on this moment…"
+              required
+              maxLength={1000}
+              rows={2}
+            />
+          </label>
+          <button type="submit" className={ui.button} disabled={!draft.trim()}>
+            Post comment
+          </button>
+          {commentError && <p role="alert">{commentError}</p>}
+          <small role="status">
+            Sample review. Comments stay in this page.
+          </small>
+        </form>
+      </DemoDialog>
+
+      <DemoDialog
+        open={confirmApproval}
+        onOpenChange={setConfirmApproval}
+        title="Approve Summer launch v4?"
+      >
+        <p>
+          This locks the version against further comments. You can reset this
+          sample to try again.
+        </p>
+        <button
+          className={`${ui.button} ${ui.primary}`}
+          type="button"
+          onClick={() => {
+            setApproved(true);
+            setConfirmApproval(false);
+            videoRef.current?.pause();
+          }}
+        >
+          Approve version
+        </button>
+      </DemoDialog>
 
       <div className="box-grid-frame is-facts">
         <ul className="box-grid">

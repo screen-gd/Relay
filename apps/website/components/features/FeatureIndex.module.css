@@ -18,11 +18,49 @@
 }
 
 .list {
+  --node-size: 7px;
+  position: relative;
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
   margin: 0;
   padding: 0;
   list-style: none;
+}
+
+.list li {
+  position: relative;
+  min-width: 0;
+}
+
+/* Mark every divider meeting the horizontal frame, including its corners. */
+.list li::before,
+.list li::after,
+.list::before,
+.list::after {
+  position: absolute;
+  z-index: 1;
+  width: var(--node-size);
+  height: var(--node-size);
+  background: var(--border-strong);
+  content: "";
+  pointer-events: none;
+}
+
+.list li::before {
+  top: -4px;
+  left: -4px;
+}
+.list li::after {
+  right: -3px;
+  bottom: -3px;
+}
+.list::before {
+  top: -4px;
+  right: -3px;
+}
+.list::after {
+  bottom: -3px;
+  left: -4px;
 }
 
 .list li + li {
@@ -60,6 +98,58 @@
     12px var(--font-geist-mono),
     monospace;
   font-variant-numeric: tabular-nums;
+}
+
+/* The CTA's label roll, scoped to the individual link under the pointer. */
+.labelRoll {
+  position: relative;
+  display: inline-flex;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.labelOriginal,
+.labelCopy {
+  display: inline-block;
+  transition: transform 300ms ease-out;
+}
+
+.labelCopy {
+  position: absolute;
+  inset: 0;
+  transform: translateY(100%);
+}
+
+.list a:hover .labelOriginal,
+.list a:focus-visible .labelOriginal {
+  transform: translateY(-100%);
+}
+
+.list a:hover .labelCopy,
+.list a:focus-visible .labelCopy {
+  transform: translateY(0);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .labelOriginal,
+  .labelCopy,
+  .list svg {
+    transition: none;
+  }
+
+  .list a:hover .labelOriginal,
+  .list a:focus-visible .labelOriginal {
+    transform: none;
+  }
+
+  .labelCopy {
+    display: none;
+  }
+
+  .list a:hover svg,
+  .list a:focus-visible svg {
+    translate: none;
+  }
 }
 
 @media (max-width: 900px) {

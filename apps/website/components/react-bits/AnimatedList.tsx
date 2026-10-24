@@ -10,6 +10,7 @@ type AnimatedListProps<Item> = {
   renderItem: (item: Item, index: number, selected: boolean) => ReactNode;
   onItemSelect: (item: Item, index: number) => void;
   className?: string;
+  disableAnimation?: boolean;
 };
 
 export default function AnimatedList<Item>({
@@ -19,6 +20,7 @@ export default function AnimatedList<Item>({
   renderItem,
   onItemSelect,
   className = "",
+  disableAnimation = false,
 }: AnimatedListProps<Item>) {
   const listRef = useRef<HTMLDivElement>(null);
   const reduceMotion = useReducedMotion();
@@ -54,7 +56,9 @@ export default function AnimatedList<Item>({
           key={getKey(item)}
           role="listitem"
           data-list-index={index}
-          initial={reduceMotion ? false : { opacity: 0, x: 10 }}
+          initial={
+            reduceMotion || disableAnimation ? false : { opacity: 0, x: 10 }
+          }
           whileInView={{ opacity: 1, x: 0 }}
           viewport={{ once: true, amount: 0.5 }}
           transition={{

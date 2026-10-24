@@ -1,5 +1,5 @@
 /** Approved launch offers; checkout and hosted-media readiness are separate. */
-export const CREATOR_MONTHLY_PRICE_USD = 10;
+export const CREATOR_MONTHLY_PRICE_USD = 9.99;
 export const TEAM_MONTHLY_PRICE_USD = 29;
 export const TEAM_INCLUDED_EDITOR_SEATS = 3;
 export const EXTRA_EDITOR_MONTHLY_PRICE_USD = 9;

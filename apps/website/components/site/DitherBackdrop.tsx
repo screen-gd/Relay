@@ -12,6 +12,8 @@ const MAX_DENSITY = 0.55;
 const FALLOFF = 1.6;
 /** Sides narrower than this get no dither. */
 const MIN_SIDE = 32;
+/** Extra painted pixels keep the drifting texture covering both edges. */
+const DRIFT = 24;
 
 /** One dither color per theme. Light mode needs a stronger, deeper green to
  * show on white. */
@@ -32,8 +34,10 @@ function frameWidth(): number {
  * Page background texture: a faint single-color ordered-dither fade in the
  * two side areas outside the content rails, densest at each screen edge,
  * gone at the rail, slightly stronger toward the bottom of the screen.
- * Fixed to the viewport, so only the middle content scrolls. Static:
- * repaints only when the viewport size, display scaling, or theme changes.
+ * Fixed to the viewport, with the two sides slowly drifting in opposite
+ * directions. CSS transforms animate the painted canvases; the canvases
+ * repaint only when size, display scaling, or theme changes. Motion stops
+ * for reduced-motion preferences and pauses while the page is hidden.
  * Rendered first in <body>; styled by `.dither-backdrop`.
  */
 export default function DitherBackdrop() {
@@ -49,6 +53,18 @@ export default function DitherBackdrop() {
 
     let frame = 0;
     let painted = "";
+    let hasSides = false;
+    const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+    wrap.style.setProperty("--dither-drift", `${DRIFT}px`);
+
+    const syncMotion = () => {
+      wrap.dataset.state =
+        !hasSides || reducedMotion.matches
+          ? "static"
+          : document.hidden
+            ? "paused"
+            : "running";
+    };
 
     const schedule = () => {
       cancelAnimationFrame(frame);
@@ -56,22 +72,25 @@ export default function DitherBackdrop() {
         const width = wrap.clientWidth;
         const height = wrap.clientHeight;
         const dark = document.documentElement.classList.contains("dark");
-        const key = `${width}x${height}@${window.devicePixelRatio}:${dark}`;
+        const contentWidth = frameWidth();
+        const key = `${width}x${height}@${window.devicePixelRatio}:${contentWidth}:${dark}`;
         if (key === painted) return;
         painted = key;
 
-        const rawSide = Math.floor((width - frameWidth()) / 2);
+        const rawSide = Math.floor((width - contentWidth) / 2);
         const side = rawSide < MIN_SIDE ? 0 : rawSide;
+        hasSides = side > 0;
+        syncMotion();
         const tone = TONES[dark ? "dark" : "light"];
         // `edge` is 1 at the outer screen edge and 0 at the rail.
         const fade = (edge: number, v: number) =>
           MAX_DENSITY * Math.pow(edge, FALLOFF) * (0.6 + 0.4 * v);
-        paintDither(left, side, height, {
+        paintDither(left, side, height + DRIFT * 2, {
           cell: CELL,
           ...tone,
           density: (u, v) => fade(1 - u, v),
         });
-        paintDither(right, side, height, {
+        paintDither(right, side, height + DRIFT * 2, {
           cell: CELL,
           ...tone,
           density: (u, v) => fade(u, v),
@@ -80,6 +99,8 @@ export default function DitherBackdrop() {
     };
 
     schedule();
+    reducedMotion.addEventListener("change", syncMotion);
+    document.addEventListener("visibilitychange", syncMotion);
     const resize = new ResizeObserver(schedule);
     resize.observe(wrap);
     // Display scaling changes (zoom, moving screens) don't always resize.
@@ -94,12 +115,19 @@ export default function DitherBackdrop() {
       cancelAnimationFrame(frame);
       resize.disconnect();
       window.removeEventListener("resize", schedule);
+      reducedMotion.removeEventListener("change", syncMotion);
+      document.removeEventListener("visibilitychange", syncMotion);
       theme.disconnect();
     };
   }, []);
 
   return (
-    <div ref={wrapRef} className="dither-backdrop" aria-hidden="true">
+    <div
+      ref={wrapRef}
+      className="dither-backdrop"
+      data-state="static"
+      aria-hidden="true"
+    >
       <canvas ref={leftRef} className="is-left" />
       <canvas ref={rightRef} className="is-right" />
     </div>

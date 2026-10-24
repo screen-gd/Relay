@@ -1,31 +1,33 @@
 .grid {
   display: grid;
-  grid-template-columns: minmax(0, 5fr) minmax(0, 6fr);
+  grid-template-columns: minmax(0, 2.5fr) minmax(260px, 1fr);
   align-items: start;
   gap: 14px;
   min-height: 380px;
 }
 
+/* Deadlines and deadline risk stack in the right column. */
+.stack {
+  display: grid;
+  min-width: 0;
+  gap: 14px;
+}
+
+/* Quartz segmented well; the buttons themselves are app-ui `.tab`s. */
 .filters {
-  display: flex;
-  gap: 2px;
+  display: inline-flex;
+  gap: 4px;
+  padding: 3px;
+  border-radius: 7px;
+  background: var(--well, #18191c);
+  box-shadow: inset 0 0 0 1px var(--hair, rgb(246 247 248 / 8%));
 }
 
 .filters button {
-  height: 26px;
-  padding: 0 8px;
-  background: transparent;
-  color: #ffffff;
-  font-size: 12px;
+  height: 24px;
+  padding: 0 9px;
+  font-size: 11.5px;
   cursor: pointer;
-}
-
-.filters button:hover {
-  border-color: rgb(255 255 255 / 10%);
-}
-
-.filters button[data-active="true"] {
-  border-color: rgb(255 255 255 / 16%);
 }
 
 .filters button:focus-visible,
@@ -37,9 +39,9 @@
 /* App activity list: dot, bold line, who and when. */
 .events {
   display: grid;
-  gap: 16px;
+  gap: 0;
   margin: 0;
-  padding: 4px 16px 18px 34px;
+  padding: 0;
   list-style: none;
 }
 
@@ -47,6 +49,11 @@
   position: relative;
   display: grid;
   gap: 1px;
+  padding: 12px 16px;
+}
+
+.events li + li {
+  border-top: 1px solid var(--hair);
 }
 
 .events li::before {
@@ -57,7 +64,111 @@
   height: 5px;
   border-radius: 50%;
   background: #ffffff;
-  content: "";
+  content: none;
+}
+
+.attention {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.attention li {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 16px;
+  font-size: 0.75rem;
+}
+.attention button {
+  display: grid;
+  gap: 3px;
+  flex: 1;
+  text-align: left;
+}
+.attention button span {
+  color: var(--text-2);
+}
+.nextStep {
+  flex: 1;
+}
+.late {
+  color: var(--fail);
+  white-space: nowrap;
+}
+.tools {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.tools select {
+  width: auto;
+  max-width: 140px;
+}
+.search {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 8px;
+  max-width: 160px;
+  border: 1px solid var(--line-strong);
+  border-radius: 6px;
+}
+.search input {
+  min-width: 0;
+  width: 100%;
+  border: 0;
+  background: transparent;
+  color: var(--ink);
+  font: inherit;
+}
+.tableScroll {
+  max-width: 100%;
+  overflow-x: auto;
+}
+.projects {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.75rem;
+}
+.projects th {
+  padding: 8px 12px;
+  text-align: left;
+  color: var(--text-2);
+  font-weight: 400;
+}
+.projects td {
+  padding: 10px 12px;
+  border-top: 1px solid var(--hair);
+  white-space: nowrap;
+}
+.projects td button {
+  text-align: left;
+  display: grid;
+  gap: 3px;
+}
+.projects small {
+  color: var(--text-2);
+  font-size: inherit;
+}
+.progressCell {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.progressCell > span {
+  width: 60px;
+}
+.empty {
+  padding: 16px;
+}
+@container (max-width:900px) {
+  .nextStep {
+    display: none;
+  }
+  .attention li {
+    flex-wrap: wrap;
+  }
 }
 
 .events b {
@@ -98,7 +209,7 @@
 
 .tableHead {
   min-height: 36px;
-  border-top: 1px solid rgb(255 255 255 / 8%);
+  color: var(--text-2, rgb(246 247 248 / 80%));
   font-size: 12px;
   font-weight: 500;
 }
@@ -132,6 +243,27 @@
   font-size: 12px;
   font-weight: 500;
   cursor: pointer;
+}
+
+/* AI deadline-risk check: one flagged row, then its action. */
+.risks {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.risks li {
+  display: flex;
+  min-height: 50px;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 14px;
+}
+
+.riskAction {
+  display: flex;
+  padding: 10px 10px 12px;
+  border-top: 1px solid rgb(255 255 255 / 8%);
 }
 
 @container (max-width: 860px) {

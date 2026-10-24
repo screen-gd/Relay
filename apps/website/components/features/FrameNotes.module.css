@@ -1,0 +1,30 @@
+.overlay {
+  position: absolute;
+  inset: var(--review-player-padding) var(--review-player-padding) auto;
+  width: calc(100% - 2 * var(--review-player-padding));
+  height: auto;
+  aspect-ratio: 16/9;
+  overflow: hidden;
+  z-index: 2;
+  pointer-events: none;
+}
+.overlay[data-active="true"] {
+  pointer-events: auto;
+  cursor: crosshair;
+  touch-action: none;
+}
+.tools {
+  display: flex;
+  gap: 12px;
+  margin-top: 10px;
+  font-size: 0.75rem;
+}
+.tools button[aria-pressed="true"] {
+  color: var(--foreground);
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+.tools button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}

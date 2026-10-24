@@ -10,7 +10,14 @@ import {
 } from "@phosphor-icons/react/ssr";
 import { Tabs } from "radix-ui";
 import { useState, type ReactNode } from "react";
-import AppWindow, { ProjectTabs, StageBar } from "./features/AppWindow";
+import AppWindow, {
+  ProjectTabs,
+  StageBar,
+  type ProjectTab,
+} from "./features/AppWindow";
+import DemoDialog from "./features/DemoDialog";
+import DemoOutputs from "./features/DemoOutputs";
+import ProjectProperties from "./features/ProjectProperties";
 import ui from "./features/app-ui.module.css";
 import chapter from "./features/chapter.module.css";
 import Reveal from "./site/Reveal";
@@ -37,7 +44,7 @@ const stages = [
     title: "Keep every version together.",
     description:
       "Link YouTube, Vimeo, Drive, or Dropbox. No Relay storage used.",
-    tab: "Outputs and Versions",
+    tab: "Outputs",
     stage: 1,
     badge: { label: "In Progress", tone: "info" },
     payment: "Not billable",
@@ -48,7 +55,7 @@ const stages = [
     title: "Get feedback on the right moment.",
     description:
       "Password-protected link. Timestamped comments, no client account.",
-    tab: "Client Review",
+    tab: "Client review",
     stage: 2,
     badge: { label: "Client Review", tone: "warning" },
     payment: "Not billable",
@@ -80,13 +87,6 @@ type Recording = { src: string; captions?: string };
 
 // Add the actual Relay recordings here when supplied. Do not substitute stock footage.
 const recordings: Partial<Record<StageId, Recording>> = {};
-
-const checklist = [
-  "Organize selects",
-  "Complete fine cut",
-  "Send review link",
-  "Export masters",
-];
 
 const comments = [
   {
@@ -127,7 +127,9 @@ function Panel({
         <h4 className={ui.panelTitle}>{title}</h4>
         {aside}
       </div>
-      {flush ? children : <div className={ui.panelBody}>{children}</div>}
+      <div className={ui.panelBody} data-flush={flush || undefined}>
+        {children}
+      </div>
     </section>
   );
 }
@@ -155,176 +157,92 @@ function Row({
   );
 }
 
-function StageView({ stage }: { stage: Stage }) {
-  const workflow = (
-    <Panel title="Workflow">
-      <StageBar stages={stageLabels} current={stage.stage} />
-    </Panel>
+function StageView({
+  stage,
+  notes,
+  onEditNotes,
+}: {
+  stage: Pick<Stage, "id" | "stage">;
+  notes: string;
+  onEditNotes: () => void;
+}) {
+  if (stage.id === "review")
+    return (
+      <>
+        <Panel
+          title="Client Portal"
+          aside={<span className={ui.badge}>Waiting on client</span>}
+          flush
+        >
+          <ul className={ui.rows}>
+            <Row
+              icon={<LockKeyIcon size={14} />}
+              title="Summer launch v4"
+              detail="Password protected · No account needed"
+            >
+              <a className={ui.button} href="#client-review">
+                Open sample review
+              </a>
+            </Row>
+          </ul>
+        </Panel>
+        <Panel
+          title="Comments"
+          aside={<span className={ui.badge}>{comments.length}</span>}
+          flush
+        >
+          <ul className={ui.rows}>
+            {comments.map((item) => (
+              <li key={item.time}>
+                <span className={ui.avatar}>{item.initials}</span>
+                <span className={ui.rowMain}>
+                  <b>{item.author}</b>
+                  <span>{item.text}</span>
+                </span>
+                <span className={ui.mono}>{item.time}</span>
+              </li>
+            ))}
+          </ul>
+        </Panel>
+      </>
+    );
+  return (
+    <>
+      <Panel title="Workflow">
+        <StageBar stages={stageLabels} current={stage.stage} />
+        <p className={styles.note}>
+          {stage.stage === 0
+            ? "Confirm the brief and deadline before production starts."
+            : stage.stage === 1
+              ? "In production. Upload a version under Outputs when it is ready for review."
+              : stage.stage === 2
+                ? "Collect review notes and prepare the next cut."
+                : "Project delivered. Confirm payment in Properties."}
+        </p>
+      </Panel>
+      <Panel
+        title="Internal notes"
+        aside={
+          <button type="button" className={ui.textButton} onClick={onEditNotes}>
+            Edit notes
+          </button>
+        }
+      >
+        <p className={styles.note}>{notes}</p>
+      </Panel>
+      <section className={ui.panel}>
+        <div className={ui.panelHead}>
+          <div>
+            <h4 className={ui.panelTitle}>Revision rounds</h4>
+            <p className={styles.note}>Counted in a team Workspace.</p>
+          </div>
+        </div>
+        <div className={ui.panelBody}>
+          <span>Draft a change order</span>
+        </div>
+      </section>
+    </>
   );
-
-  switch (stage.id) {
-    case "plan":
-      return (
-        <>
-          {workflow}
-          <Panel title="Internal notes">
-            <p className={styles.note}>
-              60-second launch film for the summer blend. One master cut and
-              three 9:16 cutdowns. Picture lock before sound and captions.
-            </p>
-          </Panel>
-          <Panel
-            title="Checklist"
-            aside={<span className={ui.mono}>0 / 4</span>}
-            flush
-          >
-            <ul className={ui.rows}>
-              {checklist.map((item) => (
-                <li key={item}>
-                  <span className={styles.check} />
-                  <span className={ui.rowMain}>
-                    <b>{item}</b>
-                  </span>
-                </li>
-              ))}
-            </ul>
-          </Panel>
-        </>
-      );
-    case "link":
-      return (
-        <>
-          <Panel
-            title="Project Outputs"
-            aside={<span className={ui.badge}>2 versions</span>}
-            flush
-          >
-            <ul className={ui.rows}>
-              <Row
-                icon={<FilmStripIcon size={14} />}
-                title="Summer launch v4"
-                detail="YouTube link · Added today"
-              >
-                <span className={ui.badge} data-tone="info">
-                  Current
-                </span>
-              </Row>
-              <Row
-                icon={<FilmStripIcon size={14} />}
-                title="Summer launch v3"
-                detail="Vimeo link · Jul 20"
-              >
-                <span className={ui.badge}>Previous</span>
-              </Row>
-            </ul>
-          </Panel>
-          <Panel
-            title="External links"
-            aside={<span className={ui.badge}>2</span>}
-            flush
-          >
-            <ul className={ui.rows}>
-              <Row
-                icon={<FileTextIcon size={14} />}
-                title="Brand brief.pdf"
-                detail="Google Drive"
-              />
-              <Row
-                icon={<ImageIcon size={14} />}
-                title="Poster.psd"
-                detail="Dropbox"
-              />
-            </ul>
-          </Panel>
-          <p className={styles.foot}>Linked files use 0 GB of Relay storage.</p>
-        </>
-      );
-    case "review":
-      return (
-        <>
-          <Panel
-            title="Client Portal"
-            aside={
-              <span className={ui.badge} data-tone="warning">
-                Waiting on client
-              </span>
-            }
-            flush
-          >
-            <ul className={ui.rows}>
-              <Row
-                icon={<LockKeyIcon size={14} />}
-                title="Summer launch v4"
-                detail="Password protected · No account needed"
-              >
-                <span className={ui.button}>
-                  <CopyIcon size={13} /> Copy link
-                </span>
-              </Row>
-            </ul>
-          </Panel>
-          <Panel
-            title="Comments"
-            aside={
-              <span className={`${ui.badge} ${ui.mono}`}>
-                {comments.length}
-              </span>
-            }
-            flush
-          >
-            <ul className={ui.rows}>
-              {comments.map((item) => (
-                <li key={item.time}>
-                  <span className={ui.avatar}>{item.initials}</span>
-                  <span className={ui.rowMain}>
-                    <b>{item.author}</b>
-                    <span>{item.text}</span>
-                  </span>
-                  <span className={ui.mono}>{item.time}</span>
-                </li>
-              ))}
-            </ul>
-          </Panel>
-        </>
-      );
-    case "deliver":
-      return (
-        <>
-          {workflow}
-          <Panel title="Project Outputs" flush>
-            <ul className={ui.rows}>
-              <Row
-                icon={<FilmStripIcon size={14} />}
-                title="Launch film · 16:9"
-                detail="v4 · Approved by Maya Chen, Jul 23"
-              >
-                <span className={ui.badge} data-tone="success">
-                  Delivered
-                </span>
-              </Row>
-              <Row
-                icon={<FilmStripIcon size={14} />}
-                title="Social cutdowns · 9:16"
-                detail="3 files"
-              >
-                <span className={ui.badge} data-tone="success">
-                  Delivered
-                </span>
-              </Row>
-            </ul>
-          </Panel>
-          <Panel
-            title="Client payment"
-            aside={<span className={ui.switch} data-on="true" />}
-          >
-            <p className={styles.note}>
-              Paid <span className={ui.mono}>Jul 26</span> ·{" "}
-              <span className={ui.mono}>$1,800</span>
-            </p>
-          </Panel>
-        </>
-      );
-  }
 }
 
 /**
@@ -350,7 +268,10 @@ export default function WorkflowDemo() {
       <Reveal delay={0.1}>
         <Tabs.Root
           value={stageId}
-          onValueChange={(value) => setStageId(value as StageId)}
+          onValueChange={(value) => {
+            const nextStage = stages.find((stage) => stage.id === value);
+            if (nextStage) setStageId(nextStage.id);
+          }}
         >
           <Tabs.List
             className={styles.steps}
@@ -369,15 +290,12 @@ export default function WorkflowDemo() {
             ))}
           </Tabs.List>
 
-          {stages.map((item) => (
-            <Tabs.Content
-              key={item.id}
-              value={item.id}
-              className={styles.content}
-            >
-              <StagePage stage={item} />
-            </Tabs.Content>
-          ))}
+          <Tabs.Content value={stageId} className={styles.content}>
+            <StagePage
+              stage={stages.find((stage) => stage.id === stageId) ?? stages[0]}
+              onStageChange={setStageId}
+            />
+          </Tabs.Content>
         </Tabs.Root>
       </Reveal>
     </section>
@@ -385,17 +303,45 @@ export default function WorkflowDemo() {
 }
 
 /** The project page for one step, or that step's recording when supplied. */
-function StagePage({ stage: item }: { stage: Stage }) {
+function StagePage({
+  stage: item,
+  onStageChange,
+}: {
+  stage: Stage;
+  onStageChange: (id: StageId) => void;
+}) {
   const [failedVideo, setFailedVideo] = useState<string | null>(null);
+  const [selectedView, setSelectedView] = useState<{
+    stage: StageId;
+    tab: ProjectTab;
+  } | null>(null);
+  const view = selectedView?.stage === item.id ? selectedView.tab : item.tab;
+  const [title, setTitle] = useState("Summer launch film");
+  const [notes, setNotes] = useState(
+    "Picture lock is due next. Sound mix and final captions follow after approval."
+  );
+  const [editing, setEditing] = useState(false);
+  const [paid, setPaid] = useState(true);
+  const contentStage =
+    view === "Outputs"
+      ? stages[1]
+      : view === "Client review"
+        ? stages[2]
+        : item.id === "deliver"
+          ? stages[3]
+          : stages[0];
   const recording = recordings[item.id];
   // Same scale as the app: Planned 0%, then 33%, 67%, Delivered 100%.
   const percent = Math.round((item.stage / (stageLabels.length - 1)) * 100);
 
   return (
     <AppWindow
-      crumbs={["Projects", "Summer launch film"]}
+      crumbs={["Projects", title]}
       page="projects"
       label={`Sample project, ${item.label} step`}
+      action="Edit"
+      onAction={() => setEditing(true)}
+      className={ui.record}
     >
       {recording && failedVideo !== recording.src ? (
         <video
@@ -420,59 +366,118 @@ function StagePage({ stage: item }: { stage: Stage }) {
         </video>
       ) : (
         <>
-          <ProjectTabs active={item.tab} />
           <div className={styles.page}>
             <div className={styles.main}>
-              <StageView stage={item} />
+              <ProjectTabs
+                active={view}
+                onChange={(tab) => setSelectedView({ stage: item.id, tab })}
+              />
+              <div hidden={view !== "Outputs"}>
+                <DemoOutputs />
+              </div>
+              {view === "Outputs" ? null : view === "Files" ? (
+                <Panel title="External links" flush>
+                  <ul className={ui.rows}>
+                    <Row
+                      icon={<FileTextIcon size={14} />}
+                      title="Brand brief.pdf"
+                      detail="Google Drive · Project brief"
+                    />
+                    <Row
+                      icon={<ImageIcon size={14} />}
+                      title="Poster.psd"
+                      detail="Dropbox · Brand artwork"
+                    />
+                  </ul>
+                </Panel>
+              ) : view === "Assets" ? (
+                <Panel title="Stage assets" flush>
+                  <ul className={ui.rows}>
+                    <Row
+                      icon={<FileTextIcon size={14} />}
+                      title="Summer blend brief"
+                      detail="Planning · Brief"
+                    />
+                    <Row
+                      icon={<FilmStripIcon size={14} />}
+                      title="Coffee roastery selects"
+                      detail="In Progress · Raw footage"
+                    />
+                  </ul>
+                </Panel>
+              ) : view === "Activity" ? (
+                <Panel title="Activity" flush>
+                  <ul className={ui.rows}>
+                    {stages.slice(0, item.stage + 1).map((stage) => (
+                      <Row
+                        key={stage.id}
+                        icon={<CheckIcon size={14} />}
+                        title={stage.title}
+                        detail={`Maya Chen · ${stage.badge.label}`}
+                      />
+                    ))}
+                  </ul>
+                </Panel>
+              ) : (
+                <StageView
+                  stage={{ ...contentStage, stage: item.stage }}
+                  notes={notes}
+                  onEditNotes={() => setEditing(true)}
+                />
+              )}
             </div>
-            <section className={`${ui.panel} ${styles.detailsPanel}`}>
-              <div className={ui.panelHead}>
-                <h4 className={ui.panelTitle}>Details</h4>
-                <span className={ui.mono}>{percent}%</span>
-              </div>
-              <div className={ui.panelBody}>
-                <div className={ui.progress}>
-                  <i style={{ width: `${percent}%` }} />
-                </div>
-                <dl className={ui.details}>
-                  <div>
-                    <dt>Stage</dt>
-                    <dd>
-                      <span className={ui.badge} data-tone={item.badge.tone}>
-                        {item.badge.label}
-                      </span>
-                    </dd>
-                  </div>
-                  {[
-                    ["Client", "Aperture Coffee"],
-                    ["Lead", "Maya Chen"],
-                    ["Due", "Jul 24, 2026"],
-                    ["Work type", "Client Work"],
-                    ["Value", "$1,800"],
-                  ].map(([term, value]) => (
-                    <div key={term}>
-                      <dt>{term}</dt>
-                      <dd>{value}</dd>
-                    </div>
-                  ))}
-                  <div>
-                    <dt>Payment</dt>
-                    <dd>
-                      {item.payment === "Paid" ? (
-                        <span className={ui.status} data-tone="success">
-                          <CheckIcon size={12} aria-hidden="true" /> Paid
-                        </span>
-                      ) : (
-                        item.payment
-                      )}
-                    </dd>
-                  </div>
-                </dl>
-              </div>
-            </section>
+            <ProjectProperties
+              status={item.badge.label}
+              onStatusChange={(status) => {
+                const stage = stages.find(
+                  (stage) => stage.badge.label === status
+                );
+                if (stage) onStageChange(stage.id);
+              }}
+              paid={paid}
+              onPaidChange={() => setPaid((value) => !value)}
+            />
           </div>
         </>
       )}
+      <DemoDialog open={editing} onOpenChange={setEditing} title="Edit project">
+        <form
+          className={ui.form}
+          onSubmit={(event) => {
+            event.preventDefault();
+            const data = new FormData(event.currentTarget);
+            const nextTitle = String(data.get("title") ?? "").trim();
+            if (!nextTitle) return;
+            setTitle(nextTitle);
+            setNotes(String(data.get("notes") ?? "").trim());
+            setEditing(false);
+          }}
+        >
+          <label className={ui.field}>
+            Project title
+            <input
+              className={ui.input}
+              name="title"
+              defaultValue={title}
+              required
+              maxLength={100}
+            />
+          </label>
+          <label className={ui.field}>
+            Internal notes
+            <textarea
+              className={ui.input}
+              name="notes"
+              defaultValue={notes}
+              rows={4}
+              maxLength={1000}
+            />
+          </label>
+          <button type="submit" className={`${ui.button} ${ui.primary}`}>
+            Save changes
+          </button>
+        </form>
+      </DemoDialog>
     </AppWindow>
   );
 }

@@ -865,7 +865,7 @@ function ActivePortal({
   const currentIndex = PUBLIC_STAGES.findIndex((item) => item === currentStage);
   return (
     <main className="min-h-dvh bg-background text-foreground">
-      <div className="mx-auto w-full max-w-3xl px-5 py-6 sm:px-8 sm:py-10">
+      <div className="mx-auto w-full max-w-6xl px-5 py-6 sm:px-8 sm:py-10">
         <header className="flex items-center justify-between gap-4 border-b border-border pb-5">
           {portal.branding ? (
             <span
@@ -1295,7 +1295,9 @@ export function PublicVersionReview({
   return (
     <section aria-label="Version comments">
       {notice ? (
-        <p className="mt-6 text-muted-foreground type-label-sm">{notice}</p>
+        <p className="px-5 pt-4 text-muted-foreground type-label-sm">
+          {notice}
+        </p>
       ) : null}
       <PublicMediaVersionComments
         versionId={versionId}
@@ -1585,87 +1587,93 @@ export function PublicOutputRow({
           </p>
         </section>
       ) : null}
-      {selected && (embedUrl || canComment || previewComment) ? (
-        <div
-          className="sm:col-span-2"
-          onPointerDown={() => setPreviewComment(undefined)}
-        >
-          <FrameAnnotationEditor
-            shapes={annotations}
-            onChange={setAnnotations}
-            label={`Frame notes for ${output.title}`}
-            disabled={!canComment}
-            preview={
-              previewComment?.annotations?.length
-                ? {
-                    shapes: previewComment.annotations,
-                    label: `Frame marks from ${previewComment.authorName}'s comment`,
-                  }
-                : undefined
-            }
-          >
-            {embedUrl ? (
-              <ReviewVideoPlayer
-                key={selected.id}
-                url={embedUrl}
-                title={`${output.title} — ${selected.label}`}
-                onReady={setPlayer}
-              />
-            ) : undefined}
-          </FrameAnnotationEditor>
-        </div>
-      ) : null}
       {selected ? (
-        <div className="sm:col-span-2">
-          {canComment ? (
-            <PublicVersionReview
-              key={selected.id}
-              player={player}
-              supportsPlayerTimestamps={!!embedUrl}
-              versionId={selected.id}
-              comments={comments}
-              loading={commentsLoading}
-              displayName={displayName}
-              onDisplayNameChange={onDisplayNameChange}
-              onClearDisplayName={onClearDisplayName}
-              onDisplayNameCommit={onDisplayNameCommit}
-              onSubmit={async (body, timestampSeconds) => {
-                await onAddComment(
-                  output.id,
-                  selected.id,
-                  body,
-                  timestampSeconds,
-                  annotations
-                );
-                setAnnotations([]);
-              }}
-              onReopen={onReopenComment}
-              onCommentSelect={selectPreviewComment}
-              busy={busy}
-              busyCommentId={busyCommentId}
-            />
-          ) : (
-            // Locked and earlier versions read their own comments, form-less.
-            <PortalHistoricalVersionComments
-              key={selected.id}
-              token={token}
-              pin={pin}
-              outputId={output.id}
-              versionId={selected.id}
-              player={player}
-              supportsPlayerTimestamps={!!embedUrl}
-              displayName={displayName}
-              onDisplayNameChange={onDisplayNameChange}
-              onClearDisplayName={onClearDisplayName}
-              onReopen={onReopenComment}
-              notice={
-                selected.isCurrent
-                  ? "Approved version — read only"
-                  : "Earlier version — read only"
-              }
-              onCommentSelect={selectPreviewComment}
-            />
-          )}
+        <div
+          className={`sm:col-span-2 grid min-w-0 overflow-hidden rounded-soft border border-hair ${embedUrl ? "lg:grid-cols-[minmax(0,1fr)_21rem]" : ""}`}
+        >
+          {embedUrl || canComment || previewComment ? (
+            <div
+              className="min-w-0 p-5"
+              onPointerDown={() => setPreviewComment(undefined)}
+            >
+              <FrameAnnotationEditor
+                shapes={annotations}
+                onChange={setAnnotations}
+                label={`Frame notes for ${output.title}`}
+                disabled={!canComment}
+                preview={
+                  previewComment?.annotations?.length
+                    ? {
+                        shapes: previewComment.annotations,
+                        label: `Frame marks from ${previewComment.authorName}'s comment`,
+                      }
+                    : undefined
+                }
+              >
+                {embedUrl ? (
+                  <ReviewVideoPlayer
+                    key={selected.id}
+                    url={embedUrl}
+                    title={`${output.title} — ${selected.label}`}
+                    onReady={setPlayer}
+                  />
+                ) : undefined}
+              </FrameAnnotationEditor>
+            </div>
+          ) : null}
+          <div
+            className={`min-w-0 ${embedUrl ? "border-t border-hair lg:border-t-0 lg:border-l" : ""}`}
+          >
+            {canComment ? (
+              <PublicVersionReview
+                key={selected.id}
+                player={player}
+                supportsPlayerTimestamps={!!embedUrl}
+                versionId={selected.id}
+                comments={comments}
+                loading={commentsLoading}
+                displayName={displayName}
+                onDisplayNameChange={onDisplayNameChange}
+                onClearDisplayName={onClearDisplayName}
+                onDisplayNameCommit={onDisplayNameCommit}
+                onSubmit={async (body, timestampSeconds) => {
+                  await onAddComment(
+                    output.id,
+                    selected.id,
+                    body,
+                    timestampSeconds,
+                    annotations
+                  );
+                  setAnnotations([]);
+                }}
+                onReopen={onReopenComment}
+                onCommentSelect={selectPreviewComment}
+                busy={busy}
+                busyCommentId={busyCommentId}
+              />
+            ) : (
+              // Locked and earlier versions read their own comments, form-less.
+              <PortalHistoricalVersionComments
+                key={selected.id}
+                token={token}
+                pin={pin}
+                outputId={output.id}
+                versionId={selected.id}
+                player={player}
+                supportsPlayerTimestamps={!!embedUrl}
+                displayName={displayName}
+                onDisplayNameChange={onDisplayNameChange}
+                onClearDisplayName={onClearDisplayName}
+                onReopen={onReopenComment}
+                notice={
+                  selected.isCurrent
+                    ? "Approved version — read only"
+                    : "Earlier version — read only"
+                }
+                onCommentSelect={selectPreviewComment}
+              />
+            )}
+          </div>
         </div>
       ) : null}
     </article>

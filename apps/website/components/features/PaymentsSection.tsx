@@ -1,10 +1,6 @@
 "use client";
 
-import {
-  ChartBarIcon,
-  ReceiptIcon,
-  RepeatIcon,
-} from "@phosphor-icons/react/ssr";
+import Image from "next/image";
 import { useState } from "react";
 import Reveal from "../site/Reveal";
 import AppWindow from "./AppWindow";
@@ -12,135 +8,54 @@ import ui from "./app-ui.module.css";
 import chapter from "./chapter.module.css";
 import styles from "./PaymentsSection.module.css";
 
-const facts = [
+const projects = [
   {
-    icon: ReceiptIcon,
-    title: "Track each project",
-    text: "Record the fee and mark payments received.",
-  },
-  {
-    icon: RepeatIcon,
-    title: "Manage recurring work",
-    text: "Creator and Team add payment plans for a client's project batches and next payout.",
-  },
-  {
-    icon: ChartBarIcon,
-    title: "Review your earnings",
-    text: "See earned, collected, and outstanding amounts in your workspace currency.",
-  },
-] as const;
-
-type Tone = "info" | "warning" | "success";
-
-// Same projects as the app's Sample Studio. Payment tracking starts after delivery.
-const initialProjects: {
-  id: string;
-  name: string;
-  client: string;
-  due: string;
-  status: string;
-  tone: Tone;
-  value: number;
-  paid: boolean | null;
-}[] = [
-  {
-    id: "launch",
     name: "Summer launch film",
     client: "Aperture Coffee",
-    due: "Jul 24",
-    status: "In Progress",
-    tone: "info",
     value: 1800,
-    paid: null,
-  },
-  {
-    id: "founder",
-    name: "Founder story cutdown",
-    client: "Orbit Labs",
-    due: "Jul 23",
-    status: "Client Review",
-    tone: "warning",
-    value: 950,
-    paid: null,
-  },
-  {
-    id: "reel",
-    name: "Q2 team reel",
-    client: "Orbit Labs",
-    due: "Jul 16",
-    status: "Delivered",
-    tone: "success",
-    value: 1450,
+    delivered: false,
     paid: false,
   },
   {
-    id: "field",
+    name: "Founder story cutdown",
+    client: "Orbit Labs",
+    value: 950,
+    delivered: false,
+    paid: false,
+  },
+  {
     name: "Field Notes episode 12",
     client: "Field Notes",
-    due: "Jul 11",
-    status: "Delivered",
-    tone: "success",
     value: 1200,
+    delivered: true,
     paid: true,
   },
 ];
-
 const money = new Intl.NumberFormat("en-US", {
   style: "currency",
   currency: "USD",
   maximumFractionDigits: 0,
 });
+const views = ["Overview", "Payments", "Clients", "Team"] as const;
 
-/**
- * Payments chapter on /features: a Relay Reports page with totals, the
- * project payments table, and a retainer plan. Switching a delivered project
- * to paid updates the totals.
- */
+/** Uses the real report layout and chart captures from the populated demo app. */
 export default function PaymentsSection() {
-  const [projects, setProjects] = useState(initialProjects);
-  const delivered = projects.filter((item) => item.paid !== null);
-  const earned = delivered.reduce((sum, item) => sum + item.value, 0);
-  const collected = delivered.reduce(
-    (sum, item) => sum + (item.paid ? item.value : 0),
+  const [view, setView] = useState<(typeof views)[number]>("Overview");
+  const [period, setPeriod] = useState("All time");
+  const [range, setRange] = useState("6M");
+  const [selectedClient, setSelectedClient] = useState("All clients");
+  const delivered = projects.filter((project) => project.delivered);
+  const earned = delivered.reduce((sum, project) => sum + project.value, 0);
+  const paid = delivered.reduce(
+    (sum, project) => sum + (project.paid ? project.value : 0),
     0
   );
-  const pipeline = projects.reduce(
-    (sum, item) => sum + (item.paid === null ? item.value : 0),
-    0
+  const clients = Array.from(
+    new Set(projects.map((project) => project.client))
   );
-  const unpaid = delivered.filter((item) => !item.paid).length;
-
-  const totals = [
-    { label: "Earned", value: earned, note: `${delivered.length} delivered` },
-    {
-      label: "Collected",
-      value: collected,
-      note: `${delivered.length - unpaid} paid`,
-    },
-    {
-      label: "Outstanding",
-      value: earned - collected,
-      note: `${unpaid} unpaid`,
-    },
-    {
-      label: "In progress",
-      value: pipeline,
-      note: `${projects.length - delivered.length} projects`,
-    },
-  ];
-
-  const togglePaid = (id: string) =>
-    setProjects((current) =>
-      current.map((item) =>
-        item.id === id && item.paid !== null
-          ? { ...item, paid: !item.paid }
-          : item
-      )
-    );
-
   return (
     <section
-      className={`story-section ${chapter.chapter}`}
+      className={["story-section", chapter.chapter].join(" ")}
       id="payments"
       aria-labelledby="payments-title"
     >
@@ -153,119 +68,280 @@ export default function PaymentsSection() {
           plans and batches for recurring work.
         </p>
       </Reveal>
-
       <Reveal delay={0.1}>
         <AppWindow
-          crumbs={["Reports"]}
+          crumbs={["Payments"]}
           page="reports"
           label="Sample earnings report"
+          topbarActions={
+            <select
+              className={ui.input}
+              aria-label="Payout period"
+              value={period}
+              onChange={(event) => setPeriod(event.target.value)}
+            >
+              {["All time", "This month", "This quarter", "This year"].map(
+                (value) => (
+                  <option key={value}>{value}</option>
+                )
+              )}
+            </select>
+          }
         >
-          <dl className={styles.totals} aria-live="polite">
-            {totals.map(({ label, value, note }) => (
-              <div key={label} className={ui.panel}>
-                <dt>{label}</dt>
-                <dd>{money.format(value)}</dd>
-                <dd className={styles.note}>{note}</dd>
-              </div>
+          <div
+            className={ui.tabs}
+            role="group"
+            aria-label="Payment report views"
+          >
+            {views.map((tab) => (
+              <button
+                key={tab}
+                type="button"
+                className={ui.tab}
+                data-active={view === tab}
+                aria-pressed={view === tab}
+                onClick={() => setView(tab)}
+              >
+                {tab}
+              </button>
             ))}
-          </dl>
-
-          <div className={styles.grid}>
-            <section className={ui.panel}>
-              <div className={ui.panelHead}>
-                <h3 className={ui.panelTitle}>Project payments</h3>
-                <span className={ui.badge}>July</span>
-              </div>
-              <div className={styles.tableHead} aria-hidden="true">
-                <span>Project</span>
-                <span>Due</span>
-                <span>Status</span>
-                <span>Value</span>
-                <span>Paid</span>
-              </div>
-              <ul className={styles.table}>
-                {projects.map((item) => (
-                  <li key={item.id}>
-                    <span className={ui.rowMain}>
-                      <b>{item.name}</b>
-                      <span>{item.client}</span>
-                    </span>
-                    <span className={`${ui.mono} ${styles.due}`}>
-                      {item.due}
-                    </span>
-                    <span className={ui.status} data-tone={item.tone}>
-                      {item.status}
-                    </span>
-                    <span className={`${ui.mono} ${styles.value}`}>
-                      {money.format(item.value)}
-                    </span>
-                    <span className={styles.paid}>
-                      {item.paid === null ? (
-                        <span className={styles.later}>After delivery</span>
-                      ) : (
-                        <button
-                          type="button"
-                          role="switch"
-                          className={ui.switch}
-                          aria-checked={item.paid}
-                          aria-label={`Paid: ${item.name}`}
-                          onClick={() => togglePaid(item.id)}
-                        />
-                      )}
-                    </span>
-                  </li>
+          </div>
+          {view === "Overview" ? (
+            <>
+              <dl className={ui.metricStrip}>
+                {[
+                  [
+                    "Earned",
+                    money.format(earned),
+                    "Delivered projects and batches",
+                  ],
+                  ["Paid", money.format(paid), "Delivered and paid"],
+                  [
+                    "Unpaid",
+                    money.format(earned - paid),
+                    "Delivered, not paid yet",
+                  ],
+                  [
+                    "Delivered edits",
+                    String(delivered.length),
+                    "0 salary edits",
+                  ],
+                ].map(([label, value, note]) => (
+                  <div key={label}>
+                    <dt>{label}</dt>
+                    <dd>{value}</dd>
+                    <dd>{note}</dd>
+                  </div>
                 ))}
-              </ul>
-            </section>
-
+              </dl>
+              <div className={styles.shareLabel}>
+                <span>Paid share</span>
+                <span>100% paid</span>
+              </div>
+              <div
+                className={[ui.progress, styles.shareMeter].join(" ")}
+                data-accent="true"
+              >
+                <i style={{ width: "100%" }} />
+              </div>
+              <div className={styles.charts}>
+                <section className={ui.panel}>
+                  <div className={ui.panelHead}>
+                    <h3 className={ui.panelTitle}>Earnings by month</h3>
+                    <div
+                      className={ui.tabs}
+                      role="group"
+                      aria-label="Earnings trend range"
+                    >
+                      {["3M", "6M", "All"].map((value) => (
+                        <button
+                          key={value}
+                          type="button"
+                          className={ui.tab}
+                          data-active={range === value}
+                          aria-pressed={range === value}
+                          onClick={() => setRange(value)}
+                        >
+                          {value}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  <div className={ui.panelBody}>
+                    <Image
+                      className={styles.chart}
+                      src="/demo/earnings-july.png"
+                      width={652}
+                      height={190}
+                      alt="July earnings: $1,200 from one delivered project"
+                    />
+                    <p className={styles.chartNote} aria-live="polite">
+                      1 delivered edit earned $1,200 across 1 month.{" "}
+                      {range === "All"
+                        ? "All available history."
+                        : "Last " + range.slice(0, 1) + " months."}
+                    </p>
+                  </div>
+                </section>
+                <section className={ui.panel}>
+                  <div className={ui.panelHead}>
+                    <h3 className={ui.panelTitle}>Work mix</h3>
+                  </div>
+                  <div className={ui.panelBody}>
+                    <Image
+                      className={styles.chart}
+                      src="/demo/work-mix.png"
+                      width={392}
+                      height={196}
+                      alt="Work mix: one Client Work project"
+                    />
+                    <div className={styles.shareLabel}>
+                      <span>Client Work</span>
+                      <span>1</span>
+                    </div>
+                  </div>
+                </section>
+              </div>
+              <section className={ui.panel}>
+                <div className={ui.panelHead}>
+                  <h3 className={ui.panelTitle}>This period</h3>
+                </div>
+                <div className={ui.panelBody}>
+                  <dl className={styles.periodMetrics}>
+                    {[
+                      ["Completed projects", "1"],
+                      ["Outputs delivered", "2"],
+                      ["Average days to deliver", "No data"],
+                      ["Overdue projects", "2"],
+                    ].map(([label, value]) => (
+                      <div key={label}>
+                        <dt>{label}</dt>
+                        <dd>{value}</dd>
+                      </div>
+                    ))}
+                  </dl>
+                  <Image
+                    className={styles.deliveries}
+                    src="/demo/deliveries-july.png"
+                    width={1100}
+                    height={160}
+                    alt="July deliveries: one project"
+                  />
+                </div>
+              </section>
+            </>
+          ) : view === "Payments" ? (
+            <div className={styles.reportStack}>
+              <section>
+                <h3 className={ui.panelTitle}>Payments</h3>
+                <p className={styles.chartNote}>
+                  Sign in to create payment plans. Local mode uses the payment
+                  batch settings.
+                </p>
+              </section>
+              <section className={ui.panel}>
+                <div className={ui.panelHead}>
+                  <h3 className={ui.panelTitle}>Payment batches</h3>
+                  <span className={ui.badge}>0</span>
+                </div>
+                <div className={ui.panelBody}>
+                  <div className={styles.batchHead}>
+                    <span>Batch</span>
+                    <span>Completed</span>
+                    <span>Edits</span>
+                    <span>Amount</span>
+                    <span>Payment</span>
+                  </div>
+                  <div className={styles.empty}>
+                    <b>No batches yet</b>
+                    <p>
+                      Finish the next salary batch to record its payment here.
+                    </p>
+                  </div>
+                </div>
+              </section>
+              <section className={ui.panel}>
+                <div className={ui.panelHead}>
+                  <h3 className={ui.panelTitle}>Invoice drafts</h3>
+                </div>
+                <div className={ui.panelBody}>
+                  <p className={styles.chartNote}>
+                    Drafts for delivered client projects. Relay does not collect
+                    payments.
+                  </p>
+                  <div className={styles.empty}>
+                    <b>No invoice drafts</b>
+                    <p>
+                      Deliver a freelance project for a named client to draft
+                      its invoice.
+                    </p>
+                  </div>
+                </div>
+              </section>
+            </div>
+          ) : view === "Clients" ? (
             <section className={ui.panel}>
               <div className={ui.panelHead}>
-                <h3 className={ui.panelTitle}>Payment plan</h3>
-                <span className={ui.badge}>Retainer</span>
+                <h3 className={ui.panelTitle}>Earnings by client</h3>
+                <select
+                  className={ui.input}
+                  aria-label="Filter earnings by client"
+                  value={selectedClient}
+                  onChange={(event) => setSelectedClient(event.target.value)}
+                >
+                  <option>All clients</option>
+                  {clients.map((client) => (
+                    <option key={client}>{client}</option>
+                  ))}
+                </select>
+              </div>
+              <div className={ui.panelBody} data-flush="true">
+                <ul className={ui.rows}>
+                  {clients
+                    .filter(
+                      (client) =>
+                        selectedClient === "All clients" ||
+                        client === selectedClient
+                    )
+                    .map((client) => {
+                      const completed = delivered.filter(
+                        (project) => project.client === client
+                      );
+                      return (
+                        <li key={client}>
+                          <span className={ui.rowMain}>
+                            <b>{client}</b>
+                            <span>{completed.length} delivered</span>
+                          </span>
+                          <span>
+                            {money.format(
+                              completed.reduce(
+                                (sum, project) => sum + project.value,
+                                0
+                              )
+                            )}
+                          </span>
+                        </li>
+                      );
+                    })}
+                </ul>
+              </div>
+            </section>
+          ) : (
+            <section className={ui.panel}>
+              <div className={ui.panelHead}>
+                <h3 className={ui.panelTitle}>Team earnings</h3>
               </div>
               <div className={ui.panelBody}>
-                <p className={styles.planClient}>Orbit Labs</p>
-                <div className={styles.planCount}>
-                  <span>
-                    <b className={ui.mono}>12</b> of{" "}
-                    <span className={ui.mono}>20</span> projects
-                  </span>
-                  <span className={ui.mono}>60%</span>
-                </div>
-                <div className={ui.progress}>
-                  <i style={{ width: "60%" }} />
-                </div>
-                <dl className={ui.details}>
-                  <div>
-                    <dt>Batch amount</dt>
-                    <dd className={ui.mono}>$10,000</dd>
-                  </div>
-                  <div>
-                    <dt>Per project</dt>
-                    <dd className={ui.mono}>$500</dd>
-                  </div>
-                  <div>
-                    <dt>Next payout</dt>
-                    <dd>After 8 projects</dd>
-                  </div>
-                </dl>
+                <p>Team earnings are available in a team Workspace.</p>
               </div>
             </section>
-          </div>
+          )}
+          <p className={styles.reportDate}>
+            July 2026 · {period} · Sample report
+          </p>
         </AppWindow>
       </Reveal>
-
-      <div className="box-grid-frame is-facts">
-        <ul className="box-grid">
-          {facts.map(({ icon: Icon, title, text }) => (
-            <li key={title}>
-              <Icon size={20} aria-hidden="true" />
-              <h3>{title}</h3>
-              <p>{text}</p>
-            </li>
-          ))}
-        </ul>
-      </div>
     </section>
   );
 }

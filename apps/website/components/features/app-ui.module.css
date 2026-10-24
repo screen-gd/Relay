@@ -1,203 +1,357 @@
 /*
- * Relay app look for the /features samples. Values copy the app's dark theme
- * (src/app/globals.css `.dark`): black canvas, #121212 panels with 8% white
- * edges, #0a0a0a inset wells, 12px panels, 6px controls, 4px square badges,
- * white primary actions, and the app's status colors. Text stays white;
- * hierarchy comes from size and weight.
+ * Relay app look for the /features samples, mirroring the app's Quartz shell
+ * in the Linear-style layout (src/components/workspace-shell.tsx and
+ * src/styles/relay-theme.css): a labeled sidebar on the near-black canvas,
+ * the page in a framed viewport one step lighter, and a top bar inside the
+ * frame that names the page and holds its actions. Surfaces copy the app's
+ * dark tokens — canvas oklch(13.5%) #080809, page 17% #0f0f11, panels 21.5%
+ * #18191c — with hairlines at 8% white and the near-white ink #f6f7f8. The
+ * Sample Studio uses a teal accent. Status is a word; only failures are warm.
  */
-.window {
-  --line: rgb(255 255 255 / 8%);
-  --line-strong: rgb(255 255 255 / 16%);
-  --panel: #121212;
-  --raised: #171717;
-  --inset: #0a0a0a;
-  --info: #60a5fa;
-  --success: #4ade80;
-  --warning: #fbbf24;
-  --danger: #f87171;
-  --border: var(--line);
+.frame {
   container-type: inline-size;
   min-width: 0;
+}
+
+.window {
+  --font-sans: "Geist Variable", ui-sans-serif, system-ui, sans-serif;
+  --canvas: #080809;
+  --page: #0f0f11;
+  --well: #18191c;
+  --ink: #f6f7f8;
+  --text-2: rgb(246 247 248 / 80%);
+  --text-3: rgb(246 247 248 / 66%);
+  --hair: rgb(246 247 248 / 8%);
+  --line: rgb(246 247 248 / 10%);
+  --line-strong: rgb(246 247 248 / 16%);
+  --fail: #fe8b82;
+  --accent: #14b8a6;
+  --selected: rgb(20 184 166 / 16%);
+  display: grid;
+  grid-template-columns: 244px minmax(0, 1fr);
+  min-width: 0;
   overflow: hidden;
-  border: 1px solid #27272a;
+  border: 1px solid #232429;
   border-radius: 14px;
-  background: #000000;
-  box-shadow: 0 40px 80px -40px rgb(0 0 0 / 45%);
-  color: #ffffff;
+  background: var(--canvas);
+  color: var(--ink);
+  font-family: var(--font-sans);
   font-size: 13px;
   line-height: 1.45;
   text-align: left;
 }
 
-/* Top bar: mark and breadcrumb, Quick Search in the middle, actions right. */
-.topbar {
-  position: relative;
+/*
+ * Sidebar, as in the app: workspace menu and icon actions on top, primary
+ * pages, then foldable groups (Workspace, AI tools), then Plans pinned below.
+ */
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  padding: 10px 8px;
+}
+
+.sideTop {
   display: flex;
   align-items: center;
-  gap: 12px;
-  height: 52px;
-  padding: 0 14px;
-  border-bottom: 1px solid var(--line);
+  gap: 4px;
+  padding: 2px 0 10px;
+}
+
+.wsMenu {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 6px;
+  border-radius: 6px;
+}
+
+.wsAvatar {
+  display: grid;
+  width: 20px;
+  height: 20px;
+  flex: 0 0 auto;
+  place-items: center;
+  border-radius: 4px;
+  background: var(--ink);
+  color: #101014;
+  font-size: 9px;
+  font-weight: 700;
+}
+
+.wsName {
+  overflow: hidden;
+  font-size: 13px;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.wsCaret {
+  flex: 0 0 auto;
+  color: var(--text-3);
+}
+
+.sideIcons {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 2px;
+}
+
+.iconBtn {
+  display: grid;
+  width: 28px;
+  height: 28px;
+  place-items: center;
+  border-radius: 6px;
+  color: var(--text-2);
+}
+
+.nav {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  flex-direction: column;
+}
+
+.navItem {
+  display: flex;
+  height: 36px;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 10px;
+  padding: 0 10px;
+  border-radius: 6px;
+  color: var(--text-2);
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.navItem svg {
+  flex: 0 0 auto;
+  color: var(--text-3);
+}
+
+.navItem[data-active="true"] {
+  background: var(--selected);
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.navItem[data-active="true"] svg {
+  color: var(--accent);
+}
+
+.navLabel {
+  overflow: hidden;
+  min-width: 0;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* One foldable group: its quiet label with a caret, then its pages. */
+.group {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+}
+
+.groupLabel {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 26px 10px 8px;
+  color: var(--text-3);
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.groupLabel > span {
+  overflow: hidden;
+  min-width: 0;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.groupCaret {
+  flex: 0 0 auto;
+  color: var(--text-3);
+}
+
+/* AI arrives soon; the tag says so without shouting. */
+.soonTag {
+  padding: 1px 6px;
+  border: 1px solid var(--hair);
+  border-radius: 4px;
+  color: var(--text-3);
+  font:
+    400 10px var(--font-geist-mono),
+    monospace;
+}
+
+.sideFoot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 2px;
+  padding-top: 10px;
+}
+
+.plans {
+  display: inline-flex;
+  height: 30px;
+  align-items: center;
+  padding: 0 10px;
+  border-radius: 6px;
+  box-shadow: inset 0 0 0 1px var(--line-strong);
+  color: var(--text-2);
+  font-size: 13px;
+}
+
+/* The framed viewport: page color, rounded, one hairline frame, inset from
+   the canvas on the top, end, and bottom edges as the app does. */
+.main {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  padding: 8px 8px 8px 0;
+}
+
+.viewport {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  flex-direction: column;
+  overflow: hidden;
+  border-radius: 10px;
+  background: var(--page);
+  box-shadow: 0 0 0 1px var(--line);
+}
+
+/* Top bar inside the frame: page name, trail, then the page's action. */
+.topbar {
+  display: flex;
+  height: 48px;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 8px;
+  padding: 0 20px;
+  box-shadow: inset 0 -1px 0 var(--hair);
 }
 
 .crumbs {
   display: flex;
   min-width: 0;
   align-items: center;
-  gap: 8px;
-  margin-left: 14px;
-  font-size: 12px;
+  gap: 5px;
+  font-size: 13px;
   font-weight: 500;
   white-space: nowrap;
 }
 
-.crumbs i {
-  color: var(--line-strong);
-  font-style: normal;
+.crumbParent {
+  overflow: hidden;
+  min-width: 0;
+  color: var(--text-2);
+  text-overflow: ellipsis;
 }
 
-.crumbs b {
+.crumbs svg {
+  flex: 0 0 auto;
+  color: var(--text-3);
+}
+
+.crumbCurrent {
   overflow: hidden;
-  font-size: 13px;
+  min-width: 0;
   font-weight: 600;
   text-overflow: ellipsis;
 }
 
-.search {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  width: 200px;
-  height: 32px;
-  padding: 0 10px;
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  background: var(--inset);
-  font-size: 12px;
-  translate: -50% -50%;
-}
-
-.search kbd {
-  margin-left: auto;
-  font:
-    9px var(--font-geist-mono),
-    monospace;
-}
-
 .topActions {
   display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-left: auto;
-}
-
-.avatar {
-  display: grid;
-  width: 30px;
-  height: 30px;
   flex: 0 0 auto;
-  place-items: center;
-  border: 1px solid var(--line-strong);
-  border-radius: 50%;
-  font-size: 10px;
-  font-weight: 700;
-}
-
-/* Icon rail, then the page. */
-.shell {
-  display: grid;
-  grid-template-columns: 48px minmax(0, 1fr);
-}
-
-.rail {
-  display: flex;
-  flex-direction: column;
   align-items: center;
-  gap: 4px;
-  padding: 12px 0;
-  border-right: 1px solid var(--line);
-  background: var(--inset);
-}
-
-.rail hr {
-  width: 24px;
-  margin: 6px 0;
-  border: 0;
-  border-top: 1px solid var(--line);
-}
-
-.railItem {
-  display: grid;
-  width: 32px;
-  height: 32px;
-  place-items: center;
-  border-radius: 6px;
-}
-
-.railItem[data-active="true"] {
-  background: rgb(255 255 255 / 10%);
+  gap: 8px;
+  margin-left: auto;
 }
 
 .page {
   min-width: 0;
-  padding: 18px;
+  padding: 20px 24px;
 }
 
-/* Page tabs. The current tab gets a 1px edge, not a fill. */
-.tabs {
+.record .page {
   display: flex;
-  align-items: center;
+  flex: 1;
+  flex-direction: column;
+  padding: 0;
+}
+
+/* Segmented control (Quartz): a quiet well track and a framed raised
+ * selection. Shared by the project views and the Payments page views. */
+.tabs {
+  display: inline-flex;
+  max-width: 100%;
   gap: 4px;
-  margin-bottom: 14px;
-  overflow: hidden;
+  margin-bottom: 16px;
+  padding: 4px;
+  overflow-x: auto;
+  border-radius: 8px;
+  background: var(--well);
+  box-shadow: inset 0 0 0 1px var(--hair);
+  scrollbar-width: none;
 }
 
 .tab {
   display: inline-flex;
-  height: 30px;
+  height: 28px;
   flex: 0 0 auto;
   align-items: center;
-  padding: 0 10px;
-  border: 1px solid transparent;
-  border-radius: 6px;
-  font-size: 13px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 5px;
+  background: transparent;
+  color: var(--text-2);
+  font-size: 12.5px;
   font-weight: 500;
   white-space: nowrap;
+  cursor: pointer;
 }
 
 .tab[data-active="true"] {
-  border-color: var(--line-strong);
+  background: var(--page);
+  box-shadow: inset 0 0 0 1px var(--hair);
+  color: var(--ink);
   font-weight: 600;
 }
 
-.tabsEnd {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  margin-left: auto;
-  font-size: 13px;
-  font-weight: 500;
-  white-space: nowrap;
-}
-
-/* App card: panel fill, faint edge, 12px corners. */
+/*
+ * The Quartz panel (ContentSection): a grey field whose title and actions sit
+ * on the grey, and whose body is the page color inside a soft frame. Flush
+ * bodies drop their padding for tables and ruled lists.
+ */
 .panel {
+  display: flex;
   min-width: 0;
-  border: 1px solid var(--line);
-  border-radius: 12px;
-  background: var(--panel);
+  flex-direction: column;
+  border-radius: 10px;
+  background: var(--well);
+  padding: 4px;
 }
 
 .panelHead {
   display: flex;
-  min-height: 48px;
+  min-height: 40px;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  padding: 0 16px;
+  padding: 6px 12px;
 }
 
 .panelTitle {
@@ -209,11 +363,119 @@
   letter-spacing: -0.005em;
 }
 
-.panelBody {
-  padding: 0 16px 16px;
+.textButton {
+  border: 0;
+  padding: 4px;
+  background: transparent;
+  color: var(--text-2);
+  font: inherit;
+  cursor: pointer;
 }
 
-/* Rows inside a panel, divided by hairlines. */
+.inkPrimary {
+  background: var(--ink);
+  color: var(--page);
+}
+
+.properties {
+  min-width: 0;
+  padding: 16px 20px;
+  border-left: 1px solid var(--hair);
+}
+.propertiesHead {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
+  font-size: 0.75rem;
+}
+.propertiesHead > :first-child {
+  color: var(--text-3);
+}
+.properties dl {
+  margin-top: 14px;
+}
+.properties dl > div {
+  display: grid;
+  grid-template-columns: 88px minmax(0, 1fr);
+  gap: 8px;
+}
+.properties .details dd {
+  text-align: left;
+}
+.properties p {
+  margin: 16px 0 0;
+  font-size: 0.75rem;
+}
+.paymentProperty {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.metricStrip {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  margin: 0 0 16px;
+  border: 1px solid var(--hair);
+  border-radius: 10px;
+  overflow: hidden;
+}
+.metricStrip > div {
+  padding: 14px 16px;
+}
+.metricStrip > div + div {
+  border-left: 1px solid var(--hair);
+}
+.metricStrip dt {
+  font-size: 0.75rem;
+  color: var(--text-2);
+}
+.metricStrip dd {
+  margin: 4px 0 0;
+  font-size: 1.25rem;
+  font-weight: 500;
+  line-height: 1.3;
+}
+.metricStrip dd + dd {
+  font-size: 0.75rem;
+  font-weight: 400;
+  color: var(--text-2);
+}
+@container (max-width:600px) {
+  .metricStrip {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .metricStrip > div:nth-child(3) {
+    border-left: 0;
+  }
+  .metricStrip > div:nth-child(n + 3) {
+    border-top: 1px solid var(--hair);
+  }
+}
+@container (max-width:760px) {
+  .properties {
+    border-left: 0;
+    border-top: 1px solid var(--hair);
+  }
+}
+
+.panelBody {
+  min-width: 0;
+  flex: 1;
+  margin: 0;
+  padding: 16px;
+  border-radius: 6px;
+  background: var(--page);
+  box-shadow: 0 0 0 1px var(--hair);
+}
+
+.panelBody[data-flush="true"] {
+  padding: 0;
+  overflow: hidden;
+}
+
+/* Rows inside a flush body, divided by hairlines. */
 .rows {
   margin: 0;
   padding: 0;
@@ -222,11 +484,14 @@
 
 .rows > li {
   display: flex;
-  min-height: 52px;
+  min-height: 50px;
   align-items: center;
   gap: 12px;
-  padding: 8px 16px;
-  border-top: 1px solid var(--line);
+  padding: 8px 14px;
+}
+
+.rows > li + li {
+  border-top: 1px solid var(--hair);
 }
 
 .rowMain {
@@ -247,6 +512,7 @@
 .rowMain span {
   overflow: hidden;
   font-size: 12px;
+  color: var(--text-2);
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -257,9 +523,9 @@
   height: 30px;
   flex: 0 0 auto;
   place-items: center;
-  border: 1px solid var(--line);
   border-radius: 6px;
-  background: var(--inset);
+  background: var(--canvas);
+  color: var(--text-2);
 }
 
 /* Label left, value right; the project Details panel. */
@@ -269,11 +535,15 @@
 
 .details > div {
   display: flex;
-  min-height: 34px;
+  min-height: 32px;
   align-items: center;
   justify-content: space-between;
   gap: 16px;
   font-size: 12px;
+}
+
+.details dt {
+  color: var(--text-2);
 }
 
 .details dd {
@@ -282,59 +552,36 @@
   text-align: right;
 }
 
-/* Square badge with the app's tinted status fills. */
+/* Metadata is a quiet word, not a chip; only failures are warm. */
 .badge {
-  display: inline-flex;
   flex: 0 0 auto;
-  align-items: center;
-  gap: 4px;
-  padding: 1px 7px;
-  border: 1px solid var(--line-strong);
-  border-radius: 4px;
-  font-size: 11px;
+  color: var(--text-2);
+  font-size: 12px;
   font-weight: 500;
   white-space: nowrap;
 }
 
-.badge[data-tone="info"] {
-  border-color: rgb(96 165 250 / 35%);
-  background: rgb(37 99 235 / 16%);
-  color: var(--info);
-}
-
+.badge[data-tone="info"],
+.badge[data-tone="success"],
 .badge[data-tone="warning"] {
-  border-color: rgb(251 191 36 / 35%);
-  background: rgb(251 191 36 / 14%);
-  color: var(--warning);
+  color: var(--ink);
 }
 
-.badge[data-tone="success"] {
-  border-color: rgb(74 222 128 / 35%);
-  background: rgb(34 197 94 / 14%);
-  color: var(--success);
-}
-
-/* Colored status words, as in the dashboard Projects table. */
+/* Status words: plain ink, warm only for failures, as in the live app. */
 .status {
   font-size: 12px;
   font-weight: 500;
   white-space: nowrap;
 }
 
-.status[data-tone="info"] {
-  color: var(--info);
-}
-
+.status[data-tone="info"],
+.status[data-tone="success"],
 .status[data-tone="warning"] {
-  color: var(--warning);
-}
-
-.status[data-tone="success"] {
-  color: var(--success);
+  color: var(--ink);
 }
 
 .status[data-tone="danger"] {
-  color: var(--danger);
+  color: var(--fail);
 }
 
 /* Four-segment stage bar from the project Overview. */
@@ -351,20 +598,22 @@
   display: block;
   height: 4px;
   border-radius: 2px;
-  background: rgb(255 255 255 / 12%);
+  background: rgb(246 247 248 / 10%);
 }
 
 .stages li[data-reached="true"] > span {
-  background: #ffffff;
+  background: var(--ink);
 }
 
 .stages small {
   display: block;
   margin-top: 8px;
+  color: var(--text-2);
   font-size: 12px;
 }
 
 .stages li[aria-current="step"] small {
+  color: var(--ink);
   font-weight: 600;
 }
 
@@ -372,29 +621,35 @@
   height: 4px;
   overflow: hidden;
   border-radius: 2px;
-  background: rgb(255 255 255 / 12%);
+  background: rgb(246 247 248 / 10%);
 }
 
 .progress > i {
   display: block;
   height: 100%;
   border-radius: inherit;
-  background: #ffffff;
+  background: var(--ink);
 }
 
-/* Controls. Primary is white like the app; outline uses the input edge. */
+/* Payout and plan progress carry the accent, as in the live app. */
+.progress[data-accent="true"] > i {
+  background: var(--accent);
+}
+
+/* Controls. Secondary is the filled grey key; primary is the lime accent
+   with dark text, as in the live app. */
 .button {
   display: inline-flex;
-  height: 32px;
+  height: 30px;
   flex: 0 0 auto;
   align-items: center;
   justify-content: center;
   gap: 6px;
   padding: 0 12px;
-  border: 1px solid rgb(255 255 255 / 12%);
+  border: 1px solid var(--line-strong);
   border-radius: 6px;
-  background: transparent;
-  color: #ffffff;
+  background: var(--well);
+  color: var(--ink);
   font-size: 12px;
   font-weight: 600;
   white-space: nowrap;
@@ -404,8 +659,81 @@
     transform 120ms ease-out;
 }
 
+span.button,
+span.tab {
+  cursor: default;
+}
+
+.checkLabel {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+}
+
+.checkLabel input {
+  accent-color: var(--ink);
+}
+
+.dialogOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: var(--background);
+  opacity: 0.8;
+}
+
+.dialog {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  z-index: 101;
+  width: min(440px, calc(100% - 32px));
+  max-height: calc(100% - 48px);
+  overflow-y: auto;
+  transform: translate(-50%, -50%);
+  padding: 24px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+}
+
+.demoDescription {
+  color: var(--muted-foreground);
+}
+
+.form,
+.field {
+  display: grid;
+  gap: 12px;
+}
+
+.form {
+  margin-block: 20px;
+}
+
+.input {
+  width: 100%;
+  min-width: 0;
+  padding: 8px 10px;
+  border: 1px solid var(--line-strong, var(--border));
+  border-radius: var(--radius);
+  background: var(--page, var(--background));
+  color: var(--ink, var(--foreground));
+  font: inherit;
+}
+
+.dialog .button {
+  --well: var(--secondary);
+  --ink: var(--foreground);
+  --line-strong: var(--border);
+  --accent: var(--brand);
+}
+
 .button:hover:not(:disabled) {
-  border-color: rgb(255 255 255 / 32%);
+  border-color: rgb(246 247 248 / 32%);
 }
 
 .button:active:not(:disabled) {
@@ -418,18 +746,30 @@
 }
 
 .button.icon {
-  width: 32px;
+  width: 30px;
   padding: 0;
 }
 
+/* The record page's overflow control in the top bar. */
+.button.kebab {
+  border-color: transparent;
+  background: transparent;
+  color: var(--text-2);
+  letter-spacing: 1px;
+}
+
+.button.kebab:hover:not(:disabled) {
+  border-color: var(--line-strong);
+}
+
 .primary {
-  border-color: #ffffff;
-  background: #ffffff;
-  color: #000000;
+  border-color: var(--accent);
+  background: var(--accent);
+  color: #0a0a0a;
 }
 
 .primary:hover:not(:disabled) {
-  border-color: #ffffff;
+  border-color: var(--accent);
 }
 
 /* App switch: white track when on, dim track when off. */
@@ -443,7 +783,7 @@
   padding: 0 1px;
   border: 0;
   border-radius: 9px;
-  background: rgb(255 255 255 / 14%);
+  background: rgb(246 247 248 / 14%);
   cursor: pointer;
   transition: background-color 120ms ease-out;
 }
@@ -452,59 +792,116 @@
   width: 16px;
   height: 16px;
   border-radius: 50%;
-  background: #ffffff;
+  background: var(--ink);
   content: "";
   transition: translate 160ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .switch[aria-checked="true"],
 .switch[data-on="true"] {
-  background: #ffffff;
+  background: var(--ink);
 }
 
 .switch[aria-checked="true"]::after,
 .switch[data-on="true"]::after {
-  background: #000000;
+  background: #101014;
   translate: 14px 0;
 }
 
 .switch:focus-visible,
-.button:focus-visible {
-  outline: 2px solid #ffffff;
+.button:focus-visible,
+.tab:focus-visible {
+  outline: 2px solid var(--ink);
   outline-offset: 2px;
 }
 
+/* Square avatars with initials, rounded like the app's. */
+.avatar {
+  display: grid;
+  width: 30px;
+  height: 30px;
+  flex: 0 0 auto;
+  place-items: center;
+  border-radius: 4px;
+  background: var(--ink);
+  color: #101014;
+  font-size: 10px;
+  font-weight: 700;
+}
+
 .mono {
-  font-family: var(--font-geist-mono), monospace;
   font-variant-numeric: tabular-nums;
 }
 
-@container (max-width: 760px) {
-  .search,
-  .quickLabel {
+/* The sidebar folds to its icon rail, as the app's does when toggled. */
+@container (max-width: 900px) {
+  .window {
+    grid-template-columns: 52px minmax(0, 1fr);
+  }
+
+  .sidebar {
+    align-items: center;
+    padding: 10px 0;
+  }
+
+  .wsName,
+  .wsCaret,
+  .sideIcons,
+  .navLabel,
+  .groupLabel,
+  .groupCaret,
+  .plans {
     display: none;
+  }
+
+  .wsMenu {
+    justify-content: center;
+    flex: 0 0 auto;
+    padding: 5px 0;
+  }
+
+  .nav {
+    align-items: center;
+  }
+
+  .navItem {
+    justify-content: center;
+    width: 34px;
+    padding: 0;
+  }
+
+  .group {
+    align-items: center;
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid var(--hair);
+  }
+
+  .sideFoot {
+    justify-content: center;
   }
 }
 
+/* Phones: the sidebar becomes a sheet in the app, so the sample shows the
+   page alone. */
 @container (max-width: 560px) {
-  .shell {
+  .window {
     grid-template-columns: minmax(0, 1fr);
   }
 
-  .rail,
-  .crumbHidden {
+  .sidebar {
     display: none;
   }
 
-  .crumbs {
-    margin-left: 8px;
+  .main {
+    padding: 0;
+  }
+
+  .viewport {
+    border-radius: 13px;
   }
 
   .page {
     padding: 12px;
-  }
-
-  .tabsEnd {
-    display: none;
   }
 }

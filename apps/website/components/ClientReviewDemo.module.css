@@ -1,0 +1,42 @@
+.composer {
+  display: grid;
+  gap: 12px;
+  font-size: 0.8125rem;
+}
+
+.composer textarea {
+  resize: vertical;
+}
+
+.composer button {
+  justify-self: start;
+}
+
+.composer small,
+.locked {
+  color: var(--muted-foreground);
+  font-size: 0.8125rem;
+}
+
+.locked,
+.commentAction {
+  padding: 16px 20px;
+  border-top: 1px solid var(--border);
+}
+
+.nameLabel,
+.timestampRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.timestampRow input {
+  max-width: 200px;
+}
+
+.timestampRow {
+  justify-content: flex-start;
+  flex-wrap: wrap;
+}

@@ -197,6 +197,15 @@ importers:
 
   apps/website:
     dependencies:
+      "@fontsource-variable/geist":
+        specifier: 5.3.0
+        version: 5.3.0
+      "@hugeicons/core-free-icons":
+        specifier: 4.3.5
+        version: 4.3.5
+      "@hugeicons/react":
+        specifier: 1.1.10
+        version: 1.1.10(react@19.2.8)
       "@gsap/react":
         specifier: ^2.1.2
         version: 2.1.2(gsap@3.15.0)(react@19.2.8)

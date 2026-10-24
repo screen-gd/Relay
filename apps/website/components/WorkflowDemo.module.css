@@ -79,25 +79,65 @@
 .page {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 280px;
-  align-items: start;
-  gap: 14px;
-  min-height: 430px;
+  align-items: stretch;
+  gap: 0;
+  min-height: 640px;
+  flex: 1;
 }
 
 .main {
   display: grid;
   align-content: start;
-  gap: 14px;
+  gap: 16px;
   min-width: 0;
+  padding: 16px 24px 24px;
+}
+
+.main > :first-child {
+  justify-self: start;
+  margin-bottom: 4px;
 }
 
 .detailsPanel {
-  position: sticky;
-  top: 0;
+  min-width: 0;
+  padding: 16px 20px;
+  border-left: 1px solid var(--hair);
+}
+
+.detailsPanel > div {
+  margin: 0;
+  padding: 0;
+  min-height: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.detailsPanel h4 {
+  color: var(--text-3);
+  font-weight: 400;
+}
+
+.detailsPanel > div + div {
+  margin-top: 8px;
 }
 
 .detailsPanel dl {
   margin-top: 14px;
+}
+
+.detailsPanel dl > div {
+  display: grid;
+  grid-template-columns: 88px minmax(0, 1fr);
+  gap: 8px;
+}
+
+.detailsPanel dd {
+  text-align: left;
+}
+
+.detailsPanel p {
+  margin-top: 16px;
+  font-size: 0.75rem;
 }
 
 .note {

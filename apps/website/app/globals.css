@@ -214,7 +214,7 @@ body::before {
 
 .dither-backdrop canvas {
   position: absolute;
-  top: 0;
+  top: calc(-1 * var(--dither-drift, 24px));
   display: block;
 }
 
@@ -224,6 +224,32 @@ body::before {
 
 .dither-backdrop .is-right {
   right: 0;
+}
+
+/* Drift already-painted strips on the compositor, without a canvas loop. */
+@keyframes relay-side-drift {
+  from {
+    transform: translateY(calc(-1 * var(--dither-drift)));
+  }
+  to {
+    transform: translateY(var(--dither-drift));
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .dither-backdrop[data-state="running"] canvas,
+  .dither-backdrop[data-state="paused"] canvas {
+    animation: relay-side-drift 18s ease-in-out infinite alternate;
+    will-change: transform;
+  }
+
+  .dither-backdrop[data-state] .is-right {
+    animation-direction: alternate-reverse;
+  }
+
+  .dither-backdrop[data-state="paused"] canvas {
+    animation-play-state: paused;
+  }
 }
 
 /*
@@ -1786,11 +1812,13 @@ body::before {
 }
 
 .review-player {
+  --review-player-padding: 20px;
+  position: relative;
   display: flex;
   min-width: 0;
   flex-direction: column;
   gap: 14px;
-  padding: 20px;
+  padding: var(--review-player-padding);
   background: #08080a;
 }
 
@@ -2458,7 +2486,7 @@ body::before {
   }
 
   .review-player {
-    padding: 12px;
+    --review-player-padding: 12px;
   }
 
   .review-player .frame-note {

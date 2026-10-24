@@ -2,13 +2,9 @@
 
 import { useState, type FormEvent } from "react";
 import { useConvexAuth } from "convex/react";
-import {
-  Check,
-  ChevronRight,
-  MessageCircle,
-  RotateCcw,
-} from "@/components/icons";
+import { Check, ChevronRight, RotateCcw } from "@/components/icons";
 import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
   Collapsible,
@@ -106,24 +102,81 @@ function CommentRow({
   busy,
   onSeek,
   onSelect,
+  selected = false,
 }: {
   comment: MediaVersionComment;
   action?: () => Promise<void>;
   busy?: boolean;
   onSeek?: (seconds: number) => void;
   onSelect?: () => void;
+  selected?: boolean;
 }) {
+  const seconds = comment.timestampSeconds;
+  const initials = comment.authorName
+    .trim()
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((part) => part[0])
+    .join("")
+    .toLocaleUpperCase();
+  const content = (
+    <>
+      <Avatar
+        aria-hidden="true"
+        className={
+          selected
+            ? "ring-1 ring-primary ring-offset-2 ring-offset-page"
+            : undefined
+        }
+      >
+        <AvatarFallback>{initials || "?"}</AvatarFallback>
+      </Avatar>
+      <span className="min-w-0">
+        <span className="flex items-baseline justify-between gap-2">
+          <span className="break-words font-medium type-label">
+            {comment.authorName}
+          </span>
+          {seconds !== undefined ? (
+            <span className="shrink-0 font-mono text-text-2 type-label-sm">
+              {formatReviewTimestamp(seconds)}
+            </span>
+          ) : null}
+        </span>
+        <span className="mt-1 block whitespace-pre-wrap break-words type-body">
+          {comment.body}
+        </span>
+      </span>
+    </>
+  );
+  const rowClassName =
+    "grid w-full grid-cols-[auto_minmax(0,1fr)] items-start gap-3 py-3 text-left text-text-1";
   return (
-    <article id={`comment-${comment.id}`} className="rounded-lg bg-well p-3">
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <div className="flex items-center gap-2 type-label">
-          <MessageCircle
-            className="size-4 text-muted-foreground"
-            aria-hidden="true"
-          />
-          {comment.authorName}
-        </div>
-        <div className="flex items-center gap-2">
+    <article
+      id={`comment-${comment.id}`}
+      className="border-b border-hair last:border-b-0"
+    >
+      {onSelect || (onSeek && seconds !== undefined) ? (
+        <button
+          type="button"
+          className={`${rowClassName} rounded-soft outline-none focus-visible:focus-ring`}
+          aria-pressed={selected}
+          aria-label={
+            seconds !== undefined && onSeek
+              ? `Jump to ${formatReviewTimestamp(seconds)}: ${comment.authorName}'s comment`
+              : `Show ${comment.authorName}'s comment`
+          }
+          onClick={() => {
+            if (seconds !== undefined) onSeek?.(seconds);
+            onSelect?.();
+          }}
+        >
+          {content}
+        </button>
+      ) : (
+        <div className={rowClassName}>{content}</div>
+      )}
+      <div className="ml-11 pb-3">
+        <div className="flex flex-wrap items-center gap-2">
           <Badge variant="secondary">
             {comment.resolved ? "Resolved" : "Open"}
           </Badge>
@@ -134,51 +187,30 @@ function CommentRow({
             {commentDate(comment.createdAt)}
           </time>
         </div>
-      </div>
-      {comment.timestampSeconds !== undefined ? (
-        onSeek ? (
+        <CommentAnnotation
+          comment={comment}
+          onSeek={onSeek}
+          onSelect={onSelect}
+        />
+        <TranscriptLine commentIds={[comment.id]} />
+        {action ? (
           <Button
             type="button"
-            variant="outline"
             size="sm"
-            className="mt-3"
-            onClick={() => {
-              onSeek(comment.timestampSeconds!);
-              onSelect?.();
-            }}
+            variant="ghost"
+            className="mt-2 -ml-2.5"
+            disabled={busy}
+            onClick={() => void action()}
           >
-            Jump to {formatReviewTimestamp(comment.timestampSeconds)}
+            {comment.resolved ? (
+              <RotateCcw aria-hidden="true" />
+            ) : (
+              <Check aria-hidden="true" />
+            )}
+            {busy ? "Saving..." : comment.resolved ? "Reopen" : "Resolve"}
           </Button>
-        ) : (
-          <p className="mt-2 font-mono text-muted-foreground type-label-sm">
-            At {formatReviewTimestamp(comment.timestampSeconds)}
-          </p>
-        )
-      ) : null}
-      <p className="mt-2 whitespace-pre-wrap type-body">{comment.body}</p>
-      <CommentAnnotation
-        comment={comment}
-        onSeek={onSeek}
-        onSelect={onSelect}
-      />
-      <TranscriptLine commentIds={[comment.id]} />
-      {action ? (
-        <Button
-          type="button"
-          size="sm"
-          variant="ghost"
-          className="mt-2 -ml-2.5"
-          disabled={busy}
-          onClick={() => void action()}
-        >
-          {comment.resolved ? (
-            <RotateCcw aria-hidden="true" />
-          ) : (
-            <Check aria-hidden="true" />
-          )}
-          {busy ? "Saving..." : comment.resolved ? "Reopen" : "Resolve"}
-        </Button>
-      ) : null}
+        ) : null}
+      </div>
     </article>
   );
 }
@@ -296,6 +328,7 @@ export function PublicMediaVersionComments({
   const [body, setBody] = useState("");
   const [error, setError] = useState("");
   const currentComments = commentsForVersion(comments, versionId);
+  const [selectedCommentId, setSelectedCommentId] = useState<string>();
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -333,8 +366,8 @@ export function PublicMediaVersionComments({
   }
 
   return (
-    <section aria-labelledby={`comments-${versionId}`} className="mt-6">
-      <div className="flex flex-wrap items-center justify-between gap-2">
+    <section aria-labelledby={`comments-${versionId}`} className="min-w-0">
+      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-hair px-5 py-4">
         <h4 id={`comments-${versionId}`} className="type-label">
           Comments
         </h4>
@@ -343,24 +376,26 @@ export function PublicMediaVersionComments({
           {currentComments.length === 1 ? "thread" : "threads"}
         </span>
       </div>
-      <p className="mt-1 text-muted-foreground type-label-sm">
+      <p className="px-5 pt-3 text-muted-foreground type-label-sm">
         {supportsPlayerTimestamps
           ? "Display names are unverified. YouTube and Vimeo support playback timestamps."
           : "Display names are unverified. Enter timestamps manually for external links."}
       </p>
       {loading ? (
-        <p role="status" className="mt-3 text-muted-foreground type-body">
+        <p role="status" className="px-5 py-3 text-muted-foreground type-body">
           Loading comments...
         </p>
       ) : null}
-      <div className="mt-3 grid gap-2">
+      <div className="max-h-80 overflow-y-auto overscroll-contain px-5">
         {currentComments.length ? (
           currentComments.map((comment) => (
             <CommentRow
               key={comment.id}
-              onSelect={
-                onCommentSelect ? () => onCommentSelect(comment) : undefined
-              }
+              selected={selectedCommentId === comment.id}
+              onSelect={() => {
+                setSelectedCommentId(comment.id);
+                onCommentSelect?.(comment);
+              }}
               onSeek={
                 player
                   ? (seconds) => {
@@ -384,7 +419,7 @@ export function PublicMediaVersionComments({
             />
           ))
         ) : (
-          <p className="rounded-lg bg-well p-3 text-muted-foreground type-body">
+          <p className="py-5 text-muted-foreground type-body">
             No comments on this version yet.
           </p>
         )}
@@ -392,7 +427,7 @@ export function PublicMediaVersionComments({
       {!disabled && !loading ? (
         <form
           onSubmit={(event) => void submit(event)}
-          className="mt-4 grid gap-3 rounded-lg bg-well p-3"
+          className="grid gap-3 border-t border-hair p-5"
         >
           <div className="flex flex-wrap items-center justify-between gap-2">
             <Label htmlFor={`comment-name-${versionId}`} className="type-label">
@@ -466,7 +501,8 @@ export function PublicMediaVersionComments({
               setError("");
             }}
             maxLength={2000}
-            placeholder="Describe what needs attention"
+            placeholder="Leave feedback on this moment…"
+            density="compact"
           />
           {error ? (
             <p role="alert" className="text-destructive type-label-sm">
@@ -477,7 +513,7 @@ export function PublicMediaVersionComments({
             type="submit"
             disabled={!displayName.trim() || !body.trim() || busy}
           >
-            {busy ? "Sending..." : "Add comment"}
+            {busy ? "Sending..." : "Post comment"}
           </Button>
         </form>
       ) : null}
